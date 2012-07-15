@@ -8,7 +8,7 @@ import logging
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
-from newsfacts import default_settings
+from linkspotting import default_settings
 
 logging.basicConfig(level=logging.DEBUG)
 
