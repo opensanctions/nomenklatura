@@ -20,7 +20,7 @@
                 <td><code>{{value.display_value}}</code></td>
                 <td>{{value.links.count()}}</td>
                 <td><a href="{{url_for('value.view', dataset=dataset.name,
-                        value=value.id)}}" class="btn">edit</a></td>
+                        value=value.id)}}" class="btn btn-small">edit</a></td>
             </tr>
         {% endfor %}
         <form class="well form-inline" method="POST"
@@ -31,7 +31,7 @@
                         name="value" placeholder="Add a value...">
                 </td>
                 <td>
-                    <button type="submit" class="btn btn-primary">add</button>
+                    <button type="submit" class="btn btn-small btn-primary">add</button>
                 </td>
             </tr>
         </form>

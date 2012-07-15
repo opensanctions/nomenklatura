@@ -27,12 +27,22 @@ class Dataset(db.Model):
     name = db.Column(db.Unicode)
     label = db.Column(db.Unicode)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow,
+            onupdate=datetime.utcnow)
 
     values = db.relationship('Value', backref='dataset',
                              lazy='dynamic')
     links = db.relationship('Link', backref='dataset',
                              lazy='dynamic')
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'label': self.label,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+            }
 
     @classmethod
     def by_name(cls, name):

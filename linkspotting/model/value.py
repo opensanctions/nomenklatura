@@ -35,10 +35,21 @@ class Value(db.Model):
     value = db.Column(db.Unicode)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow,
+            onupdate=datetime.utcnow)
 
     links = db.relationship('Link', backref='value',
                              lazy='dynamic')
+
+    def as_dict(self):
+        return {
+            'id': self.id, 
+            'value': self.value, 
+            'created_at': self.created_at, 
+            'updated_at': self.updated_at,
+            'dataset': self.dataset.name,
+            'link_count': self.links.count()
+            }
 
     @property
     def display_value(self):
@@ -62,8 +73,8 @@ class Value(db.Model):
         return value
 
     @classmethod
-    def all(cls):
-        return cls.query
+    def all(cls, dataset):
+        return cls.query.filter_by(dataset=dataset)
 
     @classmethod
     def create(cls, dataset, data):

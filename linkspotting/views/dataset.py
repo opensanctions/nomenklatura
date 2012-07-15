@@ -3,7 +3,8 @@ from flask import render_template, redirect
 from formencode import Invalid
 
 from linkspotting.core import db
-from linkspotting.util import request_content
+from linkspotting.util import request_content, response_format
+from linkspotting.util import jsonify
 from linkspotting.views.common import handle_invalid
 from linkspotting.model import Dataset
 
@@ -12,6 +13,13 @@ section = Blueprint('dataset', __name__)
 @section.route('/new', methods=['GET'])
 def new():
     return render_template('dataset/new.html')
+
+@section.route('/datasets', methods=['GET'])
+def index():
+    format = response_format()
+    if format == 'json':
+        return jsonify(Dataset.all())
+    return "Not implemented!"
 
 @section.route('/', methods=['POST'])
 def create():
@@ -26,6 +34,9 @@ def create():
 @section.route('/<dataset>', methods=['GET'])
 def view(dataset):
     dataset = Dataset.find(dataset)
+    format = response_format()
+    if format == 'json':
+        return jsonify(dataset)
     return render_template('dataset/view.html', dataset=dataset)
 
 @section.route('/<dataset>/edit', methods=['GET'])

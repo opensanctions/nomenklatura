@@ -4,6 +4,7 @@ import json
 from werkzeug.exceptions import NotFound
 from formencode.variabledecode import NestedVariables
 from flask import Response, current_app, request
+from sqlalchemy.orm.query import Query
 
 MIME_TYPES = {
         'text/html': 'html',
@@ -37,15 +38,17 @@ class JSONEncoder(json.JSONEncoder):
     method by calling that method and serializing the result. """
 
     def encode(self, obj):
-        if hasattr(obj, 'to_dict'):
-            obj = obj.to_dict()
+        if hasattr(obj, 'as_dict'):
+            obj = obj.as_dict()
         return super(JSONEncoder, self).encode(obj)
 
     def default(self, obj):
-        if hasattr(obj, 'to_dict'):
-            return obj.to_dict()
+        if hasattr(obj, 'as_dict'):
+            return obj.as_dict()
         if isinstance(obj, datetime):
             return obj.isoformat()
+        if isinstance(obj, Query):
+            return list(obj)
         raise TypeError("%r is not JSON serializable" % obj)
 
 def jsonify(obj, status=200, headers=None):
