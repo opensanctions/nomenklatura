@@ -1,0 +1,30 @@
+{%extends "layout.html" %}
+
+{% block title %}
+  Create a new dataset
+{% endblock %}
+
+{% block content %}
+  <h2>Create a new dataset</h2>
+
+  <form class="form-horizontal">
+    <div class="control-group">
+      <label class="control-label" for="label">Title</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" id="label" name="label">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="name">Identifier</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" id="name" name="name">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create dataset</button>
+    </div>
+  </form>
+{% endblock %}
+
