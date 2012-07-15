@@ -6,6 +6,7 @@ from linkspotting.model import Dataset
 from linkspotting.util import jsonify, response_format
 from linkspotting.views.dataset import section as dataset
 from linkspotting.views.value import section as value
+from linkspotting.views.link import section as link
 
 @app.context_processor
 def set_template_globals():
@@ -43,6 +44,7 @@ def handle_invalid(exc):
 
 app.register_blueprint(dataset)
 app.register_blueprint(value)
+app.register_blueprint(link)
 
 @app.route('/')
 def index():

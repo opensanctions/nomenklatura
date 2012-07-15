@@ -30,8 +30,9 @@ def request_content():
     if format == 'json':
         return json.loads(request.data)
     else:
-        nv = NestedVariables()
-        return nv.to_python(request.form)
+        data = request.form if request.method == 'POST' \
+                else request.args
+        return NestedVariables().to_python(data)
 
 class JSONEncoder(json.JSONEncoder):
     """ This encoder will serialize all entities that have a to_dict

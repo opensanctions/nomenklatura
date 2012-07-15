@@ -8,6 +8,9 @@
     <h2 class="page-header">{{dataset.label}}</h2>
     <a href="{{url_for('dataset.edit', dataset=dataset.name)}}">Edit</a>
 
+    <a href="{{url_for('link.match_random', dataset=dataset.name)}}">Match
+        ({{unmatched}})</a>
+
 
     <table class="table table-striped">
         <tr>

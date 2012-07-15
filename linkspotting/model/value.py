@@ -25,6 +25,7 @@ class AvailableValue(FancyValidator):
 
 
 class ValueSchema(Schema):
+    allow_extra_fields = True
     value = All(validators.String(min=0, max=5000), AvailableValue())
 
 

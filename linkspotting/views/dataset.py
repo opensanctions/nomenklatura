@@ -6,7 +6,7 @@ from linkspotting.core import db
 from linkspotting.util import request_content, response_format
 from linkspotting.util import jsonify
 from linkspotting.views.common import handle_invalid
-from linkspotting.model import Dataset
+from linkspotting.model import Dataset, Link
 
 section = Blueprint('dataset', __name__)
 
@@ -37,7 +37,9 @@ def view(dataset):
     format = response_format()
     if format == 'json':
         return jsonify(dataset)
-    return render_template('dataset/view.html', dataset=dataset)
+    unmatched = Link.all_unmatched(dataset).count()
+    return render_template('dataset/view.html', 
+            dataset=dataset, unmatched=unmatched)
 
 @section.route('/<dataset>/edit', methods=['GET'])
 def edit(dataset):
