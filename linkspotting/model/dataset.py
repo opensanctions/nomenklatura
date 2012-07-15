@@ -38,6 +38,10 @@ class Dataset(db.Model):
         return dataset
 
     @classmethod
+    def all(cls):
+        return cls.query
+
+    @classmethod
     def create(cls, data):
         data = DatasetNewSchema().to_python(data)
         dataset = cls()

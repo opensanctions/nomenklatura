@@ -2,8 +2,15 @@ from flask import render_template, Response, request
 from formencode import Invalid
 
 from linkspotting.core import app, db
+from linkspotting.model import Dataset
 from linkspotting.util import jsonify, response_format
 from linkspotting.views.dataset import section as dataset
+
+@app.context_processor
+def set_template_globals():
+    return {
+        'datasets': Dataset.all()
+        }
 
 @app.errorhandler(401)
 @app.errorhandler(403)

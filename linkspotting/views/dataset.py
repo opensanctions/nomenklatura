@@ -13,7 +13,7 @@ section = Blueprint('dataset', __name__)
 def new():
     return render_template('dataset/new.html')
 
-@section.route('/datasets', methods=['POST'])
+@section.route('/', methods=['POST'])
 def create():
     data = request_content()
     try:
@@ -23,9 +23,8 @@ def create():
         return handle_invalid(inv, new, data=data)
 
 @section.route('/<dataset>', methods=['GET'])
-@section.route('/datasets/<dataset>', methods=['GET'])
 def view(dataset):
     dataset = Dataset.find(dataset)
-    return dataset.label
+    return render_template('dataset/view.html', dataset=dataset)
 
 
