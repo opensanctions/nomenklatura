@@ -1,4 +1,4 @@
-from flask import Blueprint, request, url_for
+from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
 from formencode import Invalid
 
@@ -18,7 +18,8 @@ def create():
     data = request_content()
     try:
         dataset = Dataset.create(data)
-        redirect(url_for('.view', dataset=dataset.name))
+        db.session.commit()
+        return redirect(url_for('.view', dataset=dataset.name))
     except Invalid, inv:
         return handle_invalid(inv, new, data=data)
 
@@ -26,5 +27,23 @@ def create():
 def view(dataset):
     dataset = Dataset.find(dataset)
     return render_template('dataset/view.html', dataset=dataset)
+
+@section.route('/<dataset>/edit', methods=['GET'])
+def edit(dataset):
+    dataset = Dataset.find(dataset)
+    return render_template('dataset/edit.html',
+                           dataset=dataset)
+
+@section.route('/<dataset>', methods=['POST'])
+def update(dataset):
+    dataset = Dataset.find(dataset)
+    data = request_content()
+    try:
+        dataset.update(data)
+        db.session.commit()
+        flash("Updated %s" % dataset.label, 'success')
+        return redirect(url_for('.view', dataset=dataset.name))
+    except Invalid, inv:
+        return handle_invalid(inv, edit, dataset.name, data=data)
 
 

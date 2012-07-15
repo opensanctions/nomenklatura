@@ -6,5 +6,6 @@
 
 {% block content %}
     <h2 class="page-header">{{dataset.label}}</h2>
+    <a href="{{url_for('dataset.edit', dataset=dataset.name)}}">Edit</a>
 {% endblock %}
 

@@ -1,16 +1,24 @@
 from datetime import datetime
 
-from formencode import Schema, validators
+from formencode import Schema, All, Invalid, validators
 
 from linkspotting.core import db
-from linkspotting.model.common import Name
+from linkspotting.model.common import Name, FancyValidator
 from linkspotting.exc import NotFound
 
+class AvailableDatasetName(FancyValidator):
+
+    def _to_python(self, value, state):
+        if Dataset.by_name(value) is None:
+            return value
+        raise Invalid('Dataset already exists.', value, None)
 
 class DatasetNewSchema(Schema):
-    name = Name(not_empty=True)
+    name = All(AvailableDatasetName(), Name(not_empty=True))
     label = validators.String(min=3, max=255)
 
+class DatasetEditSchema(Schema):
+    label = validators.String(min=3, max=255)
 
 class Dataset(db.Model):
     __tablename__ = 'dataset'
@@ -48,6 +56,10 @@ class Dataset(db.Model):
         dataset.name = data['name']
         dataset.label = data['label']
         db.session.add(dataset)
-        db.session.commit()
+        db.session.flush()
         return dataset
 
+    def update(self, data):
+        data = DatasetEditSchema().to_python(data)
+        self.label = data['label']
+        db.session.add(self)

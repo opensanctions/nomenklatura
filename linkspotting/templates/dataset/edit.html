@@ -1,0 +1,25 @@
+{%extends "layout.html" %}
+
+{% block title %}
+    {{dataset.label}}
+{% endblock %}
+
+{% block content %}
+    <h2 class="page-header">Edit: {{dataset.label}}</h2>
+
+    <form class="form-horizontal" method="POST"
+        action="{{url_for('dataset.update', dataset=dataset.name)}}">
+    <div class="control-group">
+      <label class="control-label" for="label">Title</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" id="label" name="label"
+        value="{{dataset.label}}">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+  </form>
+{% endblock %}
+
