@@ -4,6 +4,7 @@ from formencode import Schema, validators
 
 from linkspotting.core import db
 from linkspotting.model.common import Name
+from linkspotting.exc import NotFound
 
 
 class DatasetNewSchema(Schema):
@@ -28,7 +29,14 @@ class Dataset(db.Model):
     @classmethod
     def by_name(cls, name):
         return cls.query.filter_by(name=name).first()
-    
+
+    @classmethod
+    def find(cls, name):
+        dataset = cls.by_name(name)
+        if dataset is None:
+            raise NotFound("No such dataset: %s" % name)
+        return dataset
+
     @classmethod
     def create(cls, data):
         data = DatasetNewSchema().to_python(data)
