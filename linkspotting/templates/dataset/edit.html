@@ -16,6 +16,41 @@
         value="{{dataset.label}}">
       </div>
     </div>
+    <div class="control-group">
+      <label class="control-label" for="algorithm">Algorithm</label>
+      <div class="controls">
+          <select id="algorithm" name="algorithm">
+              <option value="levenshtein">Levenshtein distance</option>
+          </select>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="ignore_case">Case insensitivity</label>
+      <div class="controls">
+        <label type="checkbox">
+          <input type="checkbox" id="ignore_case" name="ignore_case" value="True">
+          If set, lower/uppercase spelling will be ignored.
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="normalize_text">Normalization</label>
+      <div class="controls">
+        <label type="checkbox">
+          <input type="checkbox" id="normalize_text" name="normalize_text" value="True">
+          Text will be cleaned up and control characters removed.
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="enable_invalid">Invalid values</label>
+      <div class="controls">
+        <label type="checkbox">
+            <input type="checkbox" id="enable_invalid" name="enable_invalid" value="True">
+            Incoming values can be marked as invalid.
+        </label>
+      </div>
+    </div>
 
     <div class="form-actions">
       <button type="submit" class="btn btn-primary">Update</button>

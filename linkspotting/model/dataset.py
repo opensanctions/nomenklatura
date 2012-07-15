@@ -19,6 +19,10 @@ class DatasetNewSchema(Schema):
 
 class DatasetEditSchema(Schema):
     label = validators.String(min=3, max=255)
+    algorithm = validators.String(min=3, max=255)
+    ignore_case = validators.StringBool(if_missing=False)
+    normalize_text = validators.StringBool(if_missing=False)
+    enable_invalid = validators.StringBool(if_missing=False)
 
 class Dataset(db.Model):
     __tablename__ = 'dataset'
@@ -26,6 +30,10 @@ class Dataset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode)
     label = db.Column(db.Unicode)
+    ignore_case = db.Column(db.Boolean, default=False)
+    normalize_text = db.Column(db.Boolean, default=True)
+    enable_invalid = db.Column(db.Boolean, default=True)
+    algorithm = db.Column(db.Unicode)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
@@ -40,6 +48,10 @@ class Dataset(db.Model):
             'id': self.id,
             'name': self.name,
             'label': self.label,
+            'ignore_case': self.ignore_case,
+            'normalize_text': self.normalize_text,
+            'enable_invalid': self.enable_invalid,
+            'algorithm': self.algorithm,
             'created_at': self.created_at,
             'updated_at': self.updated_at
             }
@@ -72,4 +84,8 @@ class Dataset(db.Model):
     def update(self, data):
         data = DatasetEditSchema().to_python(data)
         self.label = data['label']
+        self.normalize_text = data['normalize_text']
+        self.ignore_case = data['ignore_case']
+        self.enable_invalid = data['enable_invalid']
+        self.algorithm = data['algorithm']
         db.session.add(self)

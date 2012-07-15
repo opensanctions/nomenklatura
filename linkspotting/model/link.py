@@ -14,7 +14,9 @@ class LinkMatchState():
 class ValidChoice(FancyValidator):
 
     def _to_python(self, value, state):
-        if value in ['NEW', 'INVALID']:
+        if value == 'NEW':
+            return value
+        elif value == 'INVALID' and state.dataset.enable_invalid:
             return value
         value_obj = Value.by_id(state.dataset, value)
         if value_obj is not None:

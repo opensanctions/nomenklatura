@@ -33,12 +33,14 @@
                     <input type="text" name="value" value="">
                 </td>
             </tr>
+            {% if dataset.enable_invalid %}
             <tr>
                 <td><input type="radio" name="choice" value="INVALID"></td>
                 <td colspan="2">
                     <strong>Invalid value</strong>
                 </td>
             </tr>
+            {% endif %}
         </table>
         {% if random %}
             <input type="hidden" name="random" value="true">

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
-from formencode import Invalid
+from formencode import Invalid, htmlfill
 
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
@@ -44,8 +44,9 @@ def view(dataset):
 @section.route('/<dataset>/edit', methods=['GET'])
 def edit(dataset):
     dataset = Dataset.find(dataset)
-    return render_template('dataset/edit.html',
+    html = render_template('dataset/edit.html',
                            dataset=dataset)
+    return htmlfill.render(html, defaults=dataset.as_dict())
 
 @section.route('/<dataset>', methods=['POST'])
 def update(dataset):
@@ -57,6 +58,7 @@ def update(dataset):
         flash("Updated %s" % dataset.label, 'success')
         return redirect(url_for('.view', dataset=dataset.name))
     except Invalid, inv:
-        return handle_invalid(inv, edit, dataset.name, data=data)
+        return handle_invalid(inv, edit, 
+                args=[dataset.name], data=data)
 
 
