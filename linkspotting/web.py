@@ -1,8 +1,9 @@
-from flask import render_template, Response
+from flask import render_template, Response, request
 from formencode import Invalid
 
 from linkspotting.core import app, db
 from linkspotting.util import jsonify, response_format
+from linkspotting.views.dataset import section as dataset
 
 @app.errorhandler(401)
 @app.errorhandler(403)
@@ -32,14 +33,7 @@ def handle_invalid(exc):
     return Response(repr(exc.unpack_errors()), status=400, 
                     mimetype='text/plain')
 
-
-@app.route('/new', methods=['GET'])
-def dataset_new():
-    return render_template('dataset/new.html')
-
-@app.route('/new', methods=['POST'])
-def dataset_create():
-    return render_template('dataset/new.html')
+app.register_blueprint(dataset)
 
 @app.route('/')
 def index():

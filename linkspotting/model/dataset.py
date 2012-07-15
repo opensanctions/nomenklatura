@@ -20,7 +20,7 @@ class Dataset(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
-    values = db.relationship('Values', backref='dataset',
+    values = db.relationship('Value', backref='dataset',
                              lazy='dynamic')
     links = db.relationship('Link', backref='dataset',
                              lazy='dynamic')

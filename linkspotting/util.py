@@ -20,7 +20,7 @@ def request_format(request):
     """
     return MIME_TYPES.get(request.content_type, 'html')
 
-def request_content(request):
+def request_content():
     """
     Handle a request and return a generator which yields all rows 
     in the incoming set.
