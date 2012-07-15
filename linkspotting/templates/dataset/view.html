@@ -7,5 +7,32 @@
 {% block content %}
     <h2 class="page-header">{{dataset.label}}</h2>
     <a href="{{url_for('dataset.edit', dataset=dataset.name)}}">Edit</a>
+
+
+    <table class="table table-striped">
+        <tr>
+            <th>Value</th>
+            <th>Actions</th>
+        </tr>
+        {% for value in dataset.values %}
+            <tr>
+                <td><code>{{value.display_value}}</code></td>
+                <td><a href="{{url_for('value.view', dataset=dataset.name,
+                        value=value.id)}}" class="btn">edit</a></td>
+            </tr>
+        {% endfor %}
+        <form class="well form-inline" method="POST"
+            action="{{url_for('value.create', dataset=dataset.name)}}">
+            <tr>
+                <td>
+                    <input type="text" class="input-xlarge" id="value"
+                        name="value" placeholder="Add a value...">
+                </td>
+                <td>
+                    <button type="submit" class="btn btn-primary">add</button>
+                </td>
+            </tr>
+        </form>
+    </table>
 {% endblock %}
 

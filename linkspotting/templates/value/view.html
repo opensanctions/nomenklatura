@@ -1,0 +1,18 @@
+{%extends "layout.html" %}
+
+{% block title %}
+    {{value.display_value}} - {{dataset.label}}
+{% endblock %}
+
+{% block content %}
+    <h2 class="page-header">{{value.display_value}}</h2>
+    <a href="{{url_for('dataset.view', dataset=dataset.name)}}">back to
+        dataset</a>
+    <form class="well form-inline" method="POST"
+        action="{{url_for('value.update', dataset=dataset.name, value=value.id)}}">
+        <input type="text" class="input-xlarge" id="value" name="value"
+            value="{{value.value}}">
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}
+
