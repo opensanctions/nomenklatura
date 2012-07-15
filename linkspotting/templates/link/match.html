@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="page-header">Match: {{link.display_key}}</h2>
+    <h2 class="page-header">Match: <code>{{link.display_key}}</code></h2>
     <form class="" method="POST"
         action="{{url_for('link.match_save', dataset=dataset.name, link=link.id)}}">
         <table class="table table-striped">
@@ -19,7 +19,7 @@
             <tr>
                     <td><input type="radio" name="choice"
                         value="{{value.id}}"></td>
-                    <td>{{text}}</td>
+                    <td><code>{{text}}</code></td>
                     <td>{{score}}</td>
                 </tr>
             {% endfor %}
@@ -42,9 +42,9 @@
         </table>
         {% if random %}
             <input type="hidden" name="random" value="true">
-            <button type="submit" class="btn btn-primary">Next</button>
+            <button type="submit" class="btn btn-primary">Save &amp; Next</button>
             <a href="{{url_for('link.match_random', dataset=dataset.name)}}"
-                class="btn btn-danger">Skip</a>
+                class="btn btn-danger">Try another</a>
         {% else %}
             <button type="submit" class="btn btn-primary">Save</button>
         {% endif %}
