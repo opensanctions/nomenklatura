@@ -20,7 +20,9 @@
       <label class="control-label" for="algorithm">Algorithm</label>
       <div class="controls">
           <select id="algorithm" name="algorithm">
-              <option value="levenshtein">Levenshtein distance</option>
+              {% for value, label in algorithms %}
+                <option value="{{value}}">{{label}}</option>
+              {% endfor %}
           </select>
       </div>
     </div>

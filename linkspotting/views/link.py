@@ -10,6 +10,7 @@ from linkspotting.util import jsonify
 from linkspotting.exc import NotFound
 from linkspotting.views.common import handle_invalid
 from linkspotting.model import Dataset, Value, Link
+from linkspotting.matching import match as match_op
 
 section = Blueprint('link', __name__)
 
@@ -71,8 +72,7 @@ def match_random(dataset):
 def match(dataset, link, random=False):
     dataset = Dataset.find(dataset)
     link = Link.find(dataset, link)
-    #random = random or request.args.get('random')=='True'
-    choices = [(value.value, value, 5) for value in Value.all(dataset)]
+    choices = match_op(link.key, dataset)
     html = render_template('link/match.html',
             dataset=dataset, link=link, choices=choices, 
             random=random)

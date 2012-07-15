@@ -17,13 +17,6 @@ setup(
     include_package_data=False,
     zip_safe=False,
     install_requires=[
-        'sqlalchemy==0.7.8',
-        'Flask==0.9',
-        'Flask-Script==0.3.3',
-        'flask-sqlalchemy==0.16',
-        'SQLAlchemy==0.7.8',
-        'requests==0.13.2',
-        'FormEncode==1.2.4'
     ],
     tests_require=[],
     entry_points=\

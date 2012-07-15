@@ -7,6 +7,7 @@ from linkspotting.util import request_content, response_format
 from linkspotting.util import jsonify
 from linkspotting.views.common import handle_invalid
 from linkspotting.model import Dataset, Link
+from linkspotting.matching import get_algorithms
 
 section = Blueprint('dataset', __name__)
 
@@ -45,7 +46,8 @@ def view(dataset):
 def edit(dataset):
     dataset = Dataset.find(dataset)
     html = render_template('dataset/edit.html',
-                           dataset=dataset)
+                           dataset=dataset,
+                           algorithms=get_algorithms())
     return htmlfill.render(html, defaults=dataset.as_dict())
 
 @section.route('/<dataset>', methods=['POST'])
