@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="page-header">{{value.display_value}}</h2>
+    <h2 class="page-header">Value: {{value.display_value}}</h2>
     <a href="{{url_for('dataset.view', dataset=dataset.name)}}">back to
         dataset</a>
     <form class="well form-inline" method="POST"

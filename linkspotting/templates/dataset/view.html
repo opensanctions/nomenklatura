@@ -11,12 +11,14 @@
 
     <table class="table table-striped">
         <tr>
-            <th>Value</th>
+            <th width="80%">Value</th>
+            <th>Links</th>
             <th>Actions</th>
         </tr>
         {% for value in dataset.values %}
             <tr>
                 <td><code>{{value.display_value}}</code></td>
+                <td>{{value.links.count()}}</td>
                 <td><a href="{{url_for('value.view', dataset=dataset.name,
                         value=value.id)}}" class="btn">edit</a></td>
             </tr>
@@ -24,7 +26,7 @@
         <form class="well form-inline" method="POST"
             action="{{url_for('value.create', dataset=dataset.name)}}">
             <tr>
-                <td>
+                <td colspan="2">
                     <input type="text" class="input-xlarge" id="value"
                         name="value" placeholder="Add a value...">
                 </td>
