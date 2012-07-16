@@ -31,28 +31,43 @@ def view(dataset, link):
         return jsonify(link)
     return "Not implemented!"
 
+@section.route('/<dataset>/link', methods=['GET'])
+def view_by_key(dataset):
+    dataset = Dataset.find(dataset)
+    link = Link.by_key(dataset, request.args.get('key'))
+    if link is None:
+        raise NotFound("No such link: %s" % request.args.get('key'))
+    return view(dataset.name, link.id)
+
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
 def lookup(dataset):
     dataset = Dataset.find(dataset)
     data = request_content()
-    format = response_format()
+    if response_format() != 'json':
+        return Response("Not implemented!", status=400)
+
     try:
         link = Link.lookup(dataset, data)
         if link is None:
-            if format == 'json':
-                return jsonify({
-                    'is_matched': False,
-                    'value': None,
-                    'key': data.get('key'),
-                    'dataset': dataset.name
-                    }, status=404)
-            raise NotFound("No such link.")
+            return jsonify({
+                'is_matched': False,
+                'value': None,
+                'key': data.get('key'),
+                'dataset': dataset.name
+                }, status=404)
+
+        if isinstance(link, Value):
+            return jsonify({
+                'is_matched': True,
+                'value': link,
+                'key': data.get('key'),
+                'dataset': dataset.name
+                }, status=200)
+
         db.session.commit()
         status = 200 if link.is_matched else 404
         status = 418 if link.is_invalid else status
-        if format == 'json':
-            return jsonify(link, status=status)
-        return Response(repr(link), status=status)
+        return jsonify(link, status=status)
     except Invalid, inv:
         return handle_invalid(inv, index, data=data, 
                               args=[dataset.name])
@@ -97,6 +112,9 @@ def match_save(dataset, link):
                               args=[dataset.name, link.id, random])
 
     flash("Matched: %s" % link.key, "success")
+    format = response_format()
+    if format == 'json':
+        return jsonify(link)
     if random:
         return match_random(dataset.name)
     else:

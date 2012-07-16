@@ -95,6 +95,9 @@ class Link(db.Model):
     @classmethod
     def lookup(cls, dataset, data):
         data = LinkLookupSchema().to_python(data)
+        value = Value.by_value(dataset, data['key'])
+        if value is not None:
+            return value
         link = cls.by_key(dataset, data['key'])
         if link is not None or data['readonly']:
             return link

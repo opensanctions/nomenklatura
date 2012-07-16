@@ -14,5 +14,13 @@
             value="{{value.value}}">
         <button type="submit" class="btn btn-primary">Update</button>
     </form>
+
+    <table class="table table-striped">
+        {% for link in value.links %}
+            <tr>
+                <td><code>{{link.key}}</code></td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock %}
 

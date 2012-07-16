@@ -25,22 +25,10 @@ def handle_exceptions(exc):
     if format == 'json':
         body = {'status': exc.code,
                 'name': exc.name,
-                'description': exc.get_description(request.environ)}
+                'message': exc.get_description(request.environ)}
         return jsonify(body, status=exc.code,
                        headers=exc.get_headers(request.environ))
     return exc
-
-@app.errorhandler(Invalid)
-def handle_invalid(exc):
-    format = response_format()
-    if format == 'json':
-        body = {'status': 400,
-                'name': 'Invalid Data',
-                'description': unicode(exc),
-                'errors': exc.unpack_errors()}
-        return jsonify(body, status=400)
-    return Response(repr(exc.unpack_errors()), status=400, 
-                    mimetype='text/plain')
 
 app.register_blueprint(dataset)
 app.register_blueprint(value)

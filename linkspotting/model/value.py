@@ -19,7 +19,7 @@ class AvailableValue(FancyValidator):
         v = Value.by_value(state.dataset, value)
         if v is None:
             return value
-        if v.id == state.value.id:
+        if state.value and v.id == state.value.id:
             return value
         raise Invalid('Value already exists.', value, None)
 

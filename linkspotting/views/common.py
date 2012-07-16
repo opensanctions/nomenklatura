@@ -8,7 +8,7 @@ def handle_invalid(exc, html_func, data=None, args=()):
     if format == 'json':
         body = {'status': 400,
                 'name': 'Invalid Data',
-                'description': unicode(exc),
+                'message': unicode(exc),
                 'errors': exc.unpack_errors()}
         return jsonify(body, status=400)
     elif format == 'html':
