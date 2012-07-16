@@ -48,6 +48,23 @@
                         </li>
                     </ul>
                 </div>
+                <ul class="nav pull-right">
+                    {% if logged_in %}
+                        <li>
+                            <a href="{{url_for('logout')}}">
+                                <img src="http://parsely.com/media/old/images/social/github.png">
+                                {{login}}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{{url_for('login')}}">
+                                <img src="http://parsely.com/media/old/images/social/github.png">
+                                Login with GitHub</a>
+                        </li>
+
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </div>
