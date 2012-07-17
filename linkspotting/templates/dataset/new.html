@@ -4,9 +4,13 @@
   Create a new dataset
 {% endblock %}
 
-{% block content %}
-  <h2 class="page-header">Create a new dataset</h2>
+{% block breadcrumbs %}
+    <li>
+        Create a new dataset
+    </li>
+{% endblock %}
 
+{% block content %}
   <form class="form-horizontal" method="POST" action="/">
     <div class="control-group">
       <label class="control-label" for="label">Title</label>

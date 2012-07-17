@@ -5,8 +5,18 @@
     {{link.display_key}} - {{dataset.label}}
 {% endblock %}
 
+{% block breadcrumbs %}
+    <li>
+        <a href="{{url_for('dataset.view',
+            dataset=dataset.name)}}">{{dataset.label}}</a>
+        <span class="divider">/</span>
+    </li>
+    <li>
+        Reconcile
+    </li>
+{% endblock %}
+
 {% block content %}
-    <h2 class="page-header">Matching Tool</h2>
     <div class="row">
         <div class="span8">
             Candidate: <code>{{link.display_key}}</code>
@@ -16,14 +26,14 @@
                 action="{{url_for('link.match', dataset=dataset.name, link=link.id)}}">
                 <input type="hidden" name="random" value="{{random}}">
                 <input type="text" class="input-medium search-query"
-                    name="query">
-                <button type="submit" class="btn">Search</button>
+                    name="query" placeholder="Type a partial match...">
+                <button type="submit" class="btn">Filter</button>
             </form>
         </div>
     </div>
     <form class="" method="POST"
         action="{{url_for('link.match_save', dataset=dataset.name, link=link.id)}}">
-        <table class="table table-striped match-table">
+        <table class="table match-table table-condensed">
             <tr>
                 <th></th>
                 <th>Value</th>
@@ -34,7 +44,8 @@
             <tr>
                     <td><input type="radio" name="choice"
                         value="{{value.id}}"></td>
-                    <td><code>{{text}}</code></td>
+                    <td><code><a href="{{url_for('value.view',
+                                dataset=dataset.name, value=value.id)}}" target="_new">{{text}}</a></code></td>
                     <td>{{score}}</td>
                 </tr>
             {% endfor %}
@@ -61,11 +72,14 @@
         </table>
         {% if random %}
             <input type="hidden" name="random" value="true">
-            <button type="submit" class="btn btn-primary">Save &amp; Next</button>
+            <button type="submit" class="btn btn-success btn-large">
+                <i class="icon-ok icon-white"></i> Save &amp; Next</button>
             <a href="{{url_for('link.match_random', dataset=dataset.name)}}"
-                class="btn btn-danger">Try another</a>
+                class="btn btn-danger btn-large">
+                <i class="icon-random icon-white"></i> Try another</a>
         {% else %}
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="submit" class="btn btn-success btn-large">
+                <i class="icon-ok icon-white"></i> Save</button>
         {% endif %}
     </form>
 {% endblock %}

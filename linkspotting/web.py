@@ -15,6 +15,7 @@ from linkspotting.views.link import section as link
 def set_template_globals():
     return {
         'datasets': Dataset.all(),
+        'avatar_url': session.get('avatar_url'),
         'logged_in': 'login' in session,
         'login': session.get('login')
         }
@@ -59,6 +60,17 @@ def authorized(resp):
         session[k] = v
     return redirect(url_for('index'))
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/account')
+def account():
+    token, _ = session['access_token']
+    return render_template('account.html', 
+            api_key=token)
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    datasets = Dataset.all()
+    return render_template('index.html', datasets=datasets)

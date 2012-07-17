@@ -4,8 +4,18 @@
     {{dataset.label}}
 {% endblock %}
 
+{% block breadcrumbs %}
+    <li>
+        <a href="{{url_for('dataset.view',
+            dataset=dataset.name)}}">{{dataset.label}}</a>
+        <span class="divider">/</span>
+    </li>
+    <li>
+        Dataset Settings
+    </li>
+{% endblock %}
+
 {% block content %}
-    <h2 class="page-header">Edit: {{dataset.label}}</h2>
 
     <form class="form-horizontal" method="POST"
         action="{{url_for('dataset.update', dataset=dataset.name)}}">

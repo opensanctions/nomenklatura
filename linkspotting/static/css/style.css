@@ -1,6 +1,24 @@
 
-.post-navbar {
-    margin-top: 4em;
+.breadcrumb {
+    margin-top: 2em;
+}
+
+footer {
+    padding-bottom: 2em;
+}
+
+footer ul {
+    list-style-type: none;
+    margin: 0px;
+    margin-top: 2em;
+    border-top: 1px solid #eee;
+    padding-top: 1em;
+}
+
+footer ul li {
+    float: right;
+    display: inline-block;
+    margin-left: 2em;
 }
 
 table .pager {
@@ -9,4 +27,8 @@ table .pager {
 
 table .pager ul {
     margin-left: 0;
+}
+
+table input[type="text"] {
+    margin-bottom: 0px;
 }

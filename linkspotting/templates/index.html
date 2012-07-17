@@ -4,7 +4,36 @@
   Let's link!
 {% endblock %}
 
+{% block breadcrumbs %}
+    Addictive data linking tool.
+{% endblock %}
+
 {% block content %}
-  I am a banana!
+    <div class="row">
+        <div class="span4">
+            <p>
+                A lot of time in data wrangling is spent
+                making mappings of variant names to a canonical form.
+                This app provides an easy-to-use, web-based method for 
+                creating such mappings, to allow for a more managed 
+                data cleansing pipeline.
+            </p>
+            <a class="btn btn-info" href="{{url_for('about')}}">
+                <i class="icon-info-sign icon-white"></i> Learn more
+                </a>
+            <a class="btn btn-success" href="{{url_for('dataset.new')}}">
+                <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
+        </div>
+        <div class="span8">
+            <table class="table table-condensed">
+                {% for dataset in datasets %}
+                <tr>
+                    <td><a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a></td>
+                    <td>{{dataset.values.count()}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
 {% endblock %}
 
