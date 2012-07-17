@@ -6,7 +6,7 @@ from formencode import Invalid, htmlfill
 
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
-from linkspotting.util import jsonify
+from linkspotting.util import jsonify, Pager
 from linkspotting.exc import NotFound
 from linkspotting.views.common import handle_invalid
 from linkspotting.model import Dataset, Value, Link
@@ -81,21 +81,29 @@ def match_random(dataset):
         return redirect(url_for('dataset.view',
             dataset=dataset.name))
     link = links.offset(randint(0, count-1)).first()
-    return match(dataset.name, link.id, random=True)
+    return redirect(url_for('.match', dataset=dataset.name, link=link.id,
+                            random=True))
 
 @section.route('/<dataset>/links/<link>/match', methods=['GET'])
 def match(dataset, link, random=False):
     dataset = Dataset.find(dataset)
     link = Link.find(dataset, link)
-    choices = match_op(link.key, dataset)
+    random = random or request.args.get('random')=='True'
+    choices = match_op(link.key, dataset,
+            query=request.args.get('query'))
+    pager = Pager(choices, '.match',
+        dataset=dataset.name, link=link.id,
+        limit=10)
     html = render_template('link/match.html',
-            dataset=dataset, link=link, choices=choices, 
+            dataset=dataset, link=link, choices=pager,
             random=random)
     choice = 'INVALID' if link.is_invalid else link.value_id
     if len(choices):
         choice = choices[0][1].id if choice is None else choice
-    return htmlfill.render(html,
-            defaults={'choice': choice, 'value': link.key,
+    return htmlfill.render(html, force_defaults=False,
+            defaults={'choice': choice,
+                      'value': link.key,
+                      'query': request.args.get('query', ''),
                       'random': random})
 
 @section.route('/<dataset>/links/<link>/match', methods=['POST'])

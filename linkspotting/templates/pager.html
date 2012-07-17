@@ -1,0 +1,21 @@
+{% macro pager(pager) %}
+  {% if pager.pages > 1 %}
+  <div class="pager">
+    <ul>
+        {% if pager.has_prev %}
+          <li class="previous">
+            <a href="{{ pager.prev_url }}">&laquo; back</a>
+          </li>
+        {% endif %}
+        <li class="index">
+          <span>{{ pager.page }} / {{ pager.pages }}</span>
+        </li>
+        {% if pager.has_next %}
+          <li class="next">
+            <a href="{{ pager.next_url }}">next &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+{% endmacro %}

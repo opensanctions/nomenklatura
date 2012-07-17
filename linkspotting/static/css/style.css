@@ -2,3 +2,11 @@
 .post-navbar {
     margin-top: 4em;
 }
+
+table .pager {
+    margin-bottom: 0;
+}
+
+table .pager ul {
+    margin-left: 0;
+}

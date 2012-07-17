@@ -1,4 +1,5 @@
 {%extends "layout.html" %}
+{%from "pager.html" import pager %}
 
 {% block title %}
     {{dataset.label}}
@@ -18,7 +19,7 @@
             <th>Links</th>
             <th>Actions</th>
         </tr>
-        {% for value in dataset.values %}
+        {% for value in values %}
             <tr>
                 <td><code>{{value.display_value}}</code></td>
                 <td>{{value.links.count()}}</td>
@@ -26,6 +27,11 @@
                         value=value.id)}}" class="btn btn-small">edit</a></td>
             </tr>
         {% endfor %}
+        <tr>
+            <td colspan="3">
+                {{ pager(values) }}
+            </td>
+        </tr>
         <form class="well form-inline" method="POST"
             action="{{url_for('value.create', dataset=dataset.name)}}">
             <tr>

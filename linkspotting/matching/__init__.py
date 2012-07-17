@@ -24,12 +24,15 @@ def get_candidates(dataset):
             for link in value.links:
                 yield link.key, value
 
-def match(text, dataset):
+def match(text, dataset, query=None):
+    query = '' if query is None else query.strip().lower()
     text_normalized = normalize(text, dataset)
     matches = []
     func = ALGORITHMS.get(dataset.algorithm)
     for candidate, value in get_candidates(dataset):
         candidate_normalized = normalize(candidate, dataset)
+        if len(query) and query not in candidate_normalized.lower():
+            continue
         score = func(text_normalized, candidate_normalized)
         matches.append((candidate, value, score))
     matches = sorted(matches, key=lambda (c,v,s): s, reverse=True)

@@ -4,9 +4,9 @@ from formencode import Invalid, htmlfill
 
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
-from linkspotting.util import jsonify
+from linkspotting.util import jsonify, Pager
 from linkspotting.views.common import handle_invalid
-from linkspotting.model import Dataset, Link
+from linkspotting.model import Dataset, Link, Value
 from linkspotting.matching import get_algorithms
 
 section = Blueprint('dataset', __name__)
@@ -39,7 +39,11 @@ def view(dataset):
     if format == 'json':
         return jsonify(dataset)
     unmatched = Link.all_unmatched(dataset).count()
-    return render_template('dataset/view.html', 
+    values = Value.all(dataset)
+    pager = Pager(values, '.view', dataset=dataset.name,
+                  limit=10)
+    return render_template('dataset/view.html',
+            values=pager,
             dataset=dataset, unmatched=unmatched)
 
 @section.route('/<dataset>/edit', methods=['GET'])
