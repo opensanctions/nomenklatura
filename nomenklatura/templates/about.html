@@ -9,17 +9,103 @@
 {% endblock %}
 
 {% block content %}
-    <h3>About nomenklatura</h3>
-    TODO: Explain what this does. 
+  <h3>About nomenklatura</h3>
+  <br>
+  <div class="row">
+    <div class="span6">
+      <p><strong>nomenklatura</strong> is a reference data recon server. It allows
+      users to manage a list of canonical values (e.g. person or organisation
+      names) and aliases that connect to one of the canonical values. This helps 
+      to clean up messy data in which a single entity may be referred to by many 
+      names.</p>
+    </div>
+    <div class="span6">
+      <p>The key elements in the service include the <code>dataset</code>, which 
+      is a segmented unit of reference data, a set of <code>values</code> - i.e.
+      the canonical forms - and a set of <code>link</code> which connect a
+      non-standard form to a <code>value</code>.</p>
+    </div>
+  </div>
+  <hr/>
+  <h3>Using the API</h3>
+  <br>
+  <a name="api"></a>
+  <div class="row">
+    <div class="span6">
+      <p>The API is spread through the application, JSON representations of most
+      pages can be retrieved by setting an <code>Accept</code> header. Similarly, 
+      all forms can be submitted as JSON data by setting the requests 
+      <code>Content-Type</code>.</p>
+      <p>To authenticate against the API, look up your API key on the user page
+      after you are signed in. The API key can be sent either as the content of 
+      an <code>Authorization</code> header or as a query paramter called 
+      <code>api_key</code>.</p>
+      <p>When a new key is looked up via the API, a new <code>link</code> object is
+      created, which will be added to the queue and presented to users for manual
+      linkage. Once a link exists, the API will return the corresponding 
+      <code>value</code>.</p>
+    </div>
+    <div class="span6">
+      <ul class="api-list">
+        <li><code>/{dataset}</code> - retrieve basic dataset metadata, including
+        the reconciliation algorithm parameters.</li>
+        <li><code>/{dataset}/lookup</code> - look up a link matching the given
+        <code>key</code>. By default, if no judgement exists, a new link element
+        is created and queued for reconciliation. This does not happen if the
+        user is not authenticated or the <code>readonly</code> query parameter
+        is set.</li>
+        <li><code>/{dataset}/values</code> - retrieve a listing of values. A new
+        value can be created with a POST request to this location, with a single
+        field called <code>value</code> and an optional <code>data</code>
+        dictionary.</li>
+        <li><code>/{dataset}/values/{id}</code> - retrieve an individual value, 
+        or update the same values with a POST request to this location.</li>
+        <li><code>/{dataset}/links</code> - retrieve a listing of links.</li>
+        <li><code>/{dataset}/links/{id}</code> - retrieve an individual 
+        <li><code>/{dataset}/links/{id}/match</code> - get a list of options
+        for the link or POST a link decision as the <code>choice</code> 
+        parameter.</li>
+      </ul>
+    </div>
+  </div>
+  <hr/>
+  <h3>nomenklatura-client for Python</h3>
+  <br>
+  <div class="row">
+    <div class="span6">
+      <p>To facilitate the use of the API in Python, a client library is
+      available: <a href="https://github.com/pudo/nomenklatura-client">https://github.com/pudo/nomenklatura-client</a></p>
+      <p>To install the library from the command line, try this
+      command:</p>
+      <pre>pip install -e git+https://github.com/pudo/nomenklatura-client#egg=nomenklatura-client</pre>
+    </div>
+    <div class="span6">
+      <pre class="prettyprint">from nkclient import NKDataset, NKNoMatch, NKInvalid
 
-    <h3>Using the API</h3>
-    <a name="api"></a>
-    TODO 2: Api Docs
-
-    <h3>License</h3>
-    <p>
-      By submitting databases to this service you agree to license them under 
-      the terms of the ODbL.
-    </p>
+dataset = NKDataset('my-dataset', api_key='..')
+try:
+  key = 'This needs to be reconciled'
+  value = dataset.lookup(key, readonly=False)
+  print value.value
+except NKNoMatch nnm:
+  # no match exists, the new key has been queued
+  # for reconciliation.
+except NKInvalid inv:
+  # the key is known but not a valid value (i.e.
+  # data error)</pre>
+    </div>
+  </div>
+  <hr/>
+  <h3>License</h3>
+  <br/>
+  <div class="row">
+    <div class="span12">
+      <p>
+        By submitting databases to this service you agree to license them under 
+        the terms of the <a href="http://opendatacommons.org/licenses/odbl/">Open
+        Database License</a>.
+      </p>
+    </div>
+  </div>
 {% endblock %}
 

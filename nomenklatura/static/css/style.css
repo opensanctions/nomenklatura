@@ -32,3 +32,11 @@ table .pager ul {
 table input[type="text"] {
     margin-bottom: 0px;
 }
+
+ul.api-list li {
+  margin-bottom: 0.5em;
+}
+
+code {
+  font-size: 10px;
+}
