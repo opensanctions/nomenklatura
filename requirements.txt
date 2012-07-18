@@ -7,4 +7,4 @@ requests==0.13.2
 -e git+git://github.com/seatgeek/fuzzywuzzy.git#egg=fuzzywuzzy
 FormEncode==1.2.4
 Python-Levenshtein==0.10.2
-psycopg2=2.4.5
+psycopg2==2.4.5
