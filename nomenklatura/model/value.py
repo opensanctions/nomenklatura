@@ -136,6 +136,7 @@ class Value(db.Model):
         link.value = target
         link.dataset = self.dataset
         link.is_matched = True
+        db.session.delete(self)
         db.session.add(link)
         db.session.commit()
         return target
