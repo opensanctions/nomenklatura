@@ -1,6 +1,6 @@
 from flask import request
 
-from linkspotting.exc import Forbidden
+from nomenklatura.exc import Forbidden
 
 def logged_in():
     return request.account is not None

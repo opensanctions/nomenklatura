@@ -2,14 +2,14 @@ from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
 from formencode import Invalid
 
-from linkspotting.core import db
-from linkspotting.util import request_content, response_format
-from linkspotting.util import jsonify
-from linkspotting import authz
-from linkspotting.exc import NotFound
-from linkspotting.views.dataset import view as view_dataset
-from linkspotting.views.common import handle_invalid
-from linkspotting.model import Dataset, Value
+from nomenklatura.core import db
+from nomenklatura.util import request_content, response_format
+from nomenklatura.util import jsonify
+from nomenklatura import authz
+from nomenklatura.exc import NotFound
+from nomenklatura.views.dataset import view as view_dataset
+from nomenklatura.views.common import handle_invalid
+from nomenklatura.model import Dataset, Value
 
 section = Blueprint('value', __name__)
 

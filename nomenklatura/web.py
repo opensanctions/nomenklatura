@@ -4,14 +4,14 @@ from flask import url_for, session, redirect, flash
 import requests
 from formencode import Invalid
 
-from linkspotting.core import app, db, github
-from linkspotting.model import Dataset, Account
-from linkspotting.exc import Unauthorized
-from linkspotting import authz
-from linkspotting.util import jsonify, response_format
-from linkspotting.views.dataset import section as dataset
-from linkspotting.views.value import section as value
-from linkspotting.views.link import section as link
+from nomenklatura.core import app, db, github
+from nomenklatura.model import Dataset, Account
+from nomenklatura.exc import Unauthorized
+from nomenklatura import authz
+from nomenklatura.util import jsonify, response_format
+from nomenklatura.views.dataset import section as dataset
+from nomenklatura.views.value import section as value
+from nomenklatura.views.link import section as link
 
 @app.before_request
 def check_auth():

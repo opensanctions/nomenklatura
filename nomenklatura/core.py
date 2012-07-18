@@ -9,13 +9,13 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flaskext.oauth import OAuth
 
-from linkspotting import default_settings
+from nomenklatura import default_settings
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 app.config.from_object(default_settings)
-app.config.from_envvar('LINKSPOTTING_SETTINGS', silent=True)
+app.config.from_envvar('nomenklatura_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 

@@ -6,7 +6,7 @@ from formencode.variabledecode import NestedVariables
 from flask import Response, current_app, request
 from sqlalchemy.orm.query import Query
 
-from linkspotting.pager import Pager
+from nomenklatura.pager import Pager
 
 MIME_TYPES = {
         'text/html': 'html',

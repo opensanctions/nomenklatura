@@ -1,7 +1,7 @@
 from flask import Response
 from formencode import htmlfill
 
-from linkspotting.util import response_format, jsonify
+from nomenklatura.util import response_format, jsonify
 
 def handle_invalid(exc, html_func, data=None, args=()):
     format = response_format()

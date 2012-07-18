@@ -1,8 +1,8 @@
 from flaskext.script import Manager
 
-from linkspotting.core import app, db
-from linkspotting.model import *
-from linkspotting import web
+from nomenklatura.core import app, db
+from nomenklatura.model import *
+from nomenklatura import web
 
 manager = Manager(app)
 

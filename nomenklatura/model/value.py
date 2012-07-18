@@ -3,8 +3,8 @@ from datetime import datetime
 from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
 
-from linkspotting.core import db
-from linkspotting.model.common import JsonType, DataBlob
+from nomenklatura.core import db
+from nomenklatura.model.common import JsonType, DataBlob
 
 
 class ValueState():

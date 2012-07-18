@@ -2,9 +2,9 @@ from datetime import datetime
 
 from formencode import Schema, Invalid, validators
 
-from linkspotting.core import db
-from linkspotting.model.common import Name, FancyValidator
-from linkspotting.model.value import Value
+from nomenklatura.core import db
+from nomenklatura.model.common import Name, FancyValidator
+from nomenklatura.model.value import Value
 
 class LinkMatchState():
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 from uuid import uuid4
 
-from linkspotting.core import db
-from linkspotting.model.common import JsonType, DataBlob
+from nomenklatura.core import db
+from nomenklatura.model.common import JsonType, DataBlob
 
 
 def make_key():

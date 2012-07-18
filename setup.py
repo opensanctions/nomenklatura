@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='linkspotting',
+    name='nomenklatura',
     version='0.1',
     description="Make record linkages on the web.",
     long_description='',

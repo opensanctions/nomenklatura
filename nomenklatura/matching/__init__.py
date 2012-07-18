@@ -1,10 +1,10 @@
 
-from linkspotting.core import db
-from linkspotting.model import Value
+from nomenklatura.core import db
+from nomenklatura.model import Value
 
-from linkspotting.matching.normalize import normalize
-from linkspotting.matching.levenshtein import levenshtein
-from linkspotting.matching.fw import fw
+from nomenklatura.matching.normalize import normalize
+from nomenklatura.matching.levenshtein import levenshtein
+from nomenklatura.matching.fw import fw
 
 ALGORITHMS = {
         'levenshtein': levenshtein,

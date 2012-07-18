@@ -2,13 +2,13 @@ from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
 from formencode import Invalid, htmlfill
 
-from linkspotting.core import db
-from linkspotting.util import request_content, response_format
-from linkspotting.util import jsonify, Pager
-from linkspotting import authz
-from linkspotting.views.common import handle_invalid
-from linkspotting.model import Dataset, Link, Value
-from linkspotting.matching import get_algorithms
+from nomenklatura.core import db
+from nomenklatura.util import request_content, response_format
+from nomenklatura.util import jsonify, Pager
+from nomenklatura import authz
+from nomenklatura.views.common import handle_invalid
+from nomenklatura.model import Dataset, Link, Value
+from nomenklatura.matching import get_algorithms
 
 section = Blueprint('dataset', __name__)
 

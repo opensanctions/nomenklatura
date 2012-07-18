@@ -4,14 +4,14 @@ from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect, Response
 from formencode import Invalid, htmlfill, validators
 
-from linkspotting.core import db
-from linkspotting.util import request_content, response_format
-from linkspotting.util import jsonify, Pager
-from linkspotting import authz
-from linkspotting.exc import NotFound
-from linkspotting.views.common import handle_invalid
-from linkspotting.model import Dataset, Value, Link
-from linkspotting.matching import match as match_op
+from nomenklatura.core import db
+from nomenklatura.util import request_content, response_format
+from nomenklatura.util import jsonify, Pager
+from nomenklatura import authz
+from nomenklatura.exc import NotFound
+from nomenklatura.views.common import handle_invalid
+from nomenklatura.model import Dataset, Value, Link
+from nomenklatura.matching import match as match_op
 
 section = Blueprint('link', __name__)
 

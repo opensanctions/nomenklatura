@@ -2,9 +2,9 @@ from datetime import datetime
 
 from formencode import Schema, All, Invalid, validators
 
-from linkspotting.core import db
-from linkspotting.model.common import Name, FancyValidator
-from linkspotting.exc import NotFound
+from nomenklatura.core import db
+from nomenklatura.model.common import Name, FancyValidator
+from nomenklatura.exc import NotFound
 
 class AvailableDatasetName(FancyValidator):
 
