@@ -45,7 +45,8 @@
                     <td><input type="radio" name="choice"
                         value="{{value.id}}"></td>
                     <td><code><a href="{{url_for('value.view',
-                                dataset=dataset.name, value=value.id)}}" target="_new">{{text}}</a></code></td>
+                                dataset=dataset.name, value=value.id)}}"
+                                target="_new">{{value.value}}</a></code></td>
                     <td>{{score}}</td>
                 </tr>
             {% endfor %}

@@ -5,6 +5,7 @@ from formencode import Schema, Invalid, validators
 from nomenklatura.core import db
 from nomenklatura.model.common import Name, FancyValidator
 from nomenklatura.model.value import Value
+from nomenklatura.matching import match as match_op
 
 class LinkMatchState():
 
@@ -104,11 +105,19 @@ class Link(db.Model):
         if value is not None:
             return value
         link = cls.by_key(dataset, data['key'])
-        if link is not None or readonly:
+        if link is not None:
             return link
+        choices = match_op(data['key'], dataset)
+        choices = filter(lambda c,v,s: s==100, choices)
+        if len(choices)==1:
+            c, value, s = choices.pop()
+        if readonly:
+            return value
         link = cls()
         link.creator = account
         link.dataset = dataset
+        link.value = value
+        link.is_matched = value is not None
         link.key = data['key']
         db.session.add(link)
         db.session.flush()
