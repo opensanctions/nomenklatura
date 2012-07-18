@@ -40,6 +40,9 @@ class Link(db.Model):
     is_matched = db.Column(db.Boolean, default=False)
     is_invalid = db.Column(db.Boolean, default=False)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
+    creator_id = db.Column(db.Integer, db.ForeignKey('account.id'))
+    matcher_id = db.Column(db.Integer, db.ForeignKey('account.id'),
+            nullable=True)
     value_id = db.Column(db.Integer, db.ForeignKey('value.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
@@ -51,8 +54,10 @@ class Link(db.Model):
             'key': self.key,
             'value': self.value.as_dict() if self.value else None,
             'created_at': self.created_at,
+            'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
             'is_matched': self.is_matched,
+            'matcher': self.matcher.as_dict() if self.matcher else None,
             'is_invalid': self.is_invalid,
             'dataset': self.dataset.name
             }
@@ -93,7 +98,7 @@ class Link(db.Model):
         return link
 
     @classmethod
-    def lookup(cls, dataset, data):
+    def lookup(cls, dataset, data, account):
         data = LinkLookupSchema().to_python(data)
         value = Value.by_value(dataset, data['key'])
         if value is not None:
@@ -102,16 +107,18 @@ class Link(db.Model):
         if link is not None or data['readonly']:
             return link
         link = cls()
+        link.creator = account
         link.dataset = dataset
         link.key = data['key']
         db.session.add(link)
         db.session.flush()
         return link
 
-    def match(self, dataset, data):
+    def match(self, dataset, data, account):
         state = LinkMatchState(dataset)
         data = LinkMatchSchema().to_python(data, state)
         self.is_matched = True
+        self.matcher = account
         if data['choice'] == 'INVALID':
             self.value = None
             self.is_invalid = True

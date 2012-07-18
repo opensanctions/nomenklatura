@@ -20,15 +20,24 @@
             </p>
             <a class="btn btn-info" href="{{url_for('about')}}">
                 <i class="icon-info-sign icon-white"></i> Learn more
-                </a>
-            <a class="btn btn-success" href="{{url_for('dataset.new')}}">
-                <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
+            </a>
+            {% if authz.dataset_create() %}
+                <a class="btn btn-success" href="{{url_for('dataset.new')}}">
+                    <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
+            {% else %}
+                <a class="btn btn-success" href="{{url_for('login')}}">
+                    <i class="icon-plus-sign icon-white"></i> Login with GitHub</a>
+            {% endif %}
         </div>
         <div class="span8">
             <table class="table table-condensed">
                 {% for dataset in datasets %}
                 <tr>
-                    <td><a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a></td>
+                    <td>
+                        {{dataset.owner.login}}
+                        <span class="divider">/</span>
+                        <a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a>
+                    </td>
                     <td>{{dataset.values.count()}}</td>
                 </tr>
                 {% endfor %}

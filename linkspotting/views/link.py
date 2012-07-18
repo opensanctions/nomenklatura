@@ -7,6 +7,7 @@ from formencode import Invalid, htmlfill
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
 from linkspotting.util import jsonify, Pager
+from linkspotting import authz
 from linkspotting.exc import NotFound
 from linkspotting.views.common import handle_invalid
 from linkspotting.model import Dataset, Value, Link
@@ -42,12 +43,13 @@ def view_by_key(dataset):
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
 def lookup(dataset):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     data = request_content()
     if response_format() != 'json':
         return Response("Not implemented!", status=400)
 
     try:
-        link = Link.lookup(dataset, data)
+        link = Link.lookup(dataset, data, request.account)
         if link is None:
             return jsonify({
                 'is_matched': False,
@@ -75,6 +77,7 @@ def lookup(dataset):
 @section.route('/<dataset>/match', methods=['GET'])
 def match_random(dataset):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     links = Link.all_unmatched(dataset)
     count = links.count()
     if count == 0:
@@ -87,6 +90,7 @@ def match_random(dataset):
 @section.route('/<dataset>/links/<link>/match', methods=['GET'])
 def match(dataset, link, random=False):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     link = Link.find(dataset, link)
     random = random or request.args.get('random')=='True'
     choices = match_op(link.key, dataset,
@@ -109,11 +113,12 @@ def match(dataset, link, random=False):
 @section.route('/<dataset>/links/<link>/match', methods=['POST'])
 def match_save(dataset, link):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     link = Link.find(dataset, link)
     random = request.form.get('random')=='True'
     data = request_content()
     try:
-        link.match(dataset, data)
+        link.match(dataset, data, request.account)
         db.session.commit()
     except Invalid, inv:
         return handle_invalid(inv, match, data=data, 

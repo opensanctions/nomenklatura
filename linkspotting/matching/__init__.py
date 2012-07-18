@@ -28,7 +28,7 @@ def match(text, dataset, query=None):
     query = '' if query is None else query.strip().lower()
     text_normalized = normalize(text, dataset)
     matches = []
-    func = ALGORITHMS.get(dataset.algorithm)
+    func = ALGORITHMS.get(dataset.algorithm, levenshtein)
     for candidate, value in get_candidates(dataset):
         candidate_normalized = normalize(candidate, dataset)
         if len(query) and query not in candidate_normalized.lower():

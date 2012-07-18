@@ -22,6 +22,7 @@ class DatasetEditSchema(Schema):
     algorithm = validators.String(min=3, max=255)
     match_links = validators.StringBool(if_missing=False)
     ignore_case = validators.StringBool(if_missing=False)
+    public_edit = validators.StringBool(if_missing=False)
     normalize_text = validators.StringBool(if_missing=False)
     enable_invalid = validators.StringBool(if_missing=False)
 
@@ -33,9 +34,11 @@ class Dataset(db.Model):
     label = db.Column(db.Unicode)
     ignore_case = db.Column(db.Boolean, default=False)
     match_links = db.Column(db.Boolean, default=False)
+    public_edit = db.Column(db.Boolean, default=False)
     normalize_text = db.Column(db.Boolean, default=True)
     enable_invalid = db.Column(db.Boolean, default=True)
     algorithm = db.Column(db.Unicode)
+    owner_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
@@ -50,8 +53,10 @@ class Dataset(db.Model):
             'id': self.id,
             'name': self.name,
             'label': self.label,
+            'owner': self.owner.as_dict(),
             'ignore_case': self.ignore_case,
             'match_links': self.match_links,
+            'public_edit': self.public_edit,
             'normalize_text': self.normalize_text,
             'enable_invalid': self.enable_invalid,
             'algorithm': self.algorithm,
@@ -75,9 +80,10 @@ class Dataset(db.Model):
         return cls.query
 
     @classmethod
-    def create(cls, data):
+    def create(cls, data, account):
         data = DatasetNewSchema().to_python(data)
         dataset = cls()
+        dataset.owner = account
         dataset.name = data['name']
         dataset.label = data['label']
         db.session.add(dataset)
@@ -89,6 +95,7 @@ class Dataset(db.Model):
         self.label = data['label']
         self.normalize_text = data['normalize_text']
         self.ignore_case = data['ignore_case']
+        self.public_edit = data['public_edit']
         self.match_links = data['match_links']
         self.enable_invalid = data['enable_invalid']
         self.algorithm = data['algorithm']

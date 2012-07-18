@@ -5,6 +5,7 @@ from formencode import Invalid
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
 from linkspotting.util import jsonify
+from linkspotting import authz
 from linkspotting.exc import NotFound
 from linkspotting.views.dataset import view as view_dataset
 from linkspotting.views.common import handle_invalid
@@ -23,9 +24,10 @@ def index(dataset):
 @section.route('/<dataset>/values', methods=['POST'])
 def create(dataset):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     data = request_content()
     try:
-        value = Value.create(dataset, data)
+        value = Value.create(dataset, data, request.account)
         db.session.commit()
         return redirect(url_for('.view',
             dataset=dataset.name,
@@ -55,10 +57,11 @@ def view_by_value(dataset):
 @section.route('/<dataset>/values/<value>', methods=['POST'])
 def update(dataset, value):
     dataset = Dataset.find(dataset)
+    authz.require(authz.dataset_edit(dataset))
     value = Value.find(dataset, value)
     data = request_content()
     try:
-        value.update(data)
+        value.update(data, request.account)
         db.session.commit()
         flash("Updated %s" % value.value, 'success')
         return redirect(url_for('.view', dataset=dataset.name, value=value.id))

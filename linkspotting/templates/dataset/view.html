@@ -24,13 +24,23 @@
                 Link candidates are added via the <a href="{{url_for('about',
                     _anchor='api')}}">API</a>.
             </p>
-            <a class="btn btn-primary" href="{{url_for('link.match_random', dataset=dataset.name)}}">
-                <i class="icon-check icon-white"></i> Reconcile ({{unmatched}})</a>
-            <a class="btn" href="{{url_for('dataset.edit',
-                dataset=dataset.name)}}">
-                <i class="icon-cog"></i> Settings</a>
+            {% if authz.dataset_edit(dataset) %}
+                <a class="btn btn-primary" href="{{url_for('link.match_random', dataset=dataset.name)}}">
+                    <i class="icon-check icon-white"></i> Reconcile ({{unmatched}})</a>
+            {% endif %}
+            {% if authz.dataset_manage(dataset) %}
+                <a class="btn" href="{{url_for('dataset.edit',
+                    dataset=dataset.name)}}">
+                    <i class="icon-cog"></i> Settings</a>
+            {% endif %}
         </div>
         <div class="span9">
+            <form class="form-search" method="GET"
+                action="{{url_for('dataset.view', dataset=dataset.name)}}">
+                <input type="text" class="search-query span8"
+                    name="query" value="{{query}}" placeholder="Find a value">
+                <button type="submit" class="btn">Filter</button>
+            </form>
             <table class="table table-striped table-condensed">
                 <tr>
                     <th width="90%">Value</th>
@@ -43,18 +53,20 @@
                         <td>{{value.links.count()}}</td>
                     </tr>
                 {% endfor %}
-                <form class="well form-inline" method="POST"
-                    action="{{url_for('value.create', dataset=dataset.name)}}">
-                    <tr>
-                        <td colspan="1">
-                            <input type="text" class="input-xlarge" id="value"
-                                name="value" placeholder="Add a value...">
-                        </td>
-                        <td>
-                            <button type="submit" class="btn btn-small btn-primary">add</button>
-                        </td>
-                    </tr>
-                </form>
+                {% if authz.dataset_edit(dataset) %}
+                    <form class="well form-inline" method="POST"
+                        action="{{url_for('value.create', dataset=dataset.name)}}">
+                        <tr>
+                            <td colspan="1">
+                                <input type="text" class="input-xlarge" id="value"
+                                    name="value" placeholder="Add a value...">
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-small btn-primary">add</button>
+                            </td>
+                        </tr>
+                    </form>
+                {% endif %}
                 <tr>
                     <td colspan="2">
                         {{ pager(values) }}

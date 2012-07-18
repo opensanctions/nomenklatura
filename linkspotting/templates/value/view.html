@@ -16,19 +16,30 @@
 {% endblock %}
 
 {% block content %}
-    <form class="well form-inline" method="POST"
-        action="{{url_for('value.update', dataset=dataset.name, value=value.id)}}">
-        <input type="text" class="input-xlarge" id="value" name="value"
-            value="{{value.value}}">
-        <button type="submit" class="btn btn-primary">Update</button>
-    </form>
+    {% if authz.dataset_edit(dataset) %}
+        <form class="well form-inline" method="POST"
+            action="{{url_for('value.update', dataset=dataset.name, value=value.id)}}">
+            <input type="text" class="input-xlarge" id="value" name="value"
+                value="{{value.value}}">
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+    {% else %}
+        <div class="well">
+            <code>{{value.value}}</code>
+        </div>
+    {% endif %}
     
     <h3>Links</h3>
     <table class="table table-condensed">
         {% for link in value.links %}
             <tr>
-                <td><code><a href="{{url_for('link.match', dataset=dataset.name,
-                            link=link.id)}}">{{link.key}}</a></code></td>
+                {% if authz.dataset_edit(dataset) %}
+                    <td><code><a href="{{url_for('link.match', dataset=dataset.name,
+                                link=link.id)}}">{{link.key}}</a></code></td>
+                {% else %}
+                    <td><code>{{link.key}}</code></td>
+
+                {% endif %}
             </tr>
         {% endfor %}
     </table>
