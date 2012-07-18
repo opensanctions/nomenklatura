@@ -28,6 +28,7 @@ github = oauth.remote_app('github',
         access_token_url='https://github.com/login/oauth/access_token',
         consumer_key=app.config.get('GITHUB_CLIENT_ID'),
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
+
 github._client.ca_certs = certifi.where()
 
 

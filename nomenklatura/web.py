@@ -79,7 +79,7 @@ def authorized(resp):
         return redirect(url_for('index'))
     access_token = resp['access_token']
     session['access_token'] = access_token, ''
-    res = requests.get('http://api.github.com/user?access_token=%s' % access_token,
+    res = requests.get('https://api.github.com/user?access_token=%s' % access_token,
             verify=False)
     print [res.content]
     for k, v in res.json.items():
