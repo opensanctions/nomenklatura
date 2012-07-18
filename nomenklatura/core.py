@@ -21,10 +21,10 @@ db = SQLAlchemy(app)
 
 oauth = OAuth()
 github = oauth.remote_app('github',
-        base_url='https://github.com/login/oauth/',
-        authorize_url='https://github.com/login/oauth/authorize',
+        base_url='http://github.com/login/oauth/',
+        authorize_url='http://github.com/login/oauth/authorize',
         request_token_url=None,
-        access_token_url='https://github.com/login/oauth/access_token',
+        access_token_url='http://github.com/login/oauth/access_token',
         consumer_key=app.config.get('GITHUB_CLIENT_ID'),
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
 
