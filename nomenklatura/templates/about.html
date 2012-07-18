@@ -83,13 +83,22 @@
       <pre class="prettyprint">from nkclient import NKDataset, NKNoMatch, NKInvalid
 
 dataset = NKDataset('my-dataset', api_key='..')
+
+# Create a reference value (normally done via the UI):
+in_value = ds.ensure_value('This is a reference value')
+
 try:
   key = 'This needs to be reconciled'
-  value = dataset.lookup(key, readonly=False)
+  out_value = dataset.lookup(key, readonly=False)
   print value.value
-except NKNoMatch nnm:
+
+except NKNoMatch nm:
   # no match exists, the new key has been queued
   # for reconciliation.
+  # link it to the value we created before (this 
+  # is normally done via the UI):
+  ds.match(nm.id, value.id)
+
 except NKInvalid inv:
   # the key is known but not a valid value (i.e.
   # data error)</pre>
