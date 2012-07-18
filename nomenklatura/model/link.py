@@ -108,7 +108,7 @@ class Link(db.Model):
         if link is not None:
             return link
         choices = match_op(data['key'], dataset)
-        choices = filter(lambda c,v,s: s==100, choices)
+        choices = filter(lambda (c,v,s): s == 100, choices)
         if len(choices)==1:
             c, value, s = choices.pop()
         if readonly:
