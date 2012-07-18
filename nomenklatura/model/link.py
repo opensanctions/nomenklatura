@@ -132,7 +132,7 @@ class Link(db.Model):
             self.value = None
             self.is_invalid = True
         elif data['choice'] == 'NEW':
-            self.value = Value.create(dataset, data)
+            self.value = Value.create(dataset, data, account)
             self.is_invalid = False
         else:
             self.value = data['choice']
