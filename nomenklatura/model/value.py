@@ -24,12 +24,27 @@ class AvailableValue(FancyValidator):
             return value
         raise Invalid('Value already exists.', value, None)
 
+class MergeableValue(FancyValidator):
+
+    def _to_python(self, value, state):
+        other = Value.by_id(state.dataset, value)
+        if other is None:
+            raise Invalid('Value does not exist.', value, None)
+        if other == state.value:
+            raise Invalid('Values are identical.', value, None)
+        if other.dataset != state.dataset:
+            raise Invalid('Value belongs to a different dataset.',
+                          value, None)
+        return other
 
 class ValueSchema(Schema):
     allow_extra_fields = True
     value = All(validators.String(min=0, max=5000), AvailableValue())
     data = DataBlob(if_missing={}, if_empty={})
 
+class ValueMergeSchema(Schema):
+    allow_extra_fields = True
+    target = MergeableValue()
 
 class Value(db.Model):
     __tablename__ = 'value'
@@ -107,4 +122,21 @@ class Value(db.Model):
         self.data = data['data']
         db.session.add(self)
 
+    def merge_into(self, data, account):
+        from nomenklatura.model.link import Link
+        state = ValueState(self.dataset, self)
+        data = ValueMergeSchema().to_python(data, state)
+        target = data.get('target')
+        for link in self.links:
+            link.value = target
+        link = Link()
+        link.key = self.value
+        link.creator = self.creator
+        link.matcher = account
+        link.value = target
+        link.dataset = self.dataset
+        link.is_matched = True
+        db.session.add(link)
+        db.session.commit()
+        return target
 
