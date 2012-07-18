@@ -15,7 +15,8 @@ from linkspotting.views.link import section as link
 
 @app.before_request
 def check_auth():
-    api_key = request.headers.get('Authorization')
+    api_key = request.headers.get('Authorization') \
+              or request.args.get('api_key')
     if session.get('id'):
         request.account = Account.by_github_id(session.get('id'))
         if request.account is None:

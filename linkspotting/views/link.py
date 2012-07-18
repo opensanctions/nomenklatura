@@ -2,7 +2,7 @@ from random import randint
 
 from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect, Response
-from formencode import Invalid, htmlfill
+from formencode import Invalid, htmlfill, validators
 
 from linkspotting.core import db
 from linkspotting.util import request_content, response_format
@@ -43,13 +43,16 @@ def view_by_key(dataset):
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
 def lookup(dataset):
     dataset = Dataset.find(dataset)
-    authz.require(authz.dataset_edit(dataset))
+    readonly = validators.StringBool(if_empty=False, if_missing=False)\
+            .to_python(request.args.get('readonly'))
+    readonly = readonly if authz.logged_in() else True
     data = request_content()
     if response_format() != 'json':
         return Response("Not implemented!", status=400)
 
     try:
-        link = Link.lookup(dataset, data, request.account)
+        link = Link.lookup(dataset, data, request.account,
+                           readonly=readonly)
         if link is None:
             return jsonify({
                 'is_matched': False,

@@ -24,8 +24,8 @@ class ValidChoice(FancyValidator):
         raise Invalid('No such value.', value, None)
 
 class LinkLookupSchema(Schema):
+    allow_extra_fields = True
     key = validators.String(min=0, max=5000)
-    readonly = validators.StringBool(if_empty=False, if_missing=False)
 
 class LinkMatchSchema(Schema):
     allow_extra_fields = True
@@ -98,13 +98,13 @@ class Link(db.Model):
         return link
 
     @classmethod
-    def lookup(cls, dataset, data, account):
+    def lookup(cls, dataset, data, account, readonly=False):
         data = LinkLookupSchema().to_python(data)
         value = Value.by_value(dataset, data['key'])
         if value is not None:
             return value
         link = cls.by_key(dataset, data['key'])
-        if link is not None or data['readonly']:
+        if link is not None or readonly:
             return link
         link = cls()
         link.creator = account
