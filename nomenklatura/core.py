@@ -8,6 +8,7 @@ import logging
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flaskext.oauth import OAuth
+import certifi
 
 from nomenklatura import default_settings
 
@@ -27,6 +28,6 @@ github = oauth.remote_app('github',
         access_token_url='http://github.com/login/oauth/access_token',
         consumer_key=app.config.get('GITHUB_CLIENT_ID'),
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
-
+github._client.ca_certs = certifi.where()
 
 
