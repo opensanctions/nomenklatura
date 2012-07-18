@@ -13,7 +13,6 @@
 
   <link rel="stylesheet" href="/static/css/bootstrap.min.css">
   <link rel="stylesheet" href="/static/css/bootstrap-responsive.min.css">
-  <link rel="stylesheet" type="text/css" href="http://assets.openspending.org/branding/fonts/opensans/stylesheet.css">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
   <script src="/static/js/modernizr.min.js"></script>
@@ -22,51 +21,6 @@
 </head>
 <body>
     <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
-    <!--div class="navbar  navbar-fixed-top">
-        <div class="navbar-inner">
-            <div class="container">
-                <a class="brand" href="/">nomenklatura</a>
-                <div class="nav-collapse collapse">
-                    <ul class="nav">
-                        <li class="dropdown">
-                           <a href="#" class="dropdown-toggle"
-                               data-toggle="dropdown">Datasets <b
-                                   class="caret"></b></a>
-                           <ul class="dropdown-menu">
-                             {% for ds in datasets %}
-                               <li><a href="{{url_for('dataset.view',
-                                   dataset=ds.name)}}">{{ds.label}}</a></li>
-                             {% endfor %}
-                             <li class="divider"></li>
-                             <li><a href="{{url_for('dataset.new')}}">New
-                                 dataset...</a></li>
-                           </ul>
-                        </li>
-                        <li>
-                            <a href="#">About</a>
-                        </li>
-                    </ul>
-                </div>
-                <ul class="nav pull-right">
-                    {% if logged_in %}
-                        <li>
-                            <a href="{{url_for('logout')}}">
-                                <img src="http://parsely.com/media/old/images/social/github.png">
-                                {{login}}
-                            </a>
-                        </li>
-                    {% else %}
-                        <li>
-                            <a href="{{url_for('login')}}">
-                                <img src="http://parsely.com/media/old/images/social/github.png">
-                                Login with GitHub</a>
-                        </li>
-
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </div-->
 
   <div class="container">
       <ul class="breadcrumb">
@@ -112,7 +66,7 @@
         <ul>
             <li><a href="http://github.com/pudo/nomenklatura">Source Code</a></li>
             <li><a href="{{url_for('about')}}">About</a></li>
-            <li><strong>Choose matches. Choose life.</strong></li>
+            <li>&copy; 2012: Open Knowledge Foundation, all code and data is openly licensed.</li>
         </ul>
     </div>
   </footer>

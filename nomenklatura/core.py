@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 app.config.from_object(default_settings)
-app.config.from_envvar('nomenklatura_SETTINGS', silent=True)
+app.config.from_envvar('NOMENKLATURA_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 
