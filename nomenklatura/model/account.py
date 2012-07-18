@@ -58,14 +58,14 @@ class Account(db.Model):
         account = cls()
         account.github_id = data['id']
         account.login = data['login']
-        account.email = data['email']
+        account.email = data.get('email')
         db.session.add(account)
         db.session.flush()
         return account
 
     def update(self, data):
         account.login = data['login']
-        account.email = data['email']
+        account.email = data.get('email')
         db.session.add(self)
 
 
