@@ -18,11 +18,18 @@ def get_algorithms():
     return algorithms
 
 def get_candidates(dataset):
+    candidates = set()
     for value in Value.all(dataset):
-        yield value.value, value
+        candidate = normalize(value.value, dataset)
+        candidates.add(candidate)
+        yield candidate, value
         if dataset.match_links:
             for link in value.links:
-                yield link.key, value
+                candidate = normalize(link.key, dataset)
+                if candidate in candidates:
+                    continue
+                candidates.add(candidate)
+                yield candidate, value
 
 def match(text, dataset, query=None):
     query = '' if query is None else query.strip().lower()
@@ -30,10 +37,9 @@ def match(text, dataset, query=None):
     matches = []
     func = ALGORITHMS.get(dataset.algorithm, levenshtein)
     for candidate, value in get_candidates(dataset):
-        candidate_normalized = normalize(candidate, dataset)
-        if len(query) and query not in candidate_normalized.lower():
+        if len(query) and query not in candidate.lower():
             continue
-        score = func(text_normalized, candidate_normalized)
+        score = func(text_normalized, candidate)
         matches.append((candidate, value, score))
     matches = sorted(matches, key=lambda (c,v,s): s, reverse=True)
     values = []
