@@ -50,32 +50,33 @@
         </div>
         <div class="span6">
 
-    <h3>Merge</h3>
-    <form class="form-search" method="GET"
-        action="{{url_for('.view', dataset=dataset.name, value=value.id)}}">
-        <input type="text" class="search-query span5"
-            name="query" value="{{query}}" placeholder="Find a value">
-        <button type="submit" class="btn">Filter</button>
-    </form>
-    <form method="POST" action="{{url_for('.merge', dataset=dataset.name,
-        value=value.id)}}">
-        <table class="table table-condensed">
-            {% for (c, v, s) in values %}
+    {% if authz.dataset_edit(dataset) %}
+        <h3>Merge</h3>
+        <form class="form-search" method="GET"
+            action="{{url_for('.view', dataset=dataset.name, value=value.id)}}">
+            <input type="text" class="search-query span5"
+                name="query" value="{{query}}" placeholder="Find a value">
+            <button type="submit" class="btn">Filter</button>
+        </form>
+        <form method="POST" action="{{url_for('.merge', dataset=dataset.name,
+            value=value.id)}}">
+            <table class="table table-condensed">
+                {% for (c, v, s) in values %}
+                    <tr>
+                        <td><input type="radio" name="target" value="{{v.id}}"></td>
+                        <td><a href="{{url_for('value.view', dataset=dataset.name,
+                                value=v.id)}}">{{v.display_value}}</a></td>
+                    </tr>
+                {% endfor %}
                 <tr>
-                    <td><input type="radio" name="target" value="{{v.id}}"></td>
-                    <td><a href="{{url_for('value.view', dataset=dataset.name,
-                            value=v.id)}}">{{v.display_value}}</a></td>
+                    <td colspan="2">
+                        {{ pager(values) }}
+                    </td>
                 </tr>
-            {% endfor %}
-            <tr>
-                <td colspan="2">
-                    {{ pager(values) }}
-                </td>
-            </tr>
-        </table>
-        <button type="submit" class="btn btn-danger">Merge</button>
-    </form>
-
+            </table>
+            <button type="submit" class="btn btn-danger">Merge</button>
+        </form>
+    {% endif %}
         </div>
     </div>
 {% endblock %}

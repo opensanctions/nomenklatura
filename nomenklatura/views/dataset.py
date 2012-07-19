@@ -48,6 +48,9 @@ def view(dataset):
                   limit=10)
     return render_template('dataset/view.html',
             values=pager,
+            num_values=len(pager),
+            num_links=Link.all(dataset).count(),
+            invalid=Link.all_invalid(dataset).count(),
             query=request.args.get('query', ''),
             dataset=dataset, unmatched=unmatched)
 

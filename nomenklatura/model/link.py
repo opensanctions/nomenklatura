@@ -92,6 +92,11 @@ class Link(db.Model):
                 filter_by(is_matched=False)
 
     @classmethod
+    def all_invalid(cls, dataset):
+        return cls.all(dataset).\
+                filter_by(is_invalid=True)
+
+    @classmethod
     def find(cls, dataset, id):
         link = cls.by_id(dataset, id)
         if link is None:
