@@ -2,6 +2,7 @@ from datetime import datetime
 
 from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
+from sqlalchemy.orm import joinedload_all
 
 from nomenklatura.core import db
 from nomenklatura.model.common import JsonType, DataBlob
@@ -60,6 +61,7 @@ class Value(db.Model):
 
     links = db.relationship('Link', backref='value',
                              lazy='dynamic')
+    links_static = db.relationship('Link')
 
     def as_dict(self):
         return {
@@ -95,10 +97,12 @@ class Value(db.Model):
         return value
 
     @classmethod
-    def all(cls, dataset, query=None):
+    def all(cls, dataset, query=None, eager_links=False):
         q = cls.query.filter_by(dataset=dataset)
         if query is not None and len(query.strip()):
             q = q.filter(cls.value.ilike('%%%s%%' % query.strip()))
+        if eager_links:
+            q = q.options(joinedload_all(cls.links_static))
         return q
 
     @classmethod
