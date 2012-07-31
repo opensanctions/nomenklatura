@@ -12,6 +12,13 @@ def createdb():
     db.create_all()
 
 @manager.command
+def flush(dataset):
+    ds = Dataset.by_name(dataset)
+    for link in Link.all_unmatched(ds):
+        db.session.delete(link)
+    db.session.commit()
+
+@manager.command
 def cleanup():
     """ Clean up the database. """
     for dataset in Dataset.all():
