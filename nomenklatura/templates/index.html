@@ -39,6 +39,7 @@
                         <a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a>
                     </td>
                     <td>{{dataset.values.count()}}</td>
+                    <td>{{dataset.links.filter_by(is_matched=True).count()}}:{{dataset.links.filter_by(is_matched=False).count()}}</td>
                 </tr>
                 {% endfor %}
             </table>
