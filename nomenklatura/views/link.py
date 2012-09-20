@@ -6,7 +6,7 @@ from formencode import Invalid, htmlfill, validators
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager
+from nomenklatura.util import jsonify, Pager, flush_cache, add_candidate_to_cache
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.common import handle_invalid
@@ -69,6 +69,9 @@ def lookup(dataset):
                 'dataset': dataset.name
                 }, status=200)
 
+        if link.value:
+            add_candidate_to_cache(dataset, link.key, link.value.id)
+
         db.session.commit()
         status = 200 if link.is_matched else 404
         status = 418 if link.is_invalid else status
@@ -123,6 +126,7 @@ def match_save(dataset, link):
     data = request_content()
     try:
         link.match(dataset, data, request.account)
+        add_candidate_to_cache(dataset, link.key, link.value.id)
         db.session.commit()
     except Invalid, inv:
         return handle_invalid(inv, match, data=data, 

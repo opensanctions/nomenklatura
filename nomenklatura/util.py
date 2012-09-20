@@ -7,6 +7,7 @@ from flask import Response, current_app, request
 from sqlalchemy.orm.query import Query
 
 from nomenklatura.pager import Pager
+from nomenklatura.core import memcache
 
 MIME_TYPES = {
         'text/html': 'html',
@@ -14,6 +15,18 @@ MIME_TYPES = {
         'application/json': 'json',
         'text/javascript': 'json',
         }
+
+def candidate_cache_key(dataset):
+    return str(dataset.name + '::candidates')
+
+def add_candidate_to_cache(dataset, candidate, value_id):
+    memcache.append(candidate_cache_key(dataset), (candidate, value_id))
+
+def flush_cache(dataset):
+    flush_candidate_cache(dataset)
+
+def flush_candidate_cache(dataset):
+    memcache.delete(candidate_cache_key(dataset))
 
 def request_format(request):
     """ 

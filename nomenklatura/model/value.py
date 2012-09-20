@@ -90,6 +90,14 @@ class Value(db.Model):
                 filter_by(id=id).first()
 
     @classmethod
+    def id_map(cls, dataset, ids):
+        values = {}
+        for value in cls.query.filter_by(dataset=dataset).\
+                filter(cls.id.in_(ids)):
+            values[value.id] = value
+        return values
+
+    @classmethod
     def find(cls, dataset, id):
         value = cls.by_id(dataset, id)
         if value is None:

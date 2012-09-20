@@ -1,6 +1,8 @@
 import logging
+import time
 
-from nomenklatura.core import db
+from nomenklatura.core import db, memcache
+from nomenklatura.util import candidate_cache_key
 from nomenklatura.model import Value
 
 from nomenklatura.matching.normalize import normalize
@@ -20,22 +22,32 @@ def get_algorithms():
         algorithms.append((name, fn.__doc__))
     return algorithms
 
-def get_candidates(dataset):
-    candidates = set()
+def _get_candidates(dataset):
     for value in Value.all(dataset, eager_links=dataset.match_links):
         candidate = normalize(value.value, dataset)
-        candidates.add(candidate)
-        yield candidate, value
+        yield candidate, value.id
         if dataset.match_links:
             for link in value.links_static:
                 candidate = normalize(link.key, dataset)
-                if candidate in candidates:
-                    continue
-                candidates.add(candidate)
-                yield candidate, value
+                yield candidate, value.id
+
+def get_candidates(dataset):
+    from nomenklatura.util import candidate_cache_key
+    #return set(_get_candidates(dataset))
+    begin = time.time()
+
+    key = candidate_cache_key(dataset)
+    cand = memcache.get(key)
+    if cand is None:
+        cand = list(set(_get_candidates(dataset)))
+        memcache.set(key, cand)
+
+    duration = time.time() - begin
+    log.info("Fetching %s candidates took: %sms",
+            len(cand), duration*1000)
+    return cand
 
 def match(text, dataset, query=None):
-    import time
     begin = time.time()
     choices = _match(text, dataset, query=query)
     duration = time.time() - begin
@@ -54,13 +66,12 @@ def _match(text, dataset, query=None):
         score = func(text_normalized, candidate)
         matches.append((candidate, value, score))
     matches = sorted(matches, key=lambda (c,v,s): s, reverse=True)
-    values = []
+    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v, matches))
     matches_uniq = []
     for c,v,s in matches:
-        if v in values:
+        if v not in value_objs:
             continue
-        values.append(v)
-        matches_uniq.append((c,v,s))
+        matches_uniq.append((c,value_objs.pop(v),s))
     return matches_uniq
 
 

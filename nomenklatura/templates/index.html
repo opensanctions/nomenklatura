@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    Addictive data linking tool.
+    Authority data.
 {% endblock %}
 
 {% block content %}
@@ -30,16 +30,29 @@
             {% endif %}
         </div>
         <div class="span8">
-            <table class="table table-condensed">
+          <table class="table table-condensed">
+                <tr>
+                  <th>Dataset</th>
+                  <th>Values</th>
+                  <th>Matched</th>
+                  <th>Unmatched</th>
+                </tr>
                 {% for dataset in datasets %}
                 <tr>
                     <td>
                         {{dataset.owner.login}}
-                        <span class="divider">/</span>
+                        <span class="divider">&raquo;</span>
                         <a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a>
                     </td>
-                    <td>{{dataset.values.count()}}</td>
-                    <td>{{dataset.links.filter_by(is_matched=True).count()}}:{{dataset.links.filter_by(is_matched=False).count()}}</td>
+                    <td>
+                      {{dataset.values.count()}}
+                    </td>
+                    <td>
+                      {{dataset.links.filter_by(is_matched=True).count()}}
+                    </td>
+                    <td>
+                      {{dataset.links.filter_by(is_matched=False).count()}}
+                    </td>
                 </tr>
                 {% endfor %}
             </table>

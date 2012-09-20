@@ -4,6 +4,7 @@ from formencode import Schema, Invalid, validators
 
 from nomenklatura.core import db
 from nomenklatura.model.common import Name, FancyValidator
+from nomenklatura.model.common import JsonType, DataBlob
 from nomenklatura.model.value import Value
 from nomenklatura.matching import match as match_op
 
@@ -27,6 +28,7 @@ class ValidChoice(FancyValidator):
 class LinkLookupSchema(Schema):
     allow_extra_fields = True
     key = validators.String(min=0, max=5000)
+    data = DataBlob(if_missing={}, if_empty={})
 
 class LinkMatchSchema(Schema):
     allow_extra_fields = True
@@ -38,6 +40,7 @@ class Link(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.Unicode)
+    data = db.Column(JsonType, default=dict)
     is_matched = db.Column(db.Boolean, default=False)
     is_invalid = db.Column(db.Boolean, default=False)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
@@ -58,6 +61,7 @@ class Link(db.Model):
             'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
             'is_matched': self.is_matched,
+            'data': self.data,
             'matcher': self.matcher.as_dict() if self.matcher else None,
             'is_invalid': self.is_invalid,
             'dataset': self.dataset.name
@@ -124,6 +128,7 @@ class Link(db.Model):
         link.value = value
         link.is_matched = value is not None
         link.key = data['key']
+        link.data = data['data']
         db.session.add(link)
         db.session.flush()
         return link
