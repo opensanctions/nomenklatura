@@ -9,4 +9,4 @@ FormEncode==1.2.4
 Python-Levenshtein==0.10.2
 psycopg2==2.4.5
 certifi==0.0.8
-python-memcached==1.48
+pylibmc

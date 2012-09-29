@@ -3,13 +3,15 @@ import warnings;
 warnings.filterwarnings('ignore', 'Unicode type received non-unicode bind param value.')
 from sqlalchemy.exc import SAWarning
 warnings.filterwarnings('ignore', category=SAWarning)
+
+import os
 import logging
 
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flaskext.oauth import OAuth
 import certifi
-from memcache import Client as MemcacheClient
+from pylibmc import Client as MemcacheClient
 
 from nomenklatura import default_settings
 
@@ -31,5 +33,16 @@ github = oauth.remote_app('github',
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
 
 github._client.ca_certs = certifi.where()
-memcache = MemcacheClient([app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')])
-
+#if 'MEMCACHE_USERNAME' in os.environ:
+memcache = MemcacheClient(
+    servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
+    username=os.environ.get('MEMCACHE_USERNAME'),
+    password=os.environ.get('MEMCACHE_PASSWORD'),
+    binary=True
+    )
+memcache.flush_all()
+#else:
+#    memcache = MemcacheClient(
+#        servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
+#        binary=True
+#        )

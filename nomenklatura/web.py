@@ -81,7 +81,6 @@ def authorized(resp):
     session['access_token'] = access_token, ''
     res = requests.get('https://api.github.com/user?access_token=%s' % access_token,
             verify=False)
-    print [res.content]
     for k, v in res.json.items():
         session[k] = v
     account = Account.by_github_id(res.json.get('id'))
