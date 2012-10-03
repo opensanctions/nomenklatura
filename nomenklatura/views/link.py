@@ -126,7 +126,8 @@ def match_save(dataset, link):
     data = request_content()
     try:
         link.match(dataset, data, request.account)
-        add_candidate_to_cache(dataset, link.key, link.value.id)
+        if link.value is not None:
+            add_candidate_to_cache(dataset, link.key, link.value.id)
         db.session.commit()
     except Invalid, inv:
         return handle_invalid(inv, match, data=data, 
