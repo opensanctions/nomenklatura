@@ -1,10 +1,12 @@
 from datetime import datetime
 import json
+import logging
 
 from werkzeug.exceptions import NotFound
 from formencode.variabledecode import NestedVariables
 from flask import Response, current_app, request
 from sqlalchemy.orm.query import Query
+from pylibmc import Error as MCError
 
 from nomenklatura.pager import Pager
 from nomenklatura.core import memcache
@@ -16,17 +18,38 @@ MIME_TYPES = {
         'text/javascript': 'json',
         }
 
+log = logging.getLogger(__name__)
+
 def candidate_cache_key(dataset):
     return str(dataset.name + '::candidates')
 
+def cache_get(key):
+    try:
+        return memcache.get(key)
+    except MCError, me:
+        log.exception(me)
+
+
+def cache_set(key, value):
+    try:
+        memcache.set(key, value)
+    except MCError, me:
+        log.exception(me)
+
 def add_candidate_to_cache(dataset, candidate, value_id):
-    memcache.append(candidate_cache_key(dataset), (candidate, value_id))
+    try:
+        memcache.append(candidate_cache_key(dataset), (candidate, value_id))
+    except MCError, me:
+        log.exception(me)
 
 def flush_cache(dataset):
     flush_candidate_cache(dataset)
 
 def flush_candidate_cache(dataset):
-    memcache.delete(candidate_cache_key(dataset))
+    try:
+        memcache.delete(candidate_cache_key(dataset))
+    except MCError, me:
+        log.exception(me)
 
 def request_format(request):
     """ 

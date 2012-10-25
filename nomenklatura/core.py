@@ -40,9 +40,6 @@ memcache = MemcacheClient(
     password=os.environ.get('MEMCACHE_PASSWORD'),
     binary=True
     )
-memcache.flush_all()
-#else:
-#    memcache = MemcacheClient(
-#        servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
-#        binary=True
-#        )
+try:
+    memcache.flush_all()
+except: pass

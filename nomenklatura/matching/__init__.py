@@ -1,8 +1,8 @@
 import logging
 import time
 
-from nomenklatura.core import db, memcache
-from nomenklatura.util import candidate_cache_key
+from nomenklatura.core import db
+from nomenklatura.util import candidate_cache_key, cache_get, cache_set
 from nomenklatura.model import Value
 
 from nomenklatura.matching.normalize import normalize
@@ -37,10 +37,10 @@ def get_candidates(dataset):
     begin = time.time()
 
     key = candidate_cache_key(dataset)
-    cand = memcache.get(key)
+    cand = cache_get(key)
     if cand is None:
         cand = list(set(_get_candidates(dataset)))
-        memcache.set(key, cand)
+        cache_set(key, cand)
 
     duration = time.time() - begin
     log.info("Fetching %s candidates took: %sms",
