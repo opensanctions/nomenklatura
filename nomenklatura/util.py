@@ -1,4 +1,5 @@
 from datetime import datetime
+from collections import defaultdict
 import json
 import logging
 
@@ -11,6 +12,8 @@ from pylibmc import Error as MCError
 from nomenklatura.pager import Pager
 from nomenklatura.core import memcache
 
+KEY_RANGE = 10
+
 MIME_TYPES = {
         'text/html': 'html',
         'application/xhtml+xml': 'html',
@@ -21,24 +24,41 @@ MIME_TYPES = {
 log = logging.getLogger(__name__)
 
 def candidate_cache_key(dataset):
-    return str(dataset.name + '::candidates')
+    return str(dataset.name + '::c')
+
+def candidate_hash(candidate):
+    c, v = candidate
+    if not len(c):
+        return str(0)
+    return str(ord(c[0]) % KEY_RANGE)
 
 def cache_get(key):
     try:
-        return memcache.get(key)
+        keys = map(str, range(KEY_RANGE))
+        values = memcache.get_multi(keys, key_prefix=key)
+        if not len(values):
+            return None
+        vs = []
+        for cands in values.values():
+            vs.extend(cands)
+        return vs
     except MCError, me:
         log.exception(me)
 
 
-def cache_set(key, value):
+def cache_set(key, values):
     try:
-        memcache.set(key, value)
+        data = defaultdict(list)
+        for v in values:
+            data[candidate_hash(v)].append(v)
+        memcache.set_multi(data, key_prefix=key)
     except MCError, me:
         log.exception(me)
 
 def add_candidate_to_cache(dataset, candidate, value_id):
     try:
-        memcache.append(candidate_cache_key(dataset), (candidate, value_id))
+        k = candidate_cache_key(dataset) + candidate_hash(candidate)
+        memcache.append(k, (candidate, value_id))
     except MCError, me:
         log.exception(me)
 
