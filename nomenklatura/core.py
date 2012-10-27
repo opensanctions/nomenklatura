@@ -40,6 +40,6 @@ memcache = MemcacheClient(
     password=os.environ.get('MEMCACHIER_PASSWORD'),
     binary=True
     )
-try:
-    memcache.flush_all()
-except: pass
+#try:
+#    memcache.flush_all()
+#except: pass
