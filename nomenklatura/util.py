@@ -57,8 +57,9 @@ def cache_set(key, values):
 
 def add_candidate_to_cache(dataset, candidate, value_id):
     try:
+        candidate = (candidate, value_id)
         k = candidate_cache_key(dataset) + candidate_hash(candidate)
-        memcache.append(k, (candidate, value_id))
+        memcache.append(k, candidate)
     except MCError, me:
         log.exception(me)
 
@@ -67,7 +68,8 @@ def flush_cache(dataset):
 
 def flush_candidate_cache(dataset):
     try:
-        memcache.delete(candidate_cache_key(dataset))
+        keys = map(str, range(KEY_RANGE))
+        memcache.delete(keys, key_prefix=candidate_cache_key(dataset))
     except MCError, me:
         log.exception(me)
 
