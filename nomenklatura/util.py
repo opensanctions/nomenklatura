@@ -69,7 +69,7 @@ def flush_cache(dataset):
 def flush_candidate_cache(dataset):
     try:
         keys = map(str, range(KEY_RANGE))
-        memcache.delete(keys, key_prefix=candidate_cache_key(dataset))
+        memcache.delete_multi(keys, key_prefix=candidate_cache_key(dataset))
     except MCError, me:
         log.exception(me)
 
