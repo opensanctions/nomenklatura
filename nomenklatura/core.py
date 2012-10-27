@@ -36,8 +36,8 @@ github._client.ca_certs = certifi.where()
 #if 'MEMCACHE_USERNAME' in os.environ:
 memcache = MemcacheClient(
     servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
-    username=os.environ.get('MEMCACHE_USERNAME'),
-    password=os.environ.get('MEMCACHE_PASSWORD'),
+    username=os.environ.get('MEMCACHIER_USERNAME'),
+    password=os.environ.get('MEMCACHIER_PASSWORD'),
     binary=True
     )
 try:
