@@ -62,6 +62,7 @@ def lookup(dataset):
                 }, status=404)
 
         if isinstance(link, Value):
+            add_candidate_to_cache(dataset, data.get('key'), link.id)
             return jsonify({
                 'is_matched': True,
                 'value': link,
@@ -104,6 +105,14 @@ def match(dataset, link, random=False):
     pager = Pager(choices, '.match',
         dataset=dataset.name, link=link.id,
         limit=10)
+
+    # HACK: Fetch only the values on the selected page.
+    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v,
+        pager.query[pager.offset:pager.limit]))
+    for i, (c,v,s) in enumerate(pager.query):
+        if v in value_objs:
+            pager.query[i] = (c, value_objs.get(v), s)
+
     html = render_template('link/match.html',
             dataset=dataset, link=link, choices=pager,
             random=random)

@@ -48,30 +48,27 @@ def get_candidates(dataset):
     return cand
 
 def match(text, dataset, query=None):
-    begin = time.time()
-    choices = _match(text, dataset, query=query)
-    duration = time.time() - begin
-    log.info("Matching %s candidates took: %sms",
-            len(choices), duration*1000)
-    return choices
-
-def _match(text, dataset, query=None):
     query = '' if query is None else query.strip().lower()
     text_normalized = normalize(text, dataset)
+    candidates = get_candidates(dataset)
     matches = []
+    begin = time.time()
     func = ALGORITHMS.get(dataset.algorithm, levenshtein)
-    for candidate, value in get_candidates(dataset):
+    for candidate, value in candidates:
         if len(query) and query not in candidate.lower():
             continue
         score = func(text_normalized, candidate)
         matches.append((candidate, value, score))
     matches = sorted(matches, key=lambda (c,v,s): s, reverse=True)
-    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v, matches))
+    values = set()
     matches_uniq = []
     for c,v,s in matches:
-        if v not in value_objs:
+        if v in values:
             continue
-        matches_uniq.append((c,value_objs.pop(v),s))
+        matches_uniq.append((c,v,s))
+    duration = time.time() - begin
+    log.info("Matching %s candidates took: %sms",
+            len(matches_uniq), duration*1000)
     return matches_uniq
 
 

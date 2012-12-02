@@ -33,7 +33,7 @@ def dedup(dataset):
     begin = time()
     for value in Value.all(ds).limit(20):
         matches = match(value.value, ds)
-        matches = filter(lambda (c,v,s): v!=value, matches)
+        matches = filter(lambda (c,v,s): v!=value.id, matches)
         print [value.value, '=?', matches[0][1], matches[0][2]]
     print "Time: %.2fms" % ((time() - begin)*1000)
 
