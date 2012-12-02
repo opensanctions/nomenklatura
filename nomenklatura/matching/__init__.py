@@ -65,6 +65,7 @@ def match(text, dataset, query=None):
     for c,v,s in matches:
         if v in values:
             continue
+        values.add(v)
         matches_uniq.append((c,v,s))
     duration = time.time() - begin
     log.info("Matching %s candidates took: %sms",
