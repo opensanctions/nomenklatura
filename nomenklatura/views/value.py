@@ -47,12 +47,20 @@ def view(dataset, value):
         return jsonify(value)
     query = request.args.get('query', '').strip().lower()
     choices = match_op(value.value, dataset)
-    choices = filter(lambda (c,v,s): v != value, choices)
+    choices = filter(lambda (c,v,s): v != value.id, choices)
     if len(query):
         choices = filter(lambda (c,v,s): query in v.value.lower(),
                          choices)
     pager = Pager(choices, '.view', dataset=dataset.name,
                   value=value.id, limit=10)
+
+    # HACK: Fetch only the values on the selected page.
+    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v,
+        pager.query[pager.offset:pager.limit]))
+    for i, (c,v,s) in enumerate(pager.query):
+        if v in value_objs:
+            pager.query[i] = (c, value_objs.get(v), s)
+
     return render_template('value/view.html', dataset=dataset,
                            value=value, values=pager, query=query)
 
