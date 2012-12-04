@@ -56,7 +56,7 @@ def view(dataset, value):
 
     # HACK: Fetch only the values on the selected page.
     value_objs = Value.id_map(dataset, map(lambda (c,v,s): v,
-        pager.query[pager.offset:pager.limit]))
+        pager.query[pager.offset:pager.offset+pager.limit]))
     for i, (c,v,s) in enumerate(pager.query):
         if v in value_objs:
             pager.query[i] = (c, value_objs.get(v), s)

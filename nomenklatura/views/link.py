@@ -78,7 +78,7 @@ def lookup(dataset):
         status = 418 if link.is_invalid else status
         return jsonify(link, status=status)
     except Invalid, inv:
-        return handle_invalid(inv, index, data=data, 
+        return handle_invalid(inv, index, data=data,
                               args=[dataset.name])
 
 @section.route('/<dataset>/match', methods=['GET'])
@@ -108,7 +108,7 @@ def match(dataset, link, random=False):
 
     # HACK: Fetch only the values on the selected page.
     value_objs = Value.id_map(dataset, map(lambda (c,v,s): v,
-        pager.query[pager.offset:pager.limit]))
+        pager.query[pager.offset:pager.offset+pager.limit]))
     for i, (c,v,s) in enumerate(pager.query):
         if v in value_objs:
             pager.query[i] = (c, value_objs.get(v), s)
