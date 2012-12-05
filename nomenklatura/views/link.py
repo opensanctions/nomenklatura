@@ -119,7 +119,7 @@ def match(dataset, link, random=False):
     choice = 'INVALID' if link.is_invalid else link.value_id
     if len(choices) and choice is None:
         c, v, s = choices[0]
-        choice = 'INVALID' if s <= 50 else v.id
+        choice = 'INVALID' if s <= 50 else v
     return htmlfill.render(html, force_defaults=False,
             defaults={'choice': choice,
                       'value': link.key,
