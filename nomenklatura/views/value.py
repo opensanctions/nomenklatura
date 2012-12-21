@@ -19,7 +19,7 @@ def index(dataset):
     dataset = Dataset.find(dataset)
     format = response_format()
     if format == 'json':
-        return jsonify(Value.all(dataset))
+        return jsonify(Value.all(dataset, eager=True))
     return "Not implemented!"
 
 @section.route('/<dataset>/values', methods=['POST'])

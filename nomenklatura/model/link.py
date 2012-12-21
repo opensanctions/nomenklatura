@@ -56,7 +56,7 @@ class Link(db.Model):
         return {
             'id': self.id,
             'key': self.key,
-            'value': self.value.as_dict() if self.value else None,
+            'value': self.value.as_dict(shallow=True) if self.value else None,
             'created_at': self.created_at,
             'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
@@ -82,8 +82,14 @@ class Link(db.Model):
                 filter_by(id=id).first()
 
     @classmethod
-    def all(cls, dataset):
-        return cls.query.filter_by(dataset=dataset)
+    def all(cls, dataset, eager=False):
+        q = cls.query.filter_by(dataset=dataset)
+        if eager:
+            q = q.options(db.joinedload('matcher'))
+            q = q.options(db.joinedload('creator'))
+            q = q.options(db.joinedload('value'))
+            q = q.options(db.joinedload('dataset'))
+        return q
 
     @classmethod
     def all_matched(cls, dataset):

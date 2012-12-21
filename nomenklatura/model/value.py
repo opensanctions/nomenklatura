@@ -63,17 +63,18 @@ class Value(db.Model):
                              lazy='dynamic')
     links_static = db.relationship('Link')
 
-    def as_dict(self):
-        return {
-            'id': self.id, 
-            'value': self.value, 
+    def as_dict(self, shallow=False):
+        d = {
+            'id': self.id,
+            'value': self.value,
             'created_at': self.created_at,
-            'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
-            'dataset': self.dataset.name,
-            'data': self.data,
-            'link_count': self.links.count()
             }
+        if not shallow:
+            d['creator'] = self.creator.as_dict()
+            d['dataset'] = self.dataset.name,
+            d['data'] = self.data,
+        return d
 
     @property
     def display_value(self):
@@ -105,12 +106,15 @@ class Value(db.Model):
         return value
 
     @classmethod
-    def all(cls, dataset, query=None, eager_links=False):
+    def all(cls, dataset, query=None, eager_links=False, eager=False):
         q = cls.query.filter_by(dataset=dataset)
         if query is not None and len(query.strip()):
             q = q.filter(cls.value.ilike('%%%s%%' % query.strip()))
         if eager_links:
             q = q.options(joinedload_all(cls.links_static))
+        if eager:
+            q = q.options(db.joinedload('dataset'))
+            q = q.options(db.joinedload('creator'))
         return q
 
     @classmethod

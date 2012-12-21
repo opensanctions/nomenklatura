@@ -20,7 +20,7 @@ def index(dataset):
     dataset = Dataset.find(dataset)
     format = response_format()
     if format == 'json':
-        return jsonify(Link.all(dataset))
+        return jsonify(Link.all(dataset, eager=True))
     return "Not implemented!"
 
 @section.route('/<dataset>/links/<link>', methods=['GET'])
