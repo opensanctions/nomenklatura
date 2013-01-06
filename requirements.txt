@@ -12,3 +12,4 @@ certifi==0.0.8
 pylibmc
 celery==3.0.12
 -e git+https://github.com/okfn/messytables.git#egg=messytables
+boto==2.6.0
