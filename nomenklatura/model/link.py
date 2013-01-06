@@ -114,11 +114,15 @@ class Link(db.Model):
         return link
 
     @classmethod
-    def lookup(cls, dataset, data, account, readonly=False):
+    def lookup(cls, dataset, data, account, match_value=True,
+            readonly=False):
         data = LinkLookupSchema().to_python(data)
-        value = Value.by_value(dataset, data['key'])
-        if value is not None:
-            return value
+        if match_value:
+            value = Value.by_value(dataset, data['key'])
+            if value is not None:
+                return value
+        else:
+            value = None
         link = cls.by_key(dataset, data['key'])
         if link is not None:
             return link

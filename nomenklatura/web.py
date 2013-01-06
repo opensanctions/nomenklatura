@@ -12,6 +12,7 @@ from nomenklatura.util import jsonify, response_format
 from nomenklatura.views.dataset import section as dataset
 from nomenklatura.views.value import section as value
 from nomenklatura.views.link import section as link
+from nomenklatura.views.upload import section as upload
 
 @app.before_request
 def check_auth():
@@ -59,6 +60,7 @@ def handle_exceptions(exc):
 app.register_blueprint(dataset)
 app.register_blueprint(value)
 app.register_blueprint(link)
+app.register_blueprint(upload)
 
 @app.route('/gh/login')
 def login():
@@ -102,5 +104,5 @@ def account():
 
 @app.route('/')
 def index():
-    datasets = Dataset.all()
+    datasets = Dataset.all().order_by(Dataset.label.asc())
     return render_template('index.html', datasets=datasets)

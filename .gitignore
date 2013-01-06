@@ -2,3 +2,5 @@
 *.DS_Store
 *.sqlite3
 *.egg-info
+*.sql
+settings.py

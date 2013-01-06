@@ -10,3 +10,5 @@ Python-Levenshtein==0.10.2
 psycopg2==2.4.5
 certifi==0.0.8
 pylibmc
+celery==3.0.12
+-e git+https://github.com/okfn/messytables.git#egg=messytables
