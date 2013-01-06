@@ -78,7 +78,6 @@ def import_upload(dataset_name, sig, account_id,
             link_obj = Link.lookup(dataset, d, account,
                             match_value=False)
             data = {}
-            print "LINK", link_obj
         if value_col:
             d = {'value': value, 'data': data}
             value_obj = Value.by_value(dataset, value)
@@ -86,10 +85,8 @@ def import_upload(dataset_name, sig, account_id,
                 value_obj = Value.create(dataset,
                         d, account)
             value_obj.data = data
-            print "VALUE", value_obj
         if link_col and value_col:
             link_obj.match(dataset, {'choice': value_obj.id},
                     account)
         db.session.commit()
-
 
