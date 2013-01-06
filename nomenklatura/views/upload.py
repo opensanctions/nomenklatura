@@ -16,7 +16,7 @@ section = Blueprint('upload', __name__)
 def form(dataset):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    return render_template('upload/view.html', dataset=dataset)
+    return render_template('upload/form.html', dataset=dataset)
 
 @section.route('/<dataset>/upload', methods=['POST'])
 def upload(dataset):
