@@ -74,15 +74,15 @@
   <div class="row">
     <div class="span6">
       <p>To facilitate the use of the API in Python, a client library is
-      available: <a href="https://github.com/pudo/nomenklatura-client">https://github.com/pudo/nomenklatura-client</a></p>
+      available: <a href="https://github.com/okfn/nomenklatura-client">https://github.com/okfn/nomenklatura-client</a></p>
       <p>To install the library from the command line, try this
       command:</p>
-      <pre>pip install -e git+https://github.com/pudo/nomenklatura-client#egg=nomenklatura-client</pre>
+      <pre>pip install pynomenklatura</pre>
     </div>
     <div class="span6">
-      <pre class="prettyprint">from nkclient import NKDataset, NKNoMatch, NKInvalid
+      <pre class="prettyprint">from nomenklatura import Dataset
 
-dataset = NKDataset('my-dataset', api_key='..')
+dataset = Dataset('my-dataset', api_key='..')
 
 # Create a reference value (normally done via the UI):
 in_value = dataset.ensure_value('This is a reference value')
@@ -92,14 +92,14 @@ try:
   out_value = dataset.lookup(key, readonly=False)
   print out_value.value
 
-except NKNoMatch nm:
+except dataset.NoMatch nm:
   # no match exists, the new key has been queued
   # for reconciliation.
   # link it to the value we created before (this 
   # is normally done via the UI):
   dataset.match(nm.id, in_value.id)
 
-except NKInvalid inv:
+except dataset.Invalid inv:
   # the key is known but not a valid value (i.e.
   # data error)</pre>
     </div>
