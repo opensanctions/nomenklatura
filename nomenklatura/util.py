@@ -26,16 +26,16 @@ log = logging.getLogger(__name__)
 def candidate_cache_key(dataset):
     return str(dataset.name + '::c')
 
-def candidate_hash(candidate):
+def candidate_hash(prefix, candidate):
     c, v = candidate
     if not len(c):
         return str(0)
-    return str(ord(c[0]) % KEY_RANGE)
+    return prefix + str(ord(c[0]) % KEY_RANGE)
 
 def cache_get(key):
     try:
-        keys = map(str, range(KEY_RANGE))
-        values = memcache.get_multi(keys, key_prefix=key)
+        keys = [key + str(k) for k in range(KEY_RANGE)]
+        values = memcache.get_multi(keys)
         if not len(values):
             return None
         vs = []
@@ -50,16 +50,18 @@ def cache_set(key, values):
     try:
         data = defaultdict(list)
         for v in values:
-            data[candidate_hash(v)].append(v)
-        memcache.set_multi(data, key_prefix=key)
+            data[candidate_hash(key, v)].append(v)
+        memcache.set_multi(data)
     except MCError, me:
         log.exception(me)
 
 def add_candidate_to_cache(dataset, candidate, value_id):
     try:
-        candidate = (candidate, value_id)
-        k = candidate_cache_key(dataset) + candidate_hash(candidate)
-        memcache.append(k, candidate)
+        prefix = candidate_cache_key(dataset)
+        k = candidate_hash(prefix, (candidate, value_id))
+        candidates = memcache.get(k)
+        candidates.append((candidate, value_id))
+        memcache.set(k, candidates)
     except MCError, me:
         log.exception(me)
 
@@ -68,8 +70,9 @@ def flush_cache(dataset):
 
 def flush_candidate_cache(dataset):
     try:
-        keys = map(str, range(KEY_RANGE))
-        memcache.delete_multi(keys, key_prefix=candidate_cache_key(dataset))
+        prefix = candidate_cache_key(dataset)
+        keys = [prefix + str(k) for k in range(KEY_RANGE)]
+        memcache.delete_multi(keys)
     except MCError, me:
         log.exception(me)
 
