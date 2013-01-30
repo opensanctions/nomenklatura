@@ -49,7 +49,7 @@ def view(dataset, value):
     choices = match_op(value.value, dataset)
     choices = filter(lambda (c,v,s): v != value.id, choices)
     if len(query):
-        choices = filter(lambda (c,v,s): query in Value.find(dataset,v.value).value.lower(),
+        choices = filter(lambda (c,v,s): query in Value.find(dataset,v).value.lower(),
                          choices)
                          # THIS is very inefficient - rather do this
                          # differently
