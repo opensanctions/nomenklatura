@@ -59,7 +59,7 @@ def add_candidate_to_cache(dataset, candidate, value_id):
     try:
         prefix = candidate_cache_key(dataset)
         k = candidate_hash(prefix, (candidate, value_id))
-        candidates = memcache.get(k)
+        candidates = memcache.get(k) or []
         candidates.append((candidate, value_id))
         memcache.set(k, candidates)
     except MCError, me:
