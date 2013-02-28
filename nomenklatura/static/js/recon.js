@@ -17,7 +17,6 @@ $(function() {
     if (!$('input').is(':focus')) {
       console.log(e.which);
       var selectedRadio = $radios.index($radios.filter(':checked'));
-      console.log($radios.get(selectedRadio));
 
       if (e.which >= 49 && e.which <= 57) {
         $($radios.get(e.which-49)).prop('checked', true);
@@ -38,6 +37,10 @@ $(function() {
           break;
         case 70: // 'f'
           $('#filter-field').focus();
+          e.preventDefault();
+          break;
+        case 71:
+          window.open($('#google-link').attr('href'));
           e.preventDefault();
           break;
         case 38: // up

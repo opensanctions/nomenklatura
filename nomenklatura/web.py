@@ -1,6 +1,7 @@
 from flask import render_template, Response, request
-from flask import url_for, session, redirect, flash
+from flask import url_for, session, redirect, flash, Markup
 
+import urllib
 import requests
 from formencode import Invalid
 
@@ -29,6 +30,15 @@ def check_auth():
             raise Unauthorized()
     else: 
         request.account = None
+
+
+@app.template_filter('urlencode')
+def urlencode_filter(s):
+    if type(s) == 'Markup':
+        s = s.unescape()
+    s = s.encode('utf8')
+    s = urllib.quote_plus(s)
+    return Markup(s)
 
 
 @app.context_processor

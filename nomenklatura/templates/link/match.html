@@ -20,7 +20,7 @@
   <script src="/static/js/recon.js"></script>
     <div class="row">
         <div class="span8">
-            Candidate: <code>{{link.display_key}}</code>
+          Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ link.key | urlencode }}">gg</a>]: <code>{{link.display_key}}</code>
         </div>
         <div class="span4">
             <form id="match-filter" class="form-search" method="GET"
@@ -87,6 +87,6 @@
     </form>
     <div class="help-block">
       Keyboard controls: use up and down arrows to navigate, numbers to select, 'i' for invalid, 'f' for search,
-      'n' for new value form, enter to submit.
+      'n' for new value form, enter to submit. 'g' will run a Google query with the candidate.
     </div>
 {% endblock %}
