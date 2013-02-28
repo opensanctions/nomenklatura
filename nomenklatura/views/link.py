@@ -6,7 +6,7 @@ from formencode import Invalid, htmlfill, validators
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager, flush_cache, add_candidate_to_cache
+from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.common import handle_invalid
@@ -62,16 +62,12 @@ def lookup(dataset):
                 }, status=404)
 
         if isinstance(link, Value):
-            add_candidate_to_cache(dataset, data.get('key'), link.id)
             return jsonify({
                 'is_matched': True,
                 'value': link,
                 'key': data.get('key'),
                 'dataset': dataset.name
                 }, status=200)
-
-        if link.value:
-            add_candidate_to_cache(dataset, link.key, link.value.id)
 
         db.session.commit()
         status = 200 if link.is_matched else 404
@@ -119,7 +115,7 @@ def match(dataset, link, random=False):
     choice = 'INVALID' if link.is_invalid else link.value_id
     if len(choices) and choice is None:
         c, v, s = choices[0]
-        choice = 'INVALID' if s <= 50 else v
+        choice = 'INVALID' if s <= 50 else v.id
     return htmlfill.render(html, force_defaults=False,
             defaults={'choice': choice,
                       'value': link.key,
@@ -135,8 +131,6 @@ def match_save(dataset, link):
     data = request_content()
     try:
         link.match(dataset, data, request.account)
-        if link.value is not None:
-            add_candidate_to_cache(dataset, link.key, link.value.id)
         db.session.commit()
     except Invalid, inv:
         return handle_invalid(inv, match, data=data, 

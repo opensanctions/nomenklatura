@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload_all
 
 from nomenklatura.core import db
 from nomenklatura.model.common import JsonType, DataBlob
+from nomenklatura.util import flush_cache, add_candidate_to_cache
 
 
 class ValueState():
@@ -128,6 +129,7 @@ class Value(db.Model):
         value.data = data['data']
         db.session.add(value)
         db.session.flush()
+        add_candidate_to_cache(dataset, value.value, value.id)
         return value
 
     def update(self, data, account):
@@ -136,6 +138,7 @@ class Value(db.Model):
         self.creator = account
         self.value = data['value']
         self.data = data['data']
+        flush_cache(self.dataset)
         db.session.add(self)
 
     def merge_into(self, data, account):
@@ -155,5 +158,6 @@ class Value(db.Model):
         db.session.delete(self)
         db.session.add(link)
         db.session.commit()
+        flush_cache(self.dataset)
         return target
 

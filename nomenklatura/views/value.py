@@ -4,7 +4,7 @@ from formencode import Invalid
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager, flush_cache, add_candidate_to_cache
+from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.dataset import view as view_dataset
@@ -29,7 +29,6 @@ def create(dataset):
     data = request_content()
     try:
         value = Value.create(dataset, data, request.account)
-        add_candidate_to_cache(dataset, value.value, value.id)
         db.session.commit()
         return redirect(url_for('.view',
             dataset=dataset.name,
@@ -97,7 +96,6 @@ def merge(dataset, value):
     data = request_content()
     try:
         target = value.merge_into(data, request.account)
-        flush_cache(dataset)
         db.session.commit()
         flash("Merged %s" % value.value, 'success')
         return redirect(url_for('.view', dataset=dataset.name,

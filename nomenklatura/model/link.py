@@ -7,6 +7,8 @@ from nomenklatura.model.common import Name, FancyValidator
 from nomenklatura.model.common import JsonType, DataBlob
 from nomenklatura.model.value import Value
 from nomenklatura.matching import match as match_op
+from nomenklatura.util import flush_cache, add_candidate_to_cache
+
 
 class LinkMatchState():
 
@@ -142,6 +144,7 @@ class Link(db.Model):
         link.data = data['data']
         db.session.add(link)
         db.session.flush()
+        add_candidate_to_cache(dataset, link.key, value.id)
         return link
 
     def match(self, dataset, data, account):
