@@ -17,21 +17,22 @@
 {% endblock %}
 
 {% block content %}
+  <script src="/static/js/recon.js"></script>
     <div class="row">
         <div class="span8">
             Candidate: <code>{{link.display_key}}</code>
         </div>
         <div class="span4">
-            <form class="form-search" method="GET"
+            <form id="match-filter" class="form-search" method="GET"
                 action="{{url_for('link.match', dataset=dataset.name, link=link.id)}}">
                 <input type="hidden" name="random" value="{{random}}">
-                <input type="text" class="input-medium search-query"
+                <input id="filter-field" type="text" class="input-medium search-query"
                     name="query" placeholder="Type a partial match...">
                 <button type="submit" class="btn">Filter</button>
             </form>
         </div>
     </div>
-    <form class="" method="POST"
+    <form id="save-match" class="" method="POST"
         action="{{url_for('link.match_save', dataset=dataset.name, link=link.id)}}">
         <table class="table match-table table-condensed">
             <tr>
@@ -57,14 +58,14 @@
                 </td>
             </tr>
             <tr>
-                <td><input type="radio" name="choice" value="NEW"></td>
+                <td><input type="radio" name="choice" id="new" value="NEW"></td>
                 <td colspan="2">
-                    <input type="text" name="value" value="">
+                    <input type="text" name="value" id="new-text" value="">
                 </td>
             </tr>
             {% if dataset.enable_invalid %}
             <tr>
-                <td><input type="radio" name="choice" value="INVALID"></td>
+                <td><input type="radio" name="choice" id="invalid" value="INVALID"></td>
                 <td colspan="2">
                     <strong>Invalid value</strong>
                 </td>
@@ -82,5 +83,10 @@
             <button type="submit" class="btn btn-success btn-large">
                 <i class="icon-ok icon-white"></i> Save</button>
         {% endif %}
+
     </form>
+    <div class="help-block">
+      Keyboard controls: use up and down arrows to navigate, numbers to select, 'i' for invalid, 'f' for search,
+      'n' for new value form, enter to submit.
+    </div>
 {% endblock %}
