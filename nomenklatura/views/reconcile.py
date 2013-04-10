@@ -22,7 +22,7 @@ def reconcile_index(dataset):
     domain = url_for('index', _external=True).strip('/')
     urlp = domain + '{{id}}'
     meta = {
-        'name': dataset.label,
+        'name': 'nomenklatura',
         'identifierSpace': 'http://rdf.freebase.com/ns/type.object.id',
         'schemaSpace': 'http://rdf.freebase.com/ns/type.object.id',
         'view': {'url': urlp},
@@ -33,6 +33,7 @@ def reconcile_index(dataset):
             }
         }
     if dataset is not None:
+        meta['name'] = dataset.label
         meta['suggest'] = {
             'entity': {
                 'service_url': domain,
