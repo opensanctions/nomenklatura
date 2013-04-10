@@ -117,9 +117,13 @@ class JSONEncoder(json.JSONEncoder):
             return list(obj)
         raise TypeError("%r is not JSON serializable" % obj)
 
-def jsonify(obj, status=200, headers=None):
+def jsonify(obj, status=200, headers=None, shallow=False):
     """ Custom JSONificaton to support obj.to_dict protocol. """
-    return Response(json.dumps(obj, cls=JSONEncoder), headers=headers,
+    jsondata = JSONEncoder().encode(obj)
+    if 'callback' in request.args:
+        jsondata = '%s && %s(%s)' % (request.args.get('callback'),
+                request.args.get('callback'), jsondata)
+    return Response(jsondata, headers=headers,
                     status=status, mimetype='application/json')
 
 # quite hackish:

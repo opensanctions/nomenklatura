@@ -14,6 +14,7 @@ from nomenklatura.views.dataset import section as dataset
 from nomenklatura.views.value import section as value
 from nomenklatura.views.link import section as link
 from nomenklatura.views.upload import section as upload
+from nomenklatura.views.reconcile import section as reconcile
 
 @app.before_request
 def check_auth():
@@ -71,6 +72,7 @@ app.register_blueprint(dataset)
 app.register_blueprint(value)
 app.register_blueprint(link)
 app.register_blueprint(upload)
+app.register_blueprint(reconcile)
 
 @app.route('/gh/login')
 def login():

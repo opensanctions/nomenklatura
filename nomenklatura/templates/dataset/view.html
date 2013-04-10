@@ -27,7 +27,8 @@
             </ul>
             <p>
                 Link candidates are added via the <a href="{{url_for('about',
-                    _anchor='api')}}">API</a>.
+                  _anchor='api')}}">API</a>. An <a href="https://github.com/OpenRefine/OpenRefine">OpenRefine</a>
+                endpoint is available <a href="{{url_for('reconcile.reconcile', dataset=dataset.name, _external=True)}}">here</a>.
             </p>
             {% if authz.dataset_edit(dataset) %}
                 <a class="btn btn-primary" href="{{url_for('link.match_random', dataset=dataset.name)}}">
