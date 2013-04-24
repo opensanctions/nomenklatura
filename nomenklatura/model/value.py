@@ -49,7 +49,7 @@ class ValueMergeSchema(Schema):
     target = MergeableValue()
 
 class Value(db.Model):
-    __tablename__ = 'value'
+    __tablename__ = 'entity'
 
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.Unicode)

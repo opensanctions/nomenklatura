@@ -38,7 +38,7 @@ class LinkMatchSchema(Schema):
     choice = ValidChoice()
 
 class Link(db.Model):
-    __tablename__ = 'link'
+    __tablename__ = 'alias'
 
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.Unicode)
@@ -49,7 +49,7 @@ class Link(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     matcher_id = db.Column(db.Integer, db.ForeignKey('account.id'),
             nullable=True)
-    value_id = db.Column(db.Integer, db.ForeignKey('value.id'), nullable=True)
+    entity_id = db.Column(db.Integer, db.ForeignKey('entity.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
