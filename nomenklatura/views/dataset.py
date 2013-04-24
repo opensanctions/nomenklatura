@@ -7,7 +7,7 @@ from nomenklatura.util import request_content, response_format
 from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.views.common import handle_invalid
-from nomenklatura.model import Dataset, Link, Value
+from nomenklatura.model import Dataset, Alias, Entity
 from nomenklatura.matching import get_algorithms
 
 section = Blueprint('dataset', __name__)
@@ -41,16 +41,15 @@ def view(dataset):
     format = response_format()
     if format == 'json':
         return jsonify(dataset)
-    unmatched = Link.all_unmatched(dataset).count()
-    values = Value.all(dataset,
-            query=request.args.get('query'))
-    pager = Pager(values, '.view', dataset=dataset.name,
+    unmatched = Alias.all_unmatched(dataset).count()
+    entities = Entity.all(dataset, query=request.args.get('query'))
+    pager = Pager(entities, '.view', dataset=dataset.name,
                   limit=10)
     return render_template('dataset/view.html',
-            values=pager,
-            num_values=len(pager),
-            num_links=Link.all(dataset).count(),
-            invalid=Link.all_invalid(dataset).count(),
+            entities=pager,
+            num_entities=len(pager),
+            num_aliases=Alias.all(dataset).count(),
+            invalid=Alias.all_invalid(dataset).count(),
             query=request.args.get('query', ''),
             dataset=dataset, unmatched=unmatched)
 

@@ -23,13 +23,13 @@ class Account(db.Model):
 
     datasets = db.relationship('Dataset', backref='owner',
                                lazy='dynamic')
-    values_created = db.relationship('Value', backref='creator',
+    entities_created = db.relationship('Entity', backref='creator',
                                lazy='dynamic')
-    links_created = db.relationship('Link', backref='creator',
-                        primaryjoin='Link.creator_id==Account.id',
+    aliases_created = db.relationship('Alias', backref='creator',
+                        primaryjoin='Alias.creator_id==Account.id',
                                lazy='dynamic')
-    links_matched = db.relationship('Link', backref='matcher',
-                        primaryjoin='Link.matcher_id==Account.id',
+    aliases_matched = db.relationship('Alias', backref='matcher',
+                        primaryjoin='Alias.matcher_id==Account.id',
                                lazy='dynamic')
 
     def as_dict(self):

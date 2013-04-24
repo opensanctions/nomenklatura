@@ -2,20 +2,20 @@ import time
 import logging 
 
 from nomenklatura.util import candidate_cache_key, cache_get, cache_set
-from nomenklatura.model import Value
+from nomenklatura.model import Entity
 from nomenklatura.matching.normalize import normalize
 
 log = logging.getLogger(__name__)
 
 
 def _get_candidates(dataset):
-    for value in Value.all(dataset, eager_links=dataset.match_links):
-        candidate = normalize(value.name, dataset)
-        yield candidate, value.id
-        if dataset.match_links:
-            for link in value.links_static:
+    for entity in Entity.all(dataset, eager_aliases=dataset.match_aliases):
+        candidate = normalize(entity.name, dataset)
+        yield candidate, entity.id
+        if dataset.match_aliases:
+            for link in entity.aliases_static:
                 candidate = normalize(link.name, dataset)
-                yield candidate, value.id
+                yield candidate, entity.id
 
 def get_candidates(dataset):
     begin = time.time()

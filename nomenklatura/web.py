@@ -11,8 +11,8 @@ from nomenklatura.exc import Unauthorized
 from nomenklatura import authz
 from nomenklatura.util import jsonify, response_format
 from nomenklatura.views.dataset import section as dataset
-from nomenklatura.views.value import section as value
-from nomenklatura.views.link import section as link
+from nomenklatura.views.entity import section as entity
+from nomenklatura.views.alias import section as alias
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.reconcile import section as reconcile
 
@@ -69,8 +69,8 @@ def handle_exceptions(exc):
     return exc
 
 app.register_blueprint(dataset)
-app.register_blueprint(value)
-app.register_blueprint(link)
+app.register_blueprint(entity)
+app.register_blueprint(alias)
 app.register_blueprint(upload)
 app.register_blueprint(reconcile)
 

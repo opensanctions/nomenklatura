@@ -21,8 +21,8 @@ def updb():
 @manager.command
 def flush(dataset):
     ds = Dataset.by_name(dataset)
-    for link in Link.all_unmatched(ds):
-        db.session.delete(link)
+    for alias in Alias.all_unmatched(ds):
+        db.session.delete(alias)
     db.session.commit()
 
 @manager.command
@@ -41,8 +41,8 @@ def dedup(dataset):
 def cleanup():
     """ Clean up the database. """
     for dataset in Dataset.all():
-        for link in Link.all_unmatched(dataset):
-            db.session.delete(link)
+        for alias in Alias.all_unmatched(dataset):
+            db.session.delete(alias)
         db.session.flush()
     db.session.commit()
 

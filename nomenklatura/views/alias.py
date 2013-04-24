@@ -10,35 +10,35 @@ from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.common import handle_invalid
-from nomenklatura.model import Dataset, Value, Link
+from nomenklatura.model import Dataset, Entity, Alias
 from nomenklatura.matching import match as match_op
 
-section = Blueprint('link', __name__)
+section = Blueprint('alias', __name__)
 
-@section.route('/<dataset>/links', methods=['GET'])
+@section.route('/<dataset>/aliases', methods=['GET'])
 def index(dataset):
     dataset = Dataset.find(dataset)
-    format = response_format()
-    if format == 'json':
-        return jsonify(Link.all(dataset, eager=True))
-    return "Not implemented!"
+    #format = response_format()
+    #if format == 'json':
+    return jsonify(Alias.all(dataset, eager=True))
+    #return "Not implemented!"
 
-@section.route('/<dataset>/links/<link>', methods=['GET'])
-def view(dataset, link):
+@section.route('/<dataset>/aliases/<alias>', methods=['GET'])
+def view(dataset, alias):
     dataset = Dataset.find(dataset)
-    link = Link.find(dataset, link)
-    format = response_format()
-    if format == 'json':
-        return jsonify(link)
-    return "Not implemented!"
+    alias = Alias.find(dataset, alias)
+    #format = response_format()
+    #if format == 'json':
+    return jsonify(alias)
+    #return "Not implemented!"
 
-@section.route('/<dataset>/link', methods=['GET'])
+@section.route('/<dataset>/aliases', methods=['GET'])
 def view_by_name(dataset):
     dataset = Dataset.find(dataset)
-    link = Link.by_name(dataset, request.args.get('name'))
-    if link is None:
-        raise NotFound("No such link: %s" % request.args.get('name'))
-    return view(dataset.name, link.id)
+    alias = Alias.by_name(dataset, request.args.get('name'))
+    if alias is None:
+        raise NotFound("No such alias: %s" % request.args.get('name'))
+    return view(dataset.name, alias.id)
 
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
 def lookup(dataset):
@@ -51,28 +51,28 @@ def lookup(dataset):
         return Response("Not implemented!", status=400)
 
     try:
-        link = Link.lookup(dataset, data, request.account,
-                           readonly=readonly)
-        if link is None:
+        alias = Alias.lookup(dataset, data, request.account,
+                             readonly=readonly)
+        if alias is None:
             return jsonify({
                 'is_matched': False,
-                'value': None,
+                'entity': None,
                 'name': data.get('name'),
                 'dataset': dataset.name
                 }, status=404)
 
-        if isinstance(link, Value):
+        if isinstance(alias, Entity):
             return jsonify({
                 'is_matched': True,
-                'value': link,
+                'entity': alias,
                 'name': data.get('name'),
                 'dataset': dataset.name
                 }, status=200)
 
         db.session.commit()
-        status = 200 if link.is_matched else 404
-        status = 418 if link.is_invalid else status
-        return jsonify(link, status=status)
+        status = 200 if alias.is_matched else 404
+        status = 418 if alias.is_invalid else status
+        return jsonify(alias, status=status)
     except Invalid, inv:
         return handle_invalid(inv, index, data=data,
                               args=[dataset.name])
@@ -81,67 +81,67 @@ def lookup(dataset):
 def match_random(dataset):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    links = Link.all_unmatched(dataset)
-    count = links.count()
+    aliases = Alias.all_unmatched(dataset)
+    count = aliases.count()
     if count == 0:
         return redirect(url_for('dataset.view',
             dataset=dataset.name))
-    link = links.offset(randint(0, count-1)).first()
-    return redirect(url_for('.match', dataset=dataset.name, link=link.id,
+    alias = aliases.offset(randint(0, count-1)).first()
+    return redirect(url_for('.match', dataset=dataset.name, alias=alias.id,
                             random=True))
 
-@section.route('/<dataset>/links/<link>/match', methods=['GET'])
-def match(dataset, link, random=False):
+@section.route('/<dataset>/aliases/<alias>/match', methods=['GET'])
+def match(dataset, alias, random=False):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    link = Link.find(dataset, link)
+    alias = Alias.find(dataset, alias)
     random = random or request.args.get('random')=='True'
-    choices = match_op(link.name, dataset,
+    choices = match_op(alias.name, dataset,
             query=request.args.get('query'))
     pager = Pager(choices, '.match',
-        dataset=dataset.name, link=link.id,
+        dataset=dataset.name, alias=alias.id,
         limit=10)
 
-    # HACK: Fetch only the values on the selected page.
-    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v,
+    # HACK: Fetch only the entities on the selected page.
+    entities = Entity.id_map(dataset, map(lambda (c,e,s): e,
         pager.query[pager.offset:pager.offset+pager.limit]))
-    for i, (c,v,s) in enumerate(pager.query):
-        if v in value_objs:
-            pager.query[i] = (c, value_objs.get(v), s)
+    for i, (c,e,s) in enumerate(pager.query):
+        if e in entities:
+            pager.query[i] = (c, entities.get(e), s)
 
-    html = render_template('link/match.html',
-            dataset=dataset, link=link, choices=pager,
+    html = render_template('alias/match.html',
+            dataset=dataset, alias=alias, choices=pager,
             random=random)
-    choice = 'INVALID' if link.is_invalid else link.entity_id
+    choice = 'INVALID' if alias.is_invalid else alias.entity_id
     if len(choices) and choice is None:
-        c, v, s = choices[0]
-        choice = 'INVALID' if s <= 50 else v.id
+        c, e, s = choices[0]
+        choice = 'INVALID' if s <= 50 else e.id
     return htmlfill.render(html, force_defaults=False,
             defaults={'choice': choice,
-                      'name': link.name,
+                      'name': alias.name,
                       'query': request.args.get('query', ''),
                       'random': random})
 
-@section.route('/<dataset>/links/<link>/match', methods=['POST'])
-def match_save(dataset, link):
+@section.route('/<dataset>/aliases/<alias>/match', methods=['POST'])
+def match_save(dataset, alias):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    link = Link.find(dataset, link)
+    alias = Alias.find(dataset, alias)
     random = request.form.get('random')=='True'
     data = request_content()
     try:
-        link.match(dataset, data, request.account)
+        alias.match(dataset, data, request.account)
         db.session.commit()
     except Invalid, inv:
-        return handle_invalid(inv, match, data=data, 
-                              args=[dataset.name, link.id, random])
+        return handle_invalid(inv, match, data=data,
+                              args=[dataset.name, alias.id, random])
 
-    flash("Matched: %s" % link.name, "success")
+    flash("Matched: %s" % alias.name, "success")
     format = response_format()
     if format == 'json':
-        return jsonify(link)
+        return jsonify(alias)
     if random:
         return match_random(dataset.name)
     else:
-        return match(dataset.name, link.id)
+        return match(dataset.name, alias.id)
 

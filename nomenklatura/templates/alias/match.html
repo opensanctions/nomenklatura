@@ -2,7 +2,7 @@
 {%from "pager.html" import pager %}
 
 {% block title %}
-    {{link.display_name}} - {{dataset.label}}
+    {{alias.display_name}} - {{dataset.label}}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -20,11 +20,11 @@
   <script src="/static/js/recon.js"></script>
     <div class="row">
         <div class="span8">
-          Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ link.name | urlencode }}">gg</a>]: <code>{{link.display_name}}</code>
+          Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ alias.name | urlencode }}">gg</a>]: <code>{{alias.display_name}}</code>
         </div>
         <div class="span4">
             <form id="match-filter" class="form-search" method="GET"
-                action="{{url_for('link.match', dataset=dataset.name, link=link.id)}}">
+                action="{{url_for('alias.match', dataset=dataset.name, alias=alias.id)}}">
                 <input type="hidden" name="random" value="{{random}}">
                 <input id="filter-field" type="text" class="input-medium search-query"
                     name="query" placeholder="Type a partial match...">
@@ -33,21 +33,21 @@
         </div>
     </div>
     <form id="save-match" class="" method="POST"
-        action="{{url_for('link.match_save', dataset=dataset.name, link=link.id)}}">
+        action="{{url_for('alias.match_save', dataset=dataset.name, alias=alias.id)}}">
         <table class="table match-table table-condensed">
             <tr>
                 <th></th>
-                <th>Value</th>
+                <th>Entity</th>
                 <th>Score</th>
             </tr>
 
-            {% for text, value, score in choices %}
+            {% for text, entity, score in choices %}
             <tr>
                     <td><input type="radio" name="choice"
-                        value="{{value.id}}"></td>
-                    <td><code><a href="{{url_for('value.view',
-                                dataset=dataset.name, value=value.id)}}"
-                                target="_new">{{value.display_name}}</a></code></td>
+                        value="{{entity.id}}"></td>
+                    <td><code><a href="{{url_for('entity.view',
+                                dataset=dataset.name, entity=entity.id)}}"
+                                target="_new">{{entity.display_name}}</a></code></td>
                     <td>{{score}}</td>
                 </tr>
             {% endfor %}
@@ -67,7 +67,7 @@
             <tr>
                 <td><input type="radio" name="choice" id="invalid" value="INVALID"></td>
                 <td colspan="2">
-                    <strong>Invalid value</strong>
+                    <strong>Invalid alias</strong>
                 </td>
             </tr>
             {% endif %}
@@ -76,7 +76,7 @@
             <input type="hidden" name="random" value="true">
             <button type="submit" class="btn btn-success btn-large">
                 <i class="icon-ok icon-white"></i> Save &amp; Next</button>
-            <a href="{{url_for('link.match_random', dataset=dataset.name)}}"
+            <a href="{{url_for('alias.match_random', dataset=dataset.name)}}"
                 class="btn btn-danger btn-large">
                 <i class="icon-random icon-white"></i> Try another</a>
         {% else %}
@@ -87,6 +87,6 @@
     </form>
     <div class="help-block">
       Keyboard controls: use up and down arrows to navigate, numbers to select, 'i' for invalid, 'f' for search,
-      'n' for new value form, enter to submit. 'g' will run a Google query with the candidate.
+      'n' for new entity form, enter to submit. 'g' will run a Google query with the candidate.
     </div>
 {% endblock %}

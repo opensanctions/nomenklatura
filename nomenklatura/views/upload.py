@@ -43,13 +43,13 @@ def submit(dataset, sig):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
     data = request_content()
-    value_col = data.get('value') or None
-    link_col = data.get('link') or None
-    if not (value_col or link_col):
-        flash('You need to pick either a link or value column!', 'error')
+    entity_col = data.get('entity') or None
+    alias_col = data.get('alias') or None
+    if not (entity_col or alias_col):
+        flash('You need to pick either a alias or entity column!', 'error')
         return map(dataset.name, sig)
     import_upload.delay(dataset.name, sig, request.account.id,
-            value_col, link_col)
+            entity_col, alias_col)
     flash('Loading data...', 'success')
     return redirect(url_for('dataset.view', dataset=dataset.name))
 

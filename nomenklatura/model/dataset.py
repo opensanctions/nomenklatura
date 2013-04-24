@@ -22,7 +22,7 @@ class DatasetNewSchema(Schema):
 class DatasetEditSchema(Schema):
     label = validators.String(min=3, max=255)
     algorithm = validators.String(min=3, max=255)
-    match_links = validators.StringBool(if_missing=False)
+    match_aliases = validators.StringBool(if_missing=False)
     ignore_case = validators.StringBool(if_missing=False)
     public_edit = validators.StringBool(if_missing=False)
     normalize_text = validators.StringBool(if_missing=False)
@@ -35,7 +35,7 @@ class Dataset(db.Model):
     name = db.Column(db.Unicode)
     label = db.Column(db.Unicode)
     ignore_case = db.Column(db.Boolean, default=False)
-    match_links = db.Column(db.Boolean, default=False)
+    match_aliases = db.Column(db.Boolean, default=False)
     public_edit = db.Column(db.Boolean, default=False)
     normalize_text = db.Column(db.Boolean, default=True)
     enable_invalid = db.Column(db.Boolean, default=True)
@@ -45,9 +45,9 @@ class Dataset(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
 
-    values = db.relationship('Value', backref='dataset',
+    entities = db.relationship('Entity', backref='dataset',
                              lazy='dynamic')
-    links = db.relationship('Link', backref='dataset',
+    aliases = db.relationship('Alias', backref='dataset',
                              lazy='dynamic')
 
     def as_dict(self):
@@ -57,7 +57,7 @@ class Dataset(db.Model):
             'label': self.label,
             'owner': self.owner.as_dict(),
             'ignore_case': self.ignore_case,
-            'match_links': self.match_links,
+            'match_aliases': self.match_aliases,
             'public_edit': self.public_edit,
             'normalize_text': self.normalize_text,
             'enable_invalid': self.enable_invalid,
@@ -99,7 +99,7 @@ class Dataset(db.Model):
         self.normalize_text = data['normalize_text']
         self.ignore_case = data['ignore_case']
         self.public_edit = data['public_edit']
-        self.match_links = data['match_links']
+        self.match_aliases = data['match_aliases']
         self.enable_invalid = data['enable_invalid']
         self.algorithm = data['algorithm']
         db.session.add(self)

@@ -29,18 +29,18 @@
         {% endfor %}
       </tr>
       <tr>
-        <th>Value:</th>
-        <td><input name="value" value="" type="radio"></td>
+        <th>Entity:</th>
+        <td><input name="entity" value="" type="radio"></td>
         {% for header in headers %}
-          <td><input name="value" value="{{header}}" type="radio"
+          <td><input name="entity" value="{{header}}" type="radio"
             {% if loop.first %}checked="checked"{% endif %}></td>
         {% endfor %}
       </tr>
       <tr>
         <th>Alias:</th>
-        <td><input name="link" value="" type="radio" checked="checked"></td>
+        <td><input name="alias" value="" type="radio" checked="checked"></td>
         {% for header in headers %}
-          <td><input name="link" value="{{header}}" type="radio"></td>
+          <td><input name="alias" value="{{header}}" type="radio"></td>
         {% endfor %}
       </tr>
       {% for s in sample %}

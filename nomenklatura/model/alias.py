@@ -5,12 +5,12 @@ from formencode import Schema, Invalid, validators
 from nomenklatura.core import db
 from nomenklatura.model.common import Name, FancyValidator
 from nomenklatura.model.common import JsonType, DataBlob
-from nomenklatura.model.value import Value
+from nomenklatura.model.entity import Entity
 from nomenklatura.matching import match as match_op
 from nomenklatura.util import flush_cache, add_candidate_to_cache
 
 
-class LinkMatchState():
+class AliasMatchState():
 
     def __init__(self, dataset):
         self.dataset = dataset
@@ -22,22 +22,22 @@ class ValidChoice(FancyValidator):
             return value
         elif value == 'INVALID' and state.dataset.enable_invalid:
             return value
-        value_obj = Value.by_id(state.dataset, value)
-        if value_obj is not None:
-            return value_obj
-        raise Invalid('No such value.', value, None)
+        entity = Entity.by_id(state.dataset, value)
+        if entity is not None:
+            return entity
+        raise Invalid('No such entity.', value, None)
 
-class LinkLookupSchema(Schema):
+class AliasLookupSchema(Schema):
     allow_extra_fields = True
     name = validators.String(min=0, max=5000)
     data = DataBlob(if_missing={}, if_empty={})
 
-class LinkMatchSchema(Schema):
+class AliasMatchSchema(Schema):
     allow_extra_fields = True
-    value = validators.String(min=0, max=5000, if_missing='', if_empty='')
+    entity = validators.String(min=0, max=5000, if_missing='', if_empty='')
     choice = ValidChoice()
 
-class Link(db.Model):
+class Alias(db.Model):
     __tablename__ = 'alias'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -58,7 +58,7 @@ class Link(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'value': self.value.as_dict(shallow=True) if self.value else None,
+            'entity': self.entity.as_dict(shallow=True) if self.entity else None,
             'created_at': self.created_at,
             'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
@@ -89,7 +89,7 @@ class Link(db.Model):
         if eager:
             q = q.options(db.joinedload('matcher'))
             q = q.options(db.joinedload('creator'))
-            q = q.options(db.joinedload('value'))
+            q = q.options(db.joinedload('entity'))
             q = q.options(db.joinedload('dataset'))
         return q
 
@@ -116,50 +116,50 @@ class Link(db.Model):
         return link
 
     @classmethod
-    def lookup(cls, dataset, data, account, match_value=True,
+    def lookup(cls, dataset, data, account, match_entity=True,
             readonly=False):
-        data = LinkLookupSchema().to_python(data)
-        if match_value:
-            value = Value.by_name(dataset, data['name'])
-            if value is not None:
-                return value
+        data = AliasLookupSchema().to_python(data)
+        if match_entity:
+            entity = Entity.by_name(dataset, data['name'])
+            if entity is not None:
+                return entity
         else:
-            value = None
-        link = cls.by_name(dataset, data['name'])
-        if link is not None:
-            return link
+            entity = None
+        alias = cls.by_name(dataset, data['name'])
+        if alias is not None:
+            return alias
         choices = match_op(data['name'], dataset)
         choices = filter(lambda (c,v,s): s > 99.9, choices)
         if len(choices)==1:
-            c, value, s = choices.pop()
-            value = Value.by_id(dataset, value)
+            c, entity_id, s = choices.pop()
+            entity = Entity.by_id(dataset, entity_id)
         if readonly:
-            return value
-        link = cls()
-        link.creator = account
-        link.dataset = dataset
-        link.value = value
-        link.is_matched = value is not None
-        link.name = data['name']
-        link.data = data['data']
-        db.session.add(link)
+            return entity
+        alias = cls()
+        alias.creator = account
+        alias.dataset = dataset
+        alias.entity = entity
+        alias.is_matched = entity is not None
+        alias.name = data['name']
+        alias.data = data['data']
+        db.session.add(alias)
         db.session.flush()
-        add_candidate_to_cache(dataset, link.name, value.id)
-        return link
+        add_candidate_to_cache(dataset, alias.name, entity.id)
+        return alias
 
     def match(self, dataset, data, account):
-        state = LinkMatchState(dataset)
-        data = LinkMatchSchema().to_python(data, state)
+        state = AliasMatchState(dataset)
+        data = AliasMatchSchema().to_python(data, state)
         self.is_matched = True
         self.matcher = account
         if data['choice'] == 'INVALID':
-            self.value = None
+            self.entity = None
             self.is_invalid = True
         elif data['choice'] == 'NEW':
-            self.value = Value.create(dataset, data, account)
+            self.entity = Entity.create(dataset, data, account)
             self.is_invalid = False
         else:
-            self.value = data['choice']
+            self.entity = data['choice']
             self.is_invalid = False
         db.session.add(self)
         db.session.flush()

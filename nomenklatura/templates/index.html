@@ -33,7 +33,7 @@
           <table class="table table-condensed">
                 <tr>
                   <th>Dataset</th>
-                  <th>Values</th>
+                  <th>Entities</th>
                   <th>Matched</th>
                   <th>Unmatched</th>
                 </tr>
@@ -45,13 +45,13 @@
                         <a href="{{url_for('dataset.view', dataset=dataset.name)}}">{{dataset.label}}</a>
                     </td>
                     <td>
-                      {{dataset.values.count()}}
+                      {{dataset.entities.count()}}
                     </td>
                     <td>
-                      {{dataset.links.filter_by(is_matched=True).count()}}
+                      {{dataset.aliases.filter_by(is_matched=True).count()}}
                     </td>
                     <td>
-                      {{dataset.links.filter_by(is_matched=False).count()}}
+                      {{dataset.aliases.filter_by(is_matched=False).count()}}
                     </td>
                 </tr>
                 {% endfor %}

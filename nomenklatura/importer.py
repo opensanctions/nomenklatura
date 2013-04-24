@@ -9,7 +9,7 @@ from messytables import headers_guess, headers_processor, \
 
 from nomenklatura.core import s3, app, db, celery
 from nomenklatura.exc import NotFound
-from nomenklatura.model import Dataset, Link, Value, Account
+from nomenklatura.model import Dataset, Entity, Alias, Account
 
 def get_bucket():
     return s3.create_bucket(app.config['S3_BUCKET'])
@@ -64,29 +64,28 @@ def detect_headers(row_set):
 
 @celery.task
 def import_upload(dataset_name, sig, account_id,
-        value_col, link_col):
+        entity_col, alias_col):
     dataset = Dataset.find(dataset_name)
     account = Account.by_id(account_id)
     metadata, row_set = parse_upload(dataset, sig)
     headers = detect_headers(row_set)
     for row in row_set:
         data = dict([(c.column, c.value) for c in row])
-        value = data.pop(value_col) if value_col else None
-        link = data.pop(link_col) if link_col else None
-        if link_col:
-            d = {'key': link, 'data': data}
-            link_obj = Link.lookup(dataset, d, account,
-                            match_value=False)
+        entity = data.pop(entity_col) if entity_col else None
+        alias = data.pop(alias_col) if alias_col else None
+        if alias_col:
+            d = {'name': alias, 'data': data}
+            alias_obj = Alias.lookup(dataset, d, account,
+                                     match_entity=False)
             data = {}
-        if value_col:
-            d = {'value': value, 'data': data}
-            value_obj = Value.by_value(dataset, value)
-            if value_obj is None:
-                value_obj = Value.create(dataset,
+        if entity_col:
+            d = {'name': entity, 'data': data}
+            entity_obj = Entity.by_name(dataset, entity)
+            if entity_obj is None:
+                entity_obj = Entity.create(dataset,
                         d, account)
-            value_obj.data = data
-        if link_col and value_col:
-            link_obj.match(dataset, {'choice': value_obj.id},
-                    account)
+            entity_obj.data = data
+        if alias_col and entity_col:
+            alias_obj.match(dataset, {'choice': entity_obj.id}, account)
         db.session.commit()
 

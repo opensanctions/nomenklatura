@@ -2,7 +2,7 @@
 {%from "pager.html" import pager %}
 
 {% block title %}
-    {{value.display_name}} - {{dataset.label}}
+    {{entity.display_name}} - {{dataset.label}}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -12,35 +12,35 @@
         <span class="divider">/</span>
     </li>
     <li>
-        {{value.display_name}}
+        {{entity.display_name}}
     </li>
 {% endblock %}
 
 {% block content %}
     {% if authz.dataset_edit(dataset) %}
         <form class="well form-inline" method="POST"
-            action="{{url_for('value.update', dataset=dataset.name, value=value.id)}}">
+            action="{{url_for('entity.update', dataset=dataset.name, entity=entity.id)}}">
             <input type="text" class="input-xlarge" id="name" name="name"
-                value="{{value.name}}">
+                value="{{entity.name}}">
             <button type="submit" class="btn btn-primary">Update</button>
         </form>
     {% else %}
         <div class="well">
-            <code>{{value.name}}</code>
+            <code>{{entity.name}}</code>
         </div>
     {% endif %}
 
     <div class="row">
         <div class="span6">
-    <h3>Links</h3>
+    <h3>Aliases</h3>
     <table class="table table-condensed">
-        {% for link in value.links %}
+        {% for alias in entity.aliases %}
             <tr>
                 {% if authz.dataset_edit(dataset) %}
-                    <td><code><a href="{{url_for('link.match', dataset=dataset.name,
-                                link=link.id)}}">{{link.display_name}}</a></code></td>
+                    <td><code><a href="{{url_for('alias.match', dataset=dataset.name,
+                                alias=alias.id)}}">{{alias.display_name}}</a></code></td>
                 {% else %}
-                    <td><code>{{link.display_name}}</code></td>
+                    <td><code>{{alias.display_name}}</code></td>
 
                 {% endif %}
             </tr>
@@ -53,24 +53,24 @@
     {% if authz.dataset_edit(dataset) %}
         <h3>Merge</h3>
         <form class="form-search" method="GET"
-            action="{{url_for('.view', dataset=dataset.name, value=value.id)}}">
+            action="{{url_for('.view', dataset=dataset.name, entity=entity.id)}}">
             <input type="text" class="search-query span5"
-                name="query" value="{{query}}" placeholder="Find a value">
+                name="query" value="{{query}}" placeholder="Find an entity">
             <button type="submit" class="btn">Filter</button>
         </form>
         <form method="POST" action="{{url_for('.merge', dataset=dataset.name,
-            value=value.id)}}">
+            entity=entity.id)}}">
             <table class="table table-condensed">
-                {% for (c, v, s) in values %}
+                {% for (c, e, s) in entities %}
                     <tr>
-                        <td><input type="radio" name="target" value="{{v.id}}"></td>
-                        <td><a href="{{url_for('value.view', dataset=dataset.name,
-                                value=v.id)}}">{{v.display_name}}</a></td>
+                        <td><input type="radio" name="target" value="{{e.id}}"></td>
+                        <td><a href="{{url_for('entity.view', dataset=dataset.name,
+                                entity=e.id)}}">{{e.display_name}}</a></td>
                     </tr>
                 {% endfor %}
                 <tr>
                     <td colspan="2">
-                        {{ pager(values) }}
+                        {{ pager(entities) }}
                     </td>
                 </tr>
             </table>

@@ -27,19 +27,19 @@ def match(text, dataset, query=None):
     matches = []
     begin = time.time()
     func = ALGORITHMS.get(dataset.algorithm, levenshtein)
-    for candidate, value in candidates:
+    for candidate, entity_id in candidates:
         if len(query) and query not in candidate.lower():
             continue
         score = func(text_normalized, candidate)
-        matches.append((candidate, value, score))
-    matches = sorted(matches, key=lambda (c,v,s): s, reverse=True)
-    values = set()
+        matches.append((candidate, entity_id, score))
+    matches = sorted(matches, key=lambda (c,e,s): s, reverse=True)
+    entities = set()
     matches_uniq = []
-    for c,v,s in matches:
-        if v in values:
+    for c,e,s in matches:
+        if e in entities:
             continue
-        values.add(v)
-        matches_uniq.append((c,v,s))
+        entities.add(e)
+        matches_uniq.append((c,e,s))
     duration = time.time() - begin
     log.info("Matching %s candidates took: %sms",
             len(matches_uniq), duration*1000)
@@ -49,11 +49,11 @@ def prefix_search(prefix, dataset):
     prefix_normalized = normalize(prefix, dataset)
     candidates = get_candidates(dataset)
     matches = []
-    values = set()
-    for candidate, value in candidates:
+    entities = set()
+    for candidate, entity_id in candidates:
         if candidate.startswith(prefix_normalized):
-            if value not in values:
-                values.add(value)
-                matches.append((candidate, value))
+            if entity_id not in entities:
+                entities.add(entity_id)
+                matches.append((candidate, entity_id))
     return matches
 

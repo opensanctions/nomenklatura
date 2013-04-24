@@ -5,7 +5,7 @@ from flask import render_template, redirect
 
 from nomenklatura.util import jsonify
 from nomenklatura.exc import BadRequest
-from nomenklatura.model import Dataset, Link, Value
+from nomenklatura.model import Dataset, Alias, Entity
 from nomenklatura.matching import prefix_search, match
 
 section = Blueprint('reconcile', __name__)
@@ -58,22 +58,22 @@ def reconcile_op(dataset, query):
         dataset = type_to_dataset(query.get('type', ''))
 
     results = match(query.get('query', ''), dataset)[:limit]
-    value_objs = Value.id_map(dataset, map(lambda (c,v,s): v, results))
+    entities = Entity.id_map(dataset, map(lambda (c,e,s): e, results))
     matches = []
     skip = False
-    for (candidate, value_id, score) in results:
-        value = value_objs[value_id]
+    for (candidate, entity_id, score) in results:
+        entity = entities[entity_id]
 
         for key, fv in filters:
-            if value.data.get(key) != fv:
+            if entity.data.get(key) != fv:
                 skip = True
         if skip:
             continue
 
-        id = url_for('value.view', dataset=dataset.name, value=value.id)
-        uri = url_for('value.view', dataset=dataset.name, value=value.id, _external=True)
+        id = url_for('entity.view', dataset=dataset.name, entity=entity.id)
+        uri = url_for('entity.view', dataset=dataset.name, entity=entity.id, _external=True)
         matches.append({
-            'name': value.name,
+            'name': entity.name,
             'score': score,
             'type': [{
                 'id': '/' + dataset.name,
@@ -141,18 +141,17 @@ def suggest(dataset):
     dataset = type_to_dataset(dataset)
     query = request.args.get('prefix', '').strip()
     results = prefix_search(query, dataset)[start:start+limit]
-    value_objs = Value.id_map(dataset, map(lambda (c,v): v, results))
+    entities = Entity.id_map(dataset, map(lambda (c,v): v, results))
     matches = []
-    for match in results:
-        candidate, value_id = match
-        value = value_objs[value_id]
+    for candidate, entity_id in results:
+        entity = entities[entity_id]
         matches.append({
-            'name': value.name,
+            'name': entity.name,
             'n:type': {
                 'id': '/' + dataset.name,
                 'name': dataset.label
                 },
-            'id': url_for('value.view', dataset=dataset.name, value=value_id)
+            'id': url_for('entity.view', dataset=dataset.name, entity=entity_id)
             })
     return jsonify({
         "code" : "/api/status/ok",
@@ -165,6 +164,4 @@ def suggest(dataset):
 @section.route('/private/flyout', methods=['GET', 'POST'])
 def flyout():
     return jsonify({'html': '<h3>%s</h3>' % request.args.get('id')})
-
-
 

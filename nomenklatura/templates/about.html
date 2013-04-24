@@ -14,16 +14,16 @@
   <div class="row">
     <div class="span6">
       <p><strong>nomenklatura</strong> is a reference data recon server. It allows
-      users to manage a list of canonical values (e.g. person or organisation
-      names) and aliases that connect to one of the canonical values. This helps 
+      users to manage a list of canonical entities (e.g. person or organisation
+      names) and aliases that connect to one of the canonical entities. This helps 
       to clean up messy data in which a single entity may be referred to by many 
       names.</p>
     </div>
     <div class="span6">
       <p>The key elements in the service include the <code>dataset</code>, which 
-      is a segmented unit of reference data, a set of <code>values</code> - i.e.
-      the canonical forms - and a set of <code>link</code> which connect a
-      non-standard form to a <code>value</code>.</p>
+      is a segmented unit of reference data, a set of <code>entities</code> - i.e.
+      the canonical forms - and a set of <code>aliases</code> which connect a
+      non-standard form to a <code>entity</code>.</p>
     </div>
   </div>
   <hr/>
@@ -40,7 +40,7 @@
       after you are signed in. The API key can be sent either as the content of 
       an <code>Authorization</code> header or as a query paramter called 
       <code>api_key</code>.</p>
-      <p>When a new key is looked up via the API, a new <code>link</code> object is
+      <p>When a new term is looked up via the API, a new <code>alias</code> object is
       created, which will be added to the queue and presented to users for manual
       linkage. Once a link exists, the API will return the corresponding 
       <code>value</code>.</p>
@@ -50,20 +50,20 @@
         <li><code>/{dataset}</code> - retrieve basic dataset metadata, including
         the reconciliation algorithm parameters.</li>
         <li><code>/{dataset}/lookup</code> - look up a link matching the given
-        <code>key</code>. By default, if no judgement exists, a new link element
+        <code>name</code>. By default, if no judgement exists, a new alias element
         is created and queued for reconciliation. This does not happen if the
         user is not authenticated or the <code>readonly</code> query parameter
         is set.</li>
-        <li><code>/{dataset}/values</code> - retrieve a listing of values. A new
+        <li><code>/{dataset}/entities</code> - retrieve a listing of entitites. A new
         value can be created with a POST request to this location, with a single
-        field called <code>value</code> and an optional <code>data</code>
+        field called <code>name</code> and an optional <code>data</code>
         dictionary.</li>
-        <li><code>/{dataset}/values/{id}</code> - retrieve an individual value, 
-        or update the same values with a POST request to this location.</li>
-        <li><code>/{dataset}/links</code> - retrieve a listing of links.</li>
-        <li><code>/{dataset}/links/{id}</code> - retrieve an individual 
-        <li><code>/{dataset}/links/{id}/match</code> - get a list of options
-        for the link or POST a link decision as the <code>choice</code> 
+        <li><code>/{dataset}/entities/{id}</code> - retrieve an individual entity,
+        or update the same entity with a POST request to this location.</li>
+        <li><code>/{dataset}/aliases</code> - retrieve a listing of aliases.</li>
+        <li><code>/{dataset}/aliases/{id}</code> - retrieve an individual alias.</li>
+        <li><code>/{dataset}/aliases/{id}/match</code> - get a list of options
+        for the alias or POST a match decision as the <code>choice</code> 
         parameter.</li>
       </ul>
     </div>
@@ -84,23 +84,23 @@
 
 dataset = Dataset('my-dataset', api_key='..')
 
-# Create a reference value (normally done via the UI):
-in_value = dataset.ensure_value('This is a reference value')
+# Create an entity (normally done via the UI):
+entity = dataset.ensure_entity('This is a reference value')
 
 try:
-  key = 'This needs to be reconciled'
-  out_value = dataset.lookup(key, readonly=False)
-  print out_value.value
+  name = 'This needs to be reconciled'
+  other_entity = dataset.lookup(name, readonly=False)
+  print other_entity.name
 
 except dataset.NoMatch nm:
-  # no match exists, the new key has been queued
+  # no match exists, the new alias has been queued
   # for reconciliation.
-  # link it to the value we created before (this 
+  # link it to the entity we created before (this 
   # is normally done via the UI):
-  dataset.match(nm.id, in_value.id)
+  dataset.match(nm.id, in_entity.id)
 
 except dataset.Invalid inv:
-  # the key is known but not a valid value (i.e.
+  # the name is known but not a valid value (i.e.
   # data error)</pre>
     </div>
   </div>

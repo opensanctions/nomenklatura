@@ -16,22 +16,22 @@
     <div class="row">
         <div class="span3">
             <p>
-                A dataset has a set of canonical values.  
+                A dataset has a set of canonical entities.  
                 Other forms are mapped to one of the 
-                canonical values or marked as invalid. 
+                entities as aliases or marked as invalid. 
             </p>
             <ul>
-                <li><strong>{{num_values}}</strong> Values</li>
-                <li><strong>{{num_links}}</strong> Links ({{invalid}}
+                <li><strong>{{num_entities}}</strong> Entities</li>
+                <li><strong>{{num_aliases}}</strong> Aliases ({{invalid}}
                 invalid)</li>
             </ul>
             <p>
-                Link candidates are added via the <a href="{{url_for('about',
+                Alias candidates are added via the <a href="{{url_for('about',
                   _anchor='api')}}">API</a>. An <a href="https://github.com/OpenRefine/OpenRefine">OpenRefine</a>
                 endpoint is available <a href="{{url_for('reconcile.reconcile', dataset=dataset.name, _external=True)}}">here</a>.
             </p>
             {% if authz.dataset_edit(dataset) %}
-                <a class="btn btn-primary" href="{{url_for('link.match_random', dataset=dataset.name)}}">
+                <a class="btn btn-primary" href="{{url_for('alias.match_random', dataset=dataset.name)}}">
                     <i class="icon-check icon-white"></i> Reconcile ({{unmatched}})</a>
             {% endif %}
             {% if authz.dataset_manage(dataset) %}
@@ -44,28 +44,28 @@
             <form class="form-search" method="GET"
                 action="{{url_for('dataset.view', dataset=dataset.name)}}">
                 <input type="text" class="search-query span8"
-                    name="query" value="{{query}}" placeholder="Find a value">
+                    name="query" value="{{query}}" placeholder="Find an entity">
                 <button type="submit" class="btn">Filter</button>
             </form>
             <table class="table table-striped table-condensed">
                 <tr>
-                    <th width="90%">Value</th>
-                    <th>Links</th>
+                    <th width="90%">Name</th>
+                    <th>Aliases</th>
                 </tr>
-                {% for value in values %}
+                {% for entity in entities %}
                     <tr>
-                        <td><a href="{{url_for('value.view', dataset=dataset.name,
-                                value=value.id)}}">{{value.display_name}}</a></td>
-                        <td>{{value.links.count()}}</td>
+                        <td><a href="{{url_for('entity.view', dataset=dataset.name,
+                                entity=entity.id)}}">{{entity.display_name}}</a></td>
+                        <td>{{entity.aliases.count()}}</td>
                     </tr>
                 {% endfor %}
                 {% if authz.dataset_edit(dataset) %}
                     <form class="well form-inline" method="POST"
-                        action="{{url_for('value.create', dataset=dataset.name)}}">
+                        action="{{url_for('entity.create', dataset=dataset.name)}}">
                         <tr>
                             <td colspan="1">
-                                <input type="text" class="input-xlarge" id="value"
-                                    name="value" placeholder="Add a value...">
+                                <input type="text" class="input-xlarge" id="name"
+                                    name="name" placeholder="Add an entity...">
                             </td>
                             <td>
                                 <button type="submit" class="btn btn-small btn-primary">add</button>
@@ -75,7 +75,7 @@
                 {% endif %}
                 <tr>
                     <td colspan="2">
-                        {{ pager(values) }}
+                        {{ pager(entities) }}
                     </td>
                 </tr>
             </table>

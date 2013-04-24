@@ -9,46 +9,50 @@ from nomenklatura.model.common import JsonType, DataBlob
 from nomenklatura.util import flush_cache, add_candidate_to_cache
 
 
-class ValueState():
+class EntityState():
 
-    def __init__(self, dataset, value):
+    def __init__(self, dataset, entity):
         self.dataset = dataset
-        self.value = value
+        self.entity = entity
 
 
 class AvailableName(FancyValidator):
 
     def _to_python(self, name, state):
-        v = Value.by_name(state.dataset, name)
-        if v is None:
+        entity = Entity.by_name(state.dataset, name)
+        if entity is None:
             return name
-        if state.value and v.id == state.value.id:
+        if state.entity and entity.id == state.entity.id:
             return name
-        raise Invalid('Value already exists.', name, None)
+        raise Invalid('Entity already exists.', name, None)
 
-class MergeableValue(FancyValidator):
+
+class MergeableEntity(FancyValidator):
 
     def _to_python(self, value, state):
-        other = Value.by_id(state.dataset, value)
-        if other is None:
-            raise Invalid('Value does not exist.', value, None)
-        if other == state.value:
-            raise Invalid('Values are identical.', value, None)
-        if other.dataset != state.dataset:
-            raise Invalid('Value belongs to a different dataset.',
+        entity = Entity.by_id(state.dataset, value)
+        if entity is None:
+            raise Invalid('Entity does not exist.', value, None)
+        if entity == state.entity:
+            raise Invalid('Entities are identical.', value, None)
+        if entity.dataset != state.dataset:
+            raise Invalid('Entity belongs to a different dataset.',
                           value, None)
-        return other
+        return entity
 
-class ValueSchema(Schema):
+
+class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
     data = DataBlob(if_missing={}, if_empty={})
 
-class ValueMergeSchema(Schema):
-    allow_extra_fields = True
-    target = MergeableValue()
 
-class Value(db.Model):
+class EntityMergeSchema(Schema):
+    allow_extra_fields = True
+    target = MergeableEntity()
+
+
+class Entity(db.Model):
     __tablename__ = 'entity'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -60,9 +64,9 @@ class Value(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
 
-    links = db.relationship('Link', backref='value',
+    aliases = db.relationship('Alias', backref='value',
                              lazy='dynamic')
-    links_static = db.relationship('Link')
+    aliases_static = db.relationship('Alias')
 
     def as_dict(self, shallow=False):
         d = {
@@ -93,26 +97,26 @@ class Value(db.Model):
 
     @classmethod
     def id_map(cls, dataset, ids):
-        values = {}
-        for value in cls.query.filter_by(dataset=dataset).\
+        entities = {}
+        for entity in cls.query.filter_by(dataset=dataset).\
                 filter(cls.id.in_(ids)):
-            values[value.id] = value
-        return values
+            entities[entity.id] = entity
+        return entities
 
     @classmethod
     def find(cls, dataset, id):
-        value = cls.by_id(dataset, id)
-        if value is None:
+        entity = cls.by_id(dataset, id)
+        if entity is None:
             raise NotFound("No such value ID: %s" % id)
-        return value
+        return entity
 
     @classmethod
-    def all(cls, dataset, query=None, eager_links=False, eager=False):
+    def all(cls, dataset, query=None, eager_aliases=False, eager=False):
         q = cls.query.filter_by(dataset=dataset)
         if query is not None and len(query.strip()):
             q = q.filter(cls.name.ilike('%%%s%%' % query.strip()))
-        if eager_links:
-            q = q.options(joinedload_all(cls.links_static))
+        if eager_aliases:
+            q = q.options(joinedload_all(cls.aliases_static))
         if eager:
             q = q.options(db.joinedload('dataset'))
             q = q.options(db.joinedload('creator'))
@@ -120,21 +124,21 @@ class Value(db.Model):
 
     @classmethod
     def create(cls, dataset, data, account):
-        state = ValueState(dataset, None)
-        data = ValueSchema().to_python(data, state)
-        value = cls()
-        value.dataset = dataset
-        value.creator = account
-        value.name = data['name']
-        value.data = data['data']
-        db.session.add(value)
+        state = EntityState(dataset, None)
+        data = EntitySchema().to_python(data, state)
+        entity = cls()
+        entity.dataset = dataset
+        entity.creator = account
+        entity.name = data['name']
+        entity.data = data['data']
+        db.session.add(entity)
         db.session.flush()
-        add_candidate_to_cache(dataset, value.name, value.id)
-        return value
+        add_candidate_to_cache(dataset, entity.name, entity.id)
+        return entity
 
     def update(self, data, account):
-        state = ValueState(self.dataset, self)
-        data = ValueSchema().to_python(data, state)
+        state = EntityState(self.dataset, self)
+        data = EntitySchema().to_python(data, state)
         self.creator = account
         self.name = data['name']
         self.data = data['data']
@@ -142,22 +146,21 @@ class Value(db.Model):
         db.session.add(self)
 
     def merge_into(self, data, account):
-        from nomenklatura.model.link import Link
-        state = ValueState(self.dataset, self)
-        data = ValueMergeSchema().to_python(data, state)
+        from nomenklatura.model.alias import Alias
+        state = EntityState(self.dataset, self)
+        data = EntityMergeSchema().to_python(data, state)
         target = data.get('target')
-        print [target]
-        for link in self.links:
-            link.value = target
-        link = Link()
-        link.name = self.name
-        link.creator = self.creator
-        link.matcher = account
-        link.value = target
-        link.dataset = self.dataset
-        link.is_matched = True
+        for alias in self.aliases:
+            alias.value = target
+        alias = Alias()
+        alias.name = self.name
+        alias.creator = self.creator
+        alias.matcher = account
+        alias.entity = target
+        alias.dataset = self.dataset
+        alias.is_matched = True
         db.session.delete(self)
-        db.session.add(link)
+        db.session.add(alias)
         db.session.commit()
         flush_cache(self.dataset)
         return target
