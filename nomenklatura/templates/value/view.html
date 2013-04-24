@@ -2,7 +2,7 @@
 {%from "pager.html" import pager %}
 
 {% block title %}
-    {{value.display_value}} - {{dataset.label}}
+    {{value.display_name}} - {{dataset.label}}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -12,7 +12,7 @@
         <span class="divider">/</span>
     </li>
     <li>
-        {{value.display_value}}
+        {{value.display_name}}
     </li>
 {% endblock %}
 
@@ -20,13 +20,13 @@
     {% if authz.dataset_edit(dataset) %}
         <form class="well form-inline" method="POST"
             action="{{url_for('value.update', dataset=dataset.name, value=value.id)}}">
-            <input type="text" class="input-xlarge" id="value" name="value"
-                value="{{value.value}}">
+            <input type="text" class="input-xlarge" id="name" name="name"
+                value="{{value.name}}">
             <button type="submit" class="btn btn-primary">Update</button>
         </form>
     {% else %}
         <div class="well">
-            <code>{{value.value}}</code>
+            <code>{{value.name}}</code>
         </div>
     {% endif %}
 
@@ -65,7 +65,7 @@
                     <tr>
                         <td><input type="radio" name="target" value="{{v.id}}"></td>
                         <td><a href="{{url_for('value.view', dataset=dataset.name,
-                                value=v.id)}}">{{v.display_value}}</a></td>
+                                value=v.id)}}">{{v.display_name}}</a></td>
                     </tr>
                 {% endfor %}
                 <tr>

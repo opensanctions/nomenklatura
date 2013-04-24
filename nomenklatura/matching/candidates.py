@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 def _get_candidates(dataset):
     for value in Value.all(dataset, eager_links=dataset.match_links):
-        candidate = normalize(value.value, dataset)
+        candidate = normalize(value.name, dataset)
         yield candidate, value.id
         if dataset.match_links:
             for link in value.links_static:

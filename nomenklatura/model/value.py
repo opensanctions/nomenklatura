@@ -16,15 +16,15 @@ class ValueState():
         self.value = value
 
 
-class AvailableValue(FancyValidator):
+class AvailableName(FancyValidator):
 
-    def _to_python(self, value, state):
-        v = Value.by_value(state.dataset, value)
+    def _to_python(self, name, state):
+        v = Value.by_name(state.dataset, name)
         if v is None:
-            return value
+            return name
         if state.value and v.id == state.value.id:
-            return value
-        raise Invalid('Value already exists.', value, None)
+            return name
+        raise Invalid('Value already exists.', name, None)
 
 class MergeableValue(FancyValidator):
 
@@ -41,7 +41,7 @@ class MergeableValue(FancyValidator):
 
 class ValueSchema(Schema):
     allow_extra_fields = True
-    value = All(validators.String(min=0, max=5000), AvailableValue())
+    name = All(validators.String(min=0, max=5000), AvailableName())
     data = DataBlob(if_missing={}, if_empty={})
 
 class ValueMergeSchema(Schema):
@@ -52,7 +52,7 @@ class Value(db.Model):
     __tablename__ = 'entity'
 
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Unicode)
+    name = db.Column(db.Unicode)
     data = db.Column(JsonType, default=dict)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('account.id'))
@@ -67,7 +67,7 @@ class Value(db.Model):
     def as_dict(self, shallow=False):
         d = {
             'id': self.id,
-            'value': self.value,
+            'name': self.name,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             }
@@ -78,13 +78,13 @@ class Value(db.Model):
         return d
 
     @property
-    def display_value(self):
-        return self.value
+    def display_name(self):
+        return self.name
 
     @classmethod
-    def by_value(cls, dataset, value):
+    def by_name(cls, dataset, name):
         return cls.query.filter_by(dataset=dataset).\
-                filter_by(value=value).first()
+                filter_by(name=name).first()
 
     @classmethod
     def by_id(cls, dataset, id):
@@ -110,7 +110,7 @@ class Value(db.Model):
     def all(cls, dataset, query=None, eager_links=False, eager=False):
         q = cls.query.filter_by(dataset=dataset)
         if query is not None and len(query.strip()):
-            q = q.filter(cls.value.ilike('%%%s%%' % query.strip()))
+            q = q.filter(cls.name.ilike('%%%s%%' % query.strip()))
         if eager_links:
             q = q.options(joinedload_all(cls.links_static))
         if eager:
@@ -125,18 +125,18 @@ class Value(db.Model):
         value = cls()
         value.dataset = dataset
         value.creator = account
-        value.value = data['value']
+        value.name = data['name']
         value.data = data['data']
         db.session.add(value)
         db.session.flush()
-        add_candidate_to_cache(dataset, value.value, value.id)
+        add_candidate_to_cache(dataset, value.name, value.id)
         return value
 
     def update(self, data, account):
         state = ValueState(self.dataset, self)
         data = ValueSchema().to_python(data, state)
         self.creator = account
-        self.value = data['value']
+        self.name = data['name']
         self.data = data['data']
         flush_cache(self.dataset)
         db.session.add(self)
@@ -146,10 +146,11 @@ class Value(db.Model):
         state = ValueState(self.dataset, self)
         data = ValueMergeSchema().to_python(data, state)
         target = data.get('target')
+        print [target]
         for link in self.links:
             link.value = target
         link = Link()
-        link.key = self.value
+        link.key = self.name
         link.creator = self.creator
         link.matcher = account
         link.value = target

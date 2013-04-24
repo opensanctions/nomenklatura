@@ -45,7 +45,7 @@ def view(dataset, value):
     if format == 'json':
         return jsonify(value)
     query = request.args.get('query', '').strip().lower()
-    choices = match_op(value.value, dataset)
+    choices = match_op(value.name, dataset)
     choices = filter(lambda (c,v,s): v != value.id, choices)
     if len(query):
         choices = filter(lambda (c,v,s): query in Value.find(dataset,v).value.lower(),
@@ -82,7 +82,7 @@ def update(dataset, value):
     try:
         value.update(data, request.account)
         db.session.commit()
-        flash("Updated %s" % value.value, 'success')
+        flash("Updated %s" % value.display_name, 'success')
         return redirect(url_for('.view', dataset=dataset.name, value=value.id))
     except Invalid, inv:
         return handle_invalid(inv, view, data=data,
@@ -97,7 +97,7 @@ def merge(dataset, value):
     try:
         target = value.merge_into(data, request.account)
         db.session.commit()
-        flash("Merged %s" % value.value, 'success')
+        flash("Merged %s" % value.display_name, 'success')
         return redirect(url_for('.view', dataset=dataset.name,
                         value=target.id))
     except Invalid, inv:

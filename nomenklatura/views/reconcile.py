@@ -73,7 +73,7 @@ def reconcile_op(dataset, query):
         id = url_for('value.view', dataset=dataset.name, value=value.id)
         uri = url_for('value.view', dataset=dataset.name, value=value.id, _external=True)
         matches.append({
-            'name': value.value,
+            'name': value.name,
             'score': score,
             'type': [{
                 'id': '/' + dataset.name,
@@ -147,7 +147,7 @@ def suggest(dataset):
         candidate, value_id = match
         value = value_objs[value_id]
         matches.append({
-            'name': value.value,
+            'name': value.name,
             'n:type': {
                 'id': '/' + dataset.name,
                 'name': dataset.label

@@ -47,7 +47,7 @@
                         value="{{value.id}}"></td>
                     <td><code><a href="{{url_for('value.view',
                                 dataset=dataset.name, value=value.id)}}"
-                                target="_new">{{value.value}}</a></code></td>
+                                target="_new">{{value.display_name}}</a></code></td>
                     <td>{{score}}</td>
                 </tr>
             {% endfor %}
@@ -60,7 +60,7 @@
             <tr>
                 <td><input type="radio" name="choice" id="new" value="NEW"></td>
                 <td colspan="2">
-                    <input type="text" name="value" id="new-text" value="">
+                    <input type="text" name="name" id="new-text" value="">
                 </td>
             </tr>
             {% if dataset.enable_invalid %}

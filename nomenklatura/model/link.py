@@ -120,7 +120,7 @@ class Link(db.Model):
             readonly=False):
         data = LinkLookupSchema().to_python(data)
         if match_value:
-            value = Value.by_value(dataset, data['key'])
+            value = Value.by_name(dataset, data['key'])
             if value is not None:
                 return value
         else:

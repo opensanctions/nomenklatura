@@ -55,7 +55,7 @@
                 {% for value in values %}
                     <tr>
                         <td><a href="{{url_for('value.view', dataset=dataset.name,
-                                value=value.id)}}">{{value.display_value}}</a></td>
+                                value=value.id)}}">{{value.display_name}}</a></td>
                         <td>{{value.links.count()}}</td>
                     </tr>
                 {% endfor %}
