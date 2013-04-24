@@ -2,7 +2,7 @@
 {%from "pager.html" import pager %}
 
 {% block title %}
-    {{link.display_key}} - {{dataset.label}}
+    {{link.display_name}} - {{dataset.label}}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -20,7 +20,7 @@
   <script src="/static/js/recon.js"></script>
     <div class="row">
         <div class="span8">
-          Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ link.key | urlencode }}">gg</a>]: <code>{{link.display_key}}</code>
+          Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ link.name | urlencode }}">gg</a>]: <code>{{link.display_name}}</code>
         </div>
         <div class="span4">
             <form id="match-filter" class="form-search" method="GET"

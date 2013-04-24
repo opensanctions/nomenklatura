@@ -29,7 +29,7 @@ class ValidChoice(FancyValidator):
 
 class LinkLookupSchema(Schema):
     allow_extra_fields = True
-    key = validators.String(min=0, max=5000)
+    name = validators.String(min=0, max=5000)
     data = DataBlob(if_missing={}, if_empty={})
 
 class LinkMatchSchema(Schema):
@@ -41,7 +41,7 @@ class Link(db.Model):
     __tablename__ = 'alias'
 
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.Unicode)
+    name = db.Column(db.Unicode)
     data = db.Column(JsonType, default=dict)
     is_matched = db.Column(db.Boolean, default=False)
     is_invalid = db.Column(db.Boolean, default=False)
@@ -57,7 +57,7 @@ class Link(db.Model):
     def as_dict(self):
         return {
             'id': self.id,
-            'key': self.key,
+            'name': self.name,
             'value': self.value.as_dict(shallow=True) if self.value else None,
             'created_at': self.created_at,
             'creator': self.creator.as_dict(),
@@ -70,13 +70,13 @@ class Link(db.Model):
             }
 
     @property
-    def display_key(self):
-        return self.key
+    def display_name(self):
+        return self.name
 
     @classmethod
-    def by_key(cls, dataset, key):
+    def by_name(cls, dataset, name):
         return cls.query.filter_by(dataset=dataset).\
-                filter_by(key=key).first()
+                filter_by(name=name).first()
 
     @classmethod
     def by_id(cls, dataset, id):
@@ -120,15 +120,15 @@ class Link(db.Model):
             readonly=False):
         data = LinkLookupSchema().to_python(data)
         if match_value:
-            value = Value.by_name(dataset, data['key'])
+            value = Value.by_name(dataset, data['name'])
             if value is not None:
                 return value
         else:
             value = None
-        link = cls.by_key(dataset, data['key'])
+        link = cls.by_name(dataset, data['name'])
         if link is not None:
             return link
-        choices = match_op(data['key'], dataset)
+        choices = match_op(data['name'], dataset)
         choices = filter(lambda (c,v,s): s > 99.9, choices)
         if len(choices)==1:
             c, value, s = choices.pop()
@@ -140,11 +140,11 @@ class Link(db.Model):
         link.dataset = dataset
         link.value = value
         link.is_matched = value is not None
-        link.key = data['key']
+        link.name = data['name']
         link.data = data['data']
         db.session.add(link)
         db.session.flush()
-        add_candidate_to_cache(dataset, link.key, value.id)
+        add_candidate_to_cache(dataset, link.name, value.id)
         return link
 
     def match(self, dataset, data, account):

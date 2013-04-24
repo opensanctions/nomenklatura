@@ -14,7 +14,7 @@ def _get_candidates(dataset):
         yield candidate, value.id
         if dataset.match_links:
             for link in value.links_static:
-                candidate = normalize(link.key, dataset)
+                candidate = normalize(link.name, dataset)
                 yield candidate, value.id
 
 def get_candidates(dataset):

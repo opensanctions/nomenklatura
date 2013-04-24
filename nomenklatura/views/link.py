@@ -33,11 +33,11 @@ def view(dataset, link):
     return "Not implemented!"
 
 @section.route('/<dataset>/link', methods=['GET'])
-def view_by_key(dataset):
+def view_by_name(dataset):
     dataset = Dataset.find(dataset)
-    link = Link.by_key(dataset, request.args.get('key'))
+    link = Link.by_name(dataset, request.args.get('name'))
     if link is None:
-        raise NotFound("No such link: %s" % request.args.get('key'))
+        raise NotFound("No such link: %s" % request.args.get('name'))
     return view(dataset.name, link.id)
 
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
@@ -57,7 +57,7 @@ def lookup(dataset):
             return jsonify({
                 'is_matched': False,
                 'value': None,
-                'key': data.get('key'),
+                'name': data.get('name'),
                 'dataset': dataset.name
                 }, status=404)
 
@@ -65,7 +65,7 @@ def lookup(dataset):
             return jsonify({
                 'is_matched': True,
                 'value': link,
-                'key': data.get('key'),
+                'name': data.get('name'),
                 'dataset': dataset.name
                 }, status=200)
 
@@ -96,7 +96,7 @@ def match(dataset, link, random=False):
     authz.require(authz.dataset_edit(dataset))
     link = Link.find(dataset, link)
     random = random or request.args.get('random')=='True'
-    choices = match_op(link.key, dataset,
+    choices = match_op(link.name, dataset,
             query=request.args.get('query'))
     pager = Pager(choices, '.match',
         dataset=dataset.name, link=link.id,
@@ -118,7 +118,7 @@ def match(dataset, link, random=False):
         choice = 'INVALID' if s <= 50 else v.id
     return htmlfill.render(html, force_defaults=False,
             defaults={'choice': choice,
-                      'name': link.key,
+                      'name': link.name,
                       'query': request.args.get('query', ''),
                       'random': random})
 
@@ -136,7 +136,7 @@ def match_save(dataset, link):
         return handle_invalid(inv, match, data=data, 
                               args=[dataset.name, link.id, random])
 
-    flash("Matched: %s" % link.key, "success")
+    flash("Matched: %s" % link.name, "success")
     format = response_format()
     if format == 'json':
         return jsonify(link)

@@ -38,9 +38,9 @@
             <tr>
                 {% if authz.dataset_edit(dataset) %}
                     <td><code><a href="{{url_for('link.match', dataset=dataset.name,
-                                link=link.id)}}">{{link.key}}</a></code></td>
+                                link=link.id)}}">{{link.display_name}}</a></code></td>
                 {% else %}
-                    <td><code>{{link.key}}</code></td>
+                    <td><code>{{link.display_name}}</code></td>
 
                 {% endif %}
             </tr>

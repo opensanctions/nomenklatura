@@ -150,7 +150,7 @@ class Value(db.Model):
         for link in self.links:
             link.value = target
         link = Link()
-        link.key = self.name
+        link.name = self.name
         link.creator = self.creator
         link.matcher = account
         link.value = target
