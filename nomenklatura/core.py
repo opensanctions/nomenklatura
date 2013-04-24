@@ -1,9 +1,3 @@
-# shut up useless SA warning:
-import warnings; 
-warnings.filterwarnings('ignore', 'Unicode type received non-unicode bind param value.')
-from sqlalchemy.exc import SAWarning
-warnings.filterwarnings('ignore', category=SAWarning)
-
 import os
 import logging
 
@@ -37,13 +31,9 @@ github = oauth.remote_app('github',
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
 
 github._client.ca_certs = certifi.where()
-#if 'MEMCACHE_USERNAME' in os.environ:
 memcache = MemcacheClient(
     servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
     username=os.environ.get('MEMCACHIER_USERNAME'),
     password=os.environ.get('MEMCACHIER_PASSWORD'),
     binary=True
     )
-#try:
-#    memcache.flush_all()
-#except: pass
