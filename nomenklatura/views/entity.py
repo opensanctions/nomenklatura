@@ -41,6 +41,7 @@ def create(dataset):
 def view(dataset, entity):
     dataset = Dataset.find(dataset)
     entity = Entity.find(dataset, entity)
+    print entity.data
     format = response_format()
     if format == 'json':
         return jsonify(entity)
