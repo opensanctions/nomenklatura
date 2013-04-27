@@ -5,36 +5,39 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    Authority data.
+    Hosted entity linkage.
 {% endblock %}
 
 {% block content %}
     <div class="row">
         <div class="span4">
-            <p>
-                A lot of time in data wrangling is spent
-                making mappings of variant names to a canonical form.
-                This app provides an easy-to-use, web-based method for 
-                creating such mappings, to allow for a more managed 
-                data cleansing pipeline.
-            </p>
-            <a class="btn btn-info" href="{{url_for('about')}}">
-                <i class="icon-info-sign icon-white"></i> Learn more
-            </a>
-            {% if authz.dataset_create() %}
-                <a class="btn btn-success" href="{{url_for('dataset.new')}}">
-                    <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
-            {% else %}
-                <a class="btn btn-success" href="{{url_for('login')}}">
-                    <i class="icon-plus-sign icon-white"></i> Login with GitHub</a>
-            {% endif %}
+          <p>
+            nomenklatura is a service for entity linkage. A list of alias
+            names can be mapped to the entity they represent.
+          </p>
+          <p>
+            Reconciliation can be used to clean messy and semi-structured
+            data through a set of managed mappings. Easy matches are detected
+            automatically, while more ambiguous alias terms are matched by
+            the user.
+          </p>
+          <a class="btn btn-info" href="{{url_for('about')}}">
+              <i class="icon-info-sign icon-white"></i> Learn more
+          </a>
+          {% if authz.dataset_create() %}
+              <a class="btn btn-success" href="{{url_for('dataset.new')}}">
+                  <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
+          {% else %}
+              <a class="btn btn-success" href="{{url_for('login')}}">
+                  <i class="icon-plus-sign icon-white"></i> Login with GitHub</a>
+          {% endif %}
         </div>
         <div class="span8">
           <table class="table table-condensed">
                 <tr>
                   <th>Dataset</th>
                   <th>Entities</th>
-                  <th>Matched</th>
+                  <th>Aliases</th>
                   <th>Unmatched</th>
                 </tr>
                 {% for dataset in datasets %}
