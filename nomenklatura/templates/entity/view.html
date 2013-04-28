@@ -17,18 +17,30 @@
 {% endblock %}
 
 {% block content %}
-    {% if authz.dataset_edit(dataset) %}
-        <form class="well form-inline" method="POST"
-            action="{{url_for('entity.update', dataset=dataset.name, entity=entity.id)}}">
-            <input type="text" class="input-xlarge" id="name" name="name"
-                value="{{entity.name}}">
-            <button type="submit" class="btn btn-primary">Update</button>
-        </form>
-    {% else %}
-        <div class="well">
-            <code>{{entity.name}}</code>
-        </div>
-    {% endif %}
+    <div class="well row">
+      <div class="span6">
+        {% if authz.dataset_edit(dataset) %}
+          <form class="form-inline" method="POST"
+              action="{{url_for('entity.update', dataset=dataset.name, entity=entity.id)}}">
+              <input type="text" class="input-xlarge" id="name" name="name"
+                  value="{{entity.name}}">
+              <button type="submit" class="btn btn-primary">Update</button>
+          </form>
+        {% else %}
+          <code>{{entity.name}}</code>
+        {% endif %}
+      </div>
+      <div class="span5">
+        <table class="table table-condensed">
+          {% for key, value in entity.data.items() %}
+            <tr>
+              <th>{{key}}</th>
+              <td>{{value}}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
 
     <div class="row">
         <div class="span6">

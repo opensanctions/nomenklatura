@@ -1,11 +1,7 @@
 {%extends "layout.html" %}
 
 {% block title %}
-  Let's link!
-{% endblock %}
-
-{% block breadcrumbs %}
-    Hosted entity linkage.
+  Entity reconciliation service
 {% endblock %}
 
 {% block content %}
@@ -21,19 +17,19 @@
             automatically, while more ambiguous alias terms are matched by
             the user.
           </p>
-          <a class="btn btn-info" href="{{url_for('about')}}">
-              <i class="icon-info-sign icon-white"></i> Learn more
+          <a class="btn" href="{{url_for('about')}}">
+            Learn more
           </a>
           {% if authz.dataset_create() %}
               <a class="btn btn-success" href="{{url_for('dataset.new')}}">
-                  <i class="icon-plus-sign icon-white"></i> Create a dataset</a>
+                  Create a dataset</a>
           {% else %}
               <a class="btn btn-success" href="{{url_for('login')}}">
-                  <i class="icon-plus-sign icon-white"></i> Login with GitHub</a>
+                  Login with GitHub</a>
           {% endif %}
         </div>
         <div class="span8">
-          <table class="table table-condensed">
+          <table class="table table-condensed table-striped">
                 <tr>
                   <th>Dataset</th>
                   <th>Entities</th>

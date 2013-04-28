@@ -14,36 +14,48 @@
 
 {% block content %}
     <div class="row">
-        <div class="span3">
+        <div class="span6">
             <p>
-                A dataset has a set of canonical entities.  
-                Other forms are mapped to one of the 
-                entities as aliases or marked as invalid. 
+                A dataset has a set of named entities.
+                Other forms such as different spelling and 
+                synonyms are mapped to one of the
+                entities as aliases or marked as invalid.
             </p>
-            <ul>
-                <li><strong>{{num_entities}}</strong> Entities</li>
-                <li><strong>{{num_aliases}}</strong> Aliases ({{invalid}}
-                invalid)</li>
-            </ul>
             <p>
-                Alias candidates are added via the <a href="{{url_for('about',
-                  _anchor='api')}}">API</a>. An <a href="https://github.com/OpenRefine/OpenRefine">OpenRefine</a>
-                endpoint is available <a href="{{url_for('reconcile.reconcile', dataset=dataset.name, _external=True)}}">here</a>.
+            <strong>Statistics:</strong>
+                <strong>{{num_entities}}</strong> Entities, 
+                <strong>{{num_aliases}}</strong> Aliases ({{invalid}}
+                marked invalid).
             </p>
             {% if authz.dataset_edit(dataset) %}
-                <a class="btn btn-primary" href="{{url_for('alias.match_random', dataset=dataset.name)}}">
+                <a class="btn flat btn-primary" href="{{url_for('alias.match_random', dataset=dataset.name)}}">
                     <i class="icon-check icon-white"></i> Reconcile ({{unmatched}})</a>
             {% endif %}
             {% if authz.dataset_manage(dataset) %}
-                <a class="btn" href="{{url_for('dataset.edit',
+                <a class="btn flat" href="{{url_for('dataset.edit',
                     dataset=dataset.name)}}">
                     <i class="icon-cog"></i> Settings</a>
+                <a class="btn flat" href="{{url_for('upload.form',
+                    dataset=dataset.name)}}">
+                    <i class="icon-upload"></i> Import data</a>
             {% endif %}
+            <p>
+            <br>
+                Aliases are added via the <a href="{{url_for('about',
+                  _anchor='api')}}">API</a>, by matching names against this
+                endpoint:
+            </p>
+            <pre><code>{{url_for('alias.lookup', dataset=dataset.name, _external=True, name='foo')}}</code></pre>
+            <p>
+                An <a href="https://github.com/OpenRefine/OpenRefine">OpenRefine</a>
+                reconciliation endpoint is available as well (read-only):
+            </p>
+            <pre><code>{{url_for('reconcile.reconcile', dataset=dataset.name, _external=True, query='foo')}}</code></pre>
         </div>
-        <div class="span9">
+        <div class="span6">
             <form class="form-search" method="GET"
                 action="{{url_for('dataset.view', dataset=dataset.name)}}">
-                <input type="text" class="search-query span8"
+                <input type="text" class="search-query span4"
                     name="query" value="{{query}}" placeholder="Find an entity">
                 <button type="submit" class="btn">Filter</button>
             </form>
