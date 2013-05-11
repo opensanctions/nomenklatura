@@ -144,7 +144,8 @@ class Alias(db.Model):
         alias.data = data['data']
         db.session.add(alias)
         db.session.flush()
-        add_candidate_to_cache(dataset, alias.name, entity.id)
+        if entity is not None:
+            add_candidate_to_cache(dataset, alias.name, entity.id)
         return alias
 
     def match(self, dataset, data, account):

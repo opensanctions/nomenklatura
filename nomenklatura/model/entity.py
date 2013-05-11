@@ -64,7 +64,7 @@ class Entity(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
 
-    aliases = db.relationship('Alias', backref='value',
+    aliases = db.relationship('Alias', backref='entity',
                              lazy='dynamic')
     aliases_static = db.relationship('Alias')
 
