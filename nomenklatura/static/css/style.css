@@ -9,7 +9,13 @@ body {
 }
 
 #airlock {
-  padding-top: 2em;
+  padding-top: 1em;
+  position: relative;
+}
+
+#alert-flashes {
+  position: absolute;
+  width: 100%;
 }
 
 a, a:hover {
@@ -56,7 +62,7 @@ a, a:hover {
 
 
 .breadcrumb {
-    margin-top: 2em;
+    /*margin-top: 2em;*/
 }
 
 footer {
