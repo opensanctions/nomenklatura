@@ -69,6 +69,17 @@ class Alias(db.Model):
             'dataset': self.dataset.name
             }
 
+    def as_row(self):
+        if self.is_invalid:
+            return None
+        row = self.entity.as_row() if self.entity else {'name': None, 'id': None}
+        for k, v in self.data.items():
+            if k not in row:
+                row[k] = v
+        row['alias'] = self.name
+        row['alias_id'] = self.id
+        return row
+
     @property
     def display_name(self):
         return self.name

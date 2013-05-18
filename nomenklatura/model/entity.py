@@ -74,12 +74,17 @@ class Entity(db.Model):
             'name': self.name,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            }
+        }
         if not shallow:
             d['creator'] = self.creator.as_dict()
             d['dataset'] = self.dataset.name,
             d['data'] = self.data,
         return d
+
+    def as_row(self):
+        row = self.data.copy()
+        row.update(self.as_dict(shallow=True))
+        return row
 
     @property
     def display_name(self):

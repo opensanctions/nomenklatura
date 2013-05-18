@@ -4,7 +4,7 @@ from formencode import Invalid
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager
+from nomenklatura.util import jsonify, csvify, csv_filename, Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.dataset import view as view_dataset
@@ -14,13 +14,20 @@ from nomenklatura.model import Dataset, Entity
 
 section = Blueprint('entity', __name__)
 
+
+@section.route('/<dataset>/entities.<format>', methods=['GET'])
 @section.route('/<dataset>/entities', methods=['GET'])
-def index(dataset):
+def index(dataset, format='json'):
     dataset = Dataset.find(dataset)
-    format = response_format()
-    if format == 'json':
-        return jsonify(Entity.all(dataset, eager=True))
-    return "Not implemented!"
+    q = Entity.all(dataset, eager=True)
+    if format == 'csv':
+        fn = csv_filename(dataset, 'entities')
+        headers = {
+            'Content-Disposition': 'attachment; filename=' + fn
+        }
+        return csvify(q, headers=headers)
+    return jsonify(q)
+
 
 @section.route('/<dataset>/entities', methods=['POST'])
 def create(dataset):

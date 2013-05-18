@@ -6,7 +6,7 @@ from formencode import Invalid, htmlfill, validators
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager
+from nomenklatura.util import jsonify, csvify, csv_filename, Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.common import handle_invalid
@@ -15,13 +15,20 @@ from nomenklatura.matching import match as match_op
 
 section = Blueprint('alias', __name__)
 
+
+@section.route('/<dataset>/aliases.<format>', methods=['GET'])
 @section.route('/<dataset>/aliases', methods=['GET'])
-def index(dataset):
+def index(dataset, format='json'):
     dataset = Dataset.find(dataset)
-    #format = response_format()
-    #if format == 'json':
-    return jsonify(Alias.all(dataset, eager=True))
-    #return "Not implemented!"
+    q = Alias.all(dataset, eager=True)
+    if format == 'csv':
+        fn = csv_filename(dataset, 'aliases')
+        headers = {
+            'Content-Disposition': 'attachment; filename=' + fn
+        }
+        return csvify(q, headers=headers)
+    return jsonify(q)
+
 
 @section.route('/<dataset>/aliases/<alias>', methods=['GET'])
 def view(dataset, alias):
@@ -32,6 +39,7 @@ def view(dataset, alias):
     return jsonify(alias)
     #return "Not implemented!"
 
+
 @section.route('/<dataset>/aliases', methods=['GET'])
 def view_by_name(dataset):
     dataset = Dataset.find(dataset)
@@ -39,6 +47,7 @@ def view_by_name(dataset):
     if alias is None:
         raise NotFound("No such alias: %s" % request.args.get('name'))
     return view(dataset.name, alias.id)
+
 
 @section.route('/<dataset>/lookup', methods=['POST', 'GET'])
 def lookup(dataset):
@@ -77,6 +86,7 @@ def lookup(dataset):
         return handle_invalid(inv, index, data=data,
                               args=[dataset.name])
 
+
 @section.route('/<dataset>/match', methods=['GET'])
 def match_random(dataset):
     dataset = Dataset.find(dataset)
@@ -89,6 +99,7 @@ def match_random(dataset):
     alias = aliases.offset(randint(0, count-1)).first()
     return redirect(url_for('.match', dataset=dataset.name, alias=alias.id,
                             random=True))
+
 
 @section.route('/<dataset>/aliases/<alias>/match', methods=['GET'])
 def match(dataset, alias, random=False):
@@ -122,6 +133,7 @@ def match(dataset, alias, random=False):
                       'query': request.args.get('query', ''),
                       'random': random})
 
+
 @section.route('/<dataset>/aliases/<alias>/match', methods=['POST'])
 def match_save(dataset, alias):
     dataset = Dataset.find(dataset)
@@ -144,4 +156,3 @@ def match_save(dataset, alias):
         return match_random(dataset.name)
     else:
         return match(dataset.name, alias.id)
-

@@ -27,6 +27,7 @@
                 <strong>{{num_aliases}}</strong> Aliases ({{invalid}}
                 marked invalid).
             </p>
+            <div class="btn-group">
             {% if authz.dataset_edit(dataset) %}
                 <a class="btn flat btn-primary" href="{{url_for('alias.match_random', dataset=dataset.name)}}">
                     <i class="icon-check icon-white"></i> Reconcile ({{unmatched}})</a>
@@ -37,9 +38,20 @@
                     <i class="icon-cog"></i> Settings</a>
                 <a class="btn flat" href="{{url_for('upload.form',
                     dataset=dataset.name)}}">
-                    <i class="icon-upload"></i> Import data</a>
+                    <i class="icon-upload"></i> Import</a>
             {% endif %}
-            <p>
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="icon-download"></i>
+                        Download
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{url_for('alias.index', dataset=dataset.name, format='csv')}}">
+                            Mappings (CSV with entities and aliases)</a></li>
+                        <li><a href="{{url_for('entity.index', dataset=dataset.name, format='csv')}}">
+                            Code sheet (CSV with only entities)</a></li>
+                    </ul>
+            </div>
             <br>
                 Aliases are added via the <a href="{{url_for('about',
                   _anchor='api')}}">API</a>, by matching names against this
