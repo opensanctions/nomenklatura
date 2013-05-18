@@ -4,7 +4,7 @@ from formencode import Invalid, htmlfill
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager
+from nomenklatura.util import jsonify, Pager, flush_cache
 from nomenklatura import authz
 from nomenklatura.views.common import handle_invalid
 from nomenklatura.model import Dataset, Alias, Entity
