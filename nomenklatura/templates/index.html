@@ -9,16 +9,23 @@
 {% block content %}
     <div class="row">
         <div class="span4">
-          <p>
-            nomenklatura is a service for entity linkage. A list of alias
-            names can be mapped to the entity they represent.
-          </p>
-          <p>
-            Reconciliation can be used to clean messy and semi-structured
-            data through a set of managed mappings. Easy matches are detected
-            automatically, while more ambiguous alias terms are matched by
-            the user.
-          </p>
+          <p>Nomenklatura is a simple service that makes it easy to maintain a
+          canonical list of entities such as persons, companies or event
+          streets and to match messy input, such as their names against that
+          canonical list &ndash; for example, matching Acme Widgets, Acme
+          Widgets Inc and Acme Widgets Incorporated to the canonical "Acme
+          Widgets".</p>
+
+          <p>With Nomenklatura its a matters of minutes to set up your own set
+          of master data to match against and it provides a simple user
+          interface and <a href="{{url_for('about')}}#api">API</a> which you
+          can then use do matching (the API is compatible with Open Refine's
+          reconciliation function).</p>
+
+          <p>Nomenklatura can not only store the master set of entities you
+          want to match against but also will learn and record the various
+          aliases for a given entity - such as a person, organisation or place
+          - may have in various datasets.</p>
           <a class="btn" href="{{url_for('about')}}">
             Learn more
           </a>
