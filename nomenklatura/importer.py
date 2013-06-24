@@ -14,7 +14,7 @@ from nomenklatura.model import Dataset, Entity, Alias, Account
 
 
 def get_bucket():
-    return s3.create_bucket(app.config['S3_BUCKET'])
+    return s3.get_bucket(app.config['S3_BUCKET'])
 
 
 def key_name(dataset, sig):
