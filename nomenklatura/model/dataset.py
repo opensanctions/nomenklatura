@@ -49,6 +49,8 @@ class Dataset(db.Model):
                              lazy='dynamic')
     aliases = db.relationship('Alias', backref='dataset',
                              lazy='dynamic')
+    uploads = db.relationship('Upload', backref='dataset',
+                               lazy='dynamic')
 
     def as_dict(self):
         return {

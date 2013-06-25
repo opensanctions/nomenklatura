@@ -18,7 +18,7 @@
 
 {% block content %}
   <form class="form-horizontal" method="POST"
-      action="{{ url_for('upload.submit', dataset=dataset.name, sig=sig) }}">
+      action="{{ url_for('upload.submit', dataset=dataset.name, id=id) }}">
     
     <table class="table table-bordered table-condensed">
       <tr>

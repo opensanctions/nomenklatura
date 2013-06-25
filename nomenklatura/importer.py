@@ -1,66 +1,46 @@
-from hashlib import sha1
-from time import time
 import os
-from tempfile import mkstemp
 
 from messytables.any import AnyTableSet
-from messytables import headers_guess, headers_processor, \
-        offset_processor
+from messytables import headers_guess, headers_processor
+from messytables import offset_processor
 
-from nomenklatura.core import s3, app, db, celery
+from nomenklatura.core import app, db, celery
 from nomenklatura.exc import NotFound
 from nomenklatura.util import flush_cache
-from nomenklatura.model import Dataset, Entity, Alias, Account
+from nomenklatura.model import Dataset, Entity, Alias, Account, Upload
 
 
-def get_bucket():
-    return s3.get_bucket(app.config['S3_BUCKET'])
+def upload_file(dataset, file_, account):
+    upload = Upload.create(dataset, account,
+                           file_.filename, file_.mimetype)
+    file_.save(upload.path)
+    db.session.commit()
+    return upload
 
 
-def key_name(dataset, sig):
-    return "%s/%s" % (dataset.name, sig)
-
-
-def upload_file(dataset, file_):
-    fn = file_.filename.encode('ascii', 'replace')
-    sig = sha1(fn + str(time())).hexdigest()
-    key = get_bucket().new_key(key_name(dataset, sig))
-    fh, tmp = mkstemp()
-    file_.save(tmp)
-    key.set_metadata('filename', file_.filename)
-    key.set_metadata('mimetype', file_.mimetype)
-    key.set_contents_from_filename(tmp)
-    os.unlink(tmp)
-    return sig
-
-
-def get_key(dataset, sig):
-    key = get_bucket().get_key(key_name(dataset, sig))
-    if not key:
-        raise NotFound()
-    return key
-
-
-def get_map_metadata(dataset, sig):
-    metadata, row_set = parse_upload(dataset, sig)
+def get_map_metadata(dataset, id):
+    metadata, row_set = parse_upload(dataset, id)
     headers = detect_headers(row_set)
     return {
         'dataset': dataset,
-        'sig': sig,
+        'id': id,
         'sample': list(row_set.sample)[:5],
         'headers': headers,
-        'filename': metadata.get('filename')
-        }
+        'filename': metadata.filename
+    }
 
 
-def parse_upload(dataset, sig):
-    key = get_key(dataset, sig)
-    fn, ext = os.path.splitext(key.metadata.get('filename'))
+def parse_upload(dataset, id):
+    upload = Upload.by_id(id)
+    if upload is None:
+        return None, None
+    fh = open(upload.path, 'rb')
+    fn, ext = os.path.splitext(upload.filename)
     ext = ext[1:] if ext else None
-    table_set = AnyTableSet.from_fileobj(key,
-            mimetype=key.metadata.get('mimetype'),
+    table_set = AnyTableSet.from_fileobj(fh,
+            mimetype=upload.mimetype,
             extension=ext[1:])
-    return key.metadata, table_set.tables[0]
+    return upload, table_set.tables[0]
 
 
 def detect_headers(row_set):
@@ -71,11 +51,11 @@ def detect_headers(row_set):
 
 
 @celery.task
-def import_upload(dataset_name, sig, account_id,
+def import_upload(dataset_name, id, account_id,
                   entity_col, alias_col):
     dataset = Dataset.find(dataset_name)
     account = Account.by_id(account_id)
-    metadata, row_set = parse_upload(dataset, sig)
+    metadata, row_set = parse_upload(dataset, id)
     headers = detect_headers(row_set)
     for row in row_set:
         data = dict([(c.column, c.value) for c in row])
@@ -95,4 +75,4 @@ def import_upload(dataset_name, sig, account_id,
         if alias_col and entity_col:
             alias_obj.match(dataset, {'choice': entity_obj.id}, account)
     db.session.commit()
-    flush_cache()
+    flush_cache(dataset)

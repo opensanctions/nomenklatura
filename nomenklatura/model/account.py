@@ -23,6 +23,8 @@ class Account(db.Model):
 
     datasets = db.relationship('Dataset', backref='owner',
                                lazy='dynamic')
+    uploads = db.relationship('Upload', backref='creator',
+                               lazy='dynamic')
     entities_created = db.relationship('Entity', backref='creator',
                                lazy='dynamic')
     aliases_created = db.relationship('Alias', backref='creator',
