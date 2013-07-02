@@ -66,7 +66,21 @@ class Dataset(db.Model):
             'algorithm': self.algorithm,
             'created_at': self.created_at,
             'updated_at': self.updated_at
-            }
+        }
+
+    @property
+    def last_modified(self):
+        dates = [self.updated_at]
+        from nomenklatura.model.entity import Entity
+        latest_entity = self.entities.order_by(Entity.updated_at.desc()).first()
+        if latest_entity is not None:
+            dates.append(latest_entity.updated_at)
+
+        from nomenklatura.model.alias import Alias
+        latest_alias = self.aliases.order_by(Alias.updated_at.desc()).first()
+        if latest_alias is not None:
+            dates.append(latest_alias.updated_at)
+        return max(dates)
 
     @classmethod
     def by_name(cls, name):

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
+from werkzeug.http import http_date
 from formencode import Invalid, htmlfill
 
 from nomenklatura.core import db
@@ -39,19 +40,24 @@ def create():
 def view(dataset):
     dataset = Dataset.find(dataset)
     format = response_format()
+    headers = {
+        'X-Dataset': dataset.name,
+        'Last-Modified': http_date(dataset.last_modified)
+    }
     if format == 'json':
-        return jsonify(dataset)
+        return jsonify(dataset, headers=headers)
     unmatched = Alias.all_unmatched(dataset).count()
     entities = Entity.all(dataset, query=request.args.get('query'))
     pager = Pager(entities, '.view', dataset=dataset.name,
                   limit=10)
-    return render_template('dataset/view.html',
+    html = render_template('dataset/view.html',
             entities=pager,
             num_entities=len(pager),
             num_aliases=Alias.all(dataset).count(),
             invalid=Alias.all_invalid(dataset).count(),
             query=request.args.get('query', ''),
             dataset=dataset, unmatched=unmatched)
+    return Response(html, headers=headers)
 
 @section.route('/<dataset>/edit', methods=['GET'])
 def edit(dataset):
