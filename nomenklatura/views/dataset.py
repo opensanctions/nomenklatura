@@ -1,5 +1,5 @@
 from flask import Blueprint, request, url_for, flash
-from flask import render_template, redirect
+from flask import render_template, redirect, Response
 from werkzeug.http import http_date
 from formencode import Invalid, htmlfill
 
