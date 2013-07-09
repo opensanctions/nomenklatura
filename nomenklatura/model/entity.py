@@ -156,7 +156,7 @@ class Entity(db.Model):
         data = EntityMergeSchema().to_python(data, state)
         target = data.get('target')
         for alias in self.aliases:
-            alias.value = target
+            alias.entity = target
         alias = Alias()
         alias.name = self.name
         alias.creator = self.creator
@@ -169,4 +169,3 @@ class Entity(db.Model):
         db.session.commit()
         flush_cache(self.dataset)
         return target
-
