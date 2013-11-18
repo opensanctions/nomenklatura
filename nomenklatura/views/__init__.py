@@ -68,22 +68,26 @@ def handle_exceptions(exc):
                        headers=exc.get_headers(request.environ))
     return exc
 
+
 app.register_blueprint(dataset)
 app.register_blueprint(entity)
 app.register_blueprint(alias)
 app.register_blueprint(upload)
-app.register_blueprint(sessions)
+app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(reconcile)
+
 
 @app.route('/about')
 def about():
     return render_template('about.html')
+
 
 @app.route('/account')
 def account():
     authz.require(authz.logged_in())
     return render_template('account.html', 
             api_key=request.account.api_key)
+
 
 @app.route('/')
 def index():
