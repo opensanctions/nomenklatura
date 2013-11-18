@@ -21,7 +21,7 @@
         Learn more
       </a>
       <a ng-show="session.logged_in" class="btn btn-primary"
-        href="/new">Create a dataset</a>
+        ng-click='newDataset()'>Create a dataset</a>
       <a ng-hide="session.logged_in" class="btn btn-success" href="/api/2/sessions/login">
           Login with GitHub</a>
     </div>

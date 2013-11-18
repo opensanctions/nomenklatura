@@ -23,23 +23,13 @@ MIME_TYPES = {
 log = logging.getLogger(__name__)
 
 
-def request_format(request):
-    """ 
-    Determine the format of the request content. This is slightly 
-    ugly as Flask has excellent request handling built in and we 
-    begin to work around it.
-    """
-    return MIME_TYPES.get(request.content_type, 'html')
-
-
 def request_content():
     """
     Handle a request and return a generator which yields all rows 
     in the incoming set.
     """
-    format = request_format(request)
-    if format == 'json':
-        return json.loads(request.data)
+    if request.json:
+        return request.json
     else:
         data = request.form if request.method == 'POST' \
                 else request.args
