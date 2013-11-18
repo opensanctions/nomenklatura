@@ -52,11 +52,24 @@ class Dataset(db.Model):
                                lazy='dynamic')
 
     def as_dict(self):
+        from nomenklatura.model.alias import Alias
+        from nomenklatura.model.entity import Entity
+        num_aliases = Alias.all(self).count()
+        num_unmatched = Alias.all_unmatched(self).count()
+        num_entities = Entity.all(self).count()
+        num_invalid = Alias.all_invalid(self).count()
+    
         return {
             'id': self.id,
             'name': self.name,
             'label': self.label,
             'owner': self.owner.as_dict(),
+            'stats': {
+                'num_aliases': num_aliases,
+                'num_entities': num_entities,
+                'num_unmatched': num_unmatched,
+                'num_invalid': num_invalid
+            },
             'ignore_case': self.ignore_case,
             'match_aliases': self.match_aliases,
             'public_edit': self.public_edit,

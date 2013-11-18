@@ -15,6 +15,7 @@ from nomenklatura.views.entity import section as entity
 from nomenklatura.views.alias import section as alias
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
+from nomenklatura.views.datasets_api import section as datasets_api
 from nomenklatura.views.reconcile import section as reconcile
 
 
@@ -88,8 +89,10 @@ app.register_blueprint(dataset)
 app.register_blueprint(entity)
 app.register_blueprint(alias)
 app.register_blueprint(upload)
-app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(reconcile)
+app.register_blueprint(sessions, url_prefix='/api/2')
+app.register_blueprint(datasets_api, url_prefix='/api/2')
+
 
 
 def angular_templates():
