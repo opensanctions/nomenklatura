@@ -13,29 +13,6 @@ from nomenklatura.model import Dataset, Alias, Entity
 section = Blueprint('dataset', __name__)
 
 
-@section.route('/new', methods=['GET'])
-def new():
-    authz.require(authz.dataset_create())
-    return render_template('dataset/new.html')
-
-
-@section.route('/datasets', methods=['GET'])
-def index():
-    return jsonify(Dataset.all())
-
-
-@section.route('/', methods=['POST'])
-def create():
-    authz.require(authz.dataset_create())
-    data = request_content()
-    try:
-        dataset = Dataset.create(data, request.account)
-        db.session.commit()
-        return redirect(url_for('.view', dataset=dataset.name))
-    except Invalid, inv:
-        return handle_invalid(inv, new, data=data)
-
-
 @section.route('/<dataset>', methods=['GET'])
 def view(dataset):
     dataset = Dataset.find(dataset)
