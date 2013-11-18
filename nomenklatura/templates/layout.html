@@ -33,10 +33,10 @@
                 <img width="16" height="16" src="{{avatar_url}}">
                 <strong>{{login}}</strong></a>
                 </li>
-              <li><a href="{{url_for('logout')}}">logout</a></li>
+              <li><a href="{{url_for('sessions.logout')}}">logout</a></li>
             {% else %}
               <li>
-                    <a href="{{url_for('login')}}">
+                    <a href="{{url_for('sessions.login')}}">
                       Login with GitHub</a></li>
             {% endif %}
           </ul>

@@ -2,7 +2,7 @@ from flask.ext.script import Manager
 
 from nomenklatura.core import app, db
 from nomenklatura.model import *
-from nomenklatura import web
+from nomenklatura import views
 
 manager = Manager(app)
 
