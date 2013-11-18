@@ -1,4 +1,5 @@
 import urllib
+import os
 
 from flask import render_template, request
 from flask import session, Markup
@@ -91,19 +92,18 @@ app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(reconcile)
 
 
-@app.route('/about')
-def about():
-    return render_template('about.html')
-
-
-@app.route('/account')
-def account():
-    authz.require(authz.logged_in())
-    return render_template('account.html', 
-            api_key=request.account.api_key)
+def angular_templates():
+    #if app.config.get('ASSETS_DEBUG'):
+    #    return
+    partials_dir = os.path.join(app.static_folder, 'templates')
+    for (root, dirs, files) in os.walk(partials_dir):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            with open(file_path, 'rb') as fh:
+                yield ('/static/templates/%s' % file_path[len(partials_dir)+1:],
+                       fh.read().decode('utf-8'))
 
 
 @app.route('/')
 def index():
-    datasets = Dataset.all().order_by(Dataset.label.asc())
-    return render_template('index.html', datasets=datasets)
+    return render_template('app.html', angular_templates=angular_templates())

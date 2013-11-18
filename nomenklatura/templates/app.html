@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" ng-app="nomenklatura">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>{% block title %}Welcome{% endblock %} - nomenklatura</title>
-  <meta name="description" content="{% block description %}nomenklatura is a service for entity linkage. A list of alias names can be mapped to the entity they represent.{% endblock %}">
+  <title>nomenklatura</title>
+  <meta name="description" content="nomenklatura is a data cleaning service. It helps data users to remove duplicate and near-duplicate entity references from their data by creating canonical
+  entity lists with aliases.">
 
   {% assets filters="less,cssmin,cssrewrite", output="gen/style.css",
       "vendor/bootstrap/less/bootstrap.less",
@@ -18,7 +19,7 @@
   <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico" type="image/x-icon" />
 </head>
 <body>
-  <div id="page">
+  <div id="page" ng-controller="AppCtrl">
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="menu">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
@@ -27,44 +28,21 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/"><img src="/static/img/logo.png" alt="nomenklatura"></a>
+        <a class="navbar-brand" href="/#"><img src="/static/img/logo.png" alt="nomenklatura"></a>
       </div>
 
       <div class="collapse navbar-collapse navbar-ex1-collapse navbar-right">
         <ul class="nav navbar-nav">
-          {% if logged_in %}
-            <li>
-              <a href="{{url_for('account')}}">
-                <img width="16" height="16" src="{{avatar_url}}">
-                <strong>{{login}}</strong></a>
-            </li>
-            <li><a href="{{url_for('sessions.logout')}}">logout</a></li>
-          {% else %}
-            <li><a href="{{url_for('sessions.login')}}"> Login with GitHub</a></li>
-          {% endif %}
+          <li ng-show="session.logged_in"><a href="#/profile">Profile</a></li>
+          <li ng-hide="session.logged_in"><a href="/api/2/sessions/login">Sign In</a></li>
+          <li ng-show="session.logged_in"><a href="/api/2/sessions/logout">Sign Out</a></li>
+          <li><a href="/#/about">Help</a></li>
         </ul>
       </div>
     </nav>
 
     <div id="airlock" class="container">
-      <div id="alert-flashes">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                <button class="close" data-dismiss="alert">×</button>
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-      </div>
-
-      <ul class="breadcrumb">{{ self.breadcrumbs() }}</ul>
-
-      {% block content %}
-         - No Content -
-      {% endblock %}
+      <div class="row" ng-view></div>
     </div>
   </div>
   <footer>
@@ -77,19 +55,29 @@
     </div>
   </footer>
 
+  {% for path, tmpl in angular_templates %}
+    <script id="{{path}}" type="text/ng-template">{{tmpl|safe}}</script>
+  {% endfor %}
+
   {% assets filters="uglifyjs", output="gen/app.js",
         "vendor/jquery/jquery.js",
         "vendor/bootstrap/js/dropdown.js",
         "vendor/bootstrap/js/alert.js",
         "vendor/bootstrap/js/collapse.js",
-        "js/app.js"
+
+        "vendor/angular/angular.js",
+        "vendor/angular-route/angular-route.js",
+        "vendor/angular-ui-bootstrap3/ui-bootstrap-tpls.js",
+
+        "js/app.js",
+        "js/services/session.js",
+        "js/controllers/app.js",
+        "js/controllers/home.js",
+        "js/controllers/pages.js",
+        "js/controllers/profile.js"
          %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
-
-  {% block scripts %}
-
-  {% endblock %}
 </body>
 </html>
 
