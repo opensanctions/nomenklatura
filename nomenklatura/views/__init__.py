@@ -1,7 +1,8 @@
+import urllib
+
 from flask import render_template, request
 from flask import session, Markup
-
-import urllib
+from formencode import Invalid
 
 from nomenklatura.core import app
 from nomenklatura.model import Dataset, Account
@@ -67,6 +68,19 @@ def handle_exceptions(exc):
         return jsonify(body, status=exc.code,
                        headers=exc.get_headers(request.environ))
     return exc
+
+
+@app.errorhandler(Invalid)
+def handle_invalid(exc):
+    body = {
+        'status': 400,
+        'name': 'Invalid Data',
+        'description': unicode(exc),
+        'errors': exc.unpack_errors()
+    }
+    return jsonify(body, status=400)
+
+
 
 
 app.register_blueprint(dataset)
