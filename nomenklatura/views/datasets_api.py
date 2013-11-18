@@ -3,7 +3,8 @@ from flask import redirect
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content
-from nomenklatura.util import jsonify, Pager
+from nomenklatura.util import jsonify
+from nomenklatura.pager import Pager
 from nomenklatura import authz
 from nomenklatura.model import Dataset
 

@@ -4,9 +4,10 @@ from formencode import Invalid
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, csvify, csv_filename, Pager
+from nomenklatura.util import jsonify, csvify, csv_filename
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
+from nomenklatura.pager import Pager
 from nomenklatura.views.dataset import view as view_dataset
 from nomenklatura.views.common import handle_invalid
 from nomenklatura.matching import match as match_op

@@ -52,7 +52,7 @@ class Dataset(db.Model):
     uploads = db.relationship('Upload', backref='dataset',
                                lazy='dynamic')
 
-    def as_dict(self):
+    def to_dict(self):
         from nomenklatura.model.alias import Alias
         from nomenklatura.model.entity import Entity
         num_aliases = Alias.all(self).count()

@@ -34,7 +34,7 @@ class Account(db.Model):
                         primaryjoin='Alias.matcher_id==Account.id',
                                lazy='dynamic')
 
-    def as_dict(self):
+    def to_dict(self):
         return {
             'id': self.id,
             'github_id': self.github_id,

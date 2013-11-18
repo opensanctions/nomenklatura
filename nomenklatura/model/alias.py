@@ -54,7 +54,7 @@ class Alias(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
 
-    def as_dict(self):
+    def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
@@ -69,7 +69,7 @@ class Alias(db.Model):
             'dataset': self.dataset.name
             }
 
-    def as_row(self):
+    def to_row(self):
         if self.is_invalid:
             return None
         row = self.entity.as_row() if self.entity else {'name': None, 'id': None}

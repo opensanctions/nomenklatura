@@ -1,16 +1,13 @@
 from datetime import datetime
-from collections import defaultdict
 from StringIO import StringIO
 import csv
-import json
 import logging
 
 from werkzeug.exceptions import NotFound
 from formencode.variabledecode import NestedVariables
 from flask import Response, current_app, request
-from sqlalchemy.orm.query import Query
-
-from nomenklatura.pager import Pager
+from flask.ext.utils.serialization import jsonify
+from flask.ext.utils.args import arg_bool, arg_int
 
 
 MIME_TYPES = {
@@ -36,37 +33,6 @@ def request_content():
         return NestedVariables().to_python(data)
 
 
-class JSONEncoder(json.JSONEncoder):
-    """ This encoder will serialize all entities that have a to_dict
-    method by calling that method and serializing the result. """
-
-    def encode(self, obj):
-        if hasattr(obj, 'as_dict'):
-            obj = obj.as_dict()
-        return super(JSONEncoder, self).encode(obj)
-
-    def default(self, obj):
-        if hasattr(obj, 'as_dict'):
-            return obj.as_dict()
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        if isinstance(obj, Query):
-            return list(obj)
-        if isinstance(obj, Pager):
-            return list(obj)
-        raise TypeError("%r is not JSON serializable" % obj)
-
-
-def jsonify(obj, status=200, headers=None, shallow=False):
-    """ Custom JSONificaton to support obj.to_dict protocol. """
-    jsondata = JSONEncoder().encode(obj)
-    if 'callback' in request.args:
-        jsondata = '%s && %s(%s)' % (request.args.get('callback'),
-                request.args.get('callback'), jsondata)
-    return Response(jsondata, headers=headers,
-                    status=status, mimetype='application/json')
-
-
 def csv_value(v):
     if v is None:
         return v
@@ -76,7 +42,7 @@ def csv_value(v):
 
 
 def csvify(iterable, status=200, headers=None):
-    rows = filter(lambda r: r is not None, [r.as_row() for r in iterable])
+    rows = filter(lambda r: r is not None, [r.to_row() for r in iterable])
     keys = set()
     for row in rows:
         keys = keys.union(row.keys())

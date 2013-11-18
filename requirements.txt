@@ -13,5 +13,6 @@ certifi==0.0.8
 pylibmc==1.2.3
 celery==3.1.4
 -e git+https://github.com/okfn/messytables.git#egg=messytables
+-e git+git://github.com/pudo/flask-utils.git#egg=flask-utils
 nose==1.3.0
 cssmin==0.2.0

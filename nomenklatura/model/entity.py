@@ -68,7 +68,7 @@ class Entity(db.Model):
                              lazy='dynamic')
     aliases_static = db.relationship('Alias')
 
-    def as_dict(self, shallow=False):
+    def to_dict(self, shallow=False):
         d = {
             'id': self.id,
             'name': self.name,
@@ -81,7 +81,7 @@ class Entity(db.Model):
             d['data'] = self.data,
         return d
 
-    def as_row(self):
+    def to_row(self):
         row = self.data.copy()
         row.update(self.as_dict(shallow=True))
         return row

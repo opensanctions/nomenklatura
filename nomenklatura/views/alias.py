@@ -6,7 +6,8 @@ from formencode import Invalid, htmlfill, validators
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, csvify, csv_filename, Pager
+from nomenklatura.util import jsonify, csvify, csv_filename
+from nomenklatura.pager import Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
 from nomenklatura.views.common import handle_invalid
