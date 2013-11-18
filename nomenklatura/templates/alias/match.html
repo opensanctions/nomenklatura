@@ -16,8 +16,11 @@
     </li>
 {% endblock %}
 
-{% block content %}
+{% block scripts %}
   <script src="/static/js/recon.js"></script>
+{% endblock %}
+
+{% block content %}
     <div class="row">
         <div class="span8">
           Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ alias.name | urlencode }}">gg</a>]: <code>{{alias.display_name}}</code>

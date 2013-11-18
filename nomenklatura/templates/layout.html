@@ -1,8 +1,5 @@
 <!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -10,19 +7,16 @@
   <title>{% block title %}Welcome{% endblock %} - nomenklatura</title>
   <meta name="description" content="{% block description %}nomenklatura is a service for entity linkage. A list of alias names can be mapped to the entity they represent.{% endblock %}">
   <meta name="viewport" content="width=device-width">
-  <link href="http://assets.okfn.org/p/labs/201210/css/bootstrap.css" rel="stylesheet">
 
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-  <script src="http://assets.okfn.org/p/labs/201210/js/bootstrap.js"></script>
+  {% assets filters="less,cssmin,cssrewrite", output="gen/style.css",
+      "vendor/bootstrap/docs/assets/css/bootstrap.css",
+      "vendor/font-awesome/less/font-awesome.less",
+      "style/prettify.css",
+      "style/style.less" %}
+    <link type="text/css" href="{{ ASSET_URL }}" rel="stylesheet">
+  {% endassets %}
 
-  <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="/static/css/prettify.css">
-  <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
-  <script src="/static/js/modernizr.min.js"></script>
-  <script src="/static/js/jquery.js"></script>
-  <script src="/static/js/bootstrap.min.js"></script>
-  <script src="/static/js/prettify.js"></script>
-  <script src="/static/js/app.js"></script>
+  <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico" type="image/x-icon" />
 </head>
 <body>
     <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
@@ -81,12 +75,18 @@
     </div>
   </footer>
 
-  <script>
-    var _gaq=[['_setAccount','UA-8271754-XXXXXXXXXXXXXXXXXXXXX FIX ME XXXXXXXXXXXXXXXXX'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-  </script>
+  {% assets filters="uglifyjs", output="gen/app.js",
+        "vendor/jquery/jquery.js",
+        "vendor/bootstrap/js/bootstrap-alert.js",
+        "js/prettify.js",
+        "js/app.js"
+         %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% block scripts %}
+
+  {% endblock %}
 </body>
 </html>
 

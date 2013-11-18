@@ -4,9 +4,10 @@ import logging
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.oauth import OAuth
+from flask.ext.assets import Environment
+
 import certifi
 from pylibmc import Client as MemcacheClient
-from boto.s3.connection import S3Connection
 from celery import Celery
 
 from nomenklatura import default_settings
@@ -18,6 +19,7 @@ app.config.from_object(default_settings)
 app.config.from_envvar('NOMENKLATURA_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
+assets = Environment(app)
 celery = Celery('nomenklatura', broker=app.config['CELERY_BROKER'])
 
 oauth = OAuth()

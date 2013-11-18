@@ -5,3 +5,6 @@
 _store/*
 .env
 settings.py
+nomenklatura/static/vendor/*
+nomenklatura/static/gen/*
+nomenklatura/static/.webassets-cache/*
