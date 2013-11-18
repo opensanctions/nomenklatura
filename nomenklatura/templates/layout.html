@@ -11,7 +11,6 @@
   {% assets filters="less,cssmin,cssrewrite", output="gen/style.css",
       "vendor/bootstrap/less/bootstrap.less",
       "vendor/font-awesome/less/font-awesome.less",
-      "style/prettify.css",
       "style/style.less" %}
     <link type="text/css" href="{{ ASSET_URL }}" rel="stylesheet">
   {% endassets %}
@@ -19,8 +18,6 @@
   <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico" type="image/x-icon" />
 </head>
 <body>
-    <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
-
   <div id="page">
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="menu">
       <div class="navbar-header">
@@ -85,7 +82,6 @@
         "vendor/bootstrap/js/dropdown.js",
         "vendor/bootstrap/js/alert.js",
         "vendor/bootstrap/js/collapse.js",
-        "js/prettify.js",
         "js/app.js"
          %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
