@@ -53,8 +53,7 @@
                     </ul>
             </div>
             <br>
-                Aliases are added via the <a href="{{url_for('about',
-                  _anchor='api')}}">API</a>, by matching names against this
+                Aliases are added via the <a href="/#/about">API</a>, by matching names against this
                 endpoint:
             </p>
             <pre><code>{{url_for('alias.lookup', dataset=dataset.name, _external=True, name='foo')}}</code></pre>
