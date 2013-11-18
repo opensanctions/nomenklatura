@@ -1,3 +1,4 @@
+@mainColor: #c0392b;
 
 body {
   background-color: #f9f9f9;
@@ -19,12 +20,12 @@ body {
 }
 
 a, a:hover {
-  color: #c0392b;
+  color: @mainColor;
 }
 
 #menu.navbar-static-top .navbar-inner {
   background-image: none;
-  background-color: #c0392b;
+  background-color: @mainColor;
   border: 0;
   box-shadow: none;
   -webkit-box-shadow: none;
@@ -53,38 +54,27 @@ a, a:hover {
   text-shadow: none !important;
 }
 
-#menu ul.nav li:hover a {
-  /*color: #fff !important;*/
-  /*text-shadow: none !important;*/
-}
-
-
-
-.breadcrumb {
-    /*margin-top: 2em;*/
-}
-
 footer {
   border-top: 1px solid #dddddd;
-  /*background-color: red;*/
   padding: 1em 0 2em 0;
+
+  a {
+    color: @mainColor;
+    font-weight: bold;
+  }
+
+  ul {
+    list-style-type: none;
+    margin: 0px;
+  }
+
+  ul li {
+    float: right;
+    display: inline-block;
+    margin-left: 2em;
+  }
 }
 
-footer a {
-  color: #c0392b;
-  font-weight: bold;
-}
-
-footer ul {
-  list-style-type: none;
-  margin: 0px;
-}
-
-footer ul li {
-  float: right;
-  display: inline-block;
-  margin-left: 2em;
-}
 
 table .pager {
     margin-bottom: 0;
