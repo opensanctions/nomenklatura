@@ -6,7 +6,6 @@ from messytables import offset_processor
 
 from nomenklatura.core import app, db, celery
 from nomenklatura.exc import NotFound
-from nomenklatura.util import flush_cache
 from nomenklatura.model import Dataset, Entity, Alias, Account, Upload
 
 
@@ -75,4 +74,3 @@ def import_upload(dataset_name, id, account_id,
         if alias_col and entity_col:
             alias_obj.match(dataset, {'choice': entity_obj.id}, account)
     db.session.commit()
-    flush_cache(dataset)
