@@ -76,7 +76,7 @@ class Entity(db.Model):
             'updated_at': self.updated_at,
         }
         if not shallow:
-            d['creator'] = self.creator.as_dict()
+            d['creator'] = self.creator.to_dict()
             d['dataset'] = self.dataset.name,
             d['data'] = self.data,
         return d

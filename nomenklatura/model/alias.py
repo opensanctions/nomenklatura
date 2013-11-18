@@ -58,13 +58,13 @@ class Alias(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'entity': self.entity.as_dict(shallow=True) if self.entity else None,
+            'entity': self.entity.to_dict(shallow=True) if self.entity else None,
             'created_at': self.created_at,
             'creator': self.creator.as_dict(),
             'updated_at': self.updated_at,
             'is_matched': self.is_matched,
             'data': self.data,
-            'matcher': self.matcher.as_dict() if self.matcher else None,
+            'matcher': self.matcher.to_dict() if self.matcher else None,
             'is_invalid': self.is_invalid,
             'dataset': self.dataset.name
             }

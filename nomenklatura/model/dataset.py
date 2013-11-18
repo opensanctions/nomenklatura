@@ -64,7 +64,7 @@ class Dataset(db.Model):
             'id': self.id,
             'name': self.name,
             'label': self.label,
-            'owner': self.owner.as_dict(),
+            'owner': self.owner.to_dict(),
             'stats': {
                 'num_aliases': num_aliases,
                 'num_entities': num_entities,
