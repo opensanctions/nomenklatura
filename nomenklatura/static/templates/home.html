@@ -1,0 +1,54 @@
+<div class="row">
+    <div class="col-xs-12 col-md-4">
+      <p>Nomenklatura is a simple service that makes it easy to maintain a
+      canonical list of entities such as persons, companies or event
+      streets and to match messy input, such as their names against that
+      canonical list &ndash; for example, matching Acme Widgets, Acme
+      Widgets Inc and Acme Widgets Incorporated to the canonical "Acme
+      Widgets".</p>
+
+      <p>With Nomenklatura its a matters of minutes to set up your own set
+      of master data to match against and it provides a simple user
+      interface and <a href="/#/about">API</a> which you
+      can then use do matching (the API is compatible with Open Refine's
+      reconciliation function).</p>
+
+      <p>Nomenklatura can not only store the master set of entities you
+      want to match against but also will learn and record the various
+      aliases for a given entity - such as a person, organisation or place
+      - may have in various datasets.</p>
+      <a class="btn btn-default" href="/#/about">
+        Learn more
+      </a>
+      <a ng-show="session.logged_in" class="btn btn-primary"
+        href="/new">Create a dataset</a>
+      <a ng-hide="session.logged_in" class="btn btn-success" href="/api/2/sessions/login">
+          Login with GitHub</a>
+    </div>
+    <div class="col-xs-12 col-md-8">
+      <table class="table table-condensed table-striped">
+            <tr>
+              <th>Dataset</th>
+              <th>Entities</th>
+              <th>Aliases</th>
+              <th>Unmatched</th>
+            </tr>
+            <tr ng-repeat="dataset in datasets">
+                <td>
+                    {{dataset.owner.login}}
+                    <span class="divider">&raquo;</span>
+                    <a href="/{{dataset.name}}">{{dataset.label}}</a>
+                </td>
+                <td>
+                  {{dataset.stats.num_entities}}
+                </td>
+                <td>
+                  {{dataset.stats.num_aliases}}
+                </td>
+                <td>
+                  {{dataset.stats.num_unmatched}}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
