@@ -8,7 +8,7 @@
     <li>
         <a href="{{url_for('dataset.view',
             dataset=dataset.name)}}">{{dataset.label}}</a>
-        <span class="divider">/</span>
+        <span class="divider"></span>
     </li>
     <li>
         Dataset Settings
@@ -16,74 +16,80 @@
 {% endblock %}
 
 {% block content %}
-
-    <form class="form-horizontal" method="POST"
-        action="{{url_for('dataset.update', dataset=dataset.name)}}">
-    <div class="control-group">
-      <label class="control-label" for="label">Title</label>
-      <div class="controls">
-        <input type="text" class="input-xlarge" id="label" name="label"
+  <form class="form-horizontal" method="POST" role="form"
+      action="{{url_for('dataset.update', dataset=dataset.name)}}">
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="label">Title</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="label" name="label"
         value="{{dataset.label}}">
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="algorithm">Algorithm</label>
-      <div class="controls">
-          <select id="algorithm" name="algorithm">
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="algorithm">Algorithm</label>
+      <div class="col-sm-10">
+          <select id="algorithm" class="form-control" name="algorithm">
               {% for value, label in algorithms %}
                 <option value="{{value}}">{{label}}</option>
               {% endfor %}
           </select>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="ignore_case">Case insensitivity</label>
-      <div class="controls">
-        <label type="checkbox">
-          <input type="checkbox" id="ignore_case" name="ignore_case" value="True">
-          If set, lower/uppercase spelling will be ignored.
-        </label>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="ignore_case" name="ignore_case" value="True">
+            Ignore lowercase/uppercase spelling.
+          </label>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="public_edit">Public editing</label>
-      <div class="controls">
-        <label type="checkbox">
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
             <input type="checkbox" id="public_edit" name="public_edit" value="True">
             Any user can make matches and create values.
-        </label>
+          </label>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="match_aliases">Match aliases</label>
-      <div class="controls">
-        <label type="checkbox">
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
             <input type="checkbox" id="match_aliases" name="match_aliases" value="True">
-            Use existing mappings as candidates.
-        </label>
+            Use existing aliases as matching candidates.
+          </label>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="normalize_text">Normalization</label>
-      <div class="controls">
-        <label type="checkbox">
-          <input type="checkbox" id="normalize_text" name="normalize_text" value="True">
-          Text will be cleaned up and control characters removed.
-        </label>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="normalize_text" name="normalize_text" value="True">
+            Clean up text before matching.
+          </label>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="enable_invalid">Invalid aliases</label>
-      <div class="controls">
-        <label type="checkbox">
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
             <input type="checkbox" id="enable_invalid" name="enable_invalid" value="True">
             Incoming aliases can be marked as invalid.
-        </label>
+          </label>
+        </div>
       </div>
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary">Update</button>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-default">Update</button>
+      </div>
     </div>
   </form>
 {% endblock %}

@@ -7,7 +7,7 @@
     "**/*.txt"
   ],
   "dependencies": {
-    "bootstrap": "2.1.1",
+    "bootstrap": "3.0.0",
     "font-awesome": "~4.0.3",
     "angular": "~1.2.0",
     "jquery": "~2.0.3",

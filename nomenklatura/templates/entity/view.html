@@ -9,7 +9,7 @@
     <li>
         <a href="{{url_for('dataset.view',
             dataset=dataset.name)}}">{{dataset.label}}</a>
-        <span class="divider">/</span>
+        <span class="divider"></span>
     </li>
     <li>
         {{entity.display_name}}
@@ -17,33 +17,25 @@
 {% endblock %}
 
 {% block content %}
-    <div class="well row">
-      <div class="span6">
+    <div class="row">
+      <div class="col-xs-12">
         {% if authz.dataset_edit(dataset) %}
           <form class="form-inline" method="POST"
               action="{{url_for('entity.update', dataset=dataset.name, entity=entity.id)}}">
-              <input type="text" class="input-xlarge" id="name" name="name"
-                  value="{{entity.name}}">
+              <div class="col-xs-10">
+                <input type="text" class="form-control" id="name" name="name"
+                      value="{{entity.name}}">
+                </div>
               <button type="submit" class="btn btn-primary">Update</button>
           </form>
         {% else %}
           <code>{{entity.name}}</code>
         {% endif %}
       </div>
-      <div class="span5">
-        <table class="table table-condensed">
-          {% for key, value in entity.data.items() %}
-            <tr>
-              <th>{{key}}</th>
-              <td>{{value}}</td>
-            </tr>
-          {% endfor %}
-        </table>
-      </div>
     </div>
 
     <div class="row">
-        <div class="span6">
+        <div class="col-xs-12 col-md-6">
     <h3>Aliases</h3>
     <table class="table table-condensed">
         {% for alias in entity.aliases %}
@@ -60,15 +52,17 @@
     </table>
 
         </div>
-        <div class="span6">
+        <div class="col-xs-12 col-md-6">
 
     {% if authz.dataset_edit(dataset) %}
         <h3>Merge</h3>
         <form class="form-search" method="GET"
             action="{{url_for('.view', dataset=dataset.name, entity=entity.id)}}">
-            <input type="text" class="search-query span5"
-                name="query" value="{{query}}" placeholder="Find an entity">
-            <button type="submit" class="btn">Filter</button>
+            <div class="col-xs-10">
+                <input type="text" class="search-query form-control"
+                    name="query" value="{{query}}" placeholder="Find an entity">
+            </div>
+            <button type="submit" class="btn btn-default">Filter</button>
         </form>
         <form method="POST" action="{{url_for('.merge', dataset=dataset.name,
             entity=entity.id)}}">

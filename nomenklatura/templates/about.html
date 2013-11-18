@@ -10,14 +10,14 @@
   <h3>About nomenklatura</h3>
   <br>
   <div class="row">
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <p><strong>nomenklatura</strong> is a reference data recon server. It allows
       users to manage a list of canonical entities (e.g. person or organisation
       names) and aliases that connect to one of the canonical entities. This helps 
       to clean up messy data in which a single entity may be referred to by many 
       names.</p>
     </div>
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <p>The key elements in the service include the <code>dataset</code>, which 
       is a segmented unit of reference data, a set of <code>entities</code> - i.e.
       the canonical forms - and a set of <code>aliases</code> which connect a
@@ -29,7 +29,7 @@
   <br>
   <a name="api"></a>
   <div class="row">
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <p>The API is spread through the application, JSON representations of most
       pages can be retrieved by setting an <code>Accept</code> header. Similarly, 
       all forms can be submitted as JSON data by setting the requests 
@@ -43,7 +43,7 @@
       linkage. Once a link exists, the API will return the corresponding 
       <code>value</code>.</p>
     </div>
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <ul class="api-list">
         <li><code>/{dataset}</code> - retrieve basic dataset metadata, including
         the reconciliation algorithm parameters.</li>
@@ -70,14 +70,14 @@
   <h3>nomenklatura-client for Python</h3>
   <br>
   <div class="row">
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <p>To facilitate the use of the API in Python, a client library is
       available: <a href="https://github.com/okfn/nomenklatura-client">https://github.com/okfn/nomenklatura-client</a></p>
       <p>To install the library from the command line, try this
       command:</p>
       <pre>pip install pynomenklatura</pre>
     </div>
-    <div class="span6">
+    <div class="col-xs-12 col-md-6">
       <pre class="prettyprint">from nomenklatura import Dataset
 
 dataset = Dataset('my-dataset', api_key='..')
@@ -106,7 +106,7 @@ except dataset.Invalid inv:
   <h3>License</h3>
   <br/>
   <div class="row">
-    <div class="span12">
+    <div class="col-xs-12">
       <p>
         By submitting databases to this service you agree to license them under 
         the terms of the <a href="http://opendatacommons.org/licenses/odbl/">Open

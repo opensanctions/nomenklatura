@@ -8,7 +8,7 @@
 
 {% block content %}
     <div class="row">
-        <div class="span4">
+        <div class="col-xs-12 col-md-4">
           <p>Nomenklatura is a simple service that makes it easy to maintain a
           canonical list of entities such as persons, companies or event
           streets and to match messy input, such as their names against that
@@ -26,18 +26,18 @@
           want to match against but also will learn and record the various
           aliases for a given entity - such as a person, organisation or place
           - may have in various datasets.</p>
-          <a class="btn" href="{{url_for('about')}}">
+          <a class="btn btn-default" href="{{url_for('about')}}">
             Learn more
           </a>
           {% if authz.dataset_create() %}
-              <a class="btn btn-success" href="{{url_for('dataset.new')}}">
+              <a class="btn btn-primary" href="{{url_for('dataset.new')}}">
                   Create a dataset</a>
           {% else %}
               <a class="btn btn-success" href="{{url_for('sessions.login')}}">
                   Login with GitHub</a>
           {% endif %}
         </div>
-        <div class="span8">
+        <div class="col-xs-12 col-md-8">
           <table class="table table-condensed table-striped">
                 <tr>
                   <th>Dataset</th>

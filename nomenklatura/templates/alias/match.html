@@ -9,7 +9,7 @@
     <li>
         <a href="{{url_for('dataset.view',
             dataset=dataset.name)}}">{{dataset.label}}</a>
-        <span class="divider">/</span>
+        <span class="divider"></span>
     </li>
     <li>
         Reconcile
@@ -22,16 +22,18 @@
 
 {% block content %}
     <div class="row">
-        <div class="span8">
+        <div class="col-xs-8">
           Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ alias.name | urlencode }}">gg</a>]: <code>{{alias.display_name}}</code>
         </div>
         <div class="span4">
             <form id="match-filter" class="form-search" method="GET"
                 action="{{url_for('alias.match', dataset=dataset.name, alias=alias.id)}}">
                 <input type="hidden" name="random" value="{{random}}">
-                <input id="filter-field" type="text" class="input-medium search-query"
-                    name="query" placeholder="Type a partial match...">
-                <button type="submit" class="btn">Filter</button>
+                <div class="col-xs-3">
+                    <input id="filter-field" type="text" class="form-control search-query"
+                        name="query" placeholder="Type a partial match...">
+                </div>
+                <button type="submit" class="btn btn-default">Filter</button>
             </form>
         </div>
     </div>
@@ -63,7 +65,7 @@
             <tr>
                 <td><input type="radio" name="choice" id="new" value="NEW"></td>
                 <td colspan="2">
-                    <input type="text" name="name" id="new-text" value="">
+                    <input type="text" name="name" class="form-control" id="new-text" value="">
                 </td>
             </tr>
             {% if dataset.enable_invalid %}
@@ -77,13 +79,13 @@
         </table>
         {% if random %}
             <input type="hidden" name="random" value="true">
-            <button type="submit" class="btn btn-success btn-large">
+            <button type="submit" class="btn btn-success btn-lg">
                 <i class="icon-ok icon-white"></i> Save &amp; Next</button>
             <a href="{{url_for('alias.match_random', dataset=dataset.name)}}"
-                class="btn btn-danger btn-large">
+                class="btn btn-danger btn-lg">
                 <i class="icon-random icon-white"></i> Try another</a>
         {% else %}
-            <button type="submit" class="btn btn-success btn-large">
+            <button type="submit" class="btn btn-success btn-lg">
                 <i class="icon-ok icon-white"></i> Save</button>
         {% endif %}
 
