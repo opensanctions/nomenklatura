@@ -40,12 +40,8 @@ def create():
 def view(dataset):
     dataset = Dataset.find(dataset)
     format = response_format()
-    headers = {
-        'X-Dataset': dataset.name,
-        'Last-Modified': http_date(dataset.last_modified)
-    }
     if format == 'json':
-        return jsonify(dataset, headers=headers)
+        return jsonify(dataset)
     unmatched = Alias.all_unmatched(dataset).count()
     entities = Entity.all(dataset, query=request.args.get('query'))
     pager = Pager(entities, '.view', dataset=dataset.name,
@@ -57,7 +53,7 @@ def view(dataset):
             invalid=Alias.all_invalid(dataset).count(),
             query=request.args.get('query', ''),
             dataset=dataset, unmatched=unmatched)
-    return Response(html, headers=headers)
+    return Response(html)
 
 @section.route('/<dataset>/edit', methods=['GET'])
 def edit(dataset):
