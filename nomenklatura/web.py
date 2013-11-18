@@ -95,11 +95,12 @@ def authorized(resp):
     session['access_token'] = access_token, ''
     res = requests.get('https://api.github.com/user?access_token=%s' % access_token,
             verify=False)
-    for k, v in res.json.items():
+    data = res.json()
+    for k, v in data.items():
         session[k] = v
-    account = Account.by_github_id(res.json.get('id'))
+    account = Account.by_github_id(data.get('id'))
     if account is None:
-        account = Account.create(res.json)
+        account = Account.create(data)
         db.session.commit()
     flash("Welcome back, %s." % account.login, "success")
     return redirect(url_for('index'))
