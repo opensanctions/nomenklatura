@@ -8,7 +8,7 @@ from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.views.common import handle_invalid
 from nomenklatura.model import Dataset, Alias, Entity
-from nomenklatura.matching import get_algorithms
+
 
 section = Blueprint('dataset', __name__)
 
@@ -60,9 +60,7 @@ def view(dataset):
 def edit(dataset):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_manage(dataset))
-    html = render_template('dataset/edit.html',
-                           dataset=dataset,
-                           algorithms=get_algorithms())
+    html = render_template('dataset/edit.html', dataset=dataset)
     return htmlfill.render(html, defaults=dataset.as_dict())
 
 

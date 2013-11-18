@@ -1,24 +1,12 @@
 import logging
 import time
 
-from nomenklatura.core import db
 from nomenklatura.matching.normalize import normalize
 from nomenklatura.matching.levenshtein import levenshtein
-from nomenklatura.matching.fw import fw
 from nomenklatura.matching.candidates import get_candidates
 
 log = logging.getLogger(__name__)
 
-ALGORITHMS = {
-        'levenshtein': levenshtein,
-        'fuzzywuzzy': fw
-    }
-
-def get_algorithms():
-    algorithms = []
-    for name, fn in ALGORITHMS.items():
-        algorithms.append((name, fn.__doc__))
-    return algorithms
 
 def match(text, dataset, query=None):
     query = '' if query is None else query.strip()
@@ -26,11 +14,10 @@ def match(text, dataset, query=None):
     candidates = get_candidates(dataset)
     matches = []
     begin = time.time()
-    func = ALGORITHMS.get(dataset.algorithm, levenshtein)
     for candidate, entity_id in candidates:
         if len(query) and query not in candidate.lower():
             continue
-        score = func(text_normalized, candidate)
+        score = levenshtein(text_normalized, candidate)
         matches.append((candidate, entity_id, score))
     matches = sorted(matches, key=lambda (c,e,s): s, reverse=True)
     entities = set()

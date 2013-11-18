@@ -14,18 +14,20 @@ class AvailableDatasetName(FancyValidator):
             return value
         raise Invalid('Dataset already exists.', value, None)
 
+
 class DatasetNewSchema(Schema):
     name = All(AvailableDatasetName(), Name(not_empty=True))
     label = validators.String(min=3, max=255)
 
+
 class DatasetEditSchema(Schema):
     label = validators.String(min=3, max=255)
-    algorithm = validators.String(min=3, max=255)
     match_aliases = validators.StringBool(if_missing=False)
     ignore_case = validators.StringBool(if_missing=False)
     public_edit = validators.StringBool(if_missing=False)
     normalize_text = validators.StringBool(if_missing=False)
     enable_invalid = validators.StringBool(if_missing=False)
+
 
 class Dataset(db.Model):
     __tablename__ = 'dataset'
@@ -38,7 +40,6 @@ class Dataset(db.Model):
     public_edit = db.Column(db.Boolean, default=False)
     normalize_text = db.Column(db.Boolean, default=True)
     enable_invalid = db.Column(db.Boolean, default=True)
-    algorithm = db.Column(db.Unicode)
     owner_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
@@ -75,7 +76,6 @@ class Dataset(db.Model):
             'public_edit': self.public_edit,
             'normalize_text': self.normalize_text,
             'enable_invalid': self.enable_invalid,
-            'algorithm': self.algorithm,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }
@@ -128,7 +128,6 @@ class Dataset(db.Model):
         self.public_edit = data['public_edit']
         self.match_aliases = data['match_aliases']
         self.enable_invalid = data['enable_invalid']
-        self.algorithm = data['algorithm']
         db.session.add(self)
         db.session.flush()
 
