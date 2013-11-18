@@ -1,12 +1,22 @@
 import requests
 from flask import url_for, session, Blueprint, redirect
-from flask import flash
+from flask import flash, request
 
 from nomenklatura import authz
+from nomenklatura.util import jsonify
 from nomenklatura.core import db, github
 from nomenklatura.model import Account
 
 section = Blueprint('sessions', __name__)
+
+
+@section.route('/sessions')
+def status():
+    return jsonify({
+        'logged_in': authz.logged_in(),
+        'api_key': request.account.api_key if authz.logged_in() else None,
+        'account': request.account
+    })
 
 
 @section.route('/sessions/login')
