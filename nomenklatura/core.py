@@ -1,4 +1,3 @@
-import os
 import logging
 
 from flask import Flask
@@ -7,7 +6,6 @@ from flask.ext.oauth import OAuth
 from flask.ext.assets import Environment
 
 import certifi
-from pylibmc import Client as MemcacheClient
 from celery import Celery
 
 from nomenklatura import default_settings
@@ -32,9 +30,3 @@ github = oauth.remote_app('github',
         consumer_secret=app.config.get('GITHUB_CLIENT_SECRET'))
 
 github._client.ca_certs = certifi.where()
-memcache = MemcacheClient(
-    servers=[app.config.get('MEMCACHE_HOST', '127.0.0.1:11211')],
-    username=os.environ.get('MEMCACHIER_USERNAME'),
-    password=os.environ.get('MEMCACHIER_PASSWORD'),
-    binary=True
-    )

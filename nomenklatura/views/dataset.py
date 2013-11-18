@@ -5,7 +5,7 @@ from formencode import Invalid, htmlfill
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, Pager, flush_cache
+from nomenklatura.util import jsonify, Pager
 from nomenklatura import authz
 from nomenklatura.views.common import handle_invalid
 from nomenklatura.model import Dataset, Alias, Entity
@@ -74,7 +74,6 @@ def update(dataset):
     authz.require(authz.dataset_manage(dataset))
     data = request_content()
     try:
-        flush_cache(dataset)
         dataset.update(data)
         db.session.commit()
         flash("Updated %s" % dataset.label, 'success')

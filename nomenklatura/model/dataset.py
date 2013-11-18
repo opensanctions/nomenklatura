@@ -5,7 +5,6 @@ from formencode import Schema, All, Invalid, validators
 from nomenklatura.core import db
 from nomenklatura.model.common import Name, FancyValidator
 from nomenklatura.exc import NotFound
-from nomenklatura.util import flush_cache
 
 
 class AvailableDatasetName(FancyValidator):
@@ -106,7 +105,6 @@ class Dataset(db.Model):
         dataset.label = data['label']
         db.session.add(dataset)
         db.session.flush()
-        flush_cache(dataset)
         return dataset
 
     def update(self, data):
@@ -120,5 +118,4 @@ class Dataset(db.Model):
         self.algorithm = data['algorithm']
         db.session.add(self)
         db.session.flush()
-        flush_cache(self)
 

@@ -9,12 +9,9 @@ from werkzeug.exceptions import NotFound
 from formencode.variabledecode import NestedVariables
 from flask import Response, current_app, request
 from sqlalchemy.orm.query import Query
-from pylibmc import Error as MCError
 
 from nomenklatura.pager import Pager
-from nomenklatura.core import memcache
 
-KEY_RANGE = 10
 
 MIME_TYPES = {
         'text/html': 'html',
@@ -25,58 +22,6 @@ MIME_TYPES = {
 
 log = logging.getLogger(__name__)
 
-def candidate_cache_key(dataset):
-    return str(dataset.name + '::c')
-
-def candidate_hash(prefix, candidate):
-    c, v = candidate
-    if not len(c):
-        return str(0)
-    return prefix + str(ord(c[0]) % KEY_RANGE)
-
-def cache_get(key):
-    try:
-        keys = [key + str(k) for k in range(KEY_RANGE)]
-        values = memcache.get_multi(keys)
-        if not len(values):
-            return None
-        vs = []
-        for cands in values.values():
-            vs.extend(cands)
-        return vs
-    except MCError, me:
-        log.exception(me)
-
-
-def cache_set(key, values):
-    try:
-        data = defaultdict(list)
-        for v in values:
-            data[candidate_hash(key, v)].append(v)
-        memcache.set_multi(data)
-    except MCError, me:
-        log.exception(me)
-
-def add_candidate_to_cache(dataset, candidate, value_id):
-    try:
-        prefix = candidate_cache_key(dataset)
-        k = candidate_hash(prefix, (candidate, value_id))
-        candidates = memcache.get(k) or []
-        candidates.append((candidate, value_id))
-        memcache.set(k, candidates)
-    except MCError, me:
-        log.exception(me)
-
-def flush_cache(dataset):
-    flush_candidate_cache(dataset)
-
-def flush_candidate_cache(dataset):
-    try:
-        prefix = candidate_cache_key(dataset)
-        keys = [prefix + str(k) for k in range(KEY_RANGE)]
-        memcache.delete_multi(keys)
-    except MCError, me:
-        log.exception(me)
 
 def request_format(request):
     """ 
@@ -85,6 +30,7 @@ def request_format(request):
     begin to work around it.
     """
     return MIME_TYPES.get(request.content_type, 'html')
+
 
 def request_content():
     """
@@ -98,6 +44,7 @@ def request_content():
         data = request.form if request.method == 'POST' \
                 else request.args
         return NestedVariables().to_python(data)
+
 
 class JSONEncoder(json.JSONEncoder):
     """ This encoder will serialize all entities that have a to_dict
@@ -118,6 +65,7 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, Pager):
             return list(obj)
         raise TypeError("%r is not JSON serializable" % obj)
+
 
 def jsonify(obj, status=200, headers=None, shallow=False):
     """ Custom JSONificaton to support obj.to_dict protocol. """

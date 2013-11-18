@@ -3,11 +3,11 @@ from datetime import datetime
 from formencode import Schema, Invalid, validators
 
 from nomenklatura.core import db
-from nomenklatura.model.common import Name, FancyValidator
+from nomenklatura.exc import NotFound
+from nomenklatura.model.common import FancyValidator
 from nomenklatura.model.common import JsonType, DataBlob
 from nomenklatura.model.entity import Entity
 from nomenklatura.matching import match as match_op
-from nomenklatura.util import flush_cache, add_candidate_to_cache
 
 
 class AliasMatchState():
@@ -155,8 +155,6 @@ class Alias(db.Model):
         alias.data = data['data']
         db.session.add(alias)
         db.session.flush()
-        if entity is not None:
-            add_candidate_to_cache(dataset, alias.name, entity.id)
         return alias
 
     def match(self, dataset, data, account):

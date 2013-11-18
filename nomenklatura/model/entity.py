@@ -5,8 +5,8 @@ from formencode import FancyValidator
 from sqlalchemy.orm import joinedload_all
 
 from nomenklatura.core import db
+from nomenklatura.exc import NotFound
 from nomenklatura.model.common import JsonType, DataBlob
-from nomenklatura.util import flush_cache, add_candidate_to_cache
 
 
 class EntityState():
@@ -138,7 +138,6 @@ class Entity(db.Model):
         entity.data = data['data']
         db.session.add(entity)
         db.session.flush()
-        add_candidate_to_cache(dataset, entity.name, entity.id)
         return entity
 
     def update(self, data, account):
@@ -147,7 +146,6 @@ class Entity(db.Model):
         self.creator = account
         self.name = data['name']
         self.data = data['data']
-        flush_cache(self.dataset)
         db.session.add(self)
 
     def merge_into(self, data, account):
@@ -167,5 +165,4 @@ class Entity(db.Model):
         db.session.delete(self)
         db.session.add(alias)
         db.session.commit()
-        flush_cache(self.dataset)
         return target
