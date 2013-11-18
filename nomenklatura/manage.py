@@ -1,4 +1,4 @@
-from flaskext.script import Manager
+from flask.ext.script import Manager
 
 from nomenklatura.core import app, db
 from nomenklatura.model import *

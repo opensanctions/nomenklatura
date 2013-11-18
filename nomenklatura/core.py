@@ -3,7 +3,7 @@ import logging
 
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from flaskext.oauth import OAuth
+from flask.ext.oauth import OAuth
 import certifi
 from pylibmc import Client as MemcacheClient
 from boto.s3.connection import S3Connection
@@ -18,7 +18,6 @@ app.config.from_object(default_settings)
 app.config.from_envvar('NOMENKLATURA_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
-s3 = S3Connection(app.config['S3_ACCESS_KEY'], app.config['S3_SECRET_KEY'])
 celery = Celery('nomenklatura', broker=app.config['CELERY_BROKER'])
 
 oauth = OAuth()
