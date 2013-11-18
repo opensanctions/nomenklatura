@@ -1,6 +1,5 @@
 from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect, Response
-from werkzeug.http import http_date
 from formencode import Invalid, htmlfill
 
 from nomenklatura.core import db
@@ -13,17 +12,17 @@ from nomenklatura.matching import get_algorithms
 
 section = Blueprint('dataset', __name__)
 
+
 @section.route('/new', methods=['GET'])
 def new():
     authz.require(authz.dataset_create())
     return render_template('dataset/new.html')
 
+
 @section.route('/datasets', methods=['GET'])
 def index():
-    format = response_format()
-    if format == 'json':
-        return jsonify(Dataset.all())
-    return "Not implemented!"
+    return jsonify(Dataset.all())
+
 
 @section.route('/', methods=['POST'])
 def create():
@@ -35,6 +34,7 @@ def create():
         return redirect(url_for('.view', dataset=dataset.name))
     except Invalid, inv:
         return handle_invalid(inv, new, data=data)
+
 
 @section.route('/<dataset>', methods=['GET'])
 def view(dataset):
@@ -55,6 +55,7 @@ def view(dataset):
             dataset=dataset, unmatched=unmatched)
     return Response(html)
 
+
 @section.route('/<dataset>/edit', methods=['GET'])
 def edit(dataset):
     dataset = Dataset.find(dataset)
@@ -63,6 +64,7 @@ def edit(dataset):
                            dataset=dataset,
                            algorithms=get_algorithms())
     return htmlfill.render(html, defaults=dataset.as_dict())
+
 
 @section.route('/<dataset>', methods=['POST'])
 def update(dataset):
