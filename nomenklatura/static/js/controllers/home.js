@@ -1,7 +1,12 @@
 function HomeCtrl($scope, $location, $http, $modal) {
-    $http.get('/api/2/datasets').then(function(data) {
-        $scope.datasets = data.data.results;
-    });
+
+    $scope.loadDatasets = function(url) {
+        $http.get(url).then(function(data) {
+            $scope.datasets = data.data;
+        });
+    };
+    
+    $scope.loadDatasets('/api/2/datasets?limit=10');
 
 
     $scope.newDataset = function(){

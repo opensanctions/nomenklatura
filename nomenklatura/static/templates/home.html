@@ -33,7 +33,7 @@
               <th>Aliases</th>
               <th>Unmatched</th>
             </tr>
-            <tr ng-repeat="dataset in datasets">
+            <tr ng-repeat="dataset in datasets.results">
                 <td>
                     {{dataset.owner.login}}
                     <span class="divider">&raquo;</span>
@@ -50,5 +50,6 @@
                 </td>
             </tr>
         </table>
+        <nk-pager response="datasets" load="loadDatasets(url)"></odis-pager>
     </div>
 </div>
