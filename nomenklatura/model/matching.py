@@ -1,5 +1,4 @@
 from sqlalchemy import func, select, and_
-from sqlalchemy.sql import cast
 
 from nomenklatura.model.entity import Entity
 from nomenklatura.model.text import normalize
