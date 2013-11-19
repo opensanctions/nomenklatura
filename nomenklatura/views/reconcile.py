@@ -5,8 +5,8 @@ from flask import render_template, redirect
 from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.exc import BadRequest
-from nomenklatura.model import Dataset, Alias, Entity
-from nomenklatura.matching import prefix_search, match
+from nomenklatura.model import Dataset, Entity
+#from nomenklatura.matching import prefix_search, match
 
 section = Blueprint('reconcile', __name__)
 

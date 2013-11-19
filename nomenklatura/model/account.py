@@ -27,12 +27,6 @@ class Account(db.Model):
                                lazy='dynamic')
     entities_created = db.relationship('Entity', backref='creator',
                                lazy='dynamic')
-    aliases_created = db.relationship('Alias', backref='creator',
-                        primaryjoin='Alias.creator_id==Account.id',
-                               lazy='dynamic')
-    aliases_matched = db.relationship('Alias', backref='matcher',
-                        primaryjoin='Alias.matcher_id==Account.id',
-                               lazy='dynamic')
 
     def to_dict(self):
         return {

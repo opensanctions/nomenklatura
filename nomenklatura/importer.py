@@ -6,7 +6,7 @@ from messytables import offset_processor
 
 from nomenklatura.core import app, db, celery
 from nomenklatura.exc import NotFound
-from nomenklatura.model import Dataset, Entity, Alias, Account, Upload
+from nomenklatura.model import Dataset, Entity, Account, Upload
 
 
 def upload_file(dataset, file_, account):

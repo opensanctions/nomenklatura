@@ -59,8 +59,6 @@ class Dataset(db.Model):
 
     entities = db.relationship('Entity', backref='dataset',
                              lazy='dynamic')
-    aliases = db.relationship('Alias', backref='dataset',
-                             lazy='dynamic')
     uploads = db.relationship('Upload', backref='dataset',
                                lazy='dynamic')
 
