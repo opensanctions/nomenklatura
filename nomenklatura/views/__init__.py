@@ -12,8 +12,8 @@ from nomenklatura.exc import Unauthorized
 from nomenklatura import authz
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
-from nomenklatura.views.datasets_api import section as datasets_api
-from nomenklatura.views.entities_api import section as entities_api
+from nomenklatura.views.datasets import section as datasets
+from nomenklatura.views.entities import section as entities
 from nomenklatura.views.reconcile import section as reconcile
 
 
@@ -85,8 +85,8 @@ def handle_invalid(exc):
 app.register_blueprint(upload)
 app.register_blueprint(reconcile)
 app.register_blueprint(sessions, url_prefix='/api/2')
-app.register_blueprint(datasets_api, url_prefix='/api/2')
-app.register_blueprint(entities_api, url_prefix='/api/2')
+app.register_blueprint(datasets, url_prefix='/api/2')
+app.register_blueprint(entities, url_prefix='/api/2')
 
 
 def angular_templates():
