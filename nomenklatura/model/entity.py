@@ -110,7 +110,7 @@ class Entity(db.Model):
 
     @classmethod
     def find(cls, dataset, id):
-        entity = cls.by_id(dataset, id)
+        entity = cls.by_id(id)
         if entity is None:
             raise NotFound("No such value ID: %s" % id)
         return entity
