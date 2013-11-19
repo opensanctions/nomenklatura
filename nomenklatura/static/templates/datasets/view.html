@@ -1,0 +1,88 @@
+<h2 class="page-header">{{dataset.label}}</h2>
+
+<div class="row">
+  <div class="col-xs-12 col-md-6">
+      <p>
+          A dataset has a set of named entities.
+          Other forms such as different spelling and 
+          synonyms are mapped to one of the
+          entities as aliases or marked as invalid.
+      </p>
+      <p>
+      <strong>Statistics:</strong>
+          <strong>{{dataset.stats.num_entities}}</strong> Entities, 
+          <strong>{{dataset.stats.num_aliases}}</strong> Aliases ({{dataset.stats.num_invalid}}
+          marked invalid).
+      </p>
+      <div class="btn-group">
+        <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="#">
+          <i class="icon-check icon-white"></i> Reconcile ({{dataset.stats.num_unmatched}})</a>
+        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="#">
+          <i class="icon-cog"></i> Settings</a>
+        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="#">
+          <i class="icon-upload"></i> Import</a>
+        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
+            <i class="icon-download"></i>
+            Download
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="#">Mappings (CSV with entities and aliases)</a></li>
+            <li><a href="#">Code sheet (CSV with only entities)</a></li>
+        </ul>
+      </div>
+      <br>
+          Aliases are added via the <a href="/#/about">API</a>, by matching names against this
+          endpoint:
+      </p>
+      <pre><code>bla/lookup</code></pre>
+      <p>
+          An <a href="https://github.com/OpenRefine/OpenRefine">OpenRefine</a>
+          reconciliation endpoint is available as well (read-only):
+      </p>
+      <pre><code>bla/reconcile</code></pre>
+  </div>
+  <div class="col-xs-12 col-md-6">
+       
+      <form class="form-inline" role="form">
+          <div class="form-group col-xs-10">
+              <input type="text" class="search-query form-control"
+                  name="query" value="{{query}}" placeholder="Find an entity">
+          </div>
+          <button type="submit" class="btn btn-default">Filter</button>
+      </form>
+      
+      <!--table class="table table-striped table-condensed">
+          <tr>
+              <th width="90%">Name</th>
+              <th>Aliases</th>
+          </tr>
+          {% for entity in entities %}
+              <tr>
+                  <td><a href="{{url_for('entity.view', dataset=dataset.name,
+                          entity=entity.id)}}">{{entity.display_name}}</a></td>
+                  <td>{{entity.aliases.count()}}</td>
+              </tr>
+          {% endfor %}
+          {% if authz.dataset_edit(dataset) %}
+              <form class="well form-inline" method="POST"
+                  action="{{url_for('entity.create', dataset=dataset.name)}}">
+                  <tr>
+                      <td colspan="1">
+                          <input type="text" class="form-control" id="name"
+                              name="name" placeholder="Add an entity...">
+                      </td>
+                      <td>
+                          <button type="submit" class="btn btn-small btn-primary">add</button>
+                      </td>
+                  </tr>
+              </form>
+          {% endif %}
+          <tr>
+              <td colspan="2">
+                  {{ pager(entities) }}
+              </td>
+          </tr>
+      </table-->
+  </div>
+</div>

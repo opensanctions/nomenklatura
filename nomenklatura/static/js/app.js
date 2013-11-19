@@ -18,6 +18,12 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: PagesCtrl
   });
 
+
+  $routeProvider.when('/datasets/:name', {
+    templateUrl: '/static/templates/datasets/view.html',
+    controller: DatasetsViewCtrl
+  });
+
   $routeProvider.otherwise({
     redirectTo: '/'
   });
