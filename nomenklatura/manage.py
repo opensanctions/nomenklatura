@@ -14,6 +14,15 @@ def createdb():
 
 
 @manager.command
+def postproc_20131119():
+    from nomenklatura.model.text import normalize
+    for entity in Entity.query:
+        entity.normalized = normalize(entity.name)
+        entity.attributes = entity.data
+        db.session.add(entity)
+    db.session.commit()
+
+@manager.command
 def flush(dataset):
     ds = Dataset.by_name(dataset)
     for alias in Alias.all_unmatched(ds):
