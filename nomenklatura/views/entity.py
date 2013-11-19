@@ -6,7 +6,6 @@ from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
 from nomenklatura.util import jsonify, csvify, csv_filename
 from nomenklatura import authz
-from nomenklatura.exc import NotFound
 from nomenklatura.pager import Pager
 from nomenklatura.views.dataset import view as view_dataset
 from nomenklatura.views.common import handle_invalid
@@ -74,13 +73,6 @@ def view(dataset, entity):
     return render_template('entity/view.html', dataset=dataset,
                            entity=entity, entities=pager, query=query)
 
-@section.route('/<dataset>/entities', methods=['GET'])
-def view_by_name(dataset):
-    dataset = Dataset.find(dataset)
-    entity = Entity.by_name(dataset, request.args.get('name'))
-    if entity is None:
-        raise NotFound("No such entity: %s" % request.args.get('name'))
-    return view(dataset.name, entity.id)
 
 @section.route('/<dataset>/entities/<entity>', methods=['POST'])
 def update(dataset, entity):
