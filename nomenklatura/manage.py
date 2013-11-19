@@ -15,10 +15,11 @@ def createdb():
 
 @manager.command
 def postproc_20131119():
-    from nomenklatura.model.text import normalize
+    from nomenklatura.model.text import normalize_text
     for entity in Entity.query:
-        entity.normalized = normalize(entity.name)
-        entity.attributes = entity.data
+        print [entity]
+        entity.normalized = normalize_text(entity.name)
+        #entity.attributes = entity.data
         db.session.add(entity)
     db.session.commit()
 

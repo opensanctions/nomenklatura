@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import HSTORE
 from nomenklatura.core import db
 from nomenklatura.exc import NotFound
 from nomenklatura.model.common import JsonType, DataBlob
-from nomenklatura.model.text import normalize
+from nomenklatura.model.text import normalize_text
 
 class EntityState():
 
@@ -109,10 +109,9 @@ class Entity(db.Model):
         return cls.query.filter_by(id=id).first()
 
     @classmethod
-    def id_map(cls, dataset, ids):
+    def id_map(cls, ids):
         entities = {}
-        for entity in cls.query.filter_by(dataset=dataset).\
-                filter(cls.id.in_(ids)):
+        for entity in cls.query.filter(cls.id.in_(ids)):
             entities[entity.id] = entity
         return entities
 
@@ -145,7 +144,7 @@ class Entity(db.Model):
         entity.dataset = dataset
         entity.creator = account
         entity.name = data['name']
-        entity.normalized = normalize(entity.name)
+        entity.normalized = normalize_text(entity.name)
         entity.data = data['data']
         entity.reviewed = data['reviewed']
         entity.invalid = data['invalid']
@@ -159,7 +158,7 @@ class Entity(db.Model):
         data = EntitySchema().to_python(data, state)
         self.creator = account
         self.name = data['name']
-        self.normalized = normalize(self.name)
+        self.normalized = normalize_text(self.name)
         self.data = data['data']
         self.reviewed = data['reviewed']
         self.invalid = data['invalid']
