@@ -15,11 +15,11 @@
           marked invalid).
       </p>
       <div class="btn-group">
-        <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="#">
+        <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="/{{dataset.name}}/match">
           <i class="icon-check icon-white"></i> Reconcile ({{dataset.stats.num_unmatched}})</a>
         <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="#">
           <i class="icon-cog"></i> Settings</a>
-        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="#">
+        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="" disabled >
           <i class="icon-upload"></i> Import</a>
         <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
             <i class="icon-download"></i>
@@ -44,45 +44,33 @@
   </div>
   <div class="col-xs-12 col-md-6">
        
-      <form class="form-inline" role="form">
-          <div class="form-group col-xs-10">
+      <form class="form-horizontal" role="form">
+          <div class="form-group">
               <input type="text" class="search-query form-control"
                   name="query" value="{{query}}" placeholder="Find an entity">
           </div>
-          <button type="submit" class="btn btn-default">Filter</button>
       </form>
       
-      <!--table class="table table-striped table-condensed">
+      <table class="table table-striped table-condensed">
           <tr>
               <th width="90%">Name</th>
               <th>Aliases</th>
           </tr>
-          {% for entity in entities %}
-              <tr>
-                  <td><a href="{{url_for('entity.view', dataset=dataset.name,
-                          entity=entity.id)}}">{{entity.display_name}}</a></td>
-                  <td>{{entity.aliases.count()}}</td>
-              </tr>
-          {% endfor %}
-          {% if authz.dataset_edit(dataset) %}
-              <form class="well form-inline" method="POST"
-                  action="{{url_for('entity.create', dataset=dataset.name)}}">
-                  <tr>
-                      <td colspan="1">
-                          <input type="text" class="form-control" id="name"
-                              name="name" placeholder="Add an entity...">
-                      </td>
-                      <td>
-                          <button type="submit" class="btn btn-small btn-primary">add</button>
-                      </td>
-                  </tr>
-              </form>
-          {% endif %}
-          <tr>
-              <td colspan="2">
-                  {{ pager(entities) }}
-              </td>
+          <tr ng-repeat="entity in entities.results">
+              <td><a href="/{{dataset.name}}/entities/{{entity.id}}">{{entity.name}}</a></td>
+              <td>{{entity.num_aliases}}</td>
           </tr>
-      </table-->
+          <form nk-authz dataset="dataset" op="edit" class="well form-inline">
+              <tr>
+                  <td colspan="1">
+                      <input type="text" class="form-control" id="name"
+                          name="name" placeholder="Add an entity...">
+                  </td>
+                  <td>
+                      <button type="submit" class="btn btn-small btn-primary">add</button>
+                  </td>
+              </tr>
+          </form>
+      </table>
   </div>
 </div>

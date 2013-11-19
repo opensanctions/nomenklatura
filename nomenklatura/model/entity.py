@@ -79,6 +79,7 @@ class Entity(db.Model):
             d['creator'] = self.creator.to_dict()
             d['dataset'] = self.dataset.name
             d['data'] = self.data
+            d['num_aliases'] = self.aliases.count()
         return d
 
     def to_row(self):
