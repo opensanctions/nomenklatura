@@ -31,6 +31,8 @@ class AvailableName(FancyValidator):
 class ValidCanonicalEntity(FancyValidator):
 
     def _to_python(self, value, state):
+        if isinstance(value, dict):
+            value = value.get('id')
         entity = Entity.by_id(value)
         if entity is None:
             raise Invalid('Entity does not exist.', value, None)
@@ -81,6 +83,10 @@ class Entity(db.Model):
             'id': self.id,
             'name': self.name,
             'dataset': self.dataset.name,
+            'reviewed': self.reviewed,
+            'invalid': self.invalid,
+            'canonical': self.canonical,
+            #'normalized': self.normalized,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
         }
