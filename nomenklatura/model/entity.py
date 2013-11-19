@@ -77,8 +77,8 @@ class Entity(db.Model):
         }
         if not shallow:
             d['creator'] = self.creator.to_dict()
-            d['dataset'] = self.dataset.name,
-            d['data'] = self.data,
+            d['dataset'] = self.dataset.name
+            d['data'] = self.data
         return d
 
     def to_row(self):
@@ -116,8 +116,10 @@ class Entity(db.Model):
         return entity
 
     @classmethod
-    def all(cls, dataset, query=None, eager_aliases=False, eager=False):
-        q = cls.query.filter_by(dataset=dataset)
+    def all(cls, dataset=None, query=None, eager_aliases=False, eager=False):
+        q = cls.query
+        if dataset is not None:
+            q = q.filter_by(dataset=dataset)
         if query is not None and len(query.strip()):
             q = q.filter(cls.name.ilike('%%%s%%' % query.strip()))
         if eager_aliases:
