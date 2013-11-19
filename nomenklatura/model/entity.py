@@ -28,7 +28,7 @@ class AvailableName(FancyValidator):
         raise Invalid('Entity already exists.', name, None)
 
 
-class MergeableEntity(FancyValidator):
+class ValidCanonicalEntity(FancyValidator):
 
     def _to_python(self, value, state):
         entity = Entity.by_id(value)
@@ -39,6 +39,9 @@ class MergeableEntity(FancyValidator):
         if entity.dataset != state.dataset:
             raise Invalid('Entity belongs to a different dataset.',
                           value, None)
+        if entity.canonical_id:
+            raise Invalid('Entity itself is an alias.',
+                          value, None)
         return entity
 
 
@@ -46,11 +49,10 @@ class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
     data = DataBlob(if_missing={}, if_empty={})
-
-
-class EntityMergeSchema(Schema):
-    allow_extra_fields = True
-    target = MergeableEntity()
+    # TODO: attributes
+    reviewed = validators.StringBool(if_empty=False, if_missing=False)
+    invalid = validators.StringBool(if_empty=False, if_missing=False)
+    canonical = ValidCanonicalEntity(if_missing=None, if_empty=None)
 
 
 class Entity(db.Model):
@@ -145,6 +147,9 @@ class Entity(db.Model):
         entity.name = data['name']
         entity.normalized = normalize(entity.name)
         entity.data = data['data']
+        entity.reviewed = data['reviewed']
+        entity.invalid = data['invalid']
+        entity.canonical = data['canonical']
         db.session.add(entity)
         db.session.flush()
         return entity
@@ -156,5 +161,9 @@ class Entity(db.Model):
         self.name = data['name']
         self.normalized = normalize(self.name)
         self.data = data['data']
+        self.reviewed = data['reviewed']
+        self.invalid = data['invalid']
+        self.canonical = data['canonical']
+        # TODO: redirect all aliases of this entity
         db.session.add(self)
 
