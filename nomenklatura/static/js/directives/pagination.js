@@ -7,7 +7,7 @@ nomenklatura.directive('nkPager', ['$timeout', function ($timeout) {
         },
         templateUrl: '/static/templates/pager.html',
         link: function (scope, element, attrs, model) {
-
+            scope.showPager = false;
             scope.$watch('response', function(e) {
                 if (!scope.response.count) {
                     return;
@@ -37,6 +37,7 @@ nomenklatura.directive('nkPager', ['$timeout', function ($timeout) {
                         url: url
                     });
                 }
+                scope.showPager = scope.response.count > scope.response.limit;
                 scope.pages = pages;
             });
         }
