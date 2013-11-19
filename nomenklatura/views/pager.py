@@ -13,7 +13,7 @@ def args(limit, offset):
     _args = [('limit', limit), ('offset', offset)]
     for k, v in request.args.items():
         if k not in SKIP_ARGS:
-            _args.append((k, v))
+            _args.append((k, v.encode('utf-8')))
     return '?' + urlencode(_args)
 
 
