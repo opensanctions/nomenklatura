@@ -18,6 +18,10 @@ def index():
     if dataset_arg is not None:
         dataset = Dataset.find(dataset_arg)
         entities = entities.filter_by(dataset=dataset)
+    filter_name = request.args.get('filter_name', '')
+    if len(filter_name):
+        query = '%' + filter_name + '%'
+        entities = entities.filter(Entity.name.ilike(query))
     # TODO, other filters.
     # TODO, format & download flags
     return query_pager(entities)

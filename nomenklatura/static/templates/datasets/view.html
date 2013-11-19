@@ -46,7 +46,7 @@
       <form class="form-horizontal" role="form">
           <div class="form-group">
               <input type="text" class="search-query form-control"
-                  name="query" value="{{query}}" placeholder="Find an entity">
+                  ng-model="query" ng-keyup="updateFilter()" placeholder="Find an entity">
           </div>
       </form>
       

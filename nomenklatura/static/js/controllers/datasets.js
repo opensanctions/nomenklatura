@@ -1,7 +1,8 @@
 
-function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, session) {
+function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeout, session) {
     $scope.dataset = {};
     $scope.entities = {};
+    $scope.query = '';
 
     session.authz($routeParams.name);
     
@@ -15,11 +16,21 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, sessio
         });
     };
 
-    var params = {dataset: $routeParams.name, 'limit': 15};
+    var params = {dataset: $routeParams.name, 'limit': 15},
+        filterTimeout = null;
     $scope.loadEntities('/api/2/entities', params);
     
+    $scope.updateFilter = function() {
+        if (filterTimeout) { $timeout.cancel(filterTimeout); }
 
-    $scope.editDataset = function(){
+        filterTimeout = $timeout(function() {
+            var fparams = angular.copy(params);
+            fparams.filter_name = $scope.query;
+            $scope.loadEntities('/api/2/entities', fparams);
+        }, 500);
+    };
+
+    $scope.editDataset = function() {
         var d = $modal.open({
             templateUrl: '/static/templates/datasets/edit.html',
             controller: 'DatasetsEditCtrl',
@@ -30,7 +41,7 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, sessio
     };
 }
 
-DatasetsViewCtrl.$inject = ['$scope', '$routeParams', '$location', '$http', '$modal', 'session'];
+DatasetsViewCtrl.$inject = ['$scope', '$routeParams', '$location', '$http', '$modal', '$timeout', 'session'];
 
 
 function DatasetsNewCtrl($scope, $routeParams, $modalInstance, $location, $http, session) {
