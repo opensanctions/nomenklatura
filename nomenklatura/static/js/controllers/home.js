@@ -1,4 +1,5 @@
 function HomeCtrl($scope, $location, $http, $modal) {
+    $scope.datasets = {};
 
     $scope.loadDatasets = function(url) {
         $http.get(url).then(function(data) {

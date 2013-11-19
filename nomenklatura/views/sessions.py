@@ -1,11 +1,11 @@
 import requests
 from flask import url_for, session, Blueprint, redirect
-from flask import flash, request
+from flask import request
 
 from nomenklatura import authz
 from nomenklatura.util import jsonify
 from nomenklatura.core import db, github
-from nomenklatura.model import Account
+from nomenklatura.model import Account, Dataset
 
 section = Blueprint('sessions', __name__)
 
@@ -17,6 +17,20 @@ def status():
         'api_key': request.account.api_key if authz.logged_in() else None,
         'account': request.account
     })
+
+
+@section.route('/sessions/authz')
+def get_authz():
+    permissions = {}
+    dataset_name = request.args.get('dataset')
+    if dataset_name is not None:
+        dataset = Dataset.find(dataset_name)
+        permissions[dataset_name] = {
+            'view': True,
+            'edit': authz.dataset_edit(dataset),
+            'manage': authz.dataset_manage(dataset)
+        }
+    return jsonify(permissions)
 
 
 @section.route('/sessions/login')

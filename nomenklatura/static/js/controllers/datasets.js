@@ -1,6 +1,9 @@
 
 function DatasetsViewCtrl($scope, $routeParams, $location, $http, session) {
+    $scope.dataset = {};
 
+    session.authz($routeParams.name);
+    
     $http.get('/api/2/datasets/' + $routeParams.name).then(function(res) {
         $scope.dataset = res.data;
     });
