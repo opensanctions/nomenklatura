@@ -9,10 +9,15 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, sessio
         $scope.dataset = res.data;
     });
 
-    var params = {dataset: $routeParams.name};
-    $http.get('/api/2/entities', {params: params}).then(function(res) {
-        $scope.entities = res.data;
-    });
+    $scope.loadEntities = function(url, params) {
+        $http.get(url, {params: params}).then(function(res) {
+            $scope.entities = res.data;
+        });
+    };
+
+    var params = {dataset: $routeParams.name, 'limit': 15};
+    $scope.loadEntities('/api/2/entities', params);
+    
 
     $scope.editDataset = function(){
         var d = $modal.open({
