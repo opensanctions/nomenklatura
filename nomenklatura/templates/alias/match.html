@@ -7,8 +7,7 @@
 
 {% block breadcrumbs %}
     <li>
-        <a href="{{url_for('dataset.view',
-            dataset=dataset.name)}}">{{dataset.label}}</a>
+        <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
         <span class="divider"></span>
     </li>
     <li>

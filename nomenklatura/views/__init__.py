@@ -10,7 +10,6 @@ from nomenklatura.model import Dataset, Account
 from nomenklatura.exc import Unauthorized
 from nomenklatura import authz
 from nomenklatura.util import jsonify, response_format
-from nomenklatura.views.dataset import section as dataset
 from nomenklatura.views.entity import section as entity
 from nomenklatura.views.alias import section as alias
 from nomenklatura.views.upload import section as upload
@@ -85,8 +84,6 @@ def handle_invalid(exc):
 
 
 
-
-app.register_blueprint(dataset)
 app.register_blueprint(entity)
 app.register_blueprint(alias)
 app.register_blueprint(upload)
