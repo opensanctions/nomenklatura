@@ -47,20 +47,19 @@ def find_matches(dataset, text, exclude=None):
     # calculate the difference percentage
     l = func.greatest(1.0, func.least(len(match_text), func.length(text_field)))
     score = func.greatest(0.0, ((l - func.levenshtein(text_field, match_text)) / l) * 100.0)
-    score = score.label('score')
+    score = func.max(score).label('score')
 
     # coalesce the canonical identifier
-    id_ = func.coalesce(entities.c.canonical_id, entities.c.id)
-    id_ = func.distinct(id_).label('id')
-
+    id_ = func.coalesce(entities.c.canonical_id, entities.c.id).label('id')
+    
     # apply filters
     filters = [entities.c.dataset_id==dataset.id,
                entities.c.invalid==False]
     if not dataset.match_aliases:
         filters.append(entities.c.canonical_id==None)
     if exclude is not None:
-        filters.append(id_!=exclude)
+        filters.append(entities.c.id!=exclude)
 
     q = select([id_, score], and_(*filters), [entities],
-        order_by=[score.desc()])
+        group_by=[id_], order_by=[score.desc()])
     return Matches(q)
