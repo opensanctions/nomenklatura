@@ -50,7 +50,7 @@ class ValidCanonicalEntity(FancyValidator):
 class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
-    data = DataBlob(if_missing={}, if_empty={})
+    #data = DataBlob(if_missing={}, if_empty={})
     # TODO: attributes
     reviewed = validators.StringBool(if_empty=False, if_missing=False)
     invalid = validators.StringBool(if_empty=False, if_missing=False)

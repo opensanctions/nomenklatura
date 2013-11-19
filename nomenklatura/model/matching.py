@@ -32,7 +32,7 @@ class Matches(object):
             yield {'score': int(score), 'entity': entities.get(id)}
 
 
-def find_matches(dataset, text, exclude=None):
+def find_matches(dataset, text, filter=None, exclude=None):
     entities = Entity.__table__
     match_text = normalize(text, dataset)[:254]
 
@@ -59,6 +59,8 @@ def find_matches(dataset, text, exclude=None):
         filters.append(entities.c.canonical_id==None)
     if exclude is not None:
         filters.append(entities.c.id!=exclude)
+    if filter is not None:
+        filters.append(text_field.ilike('%%%s%%' % filter))
 
     q = select([id_, score], and_(*filters), [entities],
         group_by=[id_], order_by=[score.desc()])

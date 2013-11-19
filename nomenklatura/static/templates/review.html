@@ -16,7 +16,8 @@
     <div class="col-xs-4">
         <form id="match-filter" class="form-horizontal">
             <input type="hidden" name="random" value="{{random}}">
-            <input id="filter-field" type="text" class="form-control search-query"
+            <input ng-model="filter" ng-keyup="updateFilter()" type="text"
+              class="form-control search-query"
               name="query" placeholder="Type a partial match...">
         </form>
     </div>
@@ -30,38 +31,39 @@
         </tr>
 
         <tr ng-repeat="match in matches.results">
-          <td><input type="radio" ng-model="entity.canonical.id"
+          <td><input type="radio" name="r" ng-model="entity.canonical"
               value="{{match.entity.id}}"></td>
           <td><code><a href="/#/entities/{{match.entity.id}}"
                       target="_new">{{match.entity.name}}</a></code></td>
           <td>{{match.score}}</td>
         </tr>
         <tr>
-          <td colspan="3">
-              {{ pager(choices) }}
+          <td></td>
+          <td colspan="2">
+            <nk-pager response="matches" load="loadMatches(url)"></odis-pager>
           </td>
         </tr>
         <tr>
-            <td><input type="radio" name="choice" id="new" value="NEW"></td>
+            <td><input type="radio" name="r" ng-model="entity.canonical" value=""></td>
             <td colspan="2">
                 <input type="text" name="name" class="form-control" id="new-text" ng-model="entity.name">
             </td>
         </tr>
         <tr ng-show="dataset.enable_invalid">
-            <td><input type="radio" name="choice" id="invalid" value="INVALID"></td>
+            <td><input type="radio" name="r" ng-model="entity.invalid" value="True"></td>
             <td colspan="2">
                 <strong>Invalid alias</strong>
             </td>
         </tr>
     </table>
     <div ng-show="random">
-        <button type="submit" class="btn btn-success btn-lg">
+        <button type="submit" class="btn btn-success btn-lg" ng-click="updateEntity()">
             <i class="icon-ok icon-white"></i> Save &amp; Next</button>
-        <a href="" class="btn btn-danger btn-lg">
+        <a href="" class="btn btn-danger btn-lg" ng-click="loadEntity()">
             <i class="icon-random icon-white"></i> Try another</a>
     </div>
     <div ng-hide="random">
-        <button type="submit" class="btn btn-success btn-lg">
+        <button type="submit" class="btn btn-success btn-lg" ng-click="updateEntity()">
             <i class="icon-ok icon-white"></i> Save</button>
     </div>
 

@@ -16,11 +16,11 @@ section = Blueprint('matching', __name__)
 @section.route('/match', methods=['GET'])
 def match():
     dataset_arg = request.args.get('dataset')
-    exclude = arg_int('exclude')
     dataset = Dataset.find(dataset_arg)
     matches = find_matches(dataset,
         request.args.get('name'),
-        exclude=exclude)
+        filter=request.args.get('filter'),
+        exclude=arg_int('exclude'))
     return query_pager(matches)
 
 
