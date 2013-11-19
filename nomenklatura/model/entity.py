@@ -30,7 +30,7 @@ class AvailableName(FancyValidator):
 class MergeableEntity(FancyValidator):
 
     def _to_python(self, value, state):
-        entity = Entity.by_id(state.dataset, value)
+        entity = Entity.by_id(value)
         if entity is None:
             raise Invalid('Entity does not exist.', value, None)
         if entity == state.entity:
@@ -72,12 +72,12 @@ class Entity(db.Model):
         d = {
             'id': self.id,
             'name': self.name,
+            'dataset': self.dataset.name,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
         }
         if not shallow:
             d['creator'] = self.creator.to_dict()
-            d['dataset'] = self.dataset.name
             d['data'] = self.data
             d['num_aliases'] = self.aliases.count()
         return d
@@ -97,9 +97,8 @@ class Entity(db.Model):
                 filter_by(name=name).first()
 
     @classmethod
-    def by_id(cls, dataset, id):
-        return cls.query.filter_by(dataset=dataset).\
-                filter_by(id=id).first()
+    def by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
 
     @classmethod
     def id_map(cls, dataset, ids):

@@ -22,7 +22,7 @@ class ValidChoice(FancyValidator):
             return value
         elif value == 'INVALID' and state.dataset.enable_invalid:
             return value
-        entity = Entity.by_id(state.dataset, value)
+        entity = Entity.by_id(value)
         if entity is not None:
             return entity
         raise Invalid('No such entity.', value, None)
@@ -143,7 +143,7 @@ class Alias(db.Model):
         choices = filter(lambda (c,v,s): s > 99.9, choices)
         if len(choices)==1:
             c, entity_id, s = choices.pop()
-            entity = Entity.by_id(dataset, entity_id)
+            entity = Entity.by_id(entity_id)
         if readonly:
             return entity
         alias = cls()
