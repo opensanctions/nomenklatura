@@ -21,6 +21,7 @@ class DatasetNewSchema(Schema):
 
 
 class DatasetEditSchema(Schema):
+    allow_extra_fields = True
     label = validators.String(min=3, max=255)
     match_aliases = validators.StringBool(if_missing=False)
     ignore_case = validators.StringBool(if_missing=False)

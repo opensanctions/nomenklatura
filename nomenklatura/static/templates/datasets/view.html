@@ -17,7 +17,7 @@
       <div class="btn-group">
         <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="/{{dataset.name}}/match">
           <i class="icon-check icon-white"></i> Reconcile ({{dataset.stats.num_unmatched}})</a>
-        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="#">
+        <a nk-authz dataset="dataset" op="manage" class="btn btn-default" ng-click="editDataset()">
           <i class="icon-cog"></i> Settings</a>
         <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="" disabled >
           <i class="icon-upload"></i> Import</a>
