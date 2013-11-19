@@ -4,7 +4,7 @@ from flask import redirect
 from nomenklatura.core import db
 from nomenklatura.util import request_content
 from nomenklatura.util import jsonify
-from nomenklatura.pager import Pager
+from nomenklatura.views.pager import query_pager
 from nomenklatura import authz
 from nomenklatura.model import Dataset
 
@@ -13,16 +13,8 @@ section = Blueprint('datasets', __name__)
 
 @section.route('/datasets', methods=['GET'])
 def index():
-    datasets = list(Dataset.all())
-    # TODO: proper pager
-    return jsonify({
-        'results': datasets,
-        'limit': len(datasets),
-        'count': len(datasets),
-        'offset': 0,
-        'next': None,
-        'previous': None
-        })
+    datasets = Dataset.all()
+    return query_pager(datasets)
 
 
 @section.route('/datasets', methods=['POST'])
