@@ -2,6 +2,7 @@
 function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeout, session) {
     $scope.dataset = {};
     $scope.entities = {};
+    $scope.new_entity = {};
     $scope.query = '';
 
     session.authz($routeParams.name);
@@ -38,6 +39,16 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
                 dataset: function () { return $scope.dataset; }
             }
         });
+    };
+
+    $scope.createEntity = function(form) {
+        $scope.new_entity.dataset = $scope.dataset.name;
+        console.log(form);
+        var res = $http.post('/api/2/entities', $scope.new_entity);
+        res.success(function(data) {
+            window.location.hash = '#/entities/' + data.id;
+        });
+        res.error(nomenklatura.handleFormError(form));
     };
 }
 

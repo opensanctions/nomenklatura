@@ -59,17 +59,21 @@
               <td><a href="/{{dataset.name}}/entities/{{entity.id}}">{{entity.name}}</a></td>
               <td>{{entity.num_aliases}}</td>
           </tr>
-          <form nk-authz dataset="dataset" op="edit" class="well form-inline">
-              <tr>
-                  <td colspan="1">
-                      <input type="text" class="form-control" id="name"
-                          name="name" placeholder="Add an entity...">
-                  </td>
-                  <td>
-                      <button type="submit" class="btn btn-small btn-primary">add</button>
-                  </td>
-              </tr>
-          </form>
+          <tr nk-authz dataset="dataset" op="edit">
+            <td>
+              <form class="form-horizontal" name="newEntity" role="form">
+              <div class="form-group col-xs-11" ng-class="{'has-error': newEntity.name.$invalid}">
+                <input type="text" class="form-control" ng-model="new_entity.name"
+                  placeholder="Add an entity..." name="name">
+                <p class="help-block" ng-show="newEntity.name.$invalid"
+                  ng-bind="newEntity.name.$message"></p>
+              </div>
+              </form>
+            </td>
+            <td>
+              <button class="btn btn-small btn-primary" ng-click="createEntity(newEntity)">add</button>
+            </td>
+          </tr>
       </table>
       <nk-pager response="entities" load="loadEntities(url)"></odis-pager>
   </div>
