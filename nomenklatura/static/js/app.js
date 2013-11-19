@@ -18,10 +18,14 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: PagesCtrl
   });
 
-
   $routeProvider.when('/datasets/:name', {
     templateUrl: '/static/templates/datasets/view.html',
     controller: DatasetsViewCtrl
+  });
+
+  $routeProvider.when('/entities/:id', {
+    templateUrl: '/static/templates/entities/view.html',
+    controller: EntitiesViewCtrl
   });
 
   $routeProvider.otherwise({

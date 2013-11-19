@@ -56,7 +56,7 @@
               <th>Aliases</th>
           </tr>
           <tr ng-repeat="entity in entities.results">
-              <td><a href="/{{dataset.name}}/entities/{{entity.id}}">{{entity.name}}</a></td>
+              <td><a href="/#/entities/{{entity.id}}">{{entity.name}}</a></td>
               <td>{{entity.num_aliases}}</td>
           </tr>
           <tr nk-authz dataset="dataset" op="edit">
