@@ -16,6 +16,7 @@ from nomenklatura.views.alias import section as alias
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
 from nomenklatura.views.datasets_api import section as datasets_api
+from nomenklatura.views.entities_api import section as entities_api
 from nomenklatura.views.reconcile import section as reconcile
 
 
@@ -92,6 +93,7 @@ app.register_blueprint(upload)
 app.register_blueprint(reconcile)
 app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(datasets_api, url_prefix='/api/2')
+app.register_blueprint(entities_api, url_prefix='/api/2')
 
 
 
