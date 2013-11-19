@@ -2,7 +2,6 @@ import logging
 import time
 
 from nomenklatura.model.text import normalize, similarity
-from nomenklatura.matching.levenshtein import levenshtein
 from nomenklatura.model import Entity
 
 log = logging.getLogger(__name__)
