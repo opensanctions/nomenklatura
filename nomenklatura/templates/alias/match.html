@@ -49,8 +49,7 @@
             <tr>
                     <td><input type="radio" name="choice"
                         value="{{entity.id}}"></td>
-                    <td><code><a href="{{url_for('entity.view',
-                                dataset=dataset.name, entity=entity.id)}}"
+                    <td><code><a href="/#/entities/{{entity.id}}"
                                 target="_new">{{entity.display_name}}</a></code></td>
                     <td>{{score}}</td>
                 </tr>
