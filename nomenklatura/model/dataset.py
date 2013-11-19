@@ -63,12 +63,11 @@ class Dataset(db.Model):
                                lazy='dynamic')
 
     def to_dict(self):
-        from nomenklatura.model.alias import Alias
         from nomenklatura.model.entity import Entity
-        num_aliases = Alias.all(self).count()
-        num_unmatched = Alias.all_unmatched(self).count()
+        num_aliases = Entity.all(self).filter(Entity.canonical_id!=None).count()
+        num_unmatched = Entity.all(self).filter_by(reviewed=False).count()
         num_entities = Entity.all(self).count()
-        num_invalid = Alias.all_invalid(self).count()
+        num_invalid = Entity.all(self).filter_by(invalid=True).count()
     
         return {
             'id': self.id,
