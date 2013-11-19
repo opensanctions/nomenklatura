@@ -15,7 +15,7 @@
           marked invalid).
       </p>
       <div class="btn-group">
-        <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="/{{dataset.name}}/match">
+        <a nk-authz dataset="dataset" op="edit" class="btn btn-primary" href="/#/datasets/{{dataset.name}}/review/random">
           <i class="icon-check icon-white"></i> Reconcile ({{dataset.stats.num_unmatched}})</a>
         <a nk-authz dataset="dataset" op="manage" class="btn btn-default" ng-click="editDataset()">
           <i class="icon-cog"></i> Settings</a>

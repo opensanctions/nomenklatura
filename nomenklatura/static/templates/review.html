@@ -1,0 +1,72 @@
+
+<ul class="breadcrumb">
+  <li>
+      <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+      <span class="divider"></span>
+  </li>
+  <li>
+      Reconcile
+  </li>
+</ul>
+
+<div class="row">
+    <div class="col-xs-8">
+      Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ entity.name }}">gg</a>]: <code>{{entity.name}}</code>
+    </div>
+    <div class="col-xs-4">
+        <form id="match-filter" class="form-horizontal">
+            <input type="hidden" name="random" value="{{random}}">
+            <input id="filter-field" type="text" class="form-control search-query"
+              name="query" placeholder="Type a partial match...">
+        </form>
+    </div>
+</div>
+<form id="save-match">
+    <table class="table match-table table-condensed">
+        <tr>
+            <th></th>
+            <th>Entity</th>
+            <th>Score</th>
+        </tr>
+
+        <tr ng-repeat="match in matches.results">
+          <td><input type="radio" ng-model="entity.canonical.id"
+              value="{{match.entity.id}}"></td>
+          <td><code><a href="/#/entities/{{match.entity.id}}"
+                      target="_new">{{match.entity.name}}</a></code></td>
+          <td>{{match.score}}</td>
+        </tr>
+        <tr>
+          <td colspan="3">
+              {{ pager(choices) }}
+          </td>
+        </tr>
+        <tr>
+            <td><input type="radio" name="choice" id="new" value="NEW"></td>
+            <td colspan="2">
+                <input type="text" name="name" class="form-control" id="new-text" ng-model="entity.name">
+            </td>
+        </tr>
+        <tr ng-show="dataset.enable_invalid">
+            <td><input type="radio" name="choice" id="invalid" value="INVALID"></td>
+            <td colspan="2">
+                <strong>Invalid alias</strong>
+            </td>
+        </tr>
+    </table>
+    <div ng-show="random">
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="icon-ok icon-white"></i> Save &amp; Next</button>
+        <a href="" class="btn btn-danger btn-lg">
+            <i class="icon-random icon-white"></i> Try another</a>
+    </div>
+    <div ng-hide="random">
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="icon-ok icon-white"></i> Save</button>
+    </div>
+
+</form>
+<div class="help-block">
+  Keyboard controls: use up and down arrows to navigate, numbers to select, 'i' for invalid, 'f' for search,
+  'n' for new entity form, enter to submit. 'g' will run a Google query with the candidate.
+</div>

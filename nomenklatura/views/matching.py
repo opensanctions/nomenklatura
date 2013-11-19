@@ -2,6 +2,7 @@ from random import randint
 
 from flask import Blueprint, request
 from flask.ext.utils.serialization import jsonify
+from flask.ext.utils.args import arg_int
 
 from nomenklatura.views.pager import query_pager
 #from nomenklatura import authz
@@ -15,7 +16,7 @@ section = Blueprint('matching', __name__)
 @section.route('/match', methods=['GET'])
 def match():
     dataset_arg = request.args.get('dataset')
-    exclude = request.args.get('exclude')
+    exclude = arg_int('exclude')
     dataset = Dataset.find(dataset_arg)
     matches = find_matches(dataset,
         request.args.get('name'),

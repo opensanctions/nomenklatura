@@ -92,8 +92,8 @@ app.register_blueprint(matching, url_prefix='/api/2')
 
 
 def angular_templates():
-    #if app.config.get('ASSETS_DEBUG'):
-    #    return
+    if app.config.get('ASSETS_DEBUG'):
+        return
     partials_dir = os.path.join(app.static_folder, 'templates')
     for (root, dirs, files) in os.walk(partials_dir):
         for file_name in files:

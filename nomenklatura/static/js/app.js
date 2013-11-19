@@ -23,6 +23,11 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: DatasetsViewCtrl
   });
 
+  $routeProvider.when('/datasets/:dataset/review/:what', {
+    templateUrl: '/static/templates/review.html',
+    controller: ReviewCtrl
+  });
+
   $routeProvider.when('/entities/:id', {
     templateUrl: '/static/templates/entities/view.html',
     controller: EntitiesViewCtrl
