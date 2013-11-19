@@ -14,10 +14,21 @@ class AvailableDatasetName(FancyValidator):
             return value
         raise Invalid('Dataset already exists.', value, None)
 
+class ValidDataset(FancyValidator):
+
+    def _to_python(self, value, state):
+        dataset = Dataset.by_name(value)
+        if dataset is None:
+            raise Invalid('Dataset not found.', value, None)
+        return dataset
 
 class DatasetNewSchema(Schema):
     name = All(AvailableDatasetName(), Name(not_empty=True))
     label = validators.String(min=3, max=255)
+
+class FormDatasetSchema(Schema):
+    allow_extra_fields = True
+    dataset = ValidDataset()
 
 
 class DatasetEditSchema(Schema):
@@ -105,6 +116,11 @@ class Dataset(db.Model):
         if dataset is None:
             raise NotFound("No such dataset: %s" % name)
         return dataset
+
+    @classmethod
+    def from_form(cls, form_data):
+        data = FormDatasetSchema().to_python(form_data)
+        return data.get('dataset')
 
     @classmethod
     def all(cls):
