@@ -1,7 +1,8 @@
-from flask import Response
+from flask import Response, request
 from formencode import htmlfill
 from flask.ext.utils.args import arg_bool, arg_int
 
+from nomenklatura.exc import BadRequest
 from nomenklatura.util import response_format, jsonify, request_content
 
 def handle_invalid(exc, html_func, data=None, args=()):
@@ -30,3 +31,8 @@ def get_offset(default=0):
     return max(0, arg_int('offset', default=default))
 
 
+def request_data():
+    data = request.json
+    if data is None:
+        raise BadRequest()
+    return data

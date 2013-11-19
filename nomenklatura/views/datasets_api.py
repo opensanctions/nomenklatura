@@ -2,7 +2,7 @@ from flask import Blueprint, request, url_for
 from flask import redirect
 
 from nomenklatura.core import db
-from nomenklatura.util import request_content
+from nomenklatura.views.common import request_data
 from nomenklatura.util import jsonify
 from nomenklatura.views.pager import query_pager
 from nomenklatura import authz
@@ -20,8 +20,7 @@ def index():
 @section.route('/datasets', methods=['POST'])
 def create():
     authz.require(authz.dataset_create())
-    data = request_content()
-    dataset = Dataset.create(data, request.account)
+    dataset = Dataset.create(request_data(), request.account)
     db.session.commit()
     return redirect(url_for('.view', dataset=dataset.name))
 
@@ -36,8 +35,6 @@ def view(dataset):
 def update(dataset):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_manage(dataset))
-    data = request_content()
-    dataset.update(data)
+    dataset.update(request_data())
     db.session.commit()
-    #flash("Updated %s" % dataset.label, 'success')
     return redirect(url_for('.view', dataset=dataset.name))
