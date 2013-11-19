@@ -2,9 +2,7 @@ from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
 from formencode import Invalid, htmlfill
 
-from nomenklatura.core import db
-from nomenklatura.util import request_content, response_format
-from nomenklatura.views.common import handle_invalid
+from nomenklatura.views.common import request_data
 from nomenklatura import authz
 from nomenklatura.model import Dataset
 from nomenklatura.importer import upload_file, get_map_metadata, \
@@ -28,8 +26,7 @@ def upload(dataset):
     if not file_ or not file_.filename:
         inv = Invalid("No file.", None, None,
                       error_dict={'file': "You need to upload a file"})
-        return handle_invalid(inv, form, data={},
-                              args=[dataset.name])
+        raise inv
     upload = upload_file(dataset, file_, request.account)
     return redirect(url_for('.map', dataset=dataset.name, id=upload.id))
 
@@ -46,7 +43,7 @@ def map(dataset, id):
 def submit(dataset, id):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    data = request_content()
+    data = request_data()
     entity_col = data.get('entity') or None
     alias_col = data.get('alias') or None
     if not (entity_col or alias_col):

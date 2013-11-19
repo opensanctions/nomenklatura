@@ -1,9 +1,9 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
+from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.core import db
 from nomenklatura.views.common import request_data
-from nomenklatura.util import jsonify
 from nomenklatura.views.pager import query_pager
 from nomenklatura import authz
 from nomenklatura.model import Dataset

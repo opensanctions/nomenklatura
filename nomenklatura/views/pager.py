@@ -1,7 +1,8 @@
-from flask import url_for, request
 from urllib import urlencode
 
-from nomenklatura.util import jsonify
+from flask import url_for, request
+from flask.ext.utils.serialization import jsonify
+
 from nomenklatura.views.common import get_limit, get_offset
 
 

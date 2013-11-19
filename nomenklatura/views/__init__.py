@@ -4,14 +4,12 @@ import os
 from flask import render_template, request
 from flask import session, Markup
 from formencode import Invalid
+from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.core import app
 from nomenklatura.model import Dataset, Account
 from nomenklatura.exc import Unauthorized
 from nomenklatura import authz
-from nomenklatura.util import jsonify, response_format
-from nomenklatura.views.entity import section as entity
-from nomenklatura.views.alias import section as alias
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
 from nomenklatura.views.datasets_api import section as datasets_api
@@ -55,21 +53,22 @@ def set_template_globals():
         'login': request.account.login if request.account else None
         }
 
+
 @app.errorhandler(401)
 @app.errorhandler(403)
 @app.errorhandler(404)
 @app.errorhandler(410)
 @app.errorhandler(500)
 def handle_exceptions(exc):
-    """ Re-format exceptions to JSON if accept requires that. """
-    format = response_format()
-    if format == 'json':
-        body = {'status': exc.code,
-                'name': exc.name,
-                'message': exc.get_description(request.environ)}
-        return jsonify(body, status=exc.code,
-                       headers=exc.get_headers(request.environ))
-    return exc
+    message = exc.get_description(request.environ)
+    message = message.replace('<p>', '').replace('</p>', '')
+    body = {
+        'status': exc.code,
+        'name': exc.name,
+        'message': message
+    }
+    return jsonify(body, status=exc.code,
+        headers=exc.get_headers(request.environ))
 
 
 @app.errorhandler(Invalid)
@@ -83,15 +82,11 @@ def handle_invalid(exc):
     return jsonify(body, status=400)
 
 
-
-app.register_blueprint(entity)
-app.register_blueprint(alias)
 app.register_blueprint(upload)
 app.register_blueprint(reconcile)
 app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(datasets_api, url_prefix='/api/2')
 app.register_blueprint(entities_api, url_prefix='/api/2')
-
 
 
 def angular_templates():

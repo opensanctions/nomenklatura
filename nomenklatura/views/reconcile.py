@@ -2,8 +2,8 @@ import json
 
 from flask import Blueprint, request, url_for, flash
 from flask import render_template, redirect
+from flask.ext.utils.serialization import jsonify
 
-from nomenklatura.util import jsonify
 from nomenklatura.exc import BadRequest
 from nomenklatura.model import Dataset, Alias, Entity
 from nomenklatura.matching import prefix_search, match

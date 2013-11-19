@@ -1,9 +1,9 @@
 import requests
 from flask import url_for, session, Blueprint, redirect
 from flask import request
+from flask.ext.utils.serialization import jsonify
 
 from nomenklatura import authz
-from nomenklatura.util import jsonify
 from nomenklatura.core import db, github
 from nomenklatura.model import Account, Dataset
 
