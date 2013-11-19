@@ -2,12 +2,13 @@ from datetime import datetime
 
 from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
-from sqlalchemy.orm import joinedload_all
+from sqlalchemy.orm import joinedload_all, backref
+from sqlalchemy.dialects.postgresql import HSTORE
 
 from nomenklatura.core import db
 from nomenklatura.exc import NotFound
 from nomenklatura.model.common import JsonType, DataBlob
-
+from nomenklatura.model.text import normalize
 
 class EntityState():
 
@@ -57,16 +58,21 @@ class Entity(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode)
+    normalized = db.Column(db.Unicode)
     data = db.Column(JsonType, default=dict)
+    attributes = db.Column(HSTORE)
+    reviewed = db.Column(db.Boolean, default=False)
+    invalid = db.Column(db.Boolean, default=False)
+    canonical_id = db.Column(db.Integer,
+        db.ForeignKey('entity.id'), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
             onupdate=datetime.utcnow)
 
-    aliases = db.relationship('Alias', backref='entity',
-                             lazy='dynamic')
-    aliases_static = db.relationship('Alias')
+    canonical = db.relationship('Entity', backref=backref('aliases', lazy='dynamic'),
+        remote_side='Entity.id')
 
     def to_dict(self, shallow=False):
         d = {
@@ -137,6 +143,7 @@ class Entity(db.Model):
         entity.dataset = dataset
         entity.creator = account
         entity.name = data['name']
+        entity.normalized = normalize(entity.name)
         entity.data = data['data']
         db.session.add(entity)
         db.session.flush()
@@ -147,24 +154,7 @@ class Entity(db.Model):
         data = EntitySchema().to_python(data, state)
         self.creator = account
         self.name = data['name']
+        self.normalized = normalize(self.name)
         self.data = data['data']
         db.session.add(self)
 
-    def merge_into(self, data, account):
-        from nomenklatura.model.alias import Alias
-        state = EntityState(self.dataset, self)
-        data = EntityMergeSchema().to_python(data, state)
-        target = data.get('target')
-        for alias in self.aliases:
-            alias.entity = target
-        alias = Alias()
-        alias.name = self.name
-        alias.creator = self.creator
-        alias.matcher = account
-        alias.entity = target
-        alias.dataset = self.dataset
-        alias.is_matched = True
-        db.session.delete(self)
-        db.session.add(alias)
-        db.session.commit()
-        return target
