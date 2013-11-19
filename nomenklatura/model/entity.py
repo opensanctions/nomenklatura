@@ -84,7 +84,7 @@ class Entity(db.Model):
 
     def to_row(self):
         row = self.data.copy()
-        row.update(self.as_dict(shallow=True))
+        row.update(self.to_dict(shallow=True))
         return row
 
     @property

@@ -6,7 +6,7 @@ from formencode import Invalid, htmlfill, validators
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, csvify, csv_filename
+from nomenklatura.util import jsonify
 from nomenklatura.pager import Pager
 from nomenklatura import authz
 from nomenklatura.exc import NotFound
@@ -22,12 +22,6 @@ section = Blueprint('alias', __name__)
 def index(dataset, format='json'):
     dataset = Dataset.find(dataset)
     q = Alias.all(dataset, eager=True)
-    if format == 'csv':
-        fn = csv_filename(dataset, 'aliases')
-        headers = {
-            'Content-Disposition': 'attachment; filename=' + fn
-        }
-        return csvify(q, headers=headers)
     return jsonify(q)
 
 

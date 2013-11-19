@@ -21,15 +21,9 @@
           <i class="icon-cog"></i> Settings</a>
         <a nk-authz dataset="dataset" op="manage" class="btn btn-default" href="" disabled >
           <i class="icon-upload"></i> Import</a>
-        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">
-            <i class="icon-download"></i>
-            Download
-            <span class="caret"></span>
+        <a class="btn btn-default" href="/api/2/entities?dataset={{dataset.name}}&format=csv&download=true">
+            <i class="fa fa-download"></i> CSV
         </a>
-        <ul class="dropdown-menu" role="menu">
-            <li><a href="#">Mappings (CSV with entities and aliases)</a></li>
-            <li><a href="#">Code sheet (CSV with only entities)</a></li>
-        </ul>
       </div>
       <br>
           Aliases are added via the <a href="/#/about">API</a>, by matching names against this

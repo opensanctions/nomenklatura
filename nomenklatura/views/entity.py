@@ -4,7 +4,7 @@ from formencode import Invalid
 
 from nomenklatura.core import db
 from nomenklatura.util import request_content, response_format
-from nomenklatura.util import jsonify, csvify, csv_filename
+from nomenklatura.util import jsonify
 from nomenklatura import authz
 from nomenklatura.pager import Pager
 from nomenklatura.views.dataset import view as view_dataset

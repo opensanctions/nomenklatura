@@ -1,10 +1,12 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
+from flask.ext.utils.args import arg_bool
 
 from nomenklatura.core import db
 from nomenklatura.util import jsonify
 from nomenklatura.views.pager import query_pager
-from nomenklatura.views.common import request_data
+from nomenklatura.views.common import request_data, csvify
+from nomenklatura.views.common import dataset_filename
 from nomenklatura import authz
 from nomenklatura.model import Entity, Dataset
 
@@ -22,10 +24,19 @@ def index():
     if len(filter_name):
         query = '%' + filter_name + '%'
         entities = entities.filter(Entity.name.ilike(query))
+    
     # TODO, other filters.
-    # TODO, format & download flags
-    return query_pager(entities)
+    
+    format = request.args.get('format', 'json').lower().strip()
+    if format == 'csv':
+        res = csvify(entities)
+    else:
+        res = query_pager(entities)
 
+    if arg_bool('download'):
+        fn = dataset_filename(dataset, format)
+        res.headers['Content-Disposition'] = 'attachment; filename=' + fn
+    return res
 
 @section.route('/entities', methods=['POST'])
 def create():
