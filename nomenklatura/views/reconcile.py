@@ -126,6 +126,7 @@ def reconcile(dataset=None):
     else:
         return reconcile_index(dataset)
 
+
 @section.route('/<dataset>/suggest', methods=['GET', 'POST'])
 def suggest(dataset):
     """ 
@@ -159,6 +160,7 @@ def suggest(dataset):
         "prefix" : query,
         "result" : matches
         })
+
 
 @section.route('/flyout', methods=['GET', 'POST'])
 @section.route('/private/flyout', methods=['GET', 'POST'])
