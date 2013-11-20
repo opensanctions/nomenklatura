@@ -84,7 +84,7 @@ def handle_invalid(exc):
 
 
 app.register_blueprint(upload)
-app.register_blueprint(reconcile)
+app.register_blueprint(reconcile, url_prefix='/api/2')
 app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(datasets, url_prefix='/api/2')
 app.register_blueprint(entities, url_prefix='/api/2')

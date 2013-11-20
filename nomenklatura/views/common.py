@@ -10,12 +10,12 @@ from nomenklatura.exc import BadRequest
 from flask.ext.utils.serialization import jsonify
 
 
-def get_limit(default=50):
-    return max(0, min(1000, arg_int('limit', default=default)))
+def get_limit(default=50, field='limit'):
+    return max(0, min(1000, arg_int(field, default=default)))
 
 
-def get_offset(default=0):
-    return max(0, arg_int('offset', default=default))
+def get_offset(default=0, field='offset'):
+    return max(0, arg_int(field, default=default))
 
 
 def request_data():

@@ -1,28 +1,22 @@
 import json 
 
-from flask import Blueprint, request, url_for, flash
-from flask import render_template, redirect
+from flask import Blueprint, request, url_for
 from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.exc import BadRequest
 from nomenklatura.model import Dataset, Entity
-#from nomenklatura.matching import prefix_search, match
+from nomenklatura.views.common import get_limit, get_offset
+from nomenklatura.model.matching import find_matches
+
 
 section = Blueprint('reconcile', __name__)
 
 
-def type_to_dataset(type_name):
-    dataset_name = type_name.strip().strip('/')
-    dataset = Dataset.by_name(dataset_name)
-    if dataset is None:
-        raise BadRequest('No type (or invalid type) specified!')
-    return dataset
-
 def reconcile_index(dataset):
     domain = url_for('index', _external=True).strip('/')
-    urlp = domain + '{{id}}'
+    urlp = domain + '/#/entities/{{id}}'
     meta = {
-        'name': 'nomenklatura',
+        'name': 'nomenklatura: %s' % dataset.label,
         'identifierSpace': 'http://rdf.freebase.com/ns/type.object.id',
         'schemaSpace': 'http://rdf.freebase.com/ns/type.object.id',
         'view': {'url': urlp},
@@ -30,73 +24,53 @@ def reconcile_index(dataset):
             'url': urlp + '?preview=true', 
             'width': 600,
             'height': 300
-            }
-        }
-    if dataset is not None:
-        meta['name'] = dataset.label
-        meta['suggest'] = {
+        },
+        'suggest': {
             'entity': {
                 'service_url': domain,
-                'service_path': '/' + dataset.name + '/suggest',
-                'flyout_service_path': '/flyout'
-                }
+                'service_path': '/api/2/reconcile/' + dataset.name + '/suggest'
             }
-        meta['defaultTypes'] = [{'name': dataset.label, 'id': '/' + dataset.name}]
-    else:
-        meta['defaultTypes'] = [{'name': d.label, 'id': '/' + d.name} for d in Dataset.all()]
+        },
+        'defaultTypes': [{'name': dataset.label, 'id': '/' + dataset.name}]
+    }
     return jsonify(meta)
+
 
 def reconcile_op(dataset, query):
     try:
         limit = max(1, min(100, int(query.get('limit'))))
-    except ValueError: limit = 5
-    except TypeError: limit = 5
+    except:
+        limit = 5
 
-    filters = [(p.get('p'), p.get('v')) for p in query.get('properties', [])]
+    matches = find_matches(dataset, query.get('query', ''))
+    matches = matches.limit(limit)
 
-    if dataset is None:
-        dataset = type_to_dataset(query.get('type', ''))
-
-    results = match(query.get('query', ''), dataset)[:limit]
-    entities = Entity.id_map(dataset, map(lambda (c,e,s): e, results))
-    matches = []
-    skip = False
-    for (candidate, entity_id, score) in results:
-        entity = entities[entity_id]
-
-        for key, fv in filters:
-            if entity.data.get(key) != fv:
-                skip = True
-        if skip:
-            continue
-
-        id = url_for('entity.view', dataset=dataset.name, entity=entity.id)
-        uri = url_for('entity.view', dataset=dataset.name, entity=entity.id, _external=True)
-        matches.append({
-            'name': entity.name,
-            'score': score,
+    results = []
+    for match in matches:
+        results.append({
+            'name': match['entity'].name,
+            'score': match['score'],
             'type': [{
                 'id': '/' + dataset.name,
                 'name': dataset.label
                 }],
-            'id': id,
-            'uri': uri,
-            'match': score==100
-            })
+            'id': match['entity'].id,
+            'uri': url_for('entities.view', id=match['entity'].id, _external=True),
+            'match': match['score']==100
+        })
     return {
-        'result': matches, 
+        'result': results, 
         'num': len(results)
         }
 
-@section.route('/reconcile', methods=['GET', 'POST'])
-@section.route('/<dataset>/reconcile', methods=['GET', 'POST'])
-def reconcile(dataset=None):
+
+@section.route('/reconcile/<dataset>', methods=['GET', 'POST'])
+def reconcile(dataset):
     """
     Reconciliation API, emulates Google Refine API. See: 
     http://code.google.com/p/google-refine/wiki/ReconciliationServiceApi
     """
-    if dataset is not None:
-        dataset = Dataset.by_name(dataset)
+    dataset = Dataset.by_name(dataset)
 
     # TODO: Add proper support for types and namespacing.
     data = request.args.copy()
@@ -127,32 +101,28 @@ def reconcile(dataset=None):
         return reconcile_index(dataset)
 
 
-@section.route('/<dataset>/suggest', methods=['GET', 'POST'])
+@section.route('/reconcile/<dataset>/suggest', methods=['GET', 'POST'])
 def suggest(dataset):
     """ 
     Suggest API, emulates Google Refine API. See:
     http://code.google.com/p/google-refine/wiki/SuggestApi
     """
-    try:
-        start = int(request.args.get('start', 0))
-        limit = int(request.args.get('limit', 20))
-    except:
-        raise BadRequest('Invalid result range!')
-
-    dataset = type_to_dataset(dataset)
+    dataset = Dataset.by_name(dataset)
+    entities = Entity.all().filter(Entity.invalid!=True)
     query = request.args.get('prefix', '').strip()
-    results = prefix_search(query, dataset)[start:start+limit]
-    entities = Entity.id_map(dataset, map(lambda (c,v): v, results))
+    entities = entities.filter(Entity.name.ilike('%s%%' % query))
+    entities = entities.offset(get_offset(field='start'))
+    entities = entities.limit(get_limit(default=20))
+
     matches = []
-    for candidate, entity_id in results:
-        entity = entities[entity_id]
+    for entity in entities:
         matches.append({
             'name': entity.name,
             'n:type': {
                 'id': '/' + dataset.name,
                 'name': dataset.label
                 },
-            'id': url_for('entity.view', dataset=dataset.name, entity=entity_id)
+            'id': entity.id
             })
     return jsonify({
         "code" : "/api/status/ok",
@@ -160,10 +130,3 @@ def suggest(dataset):
         "prefix" : query,
         "result" : matches
         })
-
-
-@section.route('/flyout', methods=['GET', 'POST'])
-@section.route('/private/flyout', methods=['GET', 'POST'])
-def flyout():
-    return jsonify({'html': '<h3>%s</h3>' % request.args.get('id')})
-
