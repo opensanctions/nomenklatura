@@ -46,15 +46,34 @@ function ReviewCtrl($scope, $routeParams, $location, $timeout, $http, session) {
         $http.get(url).then(function(res) {
             $scope.entity = res.data;
             $scope.canonical = $scope.entity.canonical;
-            if ($scope.canonical) {
-                $scope.entity.canonical = $scope.entity.canonical.id;
+            $scope.entity.selection = 'ENTITY';
+            if ($scope.entity.invalid) {
+                $scope.entity.selection = 'INVALID';
+            } else if ($scope.canonical) {
+                $scope.entity.canonical = $scope.canonical.id;
+                $scope.entity.selection = $scope.canonical.id;
             }
             $scope.loadMatches('/api/2/match', getMatchParams());
         });
     };
 
+    $scope.$watch('selection', function(e) {
+        console.log(e);
+    });
+
     $scope.updateEntity = function() {
         $scope.entity.reviewed = true;
+        
+        if ($scope.entity.selection == 'INVALID') {
+            $scope.entity.invalid = true;
+            $scope.entity.canonical = null;
+        } else if ($scope.entity.selection == 'ENTITY') {
+            $scope.entity.invalid = false;
+            $scope.entity.canonical = null;
+        } else {
+            $scope.entity.invalid = false;
+            $scope.entity.canonical = parseInt($scope.entity.selection, 10);
+        }
         $http.post('/api/2/entities/' + $scope.entity.id, $scope.entity).then(function(res) {
             //console.log(res);
             if ($scope.random) {

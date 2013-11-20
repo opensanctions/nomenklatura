@@ -18,8 +18,8 @@
 
   <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico" type="image/x-icon" />
 </head>
-<body>
-  <div id="page" ng-controller="AppCtrl">
+<body ng-controller="AppCtrl" ng-keyup="keyDownNotify($event)">
+  <div id="page">
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="menu">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
@@ -70,6 +70,7 @@
         "js/app.js",
         "js/services/session.js",
         "js/directives/pagination.js",
+        "js/directives/keybinding.js",
         "js/directives/authz.js",
         "js/controllers/app.js",
         "js/controllers/home.js",

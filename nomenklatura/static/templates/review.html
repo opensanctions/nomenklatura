@@ -11,13 +11,13 @@
 
 <div class="row">
     <div class="col-xs-8">
-      Candidate [<a target="_blank" id="google-link" href="http://google.com/search?q={{ entity.name }}">gg</a>]: <code>{{entity.name}}</code>
+      Candidate: <code>{{entity.name}}</code>
     </div>
     <div class="col-xs-4">
         <form id="match-filter" class="form-horizontal">
             <input type="hidden" name="random" value="{{random}}">
             <input ng-model="filter" ng-keyup="updateFilter()" type="text"
-              class="form-control search-query"
+              class="form-control search-query" nk-bind-key="70"
               name="query" placeholder="Type a partial match...">
         </form>
     </div>
@@ -31,8 +31,10 @@
         </tr>
 
         <tr ng-repeat="match in matches.results">
-          <td><input type="radio" name="r" ng-model="entity.canonical"
-              value="{{match.entity.id}}"></td>
+          <td>
+            <input type="radio" name="r" ng-model="entity.selection"
+              value="{{match.entity.id}}" nk-bind-key="{{49 + $index}}" key-do='click'>
+          </td>
           <td><code><a href="/#/entities/{{match.entity.id}}"
                       target="_new">{{match.entity.name}}</a></code></td>
           <td>{{match.score}}</td>
@@ -44,31 +46,39 @@
           </td>
         </tr>
         <tr>
-            <td><input type="radio" name="r" ng-model="entity.canonical" value=""></td>
+            <td>
+              <input type="radio" name="r" ng-model="entity.selection"
+                value="ENTITY" nk-bind-key="78" key-do='click'>
+            </td>
             <td colspan="2">
-                <input type="text" name="name" class="form-control" id="new-text" ng-model="entity.name">
+                <input type="text" name="name" class="form-control" id="new-text"
+                  ng-model="entity.name" nk-bind-key="78">
             </td>
         </tr>
         <tr ng-show="dataset.enable_invalid">
-            <td><input type="radio" name="r" ng-model="entity.invalid" value="True"></td>
+            <td>
+              <input type="radio" name="r" ng-model="entity.selection"
+                value="INVALID" nk-bind-key="73" key-do='click'>
+            </td>
             <td colspan="2">
                 <strong>Invalid alias</strong>
             </td>
         </tr>
     </table>
     <div ng-show="random">
-        <button type="submit" class="btn btn-success btn-lg" ng-click="updateEntity()">
+        <button type="submit" class="btn btn-success btn-lg"
+          ng-click="updateEntity()" nk-bind-key="13" key-do="click">
             <i class="icon-ok icon-white"></i> Save &amp; Next</button>
         <a href="" class="btn btn-danger btn-lg" ng-click="loadEntity()">
             <i class="icon-random icon-white"></i> Try another</a>
     </div>
     <div ng-hide="random">
-        <button type="submit" class="btn btn-success btn-lg" ng-click="updateEntity()">
+        <button type="submit" class="btn btn-success btn-lg"
+          ng-click="updateEntity()" nk-bind-key="13" key-do="click">
             <i class="icon-ok icon-white"></i> Save</button>
     </div>
 
 </form>
 <div class="help-block">
-  Keyboard controls: use up and down arrows to navigate, numbers to select, 'i' for invalid, 'f' for search,
-  'n' for new entity form, enter to submit. 'g' will run a Google query with the candidate.
+  Keyboard controls: use numbers to select, 'i' for invalid, 'f' for search, 'n' for new entity form, enter to submit.
 </div>
