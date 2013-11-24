@@ -5,7 +5,7 @@ function EntitiesViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
     
     $http.get('/api/2/entities/' + $routeParams.id).then(function(res) {
         $scope.entity = res.data;
-        $http.get('/api/2/dataset/' + res.data.dataset).then(function(res) {
+        $http.get('/api/2/datasets/' + res.data.dataset).then(function(res) {
             $scope.dataset = res.data;
         });
         session.authz(res.data.dataset);

@@ -1,12 +1,21 @@
 @mainColor: #c0392b;
+@linkColor: @mainColor;
 
 body {
-  background-color: #f9f9f9;
+  b-ackground-color: #f9f9f9;
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
 }
 
 #page {
   background-color: #fff;
-  padding: 60px 0 2em 0;
+  padding: 0 0 2em 0;
 }
 
 #airlock {
@@ -19,7 +28,56 @@ body {
 }
 
 a, a:hover {
-  color: @mainColor;
+  color: @linkColor;
+}
+
+label, .radio label, .checkbox label {
+  font-weight: 300;
+}
+
+.structured {
+  color: lighten(black, 20%);
+  font-family: 'Droid Sans Mono', monospace;
+  font-size: 0.8em;
+  background-color: darken(white, 3%);
+  padding: 0 2px 0 2px;
+}
+
+.btn.btn-default {
+  background-color: @mainColor;
+  border: 1px solid white;
+  color: white;
+  font-weight: 300;
+}
+
+.btn.btn-default:hover {
+  background-color: lighten(@mainColor, 10%);
+}
+
+.jumbotron {
+  background-color: @mainColor;
+
+  .text {
+    color: white;
+  }
+}
+
+.pagination {
+  margin: 0;
+
+  .active > a,
+  .active > span,
+  .active > a:hover,
+  .active > span:hover,
+  .active > a:focus,
+  .active > span:focus {
+    background-color: @linkColor;
+    border-color: @linkColor;
+  }
+}
+
+.breadcrumb > li + li:before {
+    content: "> ";
 }
 
 span.error-message {
@@ -30,36 +88,31 @@ span.error-message {
 
 #menu {
   background-image: none;
-  background-color: @mainColor;
-}
-
-#menu ul.nav li {
-  color: #fff;
-}
-
-#menu ul.nav li a {
-  color: #fff;
+  background-color: white;
+  
+  .navbar-brand {
+    font-size: 1.5em;
+    font-weight: 300;
+    color: lighten(@mainColor, 20%);
+    color: @mainColor;
+  }
 }
 
 footer {
   border-top: 1px solid #dddddd;
-  padding: 1em 0 2em 0;
+  padding: 2em 0 2em 0;
 
   a {
-    color: @mainColor;
-    font-weight: bold;
+    color: @linkColor;
   }
 
-  ul {
-    list-style-type: none;
-    margin: 0px;
+  p {
+    text-align: center;
   }
+}
 
-  ul li {
-    float: right;
-    display: inline-block;
-    margin-left: 2em;
-  }
+table td.num {
+  text-align: right;
 }
 
 .pagination.pagination-cursors a {

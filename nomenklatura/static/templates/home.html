@@ -1,5 +1,21 @@
+<div class="jumbotron">
+  <h1 class="text">nomenklatura</h1>
+  <p class="text">A data cleaning service that helps link and de-duplicate entities in raw data.</p>
+  <p>
+      <a ng-show="session.logged_in" class="btn btn-lg btn-default"
+        ng-click='newDataset()'><i class="fa fa-plus"></i> Create a dataset</a>
+      <a ng-hide="session.logged_in" class="btn btn-lg btn-success" href="/api/2/sessions/login">
+        <i class="fa fa-github"></i> Sign in with GitHub</a>
+      <a class="btn btn-lg btn-primary btn-default" href="/#/about">
+        <i class="fa fa-question-circle"></i> Learn more...</a>
+      
+  </p>
+</div>
+
+
+
 <div class="row">
-    <div class="col-xs-12 col-md-4">
+    <div class="col-xs-12 col-md-6">
       <p>Nomenklatura is a simple service that makes it easy to maintain a
       canonical list of entities such as persons, companies or event
       streets and to match messy input, such as their names against that
@@ -17,21 +33,12 @@
       want to match against but also will learn and record the various
       aliases for a given entity - such as a person, organisation or place
       - may have in various datasets.</p>
-      <a class="btn btn-default" href="/#/about">
-        Learn more
-      </a>
-      <a ng-show="session.logged_in" class="btn btn-primary"
-        ng-click='newDataset()'>Create a dataset</a>
-      <a ng-hide="session.logged_in" class="btn btn-success" href="/api/2/sessions/login">
-          Login with GitHub</a>
     </div>
-    <div class="col-xs-12 col-md-8">
-      <table class="table table-condensed table-striped">
+    <div class="col-xs-12 col-md-6">
+      <table class="table table-condensed">
             <tr>
               <th>Dataset</th>
               <th>Entities</th>
-              <th>Aliases</th>
-              <th>Unmatched</th>
             </tr>
             <tr ng-repeat="dataset in datasets.results">
                 <td>
@@ -41,12 +48,6 @@
                 </td>
                 <td>
                   {{dataset.stats.num_entities}}
-                </td>
-                <td>
-                  {{dataset.stats.num_aliases}}
-                </td>
-                <td>
-                  {{dataset.stats.num_unmatched}}
                 </td>
             </tr>
         </table>

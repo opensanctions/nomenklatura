@@ -9,6 +9,8 @@
   <meta name="description" content="nomenklatura is a data cleaning service. It helps data users to remove duplicate and near-duplicate entity references from their data by creating canonical
   entity lists with aliases.">
 
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,300,700|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+
   {% assets filters="less,cssmin,cssrewrite", output="gen/style.css",
       "vendor/bootstrap/less/bootstrap.less",
       "vendor/font-awesome/less/font-awesome.less",
@@ -20,7 +22,7 @@
 </head>
 <body ng-controller="AppCtrl" ng-keyup="keyDownNotify($event)">
   <div id="page">
-    <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="menu">
+    <nav class="navbar navbar-default" role="navigation" id="menu">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
           <span class="sr-only">Toggle navigation</span>
@@ -28,15 +30,23 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/#"><img src="/static/img/logo.png" alt="nomenklatura"></a>
+        <a class="navbar-brand" href="/#">nomenklatura</a>
       </div>
 
       <div class="collapse navbar-collapse navbar-ex1-collapse navbar-right">
         <ul class="nav navbar-nav">
-          <li ng-show="session.logged_in"><a href="#/profile">Profile</a></li>
-          <li ng-hide="session.logged_in"><a href="/api/2/sessions/login">Sign In</a></li>
-          <li ng-show="session.logged_in"><a href="/api/2/sessions/logout">Sign Out</a></li>
-          <li><a href="/#/about">Help</a></li>
+          <li ng-show="session.logged_in">
+            <a href="#/profile"><i class="fa fa-cogs"></i> Profile</a>
+          </li>
+          <li ng-hide="session.logged_in">
+            <a href="/api/2/sessions/login"><i class="fa fa-github"></i> Sign In</a>
+          </li>
+          <li ng-show="session.logged_in">
+            <a href="/api/2/sessions/logout"><i class="fa fa-sign-out"></i> Sign Out</a>
+          </li>
+          <li>
+            <a href="/#/about"><i class="fa fa-question-circle"></i> Help</a>
+          </li>
         </ul>
       </div>
     </nav>
@@ -47,11 +57,17 @@
   </div>
   <footer>
     <div class="container">
-        <ul>
-            <li><a href="http://github.com/pudo/nomenklatura">Source Code</a></li>
-            <li><a href="/#/about">About</a></li>
-            <li>&copy; 2013: Open Knowledge Foundation</li>
-        </ul>
+      <p><strong>nomenklatura.</strong> A data cleaning service that helps link and de-duplicate entities in raw data.<br/>
+      <a href="https://github.com/pudo/nomenklatura"><i class="icon-github"></i> GitHub</a>
+      &middot;
+      <a href="https://github.com/pudo/nomenklatura/issues">Report an issue</a>
+      &middot;
+      <a href="https://pudo.org">pudo.org</a>
+      &middot;
+      <a href="http://okfnlabs.org/">OKFN Labs</a>
+      &middot;
+      <a href="http://mozillaopennews.org/">Knight-Mozilla OpenNews</a>.
+      </p>
     </div>
   </footer>
 

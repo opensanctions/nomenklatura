@@ -1,84 +1,89 @@
 
 <ul class="breadcrumb">
   <li>
-      <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
-      <span class="divider"></span>
+    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
   <li>
-      Reconcile
+    <a href="/#/entities/{{entity.id}}">{{entity.name}}</a>
+  </li>
+  <li>
+    Review
   </li>
 </ul>
 
 <div class="row">
-    <div class="col-xs-8">
-      Candidate: <code>{{entity.name}}</code>
-    </div>
-    <div class="col-xs-4">
-        <form id="match-filter" class="form-horizontal">
-            <input type="hidden" name="random" value="{{random}}">
-            <input ng-model="filter" ng-keyup="updateFilter()" type="text"
-              class="form-control search-query" nk-bind-key="70"
-              name="query" placeholder="Type a partial match...">
-        </form>
+    <div class="col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <span class="structured">{{entity.name}}</span>
+        </div>
+      </div>
     </div>
 </div>
-<form id="save-match">
-    <table class="table match-table table-condensed">
-        <tr>
-            <th></th>
-            <th>Entity</th>
-            <th>Score</th>
-        </tr>
+<table class="table match-table table-condensed">
+  <tr>
+      <th colspan="2">
+        <form id="match-filter" class="form-horizontal">
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-search"></i></span>
+          <input ng-model="filter" ng-keyup="updateFilter()" type="text"
+            class="form-control search-query" nk-bind-key="70"
+            name="query" placeholder="Type a partial match...">
+        </div>
+        </form>
+      </th>
+      <th><!--Score--></th>
+  </tr>
 
-        <tr ng-repeat="match in matches.results">
-          <td>
-            <input type="radio" name="r" ng-model="entity.selection"
-              value="{{match.entity.id}}" nk-bind-key="{{49 + $index}}" key-do='click'>
-          </td>
-          <td><code><a href="/#/entities/{{match.entity.id}}"
-                      target="_new">{{match.entity.name}}</a></code></td>
-          <td>{{match.score}}</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td colspan="2">
-            <nk-pager response="matches" load="loadMatches(url)"></odis-pager>
-          </td>
-        </tr>
-        <tr>
-            <td>
-              <input type="radio" name="r" ng-model="entity.selection"
-                value="ENTITY" nk-bind-key="78" key-do='click'>
-            </td>
-            <td colspan="2">
-                <input type="text" name="name" class="form-control" id="new-text"
-                  ng-model="entity.name" nk-bind-key="78">
-            </td>
-        </tr>
-        <tr ng-show="dataset.enable_invalid">
-            <td>
-              <input type="radio" name="r" ng-model="entity.selection"
-                value="INVALID" nk-bind-key="73" key-do='click'>
-            </td>
-            <td colspan="2">
-                <strong>Invalid alias</strong>
-            </td>
-        </tr>
-    </table>
-    <div ng-show="random">
-        <button type="submit" class="btn btn-success btn-lg"
-          ng-click="updateEntity()" nk-bind-key="13" key-do="click">
-            <i class="icon-ok icon-white"></i> Save &amp; Next</button>
-        <a href="" class="btn btn-danger btn-lg" ng-click="loadEntity()">
-            <i class="icon-random icon-white"></i> Try another</a>
-    </div>
-    <div ng-hide="random">
-        <button type="submit" class="btn btn-success btn-lg"
-          ng-click="updateEntity()" nk-bind-key="13" key-do="click">
-            <i class="icon-ok icon-white"></i> Save</button>
-    </div>
-
-</form>
+  <tr ng-repeat="match in matches.results">
+    <td>
+      <input type="radio" name="r" ng-model="entity.selection"
+        value="{{match.entity.id}}" nk-bind-key="{{49 + $index}}" key-do='click'>
+    </td>
+    <td>
+      <a href="/#/entities/{{match.entity.id}}"
+        target="_new" class="structured">{{match.entity.name}}</a>
+    </td>
+    <td class="num" width="10%">{{match.score}}</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td colspan="2">
+      <nk-pager response="matches" load="loadMatches(url)"></odis-pager>
+    </td>
+  </tr>
+  <tr>
+      <td>
+        <input type="radio" name="r" ng-model="entity.selection"
+          value="ENTITY" nk-bind-key="78" key-do='click'>
+      </td>
+      <td colspan="2">
+          <input type="text" name="name" class="form-control" id="new-text"
+            ng-model="entity.name" nk-bind-key="78">
+      </td>
+  </tr>
+  <tr ng-show="dataset.enable_invalid">
+      <td>
+        <input type="radio" name="r" ng-model="entity.selection"
+          value="INVALID" nk-bind-key="73" key-do='click'>
+      </td>
+      <td colspan="2">
+          <strong>Invalid alias</strong>
+      </td>
+  </tr>
+</table>
+<div ng-show="random">
+  <button type="submit" class="btn btn-success btn-lg"
+    ng-click="updateEntity()" nk-bind-key="13" key-do="click">
+      <i class="fa fa-check"></i> Save &amp; Next</button>
+  <a href="" class="btn btn-danger btn-lg" ng-click="loadEntity()">
+      <i class="fa fa-random"></i> Try another</a>
+</div>
+<div ng-hide="random">
+  <button type="submit" class="btn btn-success btn-lg"
+    ng-click="updateEntity()" nk-bind-key="13" key-do="click">
+      <i class="fa fa-check"></i> Save</button>
+</div>
 <div class="help-block">
   Keyboard controls: use numbers to select, 'i' for invalid, 'f' for search, 'n' for new entity form, enter to submit.
 </div>

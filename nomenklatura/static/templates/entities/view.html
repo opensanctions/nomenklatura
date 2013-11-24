@@ -1,92 +1,19 @@
+<ul class="breadcrumb">
+  <li>
+    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+  </li>
+  <li>
+    <a href="/#/entities/{{entity.id}}">{{entity.name}}</a>
+  </li>
+</ul>
 
-<h2 class="page-title">{{entity.name}}</h2>
+<h2 class="page-header">{{entity.name}}</h2>
 
-<!--
-{%extends "layout.html" %}
-{%from "pager.html" import pager %}
+<p>What goes here?</p>
 
-{% block title %}
-    {{entity.display_name}} - {{dataset.label}}
-{% endblock %}
+<ul>
+    <li>Review button</li>
+    <li>list of attributes</li>
+    <li>list of aliases</li>
 
-{% block breadcrumbs %}
-    <li>
-        <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
-        <span class="divider"></span>
-    </li>
-    <li>
-        {{entity.display_name}}
-    </li>
-{% endblock %}
-
-{% block content %}
-    <div class="row">
-      <div class="col-xs-12">
-        {% if authz.dataset_edit(dataset) %}
-          <form class="form-inline" method="POST"
-              action="{{url_for('entity.update', dataset=dataset.name, entity=entity.id)}}">
-              <div class="col-xs-10">
-                <input type="text" class="form-control" id="name" name="name"
-                      value="{{entity.name}}">
-                </div>
-              <button type="submit" class="btn btn-primary">Update</button>
-          </form>
-        {% else %}
-          <code>{{entity.name}}</code>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12 col-md-6">
-    <h3>Aliases</h3>
-    <table class="table table-condensed">
-        {% for alias in entity.aliases %}
-            <tr>
-                {% if authz.dataset_edit(dataset) %}
-                    <td><code><a href="{{url_for('alias.match', dataset=dataset.name,
-                                alias=alias.id)}}">{{alias.display_name}}</a></code></td>
-                {% else %}
-                    <td><code>{{alias.display_name}}</code></td>
-
-                {% endif %}
-            </tr>
-        {% endfor %}
-    </table>
-
-        </div>
-        <div class="col-xs-12 col-md-6">
-
-    {% if authz.dataset_edit(dataset) %}
-        <h3>Merge</h3>
-        <form class="form-search" method="GET"
-            action="{{url_for('.view', dataset=dataset.name, entity=entity.id)}}">
-            <div class="col-xs-10">
-                <input type="text" class="search-query form-control"
-                    name="query" value="{{query}}" placeholder="Find an entity">
-            </div>
-            <button type="submit" class="btn btn-default">Filter</button>
-        </form>
-        <form method="POST" action="{{url_for('.merge', dataset=dataset.name,
-            entity=entity.id)}}">
-            <table class="table table-condensed">
-                {% for (c, e, s) in entities %}
-                    <tr>
-                        <td><input type="radio" name="target" value="{{e.id}}"></td>
-                        <td><a href="{{url_for('entity.view', dataset=dataset.name,
-                                entity=e.id)}}">{{e.display_name}}</a></td>
-                    </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="2">
-                        {{ pager(entities) }}
-                    </td>
-                </tr>
-            </table>
-            <button type="submit" class="btn btn-danger">Merge</button>
-        </form>
-    {% endif %}
-        </div>
-    </div>
-{% endblock %}
--->
+</ul>
