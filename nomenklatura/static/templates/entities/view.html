@@ -9,6 +9,16 @@
 
 <h2 class="page-header">{{entity.name}}</h2>
 
+<div ng-show="entity.canonical" class="alert alert-info">
+    <span class="structured">{{entity.name}}</span> is an alias name for 
+    <a href="/#/entities/{{entity.canonical.id}}" class="structured">{{entity.canonical.name}}</a>.
+</div>
+
+<div ng-show="entity.invalid" class="alert alert-danger">
+    This entity has been marked as invalid. It will not be considered for matching, 
+    clustering or other cleaning tasks. 
+</div>
+
 <p>What goes here?</p>
 
 <ul>

@@ -74,6 +74,7 @@ function ReviewCtrl($scope, $routeParams, $location, $timeout, $http, session) {
             $scope.entity.invalid = false;
             $scope.entity.canonical = parseInt($scope.entity.selection, 10);
         }
+        $scope.filter = '';
         $http.post('/api/2/entities/' + $scope.entity.id, $scope.entity).then(function(res) {
             //console.log(res);
             if ($scope.random) {

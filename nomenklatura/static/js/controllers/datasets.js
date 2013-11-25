@@ -9,6 +9,13 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
     
     $http.get('/api/2/datasets/' + $routeParams.name).then(function(res) {
         $scope.dataset = res.data;
+
+        $scope.aliases_percent = Math.ceil((res.data.stats.num_aliases / res.data.stats.num_entities)*100);
+        $scope.invalid_percent = Math.ceil((res.data.stats.num_invalid / res.data.stats.num_entities)*100);
+        $scope.review_percent = Math.ceil((res.data.stats.num_review / res.data.stats.num_entities)*100);
+        $scope.normal_percent = 100 - $scope.aliases_percent - $scope.invalid_percent - $scope.review_percent;
+        $scope.normal_num = res.data.stats.num_entities - res.data.stats.num_aliases -
+            res.data.stats.num_invalid - res.data.stats.num_review;
     });
 
     $scope.loadEntities = function(url, params) {
