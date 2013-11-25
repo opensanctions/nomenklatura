@@ -1,4 +1,4 @@
-<ul class="breadcrumb">
+<ul class="breadcrumb hidden-xs">
   <li>
     <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
@@ -59,7 +59,7 @@
 
     <table class="table table-hover table-condensed">
         <tr>
-            <th width="90%" colspan="2">
+            <th width="95%" colspan="2">
               <form class="" role="form">
                 <div class="input-group">
                   <span class="input-group-addon"><i class="fa fa-search"></i></span>
@@ -71,15 +71,13 @@
         </tr>
         <tr ng-repeat="entity in entities.results">
             <td>
-              <div class="pull-right">
-                <span ng-show="entity.canonical" class="label label-info">Alias</span>
-                <span ng-show="entity.invalid" class="label label-danger">Invalid</span>
-                <span ng-hide="entity.reviewed" class="label label-warning">To be reviewed</span>
-              </div>
               <a href="/#/entities/{{entity.id}}" class="structured">{{entity.name}}</a>
             </td>
             <td class="num">
-              <span ng-show="entity.num_aliases" class="label label-info">
+              <span ng-show="entity.canonical" class="label label-info">Alias</span>
+              <span ng-show="entity.invalid" class="label label-danger">Invalid</span>
+              <span ng-hide="entity.reviewed" class="label label-warning">To be reviewed</span>
+              <span ng-show="entity.num_aliases" class="label label-success">
                 {{entity.num_aliases}} <span ng-show="entity.num_aliases > 1">Aliases</span>
                 <span ng-show="entity.num_aliases == 1">Alias</span>
               </span>
