@@ -30,13 +30,13 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/#">nomenklatura</a>
+        <a class="navbar-brand" href="/">nomenklatura</a>
       </div>
 
       <div class="collapse navbar-collapse navbar-ex1-collapse navbar-right">
         <ul class="nav navbar-nav">
           <li ng-show="session.logged_in">
-            <a href="#/profile"><i class="fa fa-cogs"></i> Profile</a>
+            <a href="/profile"><i class="fa fa-cogs"></i> Profile</a>
           </li>
           <li ng-hide="session.logged_in">
             <a href="/api/2/sessions/login"><i class="fa fa-github"></i> Sign In</a>
@@ -45,7 +45,7 @@
             <a href="/api/2/sessions/logout"><i class="fa fa-sign-out"></i> Sign Out</a>
           </li>
           <li>
-            <a href="/#/about"><i class="fa fa-question-circle"></i> Help</a>
+            <a href="/docs/introduction"><i class="fa fa-question-circle"></i> Help</a>
           </li>
         </ul>
       </div>
@@ -90,7 +90,7 @@
         "js/directives/authz.js",
         "js/controllers/app.js",
         "js/controllers/home.js",
-        "js/controllers/pages.js",
+        "js/controllers/docs.js",
         "js/controllers/review.js",
         "js/controllers/datasets.js",
         "js/controllers/entities.js",

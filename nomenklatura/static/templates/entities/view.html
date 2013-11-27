@@ -1,15 +1,15 @@
 <ul class="breadcrumb hidden-xs">
   <li>
-    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+    <a href="/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
   <li>
-    <a href="/#/entities/{{entity.id}}">{{entity.name}}</a>
+    <a href="/entities/{{entity.id}}">{{entity.name}}</a>
   </li>
 </ul>
 
 <ul class="breadcrumb visible-xs">
   <li>
-    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+    <a href="/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
 </ul>
 
@@ -17,7 +17,7 @@
 
 <div ng-show="entity.canonical" class="alert alert-info">
     <span class="structured">{{entity.name}}</span> is an alias name for 
-    <a ng-href="/#/entities/{{entity.canonical.id}}" class="structured">{{entity.canonical.name}}</a>.
+    <a ng-href="/entities/{{entity.canonical.id}}" class="structured">{{entity.canonical.name}}</a>.
 </div>
 
 <div ng-show="entity.invalid" class="alert alert-danger">
@@ -58,9 +58,9 @@
       </tr>
       <tr ng-repeat="alias in aliases.results">
         <td>
-          <a ng-href="/#/datasets/{{dataset.name}}/review/{{alias.id}}"
+          <a ng-href="/datasets/{{dataset.name}}/review/{{alias.id}}"
             class="pull-right label label-danger">review</a>
-          <a ng-href="/#/entity/{{alias.id}}" class="structured">{{alias.name}}</a>
+          <a ng-href="/entity/{{alias.id}}" class="structured">{{alias.name}}</a>
         </td>
       </tr>
     </table>

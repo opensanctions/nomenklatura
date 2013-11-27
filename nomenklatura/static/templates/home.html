@@ -6,7 +6,7 @@
         ng-click='newDataset()'><i class="fa fa-plus"></i> Create a dataset</a>
       <a ng-hide="session.logged_in" class="btn btn-lg btn-default" href="/api/2/sessions/login">
         <i class="fa fa-github"></i> Sign in with GitHub</a>
-      <a class="btn btn-lg btn-primary btn-default" href="/#/about">
+      <a class="btn btn-lg btn-primary btn-default" href="/docs/introduction">
         <i class="fa fa-question-circle"></i> Learn more...</a>
       
   </p>
@@ -45,7 +45,7 @@
                   {{dataset.owner.login}}
                 </td>
                 <td>
-                  <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+                  <a href="/datasets/{{dataset.name}}">{{dataset.label}}</a>
                 </td>
                 <td class="num">
                   {{dataset.stats.num_entities}}

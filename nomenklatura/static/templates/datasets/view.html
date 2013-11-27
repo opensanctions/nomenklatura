@@ -1,6 +1,6 @@
 <ul class="breadcrumb hidden-xs">
   <li>
-    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+    <a href="/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
   <li>
     Overview
@@ -18,11 +18,11 @@
   </div>
   <div class="col-xs-12 col-md-4">
     <div class="btn-group pull-right">
-      <a nk-authz dataset="dataset" op="edit" class="btn btn-default" href="/#/datasets/{{dataset.name}}/review/random">
+      <a nk-authz dataset="dataset" op="edit" class="btn btn-default" ng-href="/datasets/{{dataset.name}}/review/random">
         <i class="fa fa-link"></i> Review ({{dataset.stats.num_review}})</a>
       <a nk-authz dataset="dataset" op="manage" class="btn btn-default" ng-click="editDataset()">
         <i class="fa fa-cog"></i> Settings</a>
-      <a class="btn btn-default" href="/api/2/entities?dataset={{dataset.name}}&format=csv&download=true">
+      <a class="btn btn-default" ng-href="/api/2/entities?dataset={{dataset.name}}&format=csv&download=true">
           <i class="fa fa-download"></i> CSV
       </a>
     </div>
@@ -71,7 +71,7 @@
         </tr>
         <tr ng-repeat="entity in entities.results">
             <td>
-              <a href="/#/entities/{{entity.id}}" class="structured">{{entity.name}}</a>
+              <a href="/entities/{{entity.id}}" class="structured">{{entity.name}}</a>
             </td>
             <td class="num">
               <span ng-show="entity.canonical" class="label label-info">Alias</span>

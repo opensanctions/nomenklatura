@@ -15,12 +15,12 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
 
   $routeProvider.when('/docs/:page/:anchor', {
     templateUrl: '/static/templates/pages/template.html',
-    controller: PagesCtrl
+    controller: DocsCtrl
   });
 
   $routeProvider.when('/docs/:page', {
-    templateUrl: '/static/templates/pages/template.html',
-    controller: PagesCtrl
+    templateUrl: '/static/templates/docs/template.html',
+    controller: DocsCtrl
   });
 
   $routeProvider.when('/datasets/:name', {
@@ -39,11 +39,15 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
   });
 
   $routeProvider.otherwise({
-    redirectTo: '/'
+    redirectTo: visitPath
   });
 
-  $locationProvider.html5Mode(false);
+  $locationProvider.html5Mode(true);
 }]);
+
+function visitPath(o, path) {
+  window.location.replace(path);
+}
 
 
 nomenklatura.handleFormError = function(form) {

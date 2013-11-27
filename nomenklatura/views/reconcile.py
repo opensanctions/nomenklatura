@@ -14,7 +14,7 @@ section = Blueprint('reconcile', __name__)
 
 def reconcile_index(dataset):
     domain = url_for('index', _external=True).strip('/')
-    urlp = domain + '/#/entities/{{id}}'
+    urlp = domain + '/entities/{{id}}'
     meta = {
         'name': 'nomenklatura: %s' % dataset.label,
         'identifierSpace': 'http://rdf.freebase.com/ns/type.object.id',

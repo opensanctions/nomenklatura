@@ -104,5 +104,11 @@ def angular_templates():
 
 
 @app.route('/')
-def index():
+@app.route('/entities')
+@app.route('/entities/<path:id>')
+@app.route('/datasets')
+@app.route('/datasets/<path:id>')
+@app.route('/profile')
+@app.route('/docs/<path:id>')
+def index(**kw):
     return render_template('app.html', angular_templates=angular_templates())
