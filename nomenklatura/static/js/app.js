@@ -13,8 +13,13 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: ProfileCtrl
   });
 
-  $routeProvider.when('/about', {
-    templateUrl: '/static/templates/pages/intro.html',
+  $routeProvider.when('/docs/:page/:anchor', {
+    templateUrl: '/static/templates/pages/template.html',
+    controller: PagesCtrl
+  });
+
+  $routeProvider.when('/docs/:page', {
+    templateUrl: '/static/templates/pages/template.html',
     controller: PagesCtrl
   });
 

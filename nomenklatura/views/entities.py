@@ -48,10 +48,16 @@ def create():
     return redirect(url_for('.view', id=entity.id))
 
 
-@section.route('/entities/<id>', methods=['GET'])
+@section.route('/entities/<int:id>', methods=['GET'])
 def view(id):
     entity = Entity.by_id(id)
     return jsonify(entity)
+
+
+@section.route('/entities/<int:id>/aliases', methods=['GET'])
+def aliases(id):
+    entity = Entity.by_id(id)
+    return query_pager(entity.aliases, id=id)
 
 
 @section.route('/entities/<id>', methods=['POST'])

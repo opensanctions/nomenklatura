@@ -1,4 +1,4 @@
-<ul class="breadcrumb">
+<ul class="breadcrumb hidden-xs">
   <li>
     <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
   </li>
@@ -7,11 +7,17 @@
   </li>
 </ul>
 
+<ul class="breadcrumb visible-xs">
+  <li>
+    <a href="/#/datasets/{{dataset.name}}">{{dataset.label}}</a>
+  </li>
+</ul>
+
 <h2 class="page-header">{{entity.name}}</h2>
 
 <div ng-show="entity.canonical" class="alert alert-info">
     <span class="structured">{{entity.name}}</span> is an alias name for 
-    <a href="/#/entities/{{entity.canonical.id}}" class="structured">{{entity.canonical.name}}</a>.
+    <a ng-href="/#/entities/{{entity.canonical.id}}" class="structured">{{entity.canonical.name}}</a>.
 </div>
 
 <div ng-show="entity.invalid" class="alert alert-danger">
@@ -19,11 +25,45 @@
     clustering or other cleaning tasks. 
 </div>
 
-<p>What goes here?</p>
-
-<ul>
-    <li>Review button</li>
-    <li>list of attributes</li>
-    <li>list of aliases</li>
-
-</ul>
+<div class="row" ng-show="!(entity.invalid||!!entity.canonical)">
+  <div class="col-xs-12 col-md-6">
+    <table class="table table-condensed">
+      <tr>
+        <th colspan="2">Attributes <span class="explainer">additional data</span></th>
+      </tr>
+      <tr ng-hide="has_attributes">
+        <td colspan="2">
+          <div class="alert alert-info">
+            There are no additional attributes defined for this entity.
+          </div>
+        </td>
+      </tr>
+      <tr ng-repeat="(key, value) in entity.data" ng-show="value">
+        <th>{{key}}</th>
+        <td>{{value}}</td>
+      </tr>
+    </table>
+  </div>
+  <div class="col-xs-12 col-md-6">
+    <table class="table table-condensed">
+      <tr>
+        <th colspan="1">Aliases <span class="explainer">other names</span></th>
+      </tr>
+      <tr ng-hide="has_aliases">
+        <td colspan="1">
+          <div class="alert alert-info">
+            There are no aliases defined for this entity.
+          </div>
+        </td>
+      </tr>
+      <tr ng-repeat="alias in aliases.results">
+        <td>
+          <a ng-href="/#/datasets/{{dataset.name}}/review/{{alias.id}}"
+            class="pull-right label label-danger">review</a>
+          <a ng-href="/#/entity/{{alias.id}}" class="structured">{{alias.name}}</a>
+        </td>
+      </tr>
+    </table>
+    <nk-pager class="pull-right" response="aliases" load="loadAliases(url)"></odis-pager>
+  </div>
+</div>

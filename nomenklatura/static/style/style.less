@@ -31,6 +31,11 @@ a, a:hover {
   color: @linkColor;
 }
 
+.explainer {
+  font-size: 0.9em;
+  color: #999;
+}
+
 label, .radio label, .checkbox label {
   font-weight: 300;
 }
@@ -89,10 +94,10 @@ th {
     content: "> ";
 }
 
-span.error-message {
-  color: @mainColor;
-  display: block;
-  padding-bottom: 0em;
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover,
+.nav-pills > li.active > a:focus {
+  background-color: @mainColor;
 }
 
 body.modal-open {
