@@ -24,7 +24,7 @@ def match():
     return query_pager(matches)
 
 
-@section.route('/review/<dataset>', methods=['GET'])
+@section.route('/datasets/<dataset>/review', methods=['GET'])
 def review(dataset):
     entities = Entity.all()
     dataset = Dataset.find(dataset)

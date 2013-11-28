@@ -28,7 +28,7 @@ def reconcile_index(dataset):
         'suggest': {
             'entity': {
                 'service_url': domain,
-                'service_path': '/api/2/reconcile/' + dataset.name + '/suggest'
+                'service_path': '/api/2/datasets/' + dataset.name + '/suggest'
             }
         },
         'defaultTypes': [{'name': dataset.label, 'id': '/' + dataset.name}]
@@ -64,7 +64,7 @@ def reconcile_op(dataset, query):
         }
 
 
-@section.route('/reconcile/<dataset>', methods=['GET', 'POST'])
+@section.route('/datasets/<dataset>/reconcile', methods=['GET', 'POST'])
 def reconcile(dataset):
     """
     Reconciliation API, emulates Google Refine API. See: 
@@ -101,7 +101,7 @@ def reconcile(dataset):
         return reconcile_index(dataset)
 
 
-@section.route('/reconcile/<dataset>/suggest', methods=['GET', 'POST'])
+@section.route('/datasets/<dataset>/suggest', methods=['GET', 'POST'])
 def suggest(dataset):
     """ 
     Suggest API, emulates Google Refine API. See:

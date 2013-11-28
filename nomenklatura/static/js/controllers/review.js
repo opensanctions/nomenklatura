@@ -40,7 +40,7 @@ function ReviewCtrl($scope, $routeParams, $location, $timeout, $http, session) {
 
     $scope.loadEntity = function() {
         //$scope.matches = {};
-        var randomUrl = '/api/2/review/' +  $routeParams.dataset,
+        var randomUrl = '/api/2/datasets/' +  $routeParams.dataset + '/review',
             entityUrl = '/api/2/entities/' +  $routeParams.what,
             url = $scope.random ? randomUrl : entityUrl;
         $http.get(url).then(function(res) {
