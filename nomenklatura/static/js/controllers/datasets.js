@@ -53,7 +53,7 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
         console.log(form);
         var res = $http.post('/api/2/entities', $scope.new_entity);
         res.success(function(data) {
-            window.location.hash = '#/entities/' + data.id;
+            $location.path('/entities/' + data.id);
         });
         res.error(nomenklatura.handleFormError(form));
     };
@@ -72,7 +72,7 @@ function DatasetsNewCtrl($scope, $routeParams, $modalInstance, $location, $http,
     $scope.create = function(form) {
         var res = $http.post('/api/2/datasets', $scope.dataset);
         res.success(function(data) {
-            window.location.hash = '#/datasets/' + data.name;
+            $location.path('/datasets/' + data.name);
             $modalInstance.dismiss('ok');
         });
         res.error(nomenklatura.handleFormError(form));

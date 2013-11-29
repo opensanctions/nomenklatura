@@ -44,6 +44,10 @@ function ReviewCtrl($scope, $routeParams, $location, $timeout, $http, session) {
             entityUrl = '/api/2/entities/' +  $routeParams.what,
             url = $scope.random ? randomUrl : entityUrl;
         $http.get(url).then(function(res) {
+            if (res.data=="null") {
+                // TODO: say something nice.
+                $location.path('/datasets/' +  $routeParams.dataset);
+            }
             $scope.entity = res.data;
             $scope.canonical = $scope.entity.canonical;
             $scope.entity.selection = 'ENTITY';

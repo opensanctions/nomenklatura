@@ -30,5 +30,8 @@ def review(dataset):
     dataset = Dataset.find(dataset)
     entities = entities.filter_by(dataset=dataset)
     entities = entities.filter(Entity.reviewed==False)
-    entities = entities.offset(randint(0, entities.count()-1))
+    review_count = entities.count()
+    if review_count == 0:
+        return jsonify(None)
+    entities = entities.offset(randint(0, review_count-1))
     return jsonify(entities.first())

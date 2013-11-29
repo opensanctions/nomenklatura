@@ -151,7 +151,7 @@ class Entity(db.Model):
         entity.creator = account
         entity.name = data['name']
         entity.normalized = normalize_text(entity.name)
-        entity.data = data['data']
+        entity.data = data.get('data', {})
         entity.reviewed = data['reviewed']
         entity.invalid = data['invalid']
         entity.canonical = data['canonical']
