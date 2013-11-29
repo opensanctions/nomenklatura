@@ -5,12 +5,10 @@ Flask-Assets==0.8
 flask-sqlalchemy==1.0
 Flask-OAuth==0.12
 requests==2.0.1
--e git+git://github.com/seatgeek/fuzzywuzzy.git#egg=fuzzywuzzy
 FormEncode==1.2.6
 Python-Levenshtein==0.10.2
 psycopg2==2.5.1
 certifi==0.0.8
-pylibmc==1.2.3
 celery==3.1.4
 -e git+https://github.com/okfn/messytables.git#egg=messytables
 -e git+git://github.com/pudo/flask-utils.git#egg=flask-utils
