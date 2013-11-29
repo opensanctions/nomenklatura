@@ -8,3 +8,5 @@ settings.py
 nomenklatura/static/vendor/*
 nomenklatura/static/gen/*
 nomenklatura/static/.webassets-cache/*
+.vagrant/*
+vagrant_settings.py
