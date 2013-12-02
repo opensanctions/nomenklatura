@@ -1,6 +1,6 @@
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "raring"
+  config.vm.box = "raring32"
   config.vm.box_url = "http://goo.gl/y79mW"
   config.vm.hostname = "nomenklatura"
   config.vm.network :forwarded_port, guest: 5000, host: 5000
