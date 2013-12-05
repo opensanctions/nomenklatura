@@ -1,4 +1,4 @@
-var nomenklatura = angular.module('nomenklatura', ['ngRoute', 'ui.bootstrap']);
+var nomenklatura = angular.module('nomenklatura', ['ngRoute', 'ngUpload', 'ui.bootstrap']);
 
 nomenklatura.config(['$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
@@ -72,7 +72,7 @@ nomenklatura.handleFormError = function(form) {
       if (angular.isObject(data) && data.message) {
         alert(data.message);
       }
-      console.log(status, data);
+      //console.log(status, data);
     }
   };
 };

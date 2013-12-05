@@ -1,0 +1,27 @@
+
+<div class="modal-header">
+  <button type="button" class="close" ng-click="cancel()" aria-hidden="true">&times;</button>
+  <h4 class="modal-title">Import data from a file</h4>
+</div>
+
+<form class="form-horizontal" role="form" name="importFile" action="/api/2/datasets/{{dataset.name}}/uploads"
+  ng-upload="results(content)">
+  <div class="modal-body">
+    <p>
+      You can select a comma-separated values (CSV) file with entity names and attributes
+          that you want to import into this dataset. Please make sure the file is encoded as 
+          UTF-8 (Unicode).
+    </p>
+    <div class="form-group" ng-class="{'has-error': importFile.file.$invalid}">
+      <label class="col-sm-3 control-label" for="file">Source file</label>
+      <div class="col-sm-9">
+        <input type="file" id="file" name="file">
+        <p class="help-block" ng-show="importFile.file.$invalid" ng-bind="importFile.file.$message"></p>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button type="submit" class="btn btn-primary">Import</button>
+  </div>
+</form>

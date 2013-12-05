@@ -22,8 +22,10 @@
         <i class="fa fa-link"></i> Review ({{dataset.stats.num_review}})</a>
       <a nk-authz dataset="dataset" op="manage" class="btn btn-default" ng-click="editDataset()">
         <i class="fa fa-cog"></i> Settings</a>
+      <a nk-authz dataset="dataset" op="manage" class="btn btn-default" ng-click="uploadFile()">
+        <i class="fa fa-cloud-upload"></i> Import</a>
       <a class="btn btn-default" ng-href="/api/2/entities?dataset={{dataset.name}}&format=csv&download=true">
-          <i class="fa fa-download"></i> CSV
+          <i class="fa fa-cloud-download"></i> Export
       </a>
     </div>
   </div>

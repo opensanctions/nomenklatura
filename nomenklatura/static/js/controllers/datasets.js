@@ -48,9 +48,18 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
         });
     };
 
+    $scope.uploadFile = function(){
+        var d = $modal.open({
+            templateUrl: '/static/templates/upload.html',
+            controller: 'UploadCtrl',
+            resolve: {
+                dataset: function () { return $scope.dataset; }
+            }
+        });
+    };
+
     $scope.createEntity = function(form) {
         $scope.new_entity.dataset = $scope.dataset.name;
-        console.log(form);
         var res = $http.post('/api/2/entities', $scope.new_entity);
         res.success(function(data) {
             $location.path('/entities/' + data.id);
