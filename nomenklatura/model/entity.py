@@ -63,7 +63,6 @@ class Entity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode)
     normalized = db.Column(db.Unicode)
-    data = db.Column(JsonType, default=dict)
     attributes = db.Column(HSTORE)
     reviewed = db.Column(db.Boolean, default=False)
     invalid = db.Column(db.Boolean, default=False)
@@ -92,7 +91,7 @@ class Entity(db.Model):
         }
         if not shallow:
             d['creator'] = self.creator.to_dict()
-            d['data'] = self.data
+            d['attributes'] = self.attributes
             d['num_aliases'] = self.aliases.count()
         return d
 
@@ -151,7 +150,7 @@ class Entity(db.Model):
         entity.creator = account
         entity.name = data['name']
         entity.normalized = normalize_text(entity.name)
-        entity.data = data.get('data', {})
+        entity.attributes = data.get('attributes', {})
         entity.reviewed = data['reviewed']
         entity.invalid = data['invalid']
         entity.canonical = data['canonical']
@@ -165,7 +164,7 @@ class Entity(db.Model):
         self.creator = account
         self.name = data['name']
         self.normalized = normalize_text(self.name)
-        self.data = data['data']
+        self.attributes = data['attributes']
         self.reviewed = data['reviewed']
         self.invalid = data['invalid']
         self.canonical = data['canonical']

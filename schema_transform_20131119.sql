@@ -20,3 +20,5 @@ INSERT INTO entity (dataset_id, creator_id, created_at,
 
 ALTER TABLE upload ADD COLUMN data BYTEA;
 DELETE FROM upload;
+
+ALTER TABLE entity DROP COLUMN data;
