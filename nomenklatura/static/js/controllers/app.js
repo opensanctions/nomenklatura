@@ -1,4 +1,4 @@
-function AppCtrl($scope, $window, $routeParams, $location, session) {
+function AppCtrl($scope, $window, $routeParams, $location, $modal, session) {
     $scope.session = {logged_in: false};
 
     session.get(function(data) {
@@ -12,6 +12,13 @@ function AppCtrl($scope, $window, $routeParams, $location, session) {
             //$event.preventDefault();
         }
     };
+
+    $scope.showProfile = function() {
+        var d = $modal.open({
+            templateUrl: '/static/templates/profile.html',
+            controller: 'ProfileCtrl'
+        });
+    };
 }
 
-AppCtrl.$inject = ['$scope', '$window', '$routeParams', '$location', 'session'];
+AppCtrl.$inject = ['$scope', '$window', '$routeParams', '$location', '$modal', 'session'];

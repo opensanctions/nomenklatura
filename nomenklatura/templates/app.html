@@ -36,7 +36,7 @@
       <div class="collapse navbar-collapse navbar-ex1-collapse navbar-right">
         <ul class="nav navbar-nav">
           <li ng-show="session.logged_in">
-            <a href="/profile"><i class="fa fa-cogs"></i> Profile</a>
+            <a ng-click="showProfile()"><i class="fa fa-cogs"></i> Profile</a>
           </li>
           <li ng-hide="session.logged_in">
             <a href="/api/2/sessions/login"><i class="fa fa-github"></i> Sign In</a>
