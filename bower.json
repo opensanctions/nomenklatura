@@ -12,6 +12,7 @@
     "angular": "~1.2.0",
     "jquery": "~2.0.3",
     "moment": "~2.4.0",
+    "ngUpload": "~0.5.3",
     "angular-route": "~1.2.0",
     "angular-ui-bootstrap3": "~0.6.0"
   }
