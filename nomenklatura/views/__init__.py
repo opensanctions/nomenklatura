@@ -83,7 +83,7 @@ def handle_invalid(exc):
     return jsonify(body, status=400)
 
 
-app.register_blueprint(upload)
+app.register_blueprint(upload, url_prefix='/api/2')
 app.register_blueprint(reconcile, url_prefix='/api/2')
 app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(datasets, url_prefix='/api/2')

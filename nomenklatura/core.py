@@ -18,7 +18,8 @@ app.config.from_envvar('NOMENKLATURA_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 assets = Environment(app)
-celery = Celery('nomenklatura', broker=app.config['CELERY_BROKER'])
+
+celery = Celery('nomenklatura', broker='sqla+' + app.config['SQLALCHEMY_DATABASE_URI'])
 
 oauth = OAuth()
 github = oauth.remote_app('github',

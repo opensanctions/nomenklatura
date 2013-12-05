@@ -1,24 +1,17 @@
 from flask import Blueprint, request, url_for, flash
-from flask import render_template, redirect
-from formencode import Invalid, htmlfill
+from formencode import Invalid
+from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.views.common import request_data
 from nomenklatura import authz
-from nomenklatura.model import Dataset
-from nomenklatura.importer import upload_file, get_map_metadata, \
-    import_upload
+from nomenklatura.core import db
+from nomenklatura.model import Dataset, Upload
+from nomenklatura.importer import import_upload
 
 section = Blueprint('upload', __name__)
 
 
-@section.route('/<dataset>/upload', methods=['GET'])
-def form(dataset):
-    dataset = Dataset.find(dataset)
-    authz.require(authz.dataset_edit(dataset))
-    return render_template('upload/form.html', dataset=dataset)
-
-
-@section.route('/<dataset>/upload', methods=['POST'])
+@section.route('/datasets/<dataset>/uploads', methods=['POST'])
 def upload(dataset):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
@@ -27,20 +20,21 @@ def upload(dataset):
         inv = Invalid("No file.", None, None,
                       error_dict={'file': "You need to upload a file"})
         raise inv
-    upload = upload_file(dataset, file_, request.account)
-    return redirect(url_for('.map', dataset=dataset.name, id=upload.id))
+    upload = Upload.create(dataset, request.account, file_)
+    db.session.commit()
+    return jsonify(upload)
 
 
-@section.route('/<dataset>/upload/<id>', methods=['GET'])
-def map(dataset, id):
+@section.route('/datasets/<dataset>/uploads/<id>', methods=['GET'])
+def view(dataset, id):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    data = get_map_metadata(dataset, id)
-    return render_template('upload/map.html', **data)
+    upload = Upload.find(id)
+    return jsonify(upload)
 
 
-@section.route('/<dataset>/upload/<id>', methods=['POST'])
-def submit(dataset, id):
+@section.route('/datasets/<dataset>/uploads/<id>', methods=['POST'])
+def process(dataset, id):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
     data = request_data()

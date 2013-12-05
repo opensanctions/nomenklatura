@@ -7,6 +7,5 @@ GITHUB_CLIENT_SECRET = '1701d3bd20bbb29012592fd3a9c64b827e0682d6'
 
 CELERY_BROKER = 'amqp://guest@localhost//'
 
-UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = set(['csv', 'tsv', 'ods', 'xls', 'xlsx', 'txt'])
 

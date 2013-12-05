@@ -17,3 +17,6 @@ INSERT INTO entity (dataset_id, creator_id, created_at,
     SELECT dataset_id, creator_id, created_at, updated_at, name,
         entity_id, is_invalid, is_matched, data FROM alias;
     
+
+ALTER TABLE upload ADD COLUMN data BYTEA;
+DELETE FROM upload;
