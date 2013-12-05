@@ -1,12 +1,7 @@
 from datetime import datetime
-from uuid import uuid4
 
 from nomenklatura.core import db
-from nomenklatura.model.common import JsonType, DataBlob
-
-
-def make_key():
-    return unicode(uuid4())
+from nomenklatura.model.common import make_key
 
 
 class Account(db.Model):
@@ -60,8 +55,8 @@ class Account(db.Model):
         return account
 
     def update(self, data):
-        account.login = data['login']
-        account.email = data.get('email')
+        self.login = data['login']
+        self.email = data.get('email')
         db.session.add(self)
 
 

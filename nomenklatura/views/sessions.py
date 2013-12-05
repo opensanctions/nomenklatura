@@ -43,7 +43,6 @@ def login():
 def logout():
     authz.require(authz.logged_in())
     session.clear()
-    #flash("You've been logged out.", "success")
     return redirect(url_for('index'))
 
 
@@ -63,5 +62,4 @@ def authorized(resp):
     if account is None:
         account = Account.create(data)
         db.session.commit()
-    #flash("Welcome back, %s." % account.login, "success")
     return redirect(url_for('index'))

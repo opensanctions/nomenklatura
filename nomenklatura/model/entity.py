@@ -7,8 +7,9 @@ from sqlalchemy.dialects.postgresql import HSTORE
 
 from nomenklatura.core import db
 from nomenklatura.exc import NotFound
-from nomenklatura.model.common import JsonType, DataBlob
+from nomenklatura.model.common import JsonType, Attributes
 from nomenklatura.model.text import normalize_text
+
 
 class EntityState():
 
@@ -50,8 +51,7 @@ class ValidCanonicalEntity(FancyValidator):
 class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
-    #data = DataBlob(if_missing={}, if_empty={})
-    # TODO: attributes
+    attributes = Attributes(if_missing={}, if_empty={})
     reviewed = validators.StringBool(if_empty=False, if_missing=False)
     invalid = validators.StringBool(if_empty=False, if_missing=False)
     canonical = ValidCanonicalEntity(if_missing=None, if_empty=None)

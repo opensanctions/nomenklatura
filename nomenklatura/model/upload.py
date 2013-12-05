@@ -1,9 +1,8 @@
-import os
 from datetime import datetime
 from tablib import Dataset as TablibDataset
 
 from nomenklatura.exc import NotFound
-from nomenklatura.core import db, app
+from nomenklatura.core import db
 
 
 class Upload(db.Model):

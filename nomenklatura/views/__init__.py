@@ -1,15 +1,13 @@
-import urllib
 import os
 
 from flask import render_template, request
-from flask import session, Markup
+from flask import session
 from formencode import Invalid
 from flask.ext.utils.serialization import jsonify
 
 from nomenklatura.core import app
-from nomenklatura.model import Dataset, Account
+from nomenklatura.model import Account
 from nomenklatura.exc import Unauthorized
-from nomenklatura import authz
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
 from nomenklatura.views.datasets import section as datasets
@@ -34,25 +32,6 @@ def check_auth():
     else: 
         request.account = None
 
-
-@app.template_filter('urlencode')
-def urlencode_filter(s):
-    if type(s) == 'Markup':
-        s = s.unescape()
-    s = s.encode('utf8')
-    s = urllib.quote_plus(s)
-    return Markup(s)
-
-
-@app.context_processor
-def set_template_globals():
-    return {
-        'datasets': Dataset.all(),
-        'authz': authz,
-        'avatar_url': session.get('avatar_url', ''),
-        'logged_in': request.account is not None,
-        'login': request.account.login if request.account else None
-        }
 
 
 @app.errorhandler(401)
