@@ -10,7 +10,17 @@
 
 
 <h3>How do I add entities to a dataset?</h3>
-
+<p>
+  The key function of nomenklatura is building entity lists dynamically. As a developer working with data, you would run a data extraction script and use the API to create these entities in nomenklatura. In a next step, you can review the newly created entities manually to remove duplicates and ambiguities. Finally, you would run your extraction script again, this time using the canonical entity names from nomenklatura to clean up your data. 
+</p>
+<p>
+  That said, there are three methods for adding entities to nomenklatura:
+</p>
+<ul>
+  <li>Import bulk data from a CSV file. You can select to import data from a file, either to import new entities or alias lists. The process will ask you to define how each column in the imported file should be interpreted in the context of nomenklatura.</li>
+  <li>Use the API. Nomenklatura provides a full, <a href="/docs/api">REST-inspired API</a> to provide data access. You can use this to find existing entities, but also the create new ones if no match can be found.</li>
+  <li>Add entities manually. On a dataset page, you can manually enter an entity name to create a new entity.</li>
+</ul>
 
 <h3>What is review mode?</h3>
 <p>
@@ -30,7 +40,7 @@
   Marking an entity as invalid is helpful when the entity was added to a dataset but doesn't actually make sense in the context of the dataset, i.e. when it is a category error.
 </p>
 <p>
-  For example, imagine importing speaker names from a parliamentary transcript into nomenklatura. Instead of being marked with a speaker name, some speeches may be marked in the transcript with a piece of pseudo-naming like <strong>SPEAKER</strong>, which doesn't actually represent a person's name.
+  For example, imagine importing speaker names from a parliamentary transcript into nomenklatura. Instead of being marked with a speaker name, some speeches may be marked in the transcript with a piece of pseudo-naming like <code>Unknown</code>, which doesn't actually represent a person's name.
 </p>
 
 
