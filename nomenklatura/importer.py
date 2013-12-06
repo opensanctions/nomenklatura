@@ -53,7 +53,7 @@ def import_upload(upload_id, account_id, mapping):
             row['attributes'] = attributes
 
             entity.update(row, account)
-            #print entity
+            print entity
             db.session.commit()
         except Invalid, inv:
             # TODO: logging. 
