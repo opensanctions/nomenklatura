@@ -174,8 +174,9 @@ either directly or via a Python client library.</p>
   <li><code>filter_name</code> will constrain the result set to only those entities which 
     contain the given string in their name. The filter is not case sensitive.</li>
   <li><code>format</code> can be used to switch to the alternate <code>csv</code>
-    representation for the bulk export of entities. The default representation remains <code>json</code>.
-    HTTP-style content negotiation via <code>Accept</code> headers is not supported.</li>
+    representation for the bulk export of entities (i.e. pagination will be disabled). The
+    default representation remains <code>json</code>. HTTP-style content negotiation via
+    <code>Accept</code> headers is not supported.</li>
   <li><code>download</code> is a flag that can be set to set the <code>Content-Disposition</code>
     header and force the user agent to trigger a file download instead of attempting to render the 
     results to the viewport.</li>

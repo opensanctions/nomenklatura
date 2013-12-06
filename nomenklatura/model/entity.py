@@ -103,6 +103,8 @@ class Entity(db.Model):
         row = self.attributes or {}
         row = row.copy()
         row.update(self.to_dict(shallow=True))
+        if self.canonical is not None:
+            row['canonical'] = self.canonical.name
         return row
 
     @property
