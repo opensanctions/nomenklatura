@@ -8,11 +8,6 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: HomeCtrl
   });
 
-  $routeProvider.when('/profile', {
-    templateUrl: '/static/templates/profile.html',
-    controller: ProfileCtrl
-  });
-
   $routeProvider.when('/docs/:page/:anchor', {
     templateUrl: '/static/templates/pages/template.html',
     controller: DocsCtrl
