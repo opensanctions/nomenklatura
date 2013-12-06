@@ -43,7 +43,7 @@ nomenklatura.config(['$routeProvider', '$locationProvider', '$sceProvider',
   });
 
   $locationProvider.html5Mode(true);
-  $sceProvider.enabled(false);
+  //$sceProvider.enabled(false);
 }]);
 
 function visitPath(o, path) {
