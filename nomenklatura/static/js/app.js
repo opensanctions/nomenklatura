@@ -28,6 +28,11 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
     controller: DatasetsViewCtrl
   });
 
+  $routeProvider.when('/datasets/:dataset/uploads/:upload', {
+    templateUrl: '/static/templates/mapping.html',
+    controller: MappingCtrl
+  });
+
   $routeProvider.when('/datasets/:dataset/review/:what', {
     templateUrl: '/static/templates/review.html',
     controller: ReviewCtrl

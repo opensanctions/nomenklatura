@@ -12,6 +12,10 @@
           that you want to import into this dataset. Please make sure the file is encoded as 
           UTF-8 (Unicode).
     </p>
+    <div class="alert alert-danger" ng-show="upload.parse_error">
+      <strong>The import could not be processed.</strong> The file you have submitted may not 
+      be validly formatted as CSV. The following error has occurred: {{upload.parse_error}}
+    </div>
     <div class="form-group" ng-class="{'has-error': importFile.file.$invalid}">
       <label class="col-sm-3 control-label" for="file">Source file</label>
       <div class="col-sm-9">

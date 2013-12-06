@@ -1,29 +1,57 @@
+from formencode import Invalid
+
 from nomenklatura.core import db
 from nomenklatura.core import celery as app
 from nomenklatura.model import Dataset, Entity, Account, Upload
 
+
+def apply_mapping(row, mapping):
+    out = {'attributes': {}, 'reviewed': mapping['reviewed']}
+    for column, prop in mapping['columns'].items():
+        value = row.get(column)
+        if value is None or not len(value.strip()):
+            continue
+        if prop.startswith('attributes.'):
+            a, prop = prop.split('.', 1)
+            out[a][prop] = value
+        else:
+            out[prop] = value
+    return out
+
+
 @app.task
-def import_upload(dataset_name, id, account_id,
-                  entity_col, alias_col):
-    dataset = Dataset.find(dataset_name)
+def import_upload(upload_id, account_id, mapping):
+    upload = Upload.all().filter_by(id=upload_id).first()
     account = Account.by_id(account_id)
-    metadata, row_set = parse_upload(dataset, id)
-    headers = detect_headers(row_set)
-    for row in row_set:
-        data = dict([(c.column, c.value) for c in row])
-        entity = data.pop(entity_col) if entity_col else None
-        alias = data.pop(alias_col) if alias_col else None
-        if alias_col and alias is not None and len(alias) and alias != entity:
-            d = {'name': alias, 'data': data}
-            alias_obj = Alias.lookup(dataset, d, account,
-                                     match_entity=False)
-            data = {}
-        if entity_col and entity is not None and len(entity):
-            d = {'name': entity, 'data': data}
-            entity_obj = Entity.by_name(dataset, entity)
-            if entity_obj is None:
-                entity_obj = Entity.create(dataset, d, account)
-            entity_obj.data = data
-        if alias_col and entity_col:
-            alias_obj.match(dataset, {'choice': entity_obj.id}, account)
-    db.session.commit()
+    mapped = mapping['columns'].values()
+
+    rows = [apply_mapping(r, mapping) for r in upload.tab.dict]
+    # put aliases second.
+    rows = sorted(rows, key=lambda r: 2 if r.get('canonical') else 1)
+
+    for row in rows:
+        try:
+            entity = None
+            if row.get('id'):
+                entity = Entity.by_id(row.get('id'))
+            if entity is None:
+                entity = Entity.by_name(upload.dataset, row.get('name'))
+            if entity is None:
+                entity = Entity.create(upload.dataset, row, account)
+
+            # restore some defaults: 
+            if entity.canonical_id and 'canonical' not in mapped:
+                row['canonical'] = entity.canonical_id
+            if entity.invalid and 'invalid' not in mapped:
+                row['invalid'] = entity.invalid 
+
+            attributes = entity.attributes.copy()
+            attributes.update(row['attributes'])
+            row['attributes'] = attributes
+
+            entity.update(row, account)
+            #print entity
+            db.session.commit()
+        except Invalid, inv:
+            # TODO: logging. 
+            print inv

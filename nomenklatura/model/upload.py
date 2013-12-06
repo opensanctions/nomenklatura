@@ -50,12 +50,14 @@ class Upload(db.Model):
         return self._tab
 
     @classmethod
-    def by_id(cls, id):
-        return cls.query.filter_by(id=id).first()
+    def by_id(cls, dataset, id):
+        q = cls.query.filter_by(id=id)
+        q = q.filter_by(dataset_id=dataset.id)
+        return q.first()
 
     @classmethod
-    def find(cls, id):
-        upload = cls.by_id(id)
+    def find(cls, dataset, id):
+        upload = cls.by_id(dataset, id)
         if upload is None:
             raise NotFound("No such upload: %s" % id)
         return upload

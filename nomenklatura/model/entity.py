@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import HSTORE
 
 from nomenklatura.core import db
 from nomenklatura.exc import NotFound
-from nomenklatura.model.common import JsonType, Attributes
 from nomenklatura.model.text import normalize_text
 
 
@@ -36,7 +35,9 @@ class ValidCanonicalEntity(FancyValidator):
             value = value.get('id')
         entity = Entity.by_id(value)
         if entity is None:
-            raise Invalid('Entity does not exist.', value, None)
+            entity = Entity.by_name(state.dataset, value)
+        if entity is None:
+            raise Invalid('Entity does not exist: %s' % value, value, None)
         if entity == state.entity:
             raise Invalid('Entities are identical.', value, None)
         if entity.dataset != state.dataset:
@@ -48,10 +49,13 @@ class ValidCanonicalEntity(FancyValidator):
         return entity
 
 
+class AttributeSchema(Schema):
+    allow_extra_fields = True
+
 class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
-    attributes = Attributes(if_missing={}, if_empty={})
+    attributes = AttributeSchema()
     reviewed = validators.StringBool(if_empty=False, if_missing=False)
     invalid = validators.StringBool(if_empty=False, if_missing=False)
     canonical = ValidCanonicalEntity(if_missing=None, if_empty=None)
@@ -111,7 +115,10 @@ class Entity(db.Model):
 
     @classmethod
     def by_id(cls, id):
-        return cls.query.filter_by(id=id).first()
+        try:
+            return cls.query.filter_by(id=int(id)).first()
+        except ValueError:
+            return None
 
     @classmethod
     def id_map(cls, ids):

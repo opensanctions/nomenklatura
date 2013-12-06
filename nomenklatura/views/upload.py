@@ -17,9 +17,8 @@ def upload(dataset):
     authz.require(authz.dataset_edit(dataset))
     file_ = request.files.get('file')
     if not file_ or not file_.filename:
-        inv = Invalid("No file.", None, None,
-                      error_dict={'file': "You need to upload a file"})
-        raise inv
+        err = {'file': "You need to upload a file"}
+        raise Invalid("No file.", None, None, error_dict=err)
     upload = Upload.create(dataset, request.account, file_)
     db.session.commit()
     return jsonify(upload)
@@ -29,7 +28,7 @@ def upload(dataset):
 def view(dataset, id):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    upload = Upload.find(id)
+    upload = Upload.find(dataset, id)
     return jsonify(upload)
 
 
@@ -37,13 +36,17 @@ def view(dataset, id):
 def process(dataset, id):
     dataset = Dataset.find(dataset)
     authz.require(authz.dataset_edit(dataset))
-    data = request_data()
-    entity_col = data.get('entity') or None
-    alias_col = data.get('alias') or None
-    if not (entity_col or alias_col):
-        flash('You need to pick either a alias or entity column!', 'error')
-        return map(dataset.name, id)
-    import_upload.delay(dataset.name, id, request.account.id,
-                        entity_col, alias_col)
-    flash('Loading data...', 'success')
-    return redirect(url_for('dataset.view', dataset=dataset.name))
+    upload = Upload.find(dataset, id)
+    mapping = request_data()
+    mapping['reviewed'] = mapping.get('reviewed') or False
+    mapping['columns'] = mapping.get('columns', {})
+    fields = mapping['columns'].values()
+    for header in mapping['columns'].keys():
+        if header not in upload.tab.headers:
+            raise Invalid("Invalid header: %s" % header, None, None)    
+
+    if 'name' not in fields and 'id' not in fields:
+        raise Invalid("You have not selected a field that definies entity names.", None, None)
+
+    import_upload.delay(upload.id, request.account.id, mapping)
+    return jsonify({'status': 'Loading data...'})

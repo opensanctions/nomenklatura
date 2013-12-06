@@ -1,0 +1,71 @@
+<ul class="breadcrumb hidden-xs">
+  <li>
+    <a href="/datasets/{{dataset.name}}">{{dataset.label}}</a>
+  </li>
+  <li>
+    Import: {{upload.filename}}
+  </li>
+</ul>
+
+<div class="row" ng-show="upload.id">
+  <div class="col-xs-12">
+    <div class="alert alert-danger" ng-show="errors.status">
+      <strong>The import could not be started.</strong> {{errors.description}}
+    </div>
+
+    <div style="overflow-y: scroll;">
+      <table class="table table-bordered">
+        <tr>
+          <th>Column</th>
+          <th ng-repeat="header in upload.headers">
+            {{header}}
+          </th>
+        </tr>
+        <tr ng-repeat="row in upload.sample">
+          <th><span ng-show="$first">Sample</span></th>
+          <td ng-repeat="header in upload.headers">
+            {{row[header]}}
+          </td>
+        </tr>
+        <tr>
+          <th>Import&nbsp;as</th>
+          <td ng-repeat="header in upload.headers">
+            <select ng-model="mapping.columns[header]">
+              <option value="">Don't import</option>
+              <optgroup label="Core attributes">
+                <option value="name">Name (required)</option>
+                <option value="id">Nomenklatura ID</option>
+                <option value="canonical">Canonical name</option>
+              </optgroup>
+              <optgroup label="Extended attributes">
+                <option value="attributes.acronym">Acronym</option>
+                <option value="attributes.summary">Summary</option>
+                <option value="attributes.biography">Biography</option>
+                <option value="attributes.email">E-Mail</option>
+                <option value="attributes.url">URL</option>
+              </optgroup>
+              <optgroup label="Identifiers">
+                <option value="attributes.opencorporates_uri">OpenCorporates URI</option>
+                <option value="attributes.wikipedia_uri">Wikipedia URI</option>
+                <option value="attributes.dbpedia_uri">dbPedia URI</option>
+              </optgroup>
+            </select>
+          </td> 
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="row" ng-show="upload.id">
+  <div class="col-xs-12 col-md-6">
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" ng-model="mapping.reviewed" value="True">
+        Consider imported entities <strong>reviewed</strong>.
+      </label>
+    </div>
+  </div>
+  <div class="col-xs-12 col-md-6">
+    <a ng-click="beginImport()" class="pull-right btn btn-default">Load {{upload.rows}} entities</a>
+  </div>
+</div>
