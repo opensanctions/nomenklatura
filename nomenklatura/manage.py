@@ -21,7 +21,7 @@ def postproc_20131119():
         entity.normalized = normalize_text(entity.name)
         #entity.attributes = entity.data
         db.session.add(entity)
-    db.session.commit()
+        db.session.commit()
 
 
 @manager.command
