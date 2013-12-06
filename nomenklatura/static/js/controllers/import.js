@@ -1,12 +1,7 @@
 
-function UploadCtrl($scope, $routeParams, $modalInstance, $location, $http, $sce, session, dataset) {
+function UploadCtrl($scope, $routeParams, $modalInstance, $location, $http, session, dataset) {
     $scope.dataset = angular.copy(dataset);
-    $scope.form_action = '/api/2';
     $scope.upload = {};
-
-    $scope.$watch('dataset', function() {
-        $scope.form_action = $sce.trustAsUrl('/api/2/datasets/' + $scope.dataset.name + '/uploads');
-    });
 
     $scope.cancel = function() {
         $modalInstance.dismiss('cancel');
@@ -22,7 +17,7 @@ function UploadCtrl($scope, $routeParams, $modalInstance, $location, $http, $sce
     };
 }
 
-UploadCtrl.$inject = ['$scope', '$routeParams', '$modalInstance', '$location', '$http', '$sce', 'session', 'dataset'];
+UploadCtrl.$inject = ['$scope', '$routeParams', '$modalInstance', '$location', '$http', 'session', 'dataset'];
 
 
 function MappingCtrl($scope, $routeParams, $location, $http, session) {

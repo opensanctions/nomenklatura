@@ -1,7 +1,7 @@
 var nomenklatura = angular.module('nomenklatura', ['ngRoute', 'ngUpload', 'ui.bootstrap']);
 
-nomenklatura.config(['$routeProvider', '$locationProvider',
-    function($routeProvider, $locationProvider) {
+nomenklatura.config(['$routeProvider', '$locationProvider', '$sceProvider',
+    function($routeProvider, $locationProvider, $sceProvider) {
 
   $routeProvider.when('/', {
     templateUrl: '/static/templates/home.html',
@@ -43,6 +43,7 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
   });
 
   $locationProvider.html5Mode(true);
+  $sceProvider.enabled(false);
 }]);
 
 function visitPath(o, path) {
