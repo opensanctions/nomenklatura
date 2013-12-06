@@ -4,7 +4,7 @@
   <h4 class="modal-title">Import entities from a file</h4>
 </div>
 
-<form class="form-horizontal" role="form" name="importFile" action="/api/2/datasets/{{dataset.name}}/uploads"
+<form class="form-horizontal" role="form" name="importFile" action="{{form_action}}"
   ng-upload="results(content)">
   <div class="modal-body">
     <p>
