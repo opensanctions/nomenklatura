@@ -100,7 +100,8 @@ class Entity(db.Model):
         return d
 
     def to_row(self):
-        row = self.data.copy()
+        row = self.attributes or {}
+        row = row.copy()
         row.update(self.to_dict(shallow=True))
         return row
 

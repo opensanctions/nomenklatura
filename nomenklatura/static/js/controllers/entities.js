@@ -7,7 +7,7 @@ function EntitiesViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
     
     $http.get('/api/2/entities/' + $routeParams.id).then(function(res) {
         $scope.entity = res.data;
-        $scope.has_attributes = Object.keys(res.data.attributes).length > 0;
+        $scope.has_attributes = res.data.attributes && Object.keys(res.data.attributes).length > 0;
 
         $http.get('/api/2/datasets/' + res.data.dataset).then(function(res) {
             $scope.dataset = res.data;

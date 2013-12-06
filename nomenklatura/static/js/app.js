@@ -51,7 +51,7 @@ nomenklatura.config(['$routeProvider', '$locationProvider',
 }]);
 
 function visitPath(o, path) {
-  window.location.replace(path);
+  window.location.reload(true);
 }
 
 
