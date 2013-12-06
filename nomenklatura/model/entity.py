@@ -39,12 +39,9 @@ class ValidCanonicalEntity(FancyValidator):
         if entity is None:
             raise Invalid('Entity does not exist: %s' % value, value, None)
         if entity == state.entity:
-            raise Invalid('Entities are identical.', value, None)
+            return None
         if entity.dataset != state.dataset:
             raise Invalid('Entity belongs to a different dataset.',
-                          value, None)
-        if entity.canonical_id:
-            raise Invalid('Entity itself is an alias.',
                           value, None)
         return entity
 
@@ -151,6 +148,7 @@ class Entity(db.Model):
             q = q.options(db.joinedload('creator'))
         return q
 
+
     @classmethod
     def create(cls, dataset, data, account):
         state = EntityState(dataset, None)
@@ -168,6 +166,7 @@ class Entity(db.Model):
         db.session.flush()
         return entity
 
+
     def update(self, data, account):
         state = EntityState(self.dataset, self)
         data = EntitySchema().to_python(data, state)
@@ -178,6 +177,16 @@ class Entity(db.Model):
         self.reviewed = data['reviewed']
         self.invalid = data['invalid']
         self.canonical = data['canonical']
-        # TODO: redirect all aliases of this entity
-        db.session.add(self)
 
+        # redirect all aliases of this entity
+        if self.canonical:
+            if self.canonical.canonical_id:
+                if self.canonial.canonical_id == self.id:
+                    self.canonical.canonical = None
+                else:
+                    self.canonical = self.canonical.canonical
+
+            for alias in self.aliases:
+                alias.canonical = self.canonical
+        
+        db.session.add(self)
