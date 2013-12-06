@@ -45,7 +45,10 @@ def import_upload(upload_id, account_id, mapping):
             if entity.invalid and 'invalid' not in mapped:
                 row['invalid'] = entity.invalid 
 
-            attributes = entity.attributes.copy()
+            if entity.attributes:
+                attributes = entity.attributes.copy()
+            else:
+                attributes = {}
             attributes.update(row['attributes'])
             row['attributes'] = attributes
 
