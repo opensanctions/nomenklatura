@@ -50,6 +50,7 @@ class ValidCanonicalEntity(FancyValidator):
 class AttributeSchema(Schema):
     allow_extra_fields = True
 
+
 class EntitySchema(Schema):
     allow_extra_fields = True
     name = All(validators.String(min=0, max=5000), AvailableName())
@@ -112,7 +113,10 @@ class Entity(db.Model):
     @classmethod
     def by_name(cls, dataset, name):
         q = cls.query.filter_by(dataset=dataset)
-        attr = Entity.normalized if dataset.normalize_text else Entity.name
+        attr = Entity.name
+        if dataset.normalize_text:
+            attr = Entity.normalized
+            name = normalize_text(name)
         if dataset.ignore_case:
             attr = func.lower(attr)
             if isinstance(name, basestring):
