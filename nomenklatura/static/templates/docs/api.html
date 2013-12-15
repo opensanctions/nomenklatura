@@ -198,6 +198,16 @@ either directly or via a Python client library.</p>
 </p>
 <hr class="call-sep">
 
+<pre class="call">GET /api/2/datasets/:name/find</pre>
+<p>
+  Retrieves a single entity, identified by its <code>name</code>. The semantics of the returned 
+  object are documented <a href="#entities">above</a>. A single query parameter, <code>name</code>
+  is required and will be used for lookup. This endpoints differs from the matching function in 
+  that it will return a specific entity, rather than trying to perform a fuzzy matching process.
+</p>
+<hr class="call-sep">
+
+
 <pre class="call">GET /api/2/entities/:id/aliases</pre>
 <p>
   Retrieves a <a href="#pagers">pager</a> of all known aliases for an entity, which is identified by its <code>id</code>.

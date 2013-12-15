@@ -6,7 +6,7 @@ from flask import Response, request
 from formencode import htmlfill
 from flask.ext.utils.args import arg_bool, arg_int
 
-from nomenklatura.exc import BadRequest
+from nomenklatura.exc import BadRequest, NotFound
 from flask.ext.utils.serialization import jsonify
 
 
@@ -23,6 +23,12 @@ def request_data():
     if data is None:
         raise BadRequest()
     return data
+
+
+def object_or_404(obj):
+    if obj is None:
+        raise NotFound()
+    return obj
 
 
 def csv_value(v):

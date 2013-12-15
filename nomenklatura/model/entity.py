@@ -2,6 +2,7 @@ from datetime import datetime
 
 from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload_all, backref
 from sqlalchemy.dialects.postgresql import HSTORE
 
@@ -110,8 +111,14 @@ class Entity(db.Model):
 
     @classmethod
     def by_name(cls, dataset, name):
-        return cls.query.filter_by(dataset=dataset).\
-                filter_by(name=name).first()
+        q = cls.query.filter_by(dataset=dataset)
+        attr = Entity.normalized if dataset.normalize_text else Entity.name
+        if dataset.ignore_case:
+            attr = func.lower(attr)
+            if isinstance(name, basestring):
+                name = name.lower()
+        q = q.filter(attr==name)
+        return q.first()
 
     @classmethod
     def by_id(cls, id):

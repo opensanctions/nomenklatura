@@ -6,7 +6,7 @@ from flask.ext.utils.serialization import jsonify
 from nomenklatura.core import db
 from nomenklatura.views.pager import query_pager
 from nomenklatura.views.common import request_data, csvify
-from nomenklatura.views.common import dataset_filename
+from nomenklatura.views.common import dataset_filename, object_or_404
 from nomenklatura import authz
 from nomenklatura.model import Entity, Dataset
 
@@ -51,7 +51,15 @@ def create():
 
 @section.route('/entities/<int:id>', methods=['GET'])
 def view(id):
-    entity = Entity.by_id(id)
+    entity = object_or_404(Entity.by_id(id))
+    return jsonify(entity)
+
+
+@section.route('/datasets/<dataset>/find', methods=['GET'])
+def by_name(dataset):
+    dataset = Dataset.find(dataset)
+    name = request.args.get('name')
+    entity = object_or_404(Entity.by_name(dataset, name))
     return jsonify(entity)
 
 
