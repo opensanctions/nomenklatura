@@ -47,8 +47,9 @@ def handle_exceptions(exc):
         'name': exc.name,
         'message': message
     }
+    headers = exc.get_headers(request.environ)
     return jsonify(body, status=exc.code,
-        headers=exc.get_headers(request.environ))
+        headers=headers)
 
 
 @app.errorhandler(Invalid)
@@ -82,12 +83,12 @@ def angular_templates():
                        fh.read().decode('utf-8'))
 
 
-@app.route('/')
 @app.route('/entities')
 @app.route('/entities/<path:id>')
 @app.route('/datasets')
 @app.route('/datasets/<path:id>')
 @app.route('/profile')
 @app.route('/docs/<path:id>')
+@app.route('/')
 def index(**kw):
     return render_template('app.html', angular_templates=angular_templates())

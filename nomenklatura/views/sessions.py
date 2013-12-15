@@ -15,7 +15,8 @@ def status():
     return jsonify({
         'logged_in': authz.logged_in(),
         'api_key': request.account.api_key if authz.logged_in() else None,
-        'account': request.account
+        'account': request.account,
+        'base_url': url_for('index', _external=True)
     })
 
 
