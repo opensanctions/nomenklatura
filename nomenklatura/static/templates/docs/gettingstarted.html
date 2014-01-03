@@ -1,3 +1,42 @@
-
 <h3>Getting started</h3>
+
+<p>The most important aspect to geting started with nomenklatura is to realize that it is really a very simple tool. Nomenklatura manages lists of names, whether they relate to people, organisations or any other topic. It's useful when you want to make sure that such a list is used coherently, across different servers, times or data sources.</p>
+
+<p>There are two main ways in which you can interact with nomenklatura: through its web interface, which provides most (if not all) functionality available in the software and which can also be used to import existing datasets. The API can be used to programmatically access datasets, either via a custom Python client library or through the desktop data cleaning tool OpenRefine (and it's reconcilation function).</p>
+
+<h4>Example: Country names</h4>
+
+<p>As an example, let's say you have a number of data sources that use different identifiers for countries: one source would refer to them by their official names (<code>United Kingdom of Great Britain and Northern Ireland</code>), one might use their more commonly known names (<code>Great Britain</code>), while still another source might use ISO country codes instead (<code>GB</code>).</p>
+
+<p>In this case, you'd probably quickly find a list of all countries somewhere on the web. Without nomenklatura, you might decide to map all occurrences of country names in your source data to the entries in this list using a CSV file, or a table in a database. This works, but the approach has a number of problems:</p>
+
+<ul>
+	<li>If you work with others, you might end up not sharing the latest version of the mappings you have. (Or you'd start using version control on the data, which has its own issues.)</li>
+	<li>If you want less technical users to contribute mappings, you'd have to build your own interface to allow them to do so.</li>
+	<li>If you're building an automated process, new values that need to be mapped might just appear in some log file as error messages, where its easy to miss them.</li>
+</ul>
+
+<p>By using nomenklatura, you will make sure that the aliases you create are shared with other users, there's a nice interface to edit them, and new forms appear in a review queue. Here's how that would work:</p>
+
+<ol>
+	<li>Sign into nomenklatura using your GitHub account, then <strong>create a new dataset.</strong></li>
+	<li>Select the import option to <strong>upload a CSV file</strong> with country names. You can also import additional attributes, such as the country codes.</li>
+	<li>Use OpenRefine's reconciliation service (explained below, or any other client) to <strong>match the country names in your source data</strong> against nomenklatura. We'll assume that some of the country names in your dataset do not precisely match those in the data you imported into nomenklatura.</li>
+	<li>The service will keep a record of all the requests from OpenRefine which did not match an existing country. On the nomenklatura you can <strong>use the review function</strong> to match them to
+	the proper country.</li>
+	<li>Running the client (e.g. OpenRefine) again will now return the new mapped results.</li>
+</ol>
+
+<p>
+	Of course, this is only one way to use nomenklatura. In other cases, you may not have an initial CSV file to upload, and choose to build up a dataset in nomenklatura incrementally instead.
+</p>
+
+
+<h4>Using nomenklatura with OpenRefine</h4>
+
+<p>
+	
+</p>
+
+<h4>Using the Python client library</h4>
 
