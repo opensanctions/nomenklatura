@@ -15,5 +15,8 @@
     "ngUpload": "~0.5.3",
     "angular-route": "~1.2.0",
     "angular-ui-bootstrap3": "~0.6.0"
+  },
+  "resolutions": {
+    "angular": "~1.2.3"
   }
 }
