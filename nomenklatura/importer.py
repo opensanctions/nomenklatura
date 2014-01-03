@@ -29,7 +29,7 @@ def import_upload(upload_id, account_id, mapping):
     # put aliases second.
     rows = sorted(rows, key=lambda r: 2 if r.get('canonical') else 1)
 
-    for row in rows:
+    for i, row in enumerate(rows):
         try:
             entity = None
             if row.get('id'):
@@ -54,7 +54,10 @@ def import_upload(upload_id, account_id, mapping):
 
             entity.update(row, account)
             print entity
-            db.session.commit()
+            if i % 100 == 0:
+                print 'COMMIT'
+                db.session.commit()
         except Invalid, inv:
             # TODO: logging. 
             print inv
+    db.session.commit()
