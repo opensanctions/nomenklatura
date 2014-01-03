@@ -65,3 +65,15 @@ def find_matches(dataset, text, filter=None, exclude=None):
     q = select([id_, score], and_(*filters), [entities],
         group_by=[id_], order_by=[score.desc()])
     return Matches(q)
+
+
+def attribute_keys(dataset):
+    entities = Entity.__table__
+    col = func.distinct(func.skeys(entities.c.attributes)).label('keys')
+    q = select([col], entities.c.dataset_id==dataset.id, [entities])
+    rp = db.engine.execute(q)
+    keys = set()
+    for row in rp.fetchall():
+        keys.add(row[0])
+    return sorted(keys)
+

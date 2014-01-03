@@ -7,6 +7,7 @@ from nomenklatura.views.common import request_data
 from nomenklatura.views.pager import query_pager
 from nomenklatura import authz
 from nomenklatura.model import Dataset
+from nomenklatura.model.matching import attribute_keys
 
 section = Blueprint('datasets', __name__)
 
@@ -29,6 +30,12 @@ def create():
 def view(dataset):
     dataset = Dataset.find(dataset)
     return jsonify(dataset)
+
+
+@section.route('/datasets/<dataset>/attributes', methods=['GET'])
+def attributes(dataset):
+    dataset = Dataset.find(dataset)
+    return jsonify({'attributes': attribute_keys(dataset)})
 
 
 @section.route('/datasets/<dataset>', methods=['POST'])
