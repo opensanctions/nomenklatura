@@ -16,7 +16,7 @@ pip install honcho
 echo "source /home/vagrant/env/bin/activate" >>/home/vagrant/.profile
 
 sudo -u postgres createuser -s vagrant
-createdb -E utf-8 -O vagrant nomenklatura
+createdb -T template0 -E utf-8 -O vagrant nomenklatura
 psql -d nomenklatura -c "ALTER USER vagrant PASSWORD 'vagrant';"
 psql -d nomenklatura -c "CREATE EXTENSION IF NOT EXISTS hstore;"
 psql -d nomenklatura -c "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;"
