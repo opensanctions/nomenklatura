@@ -1,0 +1,18 @@
+web:
+  build: .
+  ports:
+    - "8080:8080"
+  volumes:
+    - .:/app
+  links:
+    - database
+  environment:
+    DATABASE_URL: postgres://nomenklatura:@database/nomenklatura
+    SECRET_KEY: CHANGE_ME
+    GITHUB_CLIENT_ID: CHANGE_ME
+    GITHUB_CLIENT_SECRET: CHANGE_ME
+
+database:
+  build: contrib/postgres-nk-hstore
+  environment:
+    POSTGRES_USER: nomenklatura
