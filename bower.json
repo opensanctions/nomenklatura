@@ -14,7 +14,7 @@
     "moment": "~2.4.0",
     "ngUpload": "~0.5.3",
     "angular-route": "~1.2.0",
-    "angular-ui-bootstrap3": "~0.6.0"
+    "angular-bootstrap": "~0.12.0"
   },
   "resolutions": {
     "angular": "~1.2.3"
