@@ -60,6 +60,7 @@ function DatasetsViewCtrl($scope, $routeParams, $location, $http, $modal, $timeo
 
     $scope.createEntity = function(form) {
         $scope.new_entity.dataset = $scope.dataset.name;
+        $scope.new_entity.attributes = {};
         var res = $http.post('/api/2/entities', $scope.new_entity);
         res.success(function(data) {
             $location.path('/entities/' + data.id);
