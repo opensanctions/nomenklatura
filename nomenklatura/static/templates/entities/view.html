@@ -13,7 +13,14 @@
   </li>
 </ul>
 
-<h2 class="page-header">{{entity.name}}</h2>
+
+<h2 class="page-header">
+  {{entity.name}}
+  <div class="btn-group pull-right">
+    <a nk-authz dataset="dataset" op="edit" class="btn btn-default" ng-href="/datasets/{{dataset.name}}/review/{{entity.id}}">
+      <i class="fa fa-link"></i> Review</a>
+  </div>
+</h2>
 
 <div ng-show="entity.canonical" class="alert alert-info">
     <span class="structured">{{entity.name}}</span> is an alias name for 
