@@ -4,15 +4,14 @@
   <p>
       <a ng-show="session.logged_in" class="btn btn-lg btn-default"
         ng-click='newDataset()'><i class="fa fa-plus"></i> Create a dataset</a>
-      <a ng-hide="session.logged_in" class="btn btn-lg btn-default" href="/api/2/sessions/login">
+      <a ng-hide="session.logged_in" class="btn btn-lg btn-default"
+         target="_self" href="/api/2/sessions/login">
         <i class="fa fa-github"></i> Sign in with GitHub</a>
       <a class="btn btn-lg btn-primary btn-default" href="/docs/introduction">
         <i class="fa fa-question-circle"></i> Learn more...</a>
       
   </p>
 </div>
-
-
 
 <div class="row">
     <div class="col-xs-12 col-md-6">

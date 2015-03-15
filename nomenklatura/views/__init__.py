@@ -3,7 +3,7 @@ import os
 from flask import render_template, request
 from flask import session
 from formencode import Invalid
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura.core import app
 from nomenklatura.model import Account
@@ -19,7 +19,7 @@ from nomenklatura.views.matching import section as matching
 @app.before_request
 def check_auth():
     api_key = request.headers.get('Authorization') \
-              or request.args.get('api_key')
+        or request.args.get('api_key')
     if session.get('id'):
         request.account = Account.by_github_id(session.get('id'))
         if request.account is None:
@@ -29,9 +29,8 @@ def check_auth():
         request.account = Account.by_api_key(api_key)
         if request.account is None:
             raise Unauthorized()
-    else: 
+    else:
         request.account = None
-
 
 
 @app.errorhandler(401)
@@ -49,7 +48,7 @@ def handle_exceptions(exc):
     }
     headers = exc.get_headers(request.environ)
     return jsonify(body, status=exc.code,
-        headers=headers)
+                   headers=headers)
 
 
 @app.errorhandler(Invalid)

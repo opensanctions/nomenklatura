@@ -1,6 +1,6 @@
-from flask import Blueprint, request, url_for, flash
+from flask import Blueprint, request  # , url_for, flash
 from formencode import Invalid
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura.views.common import request_data
 from nomenklatura import authz
@@ -43,7 +43,7 @@ def process(dataset, id):
     fields = mapping['columns'].values()
     for header in mapping['columns'].keys():
         if header not in upload.tab.headers:
-            raise Invalid("Invalid header: %s" % header, None, None)    
+            raise Invalid("Invalid header: %s" % header, None, None)
 
     if 'name' not in fields and 'id' not in fields:
         raise Invalid("You have not selected a field that definies entity names.", None, None)

@@ -13,3 +13,6 @@ celery
 nose
 cssmin
 tablib
+apikit
+unidecode
+normality

@@ -1,7 +1,7 @@
 from urllib import urlencode
 
 from flask import url_for, request
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura.views.common import get_limit, get_offset
 

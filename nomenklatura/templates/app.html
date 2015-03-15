@@ -39,10 +39,10 @@
             <a ng-click="showProfile()"><i class="fa fa-cogs"></i> Profile</a>
           </li>
           <li ng-hide="session.logged_in">
-            <a href="/api/2/sessions/login"><i class="fa fa-github"></i> Sign In</a>
+            <a target="_self" href="/api/2/sessions/login"><i class="fa fa-github"></i> Sign In</a>
           </li>
           <li ng-show="session.logged_in">
-            <a href="/api/2/sessions/logout"><i class="fa fa-sign-out"></i> Sign Out</a>
+            <a target="_self" href="/api/2/sessions/logout"><i class="fa fa-sign-out"></i> Sign Out</a>
           </li>
           <li>
             <a href="/docs/introduction"><i class="fa fa-question-circle"></i> Help</a>
@@ -76,7 +76,7 @@
   {% endfor %}
 
   {% assets filters="uglifyjs", output="gen/app.js",
-        "vendor/jquery/jquery.js",
+        "vendor/jquery/dist/jquery.js",
         "vendor/bootstrap/js/collapse.js",
 
         "vendor/angular/angular.js",

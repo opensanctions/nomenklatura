@@ -1,7 +1,7 @@
-import json 
+import json
 
 from flask import Blueprint, request, url_for
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura.exc import BadRequest
 from nomenklatura.model import Dataset, Entity
@@ -21,7 +21,7 @@ def reconcile_index(dataset):
         'schemaSpace': 'http://rdf.freebase.com/ns/type.object.id',
         'view': {'url': urlp},
         'preview': {
-            'url': urlp + '?preview=true', 
+            'url': urlp + '?preview=true',
             'width': 600,
             'height': 300
         },

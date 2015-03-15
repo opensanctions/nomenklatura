@@ -1,6 +1,6 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura.core import db
 from nomenklatura.views.common import request_data

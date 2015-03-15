@@ -1,11 +1,11 @@
 from random import randint
 
 from flask import Blueprint, request
-from flask.ext.utils.serialization import jsonify
-from flask.ext.utils.args import arg_int
+from apikit import jsonify
+from apikit.args import arg_int
 
 from nomenklatura.views.pager import query_pager
-#from nomenklatura import authz
+# from nomenklatura import authz
 from nomenklatura.model.matching import find_matches
 from nomenklatura.model import Dataset, Entity
 

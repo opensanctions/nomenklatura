@@ -1,7 +1,7 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
-from flask.ext.utils.args import arg_bool
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
+from apikit.args import arg_bool
 
 from nomenklatura.core import db
 from nomenklatura.views.pager import query_pager
@@ -24,9 +24,9 @@ def index():
     if len(filter_name):
         query = '%' + filter_name + '%'
         entities = entities.filter(Entity.name.ilike(query))
-    
+
     # TODO, other filters.
-    
+
     format = request.args.get('format', 'json').lower().strip()
     if format == 'csv':
         res = csvify(entities)

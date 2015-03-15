@@ -1,7 +1,7 @@
 import requests
 from flask import url_for, session, Blueprint, redirect
 from flask import request
-from flask.ext.utils.serialization import jsonify
+from apikit import jsonify
 
 from nomenklatura import authz
 from nomenklatura.core import db, github
@@ -36,7 +36,7 @@ def get_authz():
 
 @section.route('/sessions/login')
 def login():
-    callback=url_for('sessions.authorized', _external=True)
+    callback = url_for('sessions.authorized', _external=True)
     return github.authorize(callback=callback)
 
 
@@ -50,12 +50,12 @@ def logout():
 @section.route('/sessions/callback')
 @github.authorized_handler
 def authorized(resp):
-    if not 'access_token' in resp:
+    if 'access_token' not in resp:
         return redirect(url_for('index'))
     access_token = resp['access_token']
     session['access_token'] = access_token, ''
     res = requests.get('https://api.github.com/user?access_token=%s' % access_token,
-            verify=False)
+                       verify=False)
     data = res.json()
     for k, v in data.items():
         session[k] = v

@@ -39,17 +39,12 @@ nomenklatura.config(['$routeProvider', '$locationProvider', '$sceProvider',
   });
 
   $routeProvider.otherwise({
-    redirectTo: visitPath
+    redirectTo: '/'
   });
 
   $locationProvider.html5Mode(true);
   //$sceProvider.enabled(false);
 }]);
-
-function visitPath(o, path) {
-  window.location.reload(true);
-}
-
 
 nomenklatura.handleFormError = function(form) {
   return function(data, status) {
