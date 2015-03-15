@@ -1,3 +1,4 @@
+from normality import normalize
 from flask.ext.script import Manager
 from flask.ext.assets import ManageAssets
 
@@ -18,10 +19,9 @@ def createdb():
 
 @manager.command
 def postproc_20131119():
-    from nomenklatura.model.text import normalize_text
     for entity in Entity.query:
         print [entity]
-        entity.normalized = normalize_text(entity.name)
+        entity.normalized = normalize(entity.name)
         db.session.add(entity)
         db.session.commit()
 
@@ -36,4 +36,3 @@ def flush(dataset):
 
 if __name__ == '__main__':
     manager.run()
-

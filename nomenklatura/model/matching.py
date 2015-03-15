@@ -1,7 +1,7 @@
+from normality import normalize
 from sqlalchemy import func, select, and_
 
 from nomenklatura.model.entity import Entity
-from nomenklatura.model.text import normalize
 from nomenklatura.core import db
 
 
@@ -43,7 +43,7 @@ def find_matches(dataset, text, filter=None, exclude=None):
     if dataset.ignore_case:
         text_field = func.lower(text_field)
     text_field = func.left(text_field, 254)
-    
+
     # calculate the difference percentage
     l = func.greatest(1.0, func.least(len(match_text), func.length(text_field)))
     score = func.greatest(0.0, ((l - func.levenshtein(text_field, match_text)) / l) * 100.0)
@@ -51,29 +51,28 @@ def find_matches(dataset, text, filter=None, exclude=None):
 
     # coalesce the canonical identifier
     id_ = func.coalesce(entities.c.canonical_id, entities.c.id).label('id')
-    
+
     # apply filters
-    filters = [entities.c.dataset_id==dataset.id,
-               entities.c.invalid==False]
+    filters = [entities.c.dataset_id == dataset.id,
+               entities.c.invalid == False] # noqa
     if not dataset.match_aliases:
-        filters.append(entities.c.canonical_id==None)
+        filters.append(entities.c.canonical_id == None) # noqa
     if exclude is not None:
         filters.append(entities.c.id!=exclude)
     if filter is not None:
         filters.append(text_field.ilike('%%%s%%' % filter))
 
     q = select([id_, score], and_(*filters), [entities],
-        group_by=[id_], order_by=[score.desc()])
+               group_by=[id_], order_by=[score.desc()])
     return Matches(q)
 
 
 def attribute_keys(dataset):
     entities = Entity.__table__
     col = func.distinct(func.skeys(entities.c.attributes)).label('keys')
-    q = select([col], entities.c.dataset_id==dataset.id, [entities])
+    q = select([col], entities.c.dataset_id == dataset.id, [entities])
     rp = db.engine.execute(q)
     keys = set()
     for row in rp.fetchall():
         keys.add(row[0])
     return sorted(keys)
-

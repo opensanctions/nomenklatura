@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from normality import normalize
 from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
 from sqlalchemy import func
@@ -8,7 +9,6 @@ from sqlalchemy.dialects.postgresql import HSTORE
 
 from nomenklatura.core import db
 from nomenklatura.exc import NotFound
-from nomenklatura.model.text import normalize_text
 
 
 class EntityState():
@@ -70,15 +70,15 @@ class Entity(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
     invalid = db.Column(db.Boolean, default=False)
     canonical_id = db.Column(db.Integer,
-        db.ForeignKey('entity.id'), nullable=True)
+                             db.ForeignKey('entity.id'), nullable=True)
     dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('account.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
-            onupdate=datetime.utcnow)
+                           onupdate=datetime.utcnow)
 
-    canonical = db.relationship('Entity', backref=backref('aliases', lazy='dynamic'),
-        remote_side='Entity.id')
+    canonical = db.relationship('Entity', remote_side='Entity.id',
+                                backref=backref('aliases', lazy='dynamic'))
 
     def to_dict(self, shallow=False):
         d = {
@@ -88,7 +88,6 @@ class Entity(db.Model):
             'reviewed': self.reviewed,
             'invalid': self.invalid,
             'canonical': self.canonical,
-            #'normalized': self.normalized,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
         }
@@ -116,12 +115,12 @@ class Entity(db.Model):
         attr = Entity.name
         if dataset.normalize_text:
             attr = Entity.normalized
-            name = normalize_text(name)
+            name = normalize(name)
         if dataset.ignore_case:
             attr = func.lower(attr)
             if isinstance(name, basestring):
                 name = name.lower()
-        q = q.filter(attr==name)
+        q = q.filter(attr == name)
         return q.first()
 
     @classmethod
@@ -159,7 +158,6 @@ class Entity(db.Model):
             q = q.options(db.joinedload('creator'))
         return q
 
-
     @classmethod
     def create(cls, dataset, data, account):
         state = EntityState(dataset, None)
@@ -168,7 +166,7 @@ class Entity(db.Model):
         entity.dataset = dataset
         entity.creator = account
         entity.name = data['name']
-        entity.normalized = normalize_text(entity.name)
+        entity.normalized = normalize(entity.name)
         entity.attributes = data.get('attributes', {})
         entity.reviewed = data['reviewed']
         entity.invalid = data['invalid']
@@ -177,13 +175,12 @@ class Entity(db.Model):
         db.session.flush()
         return entity
 
-
     def update(self, data, account):
         state = EntityState(self.dataset, self)
         data = EntitySchema().to_python(data, state)
         self.creator = account
         self.name = data['name']
-        self.normalized = normalize_text(self.name)
+        self.normalized = normalize(self.name)
         self.attributes = data['attributes']
         self.reviewed = data['reviewed']
         self.invalid = data['invalid']
@@ -199,5 +196,5 @@ class Entity(db.Model):
 
             for alias in self.aliases:
                 alias.canonical = self.canonical
-        
+
         db.session.add(self)
