@@ -1,10 +1,9 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
-from apikit import jsonify
+from apikit import jsonify, Pager
 from apikit.args import arg_bool
 
 from nomenklatura.core import db
-from nomenklatura.views.pager import query_pager
 from nomenklatura.views.common import request_data, csvify
 from nomenklatura.views.common import dataset_filename, object_or_404
 from nomenklatura import authz
@@ -31,7 +30,8 @@ def index():
     if format == 'csv':
         res = csvify(entities)
     else:
-        res = query_pager(entities)
+        pager = Pager(entities)
+        res = jsonify(pager.to_dict())
 
     if arg_bool('download'):
         fn = dataset_filename(dataset, format)
@@ -66,7 +66,8 @@ def by_name(dataset):
 @section.route('/entities/<int:id>/aliases', methods=['GET'])
 def aliases(id):
     entity = Entity.by_id(id)
-    return query_pager(entity.aliases, id=id)
+    pager = Pager(entity.aliases)
+    return jsonify(pager.to_dict(), id=id)
 
 
 @section.route('/entities/<id>', methods=['POST'])
@@ -76,4 +77,3 @@ def update(id):
     entity.update(request_data(), request.account)
     db.session.commit()
     return redirect(url_for('.view', id=entity.id))
-

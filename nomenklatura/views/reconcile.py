@@ -2,10 +2,10 @@ import json
 
 from flask import Blueprint, request, url_for
 from apikit import jsonify
+from apikit.args import get_limit, get_offset
 
 from nomenklatura.exc import BadRequest
 from nomenklatura.model import Dataset, Entity
-from nomenklatura.views.common import get_limit, get_offset
 from nomenklatura.model.matching import find_matches
 
 
@@ -53,21 +53,21 @@ def reconcile_op(dataset, query):
             'type': [{
                 'id': '/' + dataset.name,
                 'name': dataset.label
-                }],
+            }],
             'id': match['entity'].id,
             'uri': url_for('entities.view', id=match['entity'].id, _external=True),
             'match': match['score']==100
         })
     return {
-        'result': results, 
+        'result': results,
         'num': len(results)
-        }
+    }
 
 
 @section.route('/datasets/<dataset>/reconcile', methods=['GET', 'POST'])
 def reconcile(dataset):
     """
-    Reconciliation API, emulates Google Refine API. See: 
+    Reconciliation API, emulates Google Refine API. See:
     http://code.google.com/p/google-refine/wiki/ReconciliationServiceApi
     """
     dataset = Dataset.by_name(dataset)
@@ -76,7 +76,7 @@ def reconcile(dataset):
     data = request.args.copy()
     data.update(request.form.copy())
     if 'query' in data:
-        # single 
+        # single
         q = data.get('query')
         if q.startswith('{'):
             try:
@@ -103,12 +103,12 @@ def reconcile(dataset):
 
 @section.route('/datasets/<dataset>/suggest', methods=['GET', 'POST'])
 def suggest(dataset):
-    """ 
+    """
     Suggest API, emulates Google Refine API. See:
     http://code.google.com/p/google-refine/wiki/SuggestApi
     """
     dataset = Dataset.by_name(dataset)
-    entities = Entity.all().filter(Entity.invalid!=True)
+    entities = Entity.all().filter(Entity.invalid != True) # noqa
     query = request.args.get('prefix', '').strip()
     entities = entities.filter(Entity.name.ilike('%s%%' % query))
     entities = entities.offset(get_offset(field='start'))
@@ -121,12 +121,12 @@ def suggest(dataset):
             'n:type': {
                 'id': '/' + dataset.name,
                 'name': dataset.label
-                },
+            },
             'id': entity.id
-            })
-    return jsonify({
-        "code" : "/api/status/ok",
-        "status" : "200 OK",
-        "prefix" : query,
-        "result" : matches
         })
+    return jsonify({
+        "code": "/api/status/ok",
+        "status": "200 OK",
+        "prefix": query,
+        "result": matches
+    })

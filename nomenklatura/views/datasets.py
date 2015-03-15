@@ -1,6 +1,6 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
-from apikit import jsonify
+from apikit import jsonify, Pager
 
 from nomenklatura.core import db
 from nomenklatura.views.common import request_data
@@ -15,7 +15,8 @@ section = Blueprint('datasets', __name__)
 @section.route('/datasets', methods=['GET'])
 def index():
     datasets = Dataset.all()
-    return query_pager(datasets)
+    pager = Pager(datasets)
+    return jsonify(pager.to_dict())
 
 
 @section.route('/datasets', methods=['POST'])

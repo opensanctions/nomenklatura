@@ -1,8 +1,8 @@
 from flask.ext.script import Manager
 
-from nomenklatura.core import app, db
-from nomenklatura.model import *
-from nomenklatura import views
+from nomenklatura.core import db
+from nomenklatura.model import Entity
+from nomenklatura.views import app
 
 manager = Manager(app)
 
@@ -19,7 +19,6 @@ def postproc_20131119():
     for entity in Entity.query:
         print [entity]
         entity.normalized = normalize_text(entity.name)
-        #entity.attributes = entity.data
         db.session.add(entity)
         db.session.commit()
 

@@ -3,19 +3,9 @@ from StringIO import StringIO
 import csv
 
 from flask import Response, request
-# from formencode import htmlfill
-# from apikit import jsonify
 from apikit.args import arg_int
 
 from nomenklatura.exc import BadRequest, NotFound
-
-
-def get_limit(default=50, field='limit'):
-    return max(0, min(1000, arg_int(field, default=default)))
-
-
-def get_offset(default=0, field='offset'):
-    return max(0, arg_int(field, default=default))
 
 
 def request_data():

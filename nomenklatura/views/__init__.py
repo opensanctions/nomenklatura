@@ -2,12 +2,12 @@ import os
 
 from flask import render_template, request
 from flask import session
+from werkzeug.exceptions import Unauthorized
 from formencode import Invalid
 from apikit import jsonify
 
 from nomenklatura.core import app
 from nomenklatura.model import Account
-from nomenklatura.exc import Unauthorized
 from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
 from nomenklatura.views.datasets import section as datasets
