@@ -18,15 +18,6 @@ def createdb():
 
 
 @manager.command
-def postproc_20131119():
-    for entity in Entity.query:
-        print [entity]
-        entity.normalized = normalize(entity.name)
-        db.session.add(entity)
-        db.session.commit()
-
-
-@manager.command
 def flush(dataset):
     ds = Dataset.by_name(dataset)
     for alias in Alias.all_unmatched(ds):
