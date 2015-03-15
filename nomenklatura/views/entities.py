@@ -1,11 +1,8 @@
-from flask import Blueprint, request, url_for
-from flask import redirect
-from apikit import jsonify, Pager
-from apikit.args import arg_bool
+from flask import Blueprint, request, url_for, redirect
+from apikit import jsonify, Pager, arg_bool, request_data, obj_or_404
 
 from nomenklatura.core import db
-from nomenklatura.views.common import request_data, csvify
-from nomenklatura.views.common import dataset_filename, object_or_404
+from nomenklatura.views.common import csvify, dataset_filename
 from nomenklatura import authz
 from nomenklatura.model import Entity, Dataset
 
@@ -51,7 +48,7 @@ def create():
 
 @section.route('/entities/<int:id>', methods=['GET'])
 def view(id):
-    entity = object_or_404(Entity.by_id(id))
+    entity = obj_or_404(Entity.by_id(id))
     return jsonify(entity)
 
 
@@ -59,15 +56,15 @@ def view(id):
 def by_name(dataset):
     dataset = Dataset.find(dataset)
     name = request.args.get('name')
-    entity = object_or_404(Entity.by_name(dataset, name))
+    entity = obj_or_404(Entity.by_name(dataset, name))
     return jsonify(entity)
 
 
 @section.route('/entities/<int:id>/aliases', methods=['GET'])
 def aliases(id):
     entity = Entity.by_id(id)
-    pager = Pager(entity.aliases)
-    return jsonify(pager.to_dict(), id=id)
+    pager = Pager(entity.aliases, id=id)
+    return jsonify(pager.to_dict())
 
 
 @section.route('/entities/<id>', methods=['POST'])

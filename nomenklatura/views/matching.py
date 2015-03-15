@@ -1,8 +1,7 @@
 from random import randint
 
 from flask import Blueprint, request
-from apikit import jsonify, Pager
-from apikit.args import arg_int
+from apikit import jsonify, Pager, arg_int
 
 from nomenklatura.model.matching import find_matches
 from nomenklatura.model import Dataset, Entity

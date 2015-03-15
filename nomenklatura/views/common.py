@@ -2,23 +2,7 @@ from datetime import datetime
 from StringIO import StringIO
 import csv
 
-from flask import Response, request
-from apikit.args import arg_int
-
-from nomenklatura.exc import BadRequest, NotFound
-
-
-def request_data():
-    data = request.json
-    if data is None:
-        raise BadRequest()
-    return data
-
-
-def object_or_404(obj):
-    if obj is None:
-        raise NotFound()
-    return obj
+from flask import Response
 
 
 def csv_value(v):

@@ -1,8 +1,7 @@
 from flask import Blueprint, request  # , url_for, flash
 from formencode import Invalid
-from apikit import jsonify
+from apikit import jsonify, request_data
 
-from nomenklatura.views.common import request_data
 from nomenklatura import authz
 from nomenklatura.core import db
 from nomenklatura.model import Dataset, Upload

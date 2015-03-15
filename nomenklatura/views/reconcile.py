@@ -1,8 +1,7 @@
 import json
 
 from flask import Blueprint, request, url_for
-from apikit import jsonify
-from apikit.args import get_limit, get_offset
+from apikit import jsonify, get_limit, get_offset
 
 from nomenklatura.exc import BadRequest
 from nomenklatura.model import Dataset, Entity

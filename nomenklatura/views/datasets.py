@@ -1,10 +1,8 @@
 from flask import Blueprint, request, url_for
 from flask import redirect
-from apikit import jsonify, Pager
+from apikit import jsonify, Pager, request_data
 
 from nomenklatura.core import db
-from nomenklatura.views.common import request_data
-from nomenklatura.views.pager import query_pager
 from nomenklatura import authz
 from nomenklatura.model import Dataset
 from nomenklatura.model.matching import attribute_keys
