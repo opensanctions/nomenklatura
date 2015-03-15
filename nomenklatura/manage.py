@@ -1,10 +1,13 @@
 from flask.ext.script import Manager
+from flask.ext.assets import ManageAssets
 
 from nomenklatura.core import db
 from nomenklatura.model import Entity
 from nomenklatura.views import app
+from nomenklatura.assets import assets
 
 manager = Manager(app)
+manager.add_command('assets', ManageAssets(assets))
 
 
 @manager.command

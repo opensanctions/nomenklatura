@@ -6,19 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>nomenklatura</title>
-  <meta name="description" content="nomenklatura is a data cleaning service. It helps data users to remove duplicate and near-duplicate entity references from their data by creating canonical
-  entity lists with aliases.">
+  <meta name="description" content="nomenklatura is a data cleaning service. It helps data users to remove duplicate and near-duplicate entity references from their data by creating canonical entity lists with aliases.">
 
-  <link href='http://fonts.googleapis.com/css?family=Lato:400,300,700|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,300,700|Droid+Sans+Mono'
+    rel='stylesheet' type='text/css'>
 
-  {% assets filters="less,cssmin,cssrewrite", output="gen/style.css",
-      "vendor/bootstrap/less/bootstrap.less",
-      "vendor/font-awesome/less/font-awesome.less",
-      "style/style.less" %}
+  {% assets "css" %}
     <link type="text/css" href="{{ ASSET_URL }}" rel="stylesheet">
   {% endassets %}
 
-  <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico" type="image/x-icon" />
+  <link rel="shortcut icon" href="http://assets.pudo.org/img/favicon.ico"
+    type="image/x-icon" />
 </head>
 <body ng-controller="AppCtrl" ng-keyup="keyDownNotify($event)">
   <div id="page">
@@ -57,10 +55,15 @@
   </div>
   <footer>
     <div class="container">
-      <p><strong>nomenklatura.</strong> A data cleaning service that helps link and de-duplicate entities in raw data.<br/>
-      <a href="https://github.com/pudo/nomenklatura"><i class="icon-github"></i> GitHub</a>
+      <p><strong>nomenklatura.</strong>
+      A data cleaning service that helps link and de-duplicate entities in raw data.<br/>
+      <a href="https://github.com/pudo/nomenklatura">
+        <i class="icon-github"></i> GitHub
+      </a>
       &middot;
-      <a href="https://github.com/pudo/nomenklatura/issues">Report an issue</a>
+      <a href="https://github.com/pudo/nomenklatura/issues">
+        Report an issue
+      </a>
       &middot;
       <a href="https://pudo.org">pudo.org</a>
       &middot;
@@ -75,30 +78,12 @@
     <script id="{{path}}" type="text/ng-template">{{tmpl|safe}}</script>
   {% endfor %}
 
-  {% assets filters="uglifyjs", output="gen/app.js",
-        "vendor/jquery/dist/jquery.js",
-        "vendor/bootstrap/js/collapse.js",
+  {% assets "deps" %}
+    <script src="{{ ASSET_URL }}"></script>
+  {% endassets %}
 
-        "vendor/angular/angular.js",
-        "vendor/angular-route/angular-route.js",
-        "vendor/angular-bootstrap/ui-bootstrap-tpls.js",
-        "vendor/ngUpload/ng-upload.js",
-
-        "js/app.js",
-        "js/services/session.js",
-        "js/directives/pagination.js",
-        "js/directives/keybinding.js",
-        "js/directives/authz.js",
-        "js/controllers/app.js",
-        "js/controllers/import.js",
-        "js/controllers/home.js",
-        "js/controllers/docs.js",
-        "js/controllers/review.js",
-        "js/controllers/datasets.js",
-        "js/controllers/entities.js",
-        "js/controllers/profile.js"
-         %}
-      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% assets "app" %}
+    <script src="{{ ASSET_URL }}"></script>
   {% endassets %}
 </body>
 </html>
