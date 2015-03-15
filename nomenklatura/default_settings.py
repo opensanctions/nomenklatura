@@ -1,5 +1,6 @@
 DEBUG = True
 SECRET_KEY = 'no'
+APP_NAME = 'nomenklatura'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///master.sqlite3'
 CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
