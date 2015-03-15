@@ -28,7 +28,7 @@ class Account(db.Model):
             'id': self.id,
             'github_id': self.github_id,
             'login': self.login,
-            'created_at': self.created_at, 
+            'created_at': self.created_at,
             'updated_at': self.updated_at,
             }
 
@@ -58,5 +58,3 @@ class Account(db.Model):
         self.login = data['login']
         self.email = data.get('email')
         db.session.add(self)
-
-
