@@ -1,9 +1,8 @@
 import re
-# import json
 from uuid import uuid4
 
 from formencode import FancyValidator, Invalid
-# from sqlalchemy.types import TypeDecorator, VARCHAR
+
 
 VALID_NAME = re.compile(r"^[a-zA-Z0-9_\-]{2,1999}$")
 

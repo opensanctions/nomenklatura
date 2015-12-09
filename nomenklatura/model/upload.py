@@ -18,7 +18,6 @@ class Upload(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
                            onupdate=datetime.utcnow)
 
-
     def to_dict(self):
         data = {
             'id': self.id,

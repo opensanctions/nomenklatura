@@ -1,24 +1,24 @@
-function AppCtrl($scope, $window, $routeParams, $location, $modal, session) {
-    $scope.session = {logged_in: false};
 
-    session.get(function(data) {
-        $scope.session = data;
-    });
+nomenklatura.controller('AppCtrl', ['$scope', '$window', '$routeParams', '$location', '$modal', 'session',
+		function($scope, $window, $routeParams, $location, $modal, session) {
+	$scope.session = {logged_in: false};
 
-    $scope.keyDownNotify = function($event) {
-        //console.log($event);
-        if(angular.lowercase($event.target.tagName) == 'body') {
-            $scope.$broadcast('key-pressed', $event.keyCode);
-            //$event.preventDefault();
-        }
-    };
+	session.get(function(data) {
+		$scope.session = data;
+	});
 
-    $scope.showProfile = function() {
-        var d = $modal.open({
-            templateUrl: '/static/templates/profile.html',
-            controller: 'ProfileCtrl'
-        });
-    };
-}
+	$scope.keyDownNotify = function($event) {
+		//console.log($event);
+		if(angular.lowercase($event.target.tagName) == 'body') {
+			$scope.$broadcast('key-pressed', $event.keyCode);
+			//$event.preventDefault();
+		}
+	};
 
-AppCtrl.$inject = ['$scope', '$window', '$routeParams', '$location', '$modal', 'session'];
+	$scope.showProfile = function() {
+		var d = $modal.open({
+			templateUrl: '/static/templates/profile.html',
+			controller: 'ProfileCtrl'
+		});
+	};
+}]);

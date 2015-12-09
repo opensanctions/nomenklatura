@@ -1,14 +1,14 @@
-function ProfileCtrl($scope, $location, $modalInstance, session) {
-    $scope.session = {logged_in: false};
 
-    session.get(function(data) {
-        $scope.session = data;
-    });
+nomenklatura.controller('ProfileCtrl', ['$scope', '$location', '$modalInstance', 'session', 
+		function($scope, $location, $modalInstance, session) {
+	$scope.session = {logged_in: false};
 
-    $scope.cancel = function() {
-        $modalInstance.dismiss('cancel');
-    };
-    
-}
+	session.get(function(data) {
+		$scope.session = data;
+	});
 
-ProfileCtrl.$inject = ['$scope', '$location', '$modalInstance', 'session'];
+	$scope.cancel = function() {
+		$modalInstance.dismiss('cancel');
+	};
+	
+}]);

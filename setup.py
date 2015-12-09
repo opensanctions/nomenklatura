@@ -5,8 +5,7 @@ setup(
     version='0.1',
     description="Make record linkages on the web.",
     long_description='',
-    classifiers=[
-        ],
+    classifiers=[],
     keywords='data mapping identity linkage record',
     author='Open Knowledge Foundation',
     author_email='info@okfn.org',
@@ -19,6 +18,9 @@ setup(
     install_requires=[
     ],
     tests_require=[],
-    entry_points=\
-    """ """,
+    entry_points={
+        'console_scripts': [
+            'nk = nomenklatura.manage:main'
+        ]
+    }
 )

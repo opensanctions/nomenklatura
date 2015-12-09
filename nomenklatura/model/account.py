@@ -14,14 +14,14 @@ class Account(db.Model):
     api_key = db.Column(db.Unicode, default=make_key)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
-            onupdate=datetime.utcnow)
+                           onupdate=datetime.utcnow)
 
     datasets = db.relationship('Dataset', backref='owner',
                                lazy='dynamic')
     uploads = db.relationship('Upload', backref='creator',
-                               lazy='dynamic')
+                              lazy='dynamic')
     entities_created = db.relationship('Entity', backref='creator',
-                               lazy='dynamic')
+                                       lazy='dynamic')
 
     def to_dict(self):
         return {
@@ -30,7 +30,7 @@ class Account(db.Model):
             'login': self.login,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            }
+        }
 
     @classmethod
     def by_id(cls, id):
