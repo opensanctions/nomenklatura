@@ -5,10 +5,10 @@ from formencode import Schema, All, Invalid, validators
 from formencode import FancyValidator
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload_all, backref
-from sqlalchemy.dialects.postgresql import HSTORE
+from sqlalchemy.dialects.postgresql import JSON
+from werkzeug.exceptions import NotFound
 
 from nomenklatura.core import db
-from nomenklatura.exc import NotFound
 
 
 class EntityState():
@@ -66,7 +66,7 @@ class Entity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode)
     normalized = db.Column(db.Unicode)
-    attributes = db.Column(HSTORE)
+    attributes = db.Column(JSON)
     reviewed = db.Column(db.Boolean, default=False)
     invalid = db.Column(db.Boolean, default=False)
     canonical_id = db.Column(db.Integer,

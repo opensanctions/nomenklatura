@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from werkzeug.exceptions import NotFound
 from formencode import Schema, All, Invalid, validators
 
 from nomenklatura.core import db
 from nomenklatura.model.common import Name, FancyValidator
-from nomenklatura.exc import NotFound
 
 
 class AvailableDatasetName(FancyValidator):

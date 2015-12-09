@@ -1,7 +1,7 @@
 from datetime import datetime
 from tablib import Dataset as TablibDataset
+from werkzeug.exceptions import NotFound
 
-from nomenklatura.exc import NotFound
 from nomenklatura.core import db
 
 
