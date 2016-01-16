@@ -22,7 +22,6 @@ def index():
         entities = entities.filter(Entity.name.ilike(query))
 
     # TODO, other filters.
-
     format = request.args.get('format', 'json').lower().strip()
     if format == 'csv':
         res = csvify(entities)
