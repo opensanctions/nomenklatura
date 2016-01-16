@@ -8,7 +8,6 @@ from apikit import jsonify
 
 from nomenklatura.core import app
 from nomenklatura.model import Account
-from nomenklatura.views.upload import section as upload
 from nomenklatura.views.sessions import section as sessions
 from nomenklatura.views.datasets import section as datasets
 from nomenklatura.views.entities import section as entities
@@ -62,7 +61,6 @@ def handle_invalid(exc):
     return jsonify(body, status=400)
 
 
-app.register_blueprint(upload, url_prefix='/api/2')
 app.register_blueprint(reconcile, url_prefix='/api/2')
 app.register_blueprint(sessions, url_prefix='/api/2')
 app.register_blueprint(datasets, url_prefix='/api/2')

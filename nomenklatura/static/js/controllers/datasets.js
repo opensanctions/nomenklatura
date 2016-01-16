@@ -49,16 +49,6 @@ nomenklatura.controller('DatasetsViewCtrl', ['$scope', '$routeParams', '$locatio
 		});
 	};
 
-	$scope.uploadFile = function(){
-		var d = $modal.open({
-			templateUrl: '/static/templates/upload.html',
-			controller: 'UploadCtrl',
-			resolve: {
-				dataset: function () { return $scope.dataset; }
-			}
-		});
-	};
-
 	$scope.createEntity = function(form) {
 		$scope.new_entity.dataset = $scope.dataset.name;
 		$scope.new_entity.attributes = {};

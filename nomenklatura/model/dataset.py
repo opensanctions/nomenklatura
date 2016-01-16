@@ -62,8 +62,6 @@ class Dataset(db.Model):
 
     entities = db.relationship('Entity', backref='dataset',
                                lazy='dynamic')
-    uploads = db.relationship('Upload', backref='dataset',
-                              lazy='dynamic')
 
     def to_dict(self):
         from nomenklatura.model.entity import Entity
