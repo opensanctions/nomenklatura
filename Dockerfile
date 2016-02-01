@@ -1,25 +1,20 @@
-FROM dockerfile/python
+FROM python:2.7.10
 MAINTAINER robbi5 <robbi5@robbi5.de>
 
-RUN \
-  add-apt-repository -y ppa:chris-lea/node.js && \
-  apt-get update && \
-  apt-get install -y nodejs libpq-dev && \
-  npm install -g bower less uglify-js
+RUN apt-get update -qq && \
+  apt-get install -y libpq-dev curl git python-pip python-virtualenv build-essential python-dev \
+        libxml2-dev libxslt1-dev libpq-dev apt-utils ca-certificates
 
-RUN virtualenv /env
-ADD requirements.txt /app/
-RUN /env/bin/pip install -r /app/requirements.txt
+RUN curl --silent --location https://deb.nodesource.com/setup_0.12 | sh
+RUN apt-get install -y nodejs && curl -L https://www.npmjs.org/install.sh | sh
+RUN npm install -g bower uglifyjs less
 
-ADD . /app
+
+COPY . /app
 WORKDIR /app
-
-RUN /env/bin/python setup.py develop
-
-VOLUME /app
-
+RUN pip install -r /app/requirements.txt
+RUN pip install -e /app &&  rm -rf .git && bower --allow-root install
 ENV NOMENKLATURA_SETTINGS /app/heroku_settings.py
-
 CMD ["/app/contrib/docker-run.sh"]
 
 EXPOSE 8080
