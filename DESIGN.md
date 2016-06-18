@@ -76,7 +76,7 @@ AliasStatement:
 
 ## Reading
 
-* https://dedupe.readthedocs.org/en/latest/
+* https://dedupe.readthedocs.io/en/latest/
 * https://github.com/OpenRefine/OpenRefine/wiki/Reconcilable-Data-Sources
 * https://github.com/OpenRefine/OpenRefine/wiki/Clustering-In-Depth
 * https://github.com/OpenRefine/OpenRefine/wiki/Reconciliation-Service-API
