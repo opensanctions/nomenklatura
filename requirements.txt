@@ -14,6 +14,6 @@ oauth2==1.5.211
 psycopg2==2.6
 python-Levenshtein==0.12.0
 pytz==2014.10
-requests==2.6.0
+requests==2.20.0
 six==1.9.0
 webassets==0.10.1
