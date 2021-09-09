@@ -6,3 +6,4 @@ _store/*
 .env
 settings.py
 .mypy_cache
+tests/fixtures/donations.frag.ijson

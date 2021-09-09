@@ -1,0 +1,71 @@
+donations:
+  queries:
+    - csv_url: donations.csv
+      entities:
+        party:
+          schema: Organization
+          key: Party
+          properties:
+            name:
+              column: Party
+        donor:
+          schema: LegalEntity
+          key: Donor
+          properties:
+            name:
+              column: Donor
+            country:
+              column: Country
+            addressEntity:
+              entity: address
+        address:
+          schema: Address
+          key:
+            - Street
+            - City
+            - Country
+          properties:
+            city:
+              column: City
+            street:
+              column: Street
+            country:
+              column: Country
+        donation:
+          schema: Payment
+          key:
+            - Party
+            - Donor
+            - DonationDate
+            - DonationEUR
+          properties:
+            payer:
+              entity: donor
+            beneficiary:
+              entity: party
+            date:
+              column: DonationDate
+              format: "%Y-%m-%d"
+            amountEur:
+              column: DonationEUR
+    - csv_url: donations.csv
+      filters:
+        DonorType: ORG
+      entities:
+        donor:
+          schema: Organization
+          key: Donor
+    - csv_url: donations.csv
+      filters:
+        DonorType: COMPANY
+      entities:
+        donor:
+          schema: Company
+          key: Donor
+    - csv_url: donations.csv
+      filters:
+        DonorType: PERSON
+      entities:
+        donor:
+          schema: Person
+          key: Donor

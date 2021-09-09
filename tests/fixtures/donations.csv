@@ -1,0 +1,293 @@
+"Party","DonationEUR","DonorType","Donor","Street","City","Country","DonationDate","ReportingDate"
+"MLPD",100000,"PERSON","Frau Lina Dachner","Schillerstraße 19","76135 Karlsruhe","Deutschland",2011-12-29,2011-12-30
+"MLPD","113969.15","PERSON","Frau Dr. Irene Nierstenhöfer","Auf der Altstätte 1C","44369 Dortmund","Deutschland",2011-12-28,2011-12-30
+"FDP ",80000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2011-12-22,2011-12-23
+"CSU ",320000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2011-12-21,2011-12-23
+"GRÜNE",60000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2011-10-07,2011-10-13
+"SPD",60000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2011-10-07,2011-10-12
+"CDU",100000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2011-10-07,2011-10-11
+"CDU ",60000,"ORG","Verband der Metall- und Elektroindustrie Nordrhein-Westfalen e.V.","Uerdinger Str. 58-62","40474 Düsseldorf ","Deutschland",2011-08-31,2011-09-02
+"SPD ",150000,"COMPANY","Daimler AG",,"70546 Stuttgart ","Deutschland",2011-08-10,2011-08-12
+"CDU ",150000,"COMPANY","Daimler AG",,"70546 Stuttgart ","Deutschland",2011-08-10,2011-08-10
+"GRÜNE",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2011-07-01,2011-07-05
+"CDU ",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2011-07-01,2011-07-05
+"CDU ",100000,"COMPANY","Berenberg Bank Joh. Berenberg, Gossler & Co.","Neuer Jungfernstieg 20","20354 Hamburg","Deutschland",2011-07-01,2011-07-04
+"FDP ",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2011-07-01,2011-07-04
+"SPD ",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2011-07-01,2011-07-01
+"CSU ",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2011-06-30,2011-07-01
+"FDP",50500,"COMPANY","REUTAX AG","Kurfürsten-Anlage 34-36","69115 Heidelberg","Deutschland",2011-03-04,2011-03-11
+"SPD ",95338,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2011-02-23,2011-02-23
+"FDP ",65129,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2011-02-23,2011-02-23
+"CDU ",56129,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2011-02-23,2011-02-24
+"CSU ",142332,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2011-02-23,2011-02-24
+"FDP",75000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2010-12-23,2011-01-06
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2010-12-28,2010-12-28
+"FDP ",80000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2010-12-07,2010-12-08
+"CSU ",300000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2010-12-06,2010-11-07
+"FDP ",60000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2010-11-09,2010-11-10
+"CDU ",100000,"COMPANY","Berenberg Bank Joh. Berenberg, Gossler & Co.","Neuer Jungfernstieg 20","20354 Hamburg","Deutschland",2010-11-05,2010-11-08
+"CDU ",100000,"COMPANY","Adolf Würth GmbH & Co. KG","Reinhold-Würth-Straße 12-17","74653 Künzelsau","Deutschland",2010-10-27,2010-10-29
+"DVU ",1030898,"COMPANY","Dr. Gerhard Frey","Paosostraße 2","81243 München","Deutschland",2010-10-20,2010-10-25
+"NPD ",150225,"ORG","Verein zur Pflege nationaler Politik e.V.","Grüntenweg 14","72622 Nürtingen","Deutschland",2010-09-15,2010-09-29
+"CDU ",160000,"ORG","Verband der Metall- und Elektroindustrie Nordrhein-Westfalen e.V.","Uerdinger Str. 58-62","40474 Düsseldorf ","Deutschland",2010-08-05,2010-08-27
+"FDP ",65000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main ","Deutschland",2010-08-17,2010-08-18
+"GRÜNE",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2010-08-12,2010-08-16
+"CDU ",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2010-08-13,2010-08-13
+"FDP ",50001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2010-08-11,2010-08-12
+"SPD ",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2010-08-12,2010-08-12
+"CSU ",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München ","Deutschland",2010-07-08,2010-07-13
+"FDP ",75000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main ","Deutschland",2010-07-06,2010-07-12
+"LINKE",100000,"PERSON","Herr Dr. Friedhelm Holz","Fritz-Reuter-Weg 7","49214 Bad Rothenfelde ","Deutschland",2010-05-27,2010-06-03
+"LINKE",75000,"PERSON","Herr Dr. Friedhelm Holz","Fritz-Reuter-Weg 7","49214 Bad Rothenfelde ","Deutschland",2010-05-21,2010-06-02
+"SPD ",150000,"COMPANY","Daimler AG",,"70546 Stuttgart ","Deutschland",2010-05-11,2010-05-17
+"CDU ",150000,"COMPANY","Daimler AG",,"70546 Stuttgart ","Deutschland",2010-05-10,2010-05-12
+"FDP ",60000,"ORG","Verband der Metall- und Elektroindustrie Nordrhein-Westfalen e.V.","Uerdinger Str. 58-62","40474 Düsseldorf ","Deutschland",2010-04-12,2010-04-19
+"FDP ",55886,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2010-02-26,2010-02-26
+"SPD ",140034,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2010-02-25,2010-02-26
+"CDU ",133236,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2010-02-24,2010-02-25
+"CSU ",148718,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2010-02-25,2010-02-25
+"CDU ",125000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main ","Deutschland",2010-02-10,2010-02-12
+"CDU ",75000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main ","Deutschland",2010-02-10,2010-02-12
+"CDU",100000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2009-12-28,2009-12-29
+"CDU",150000,"PERSON","Frau Johanna Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2009-10-01,2009-10-02
+"CDU",150000,"PERSON","Herr Stefan Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2009-10-01,2009-10-02
+"CDU",150000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2009-10-01,2009-10-02
+"FDP",300000,"COMPANY","Substantia AG","Berliner Allee 21","40212 Düsseldorf","Deutschland",2009-10-13,2009-10-19
+"NPD",140500,"PERSON","Herr Robert Weber","Hanfsack 4","98634 Mehmels","Deutschland",2009-09-09,2009-09-14
+"FDP",50500,"COMPANY","REUTAX AG","Kurfürsten-Anlage 34 - 36","69115 Heidelberg","Deutschland",2009-09-22,2009-09-24
+"CDU",261800,"COMPANY","YOC AG","Karl-Liebknecht-Straße 1","10178 Berlin","Deutschland",2009-08-05,2009-08-05
+"CDU",60001,"COMPANY","Allianz Versicherungs-AG","Königinstraße 28","80802 München","Deutschland",2009-08-04,2009-08-07
+"CDU",200000,"PERSON","Herr Prof. Dr. Hermann Schnabel","Nordkanalstraße 28","20097 Hamburg","Deutschland",2009-08-06,2009-08-07
+"CDU",150000,"COMPANY","FERRING Arzneimittel GmbH","Fabrikstraße 7","24103 Kiel","Deutschland",2009-08-06,2009-08-07
+"CDU",60000,"COMPANY","Märkischer Arbeitgeberverband e. V.","Körnerstraße 25","58095 Hagen","Deutschland",2009-07-13,2009-08-11
+"CDU",120000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2009-08-11,2009-08-18
+"CDU",100000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2009-08-11,2009-08-18
+"FDP",50001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2009-07-31,2009-08-03
+"FDP",300000,"COMPANY","Substantia AG","Berliner Allee 21","40212 Düsseldorf","Deutschland",2009-08-05,2009-08-06
+"SPD",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München","Deutschland",2009-08-04,2009-08-05
+"CSU",70000,"ORG","Verein der Bayerischen Chemischen Industrie e.V.","Innstraße 15","81679 München","Deutschland",2009-08-04,2009-08-05
+"GRÜNE",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München","Deutschland",2009-08-03,2009-08-04
+"CDU",106000,"COMPANY","Berenberg Bank Joh. Berenberg, Gossler & Co.","Neuer Jungfernstieg 20","20354 Hamburg","Deutschland",2009-07-08,2009-07-08
+"CDU",70000,"PERSON","Dr.-Ing. E. h. Martin Herrenknecht","Waldweg 9","77963 Schwanau","Deutschland",2009-07-10,2009-07-15
+"CDU",100000,"ORG","Verband der Chemischen Industrie e.V.","Karlstraße 21","60329 Frankfurt am Main","Deutschland",2009-07-30,2009-07-31
+"FDP",150000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2009-06-30,2009-07-06
+"FDP",100000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2009-06-30,2009-07-06
+"FDP",150000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2009-07-07,2009-07-09
+"CSU",116317,"COMPANY","Firma Scheffel Grund GmbH","Lilienthalallee 25","80939 München","Deutschland",2009-07-01,2010-07-14
+"CSU",600000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5","80333 München","Deutschland",2009-07-03,2009-07-06
+"CSU",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München","Deutschland",2009-07-29,2009-07-30
+"AGFG",103135,"COMPANY","Dr. Rath Education Services B.V.","Sourethweg 9","64 22 PC Heerlen","Niedlerlande",2009-06-27,2009-07-09
+"CDU",200000,"PERSON","Herr Prof. Dr. Hermann Schnabel","Nordkanalstraße 28","20097 Hamburg","Deutschland",2009-06-23,2009-06-25
+"CDU",170000,"ORG","Verband der Metall- und Elektroindustrie Nordrhein-Westfalen e.V.","Uerdinger Straße 58","40474 Düsseldorf","Deutschland",2009-06-10,2009-06-15
+"CDU",150000,"COMPANY","Daimler AG","Mercedesstraße 137","70327 Stuttgart","Deutschland",2009-06-03,2009-06-05
+"FDP",200000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60325 Frankfurt am Main","Deutschland",2009-06-22,2009-06-25
+"SPD",150000,"COMPANY","Daimler AG",,"70546 Stuttgart","Deutschland",2009-06-02,2009-06-03
+"FDP",250000,"COMPANY","Substantia AG","Berliner Allee 21","40212 Düsseldorf","Deutschland",2009-04-14,2009-04-20
+"CDU",60000,"COMPANY","Bertelsmann AG","Carl-Bertelsmann-Straße 270","33311 Gütersloh","Deutschland",2009-04-09,2009-04-15
+"FDP",50500,"COMPANY","REUTAX AG","Kurfürsten-Anlage 34-36","69115 Heidelberg","Deutschland",2009-04-16,2009-04-24
+"AGFG",83750,"COMPANY","Dr. Rath Health Programs B.V.","Sourethweg 9","6422 PC Heerlen","Niedlerlande",2008-12-31,2009-05-07
+"CDU",200000,"COMPANY","Deutsche Bank AG","Theodor-Heuss-Allee 70","60486 Frankfurt am Main","Deutschland",2009-03-20,2009-03-24
+"CDU",100000,"PERSON","Herr Christoph Alexander Kahl","Pferdmengesstraße 3","50968 Köln","Deutschland",2009-03-03,2009-03-05
+"SPD",151345,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München","Deutschland",2009-02-20,2009-02-23
+"CSU",146776,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München","Deutschland",2009-02-18,2009-02-19
+"CDU",110209,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München","Deutschland",2009-02-23,2009-02-24
+"FDP",54043,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München","Deutschland",2009-02-16,2009-02-26
+"CDU",200000,"COMPANY","Clou Container Leasing GmbH","Harvestehuder Weg 18","20148 Hamburg","Deutschland",2009-01-13,2009-01-14
+"CDU",70000,"COMPANY","Evonik Industries AG","Rellinghauser Straße 1-11","45128 Essen","Deutschland",2009-01-28,2009-01-28
+"SPD",100000,"COMPANY","Evonik Industries AG","Rellinghauser Straße 1-11","45128 Essen","Deutschland",2009-01-27,2009-01-28
+"AGFG",77750,"COMPANY","Dr. Rath Health Programs B.V.","Sourethweg 9","6422 PC Heerlen","Niedlerlande",2008-12-18,2009-01-13
+"CDU",100000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG ","Münchener Straße 1 ","60329 Frankfurt am Main ","Deutschland",2008-12-10,2008-12-11
+"CDU",100000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24 ","70597 Stuttgart","Deutschland",2008-12-19,2008-12-30
+"CDU",100000,"COMPANY","Schoeller Holdings Ltd. ","Dodekanison Street","Limassol 3507","Zypern",2008-12-17,2009-01-07
+"CDU",100000,"COMPANY","Berenberg Bank Joh. Berenberg, Gossler & Co.","Neuer Jungfernstieg 20 ","20354 Hamburg","Deutschland",2008-12-23,2009-01-06
+"CDU",93489,"COMPANY","Gießner Bauunternehmung GmbH ","Bruno-Bürgel-Weg 100 ","12439 Berlin","Deutschland",2008-12-31,2009-01-07
+"SPD",100000,"COMPANY","Deutsche Bank AG ","Theodor-Heuss-Allee 70","60486 Frankfurt am Main","Deutschland",2008-12-08,2008-12-10
+"FDP",200000,"COMPANY","Deutsche Bank AG ","Taunusanlage 12","60325 Frankfurt am Main","Deutschland",2008-12-05,2008-12-11
+"FDP",100000,"COMPANY","Allfinanz Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2008-12-15,2008-12-17
+"CSU",57000,"ORG","Verein der Bayerischen Chemischen Industrie e.V.","Innstraße 15 ","81679 München","Deutschland",2008-12-30,2009-01-05
+"AGFG ",69750,"COMPANY","Dr. Rath Health Programs B.V.","Sourethweg 9","6422 PC Heerlen ","Niedlerlande",2008-11-19,2008-11-28
+"FDP",250000,"COMPANY","VM Holding Aktiengesellschaft","Berliner Allee 121","40212 Düsseldorf ","Deutschland",2008-10-15,2008-10-20
+"CDU",200000,"COMPANY","Deutsche Bank AG","Theodor-Heuss-Allee 70 ","60486 Frankfurt am Main ","Deutschland",2008-10-06,2008-10-08
+"AGFG ",88591,"COMPANY","Dr. Rath Education Services B.V.","Sourethweg 9","6422 PC Heerlen ","Niedlerlande",2008-10-29,2008-10-31
+"AGFG",61750,"COMPANY","Dr. Rath Health Programs B.V. ","Sourethweg 9 ","6422 PC Heerlen","Niedlerlande",2008-10-10,2008-10-21
+"CSU",430000,"COMPANY","Clair Immobilien Deutschland GmbH","Pacellistraße 4","80333 München","Deutschland",2008-09-22,2008-09-26
+"CSU",390000,"COMPANY","Mercator Verwaltung GmbH","Promenadeplatz 12","80333 München ","Deutschland",2008-09-22,2008-09-26
+"CDU",71400,"COMPANY","EGGERT GROUP GmbH & Co. KG","Benrather Straße 18-20","40213 Düsseldorf ","Deutschland",2008-09-23,2008-10-06
+"CDU",100000,"COMPANY","Bankhaus Sal. Oppenheim Jr. & Cie KGaA","Unter Sachsenhausen 4","50667 Köln","Deutschland",2008-08-05,2008-08-05
+"CDU",70000,"ORG","Verband der Metall- und Elektroindustrie Nordrhein-Westfalen e.V.","Uerdinger Straße 56-62","40474 Düsseldorf","Deutschland",2008-07-30,2008-08-12
+"FDP",100000,"COMPANY","Bankhaus Sal. Oppenheim Jr. & Cie KGaA","Unter Sachsenhausen 4","50667 Köln ","Deutschland",2008-08-01,2008-08-05
+"MLPD",70000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2008-06-24,2008-07-10
+"CSU",60001,"COMPANY","Allianz SE ","Königinstraße 28","80802 München","Deutschland",2008-07-15,2008-07-16
+"GRÜNE",60001,"COMPANY","Allianz SE, Repräsentanz","Pariser Platz 6","10117 Berlin","Deutschland",2008-07-15,2008-07-16
+"FDP",50001,"COMPANY","Allianz Versicherungs-AG","Königinstraße 28","80802 München","Deutschland",2008-07-14,2008-07-17
+"SPD",60001,"COMPANY","Allianz SE","Königinstraße 28 ","80802 München","Deutschland",2008-07-15,2008-07-17
+"CDU",60001,"COMPANY","Allianz SE","Königinstraße 28 ","80802 München","Deutschland",2008-07-15,2008-07-18
+"CDU",150000,"COMPANY","Daimler AG ",,"70546 Stuttgart","Deutschland",2008-06-17,2008-06-18
+"SPD",150000,"COMPANY","Daimler AG",,"70546 Stuttgart","Deutschland",2008-06-17,2008-06-19
+"AGFG",50500,"COMPANY","Dr. Rath Health Programs B.V.","Sourethweg 9","6422 PC Heerlen","Niedlerlande",2008-05-30,2008-06-20
+"MLPD",330000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2008-05-20,2008-06-20
+"FDP",75000,"PERSON","Herr Dr. Cornelius Boersch","Dufourstraße 121","CH-9001 St.Gallen","Deutschland",2008-05-20,2008-05-20
+"CSU",540000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2008-04-02,2008-04-04
+"FDP",100000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2008-04-04,2008-04-09
+"CDU",100000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main","Deutschland",2008-03-20,2008-03-26
+"SPD",100000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main","Deutschland",2008-03-25,2008-03-28
+"CDU",100000,"PERSON","Herr Prof. Dr. Hermann Schnabel","Nordkanalstraße 28 ","20097 Hamburg","Deutschland",2008-01-31,2008-02-08
+"CDU",100000,"PERSON","Herr Prof. Dr. Schnabel","Nordkanalstraße 28 ","20097 Hamburg","Deutschland",2008-02-01,2008-02-11
+"CDU",71565,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2008-02-26,2008-02-27
+"SPD",141328,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2008-02-21,2008-02-22
+"CSU",134742,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2008-02-21,2008-02-22
+"FDP",61146,"COMPANY","Bayerische Motorenwerke AG",,"Berlin / Bonn","Deutschland",2008-02-14,2008-02-25
+"AGFG",97000,"COMPANY","Matthias Rath Limited","414 Montrose Avenue","Slough, Berkshire, SL 1 4 TJ","Großbritannien",2007-08-23,2008-02-14
+"CDU",100000,"COMPANY","Clou Container Leasing GmbH","Harvestehuder Weg 18","20148 Hamburg ","Deutschland",2008-01-10,2008-01-16
+"CDU",70000,"COMPANY","Evonik Industries AG","Rellinghauser Straße 1-11","45128 Essen","Deutschland",2008-01-21,2008-01-23
+"CDU",75000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2008-01-28,2008-01-29
+"CDU",75000,"PERSON","Frau Johanna Quandt ","Seedammweg 55","61352 Bad Homburg","Deutschland",2008-01-28,2008-01-29
+"CDU",75000,"PERSON","Herr Stefan Quandt ","Seedammweg 55","61352 Bad Homburg","Deutschland",2008-01-28,2008-01-29
+"SPD",100000,"COMPANY","Evonik Industries AG","Rellinghauser Straße 1-11","45128 Essen","Deutschland",2008-01-18,2008-01-22
+"CDU",75000,"COMPANY","Reederei Claus-Peter Offen GmbH & Co. ","Bleichenbrücke 10 ","20354 Hamburg","Deutschland",2007-11-15,2007-11-19
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V. ","Löffelstraße 22-24 ","70597 Stuttgart","Deutschland",2007-12-21,2007-12-27
+"AGFG",60000,"COMPANY","Dr. Rath Education Services B.V.","Sourethweg 9 ","NL-6422 PC Heerlen","Deutschland",2007-02-08,2007-11-30
+"AGFG",150000,"COMPANY","Dr. Rath Health Programms B.V.","Sourethweg 9 ","NL-6422 PC Heerlen","Deutschland",2007-10-08,2007-11-30
+"AGFG",55000,"COMPANY","Matthias Rath Limited ","414 Montrose Avenue","Slough Berkshire, SL 1 4TJ","Großbritannien",2007-10-30,2007-11-30
+"FDP",90000,"PERSON","Herr Kurt Fordan ","Adalbert-Stifter-Straße 41 ","81925 München","Deutschland",2007-12-06,2007-12-17
+"FDP",100000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24 ","70597 Stuttgart","Deutschland",2007-12-21,2007-12-27
+"FDP",54000,"COMPANY","Deutsche Vermögensberatung AG","Münchener Straße 1","60329 Frankfurt am Main","Deutschland",2007-12-28,2008-01-09
+"FDP",200000,"COMPANY","Deutsche Bank AG ","Taunusanlage 12 ","60325 Frankfurt/Main","Deutschland",2007-10-18,2007-10-22
+"CDU",65000,"PERSON","Frau Ann Kathrin Linsenhoff ","Schwalbacher Straße ","61476 Kronberg","Deutschland",2007-10-22,2007-10-24
+"CSU",100000,"PERSON","Herr Michael Stoschek ","Schleifschrot ","96483 Ahorn","Deutschland",2007-09-25,2007-10-31
+"CDU",200000,"COMPANY","Deutsche Bank AG ","Taunusanlage 12 ","60325 Frankfurt/Main","Deutschland",2007-08-10,2007-08-10
+"AGFG",60000,"COMPANY","Dr. Rath Education Services B.V.","Sourethweg 9 ","NL-6422 PC Heerlen","Deutschland",2007-02-08,2007-08-07
+"AGFG",100000,"COMPANY","Dr. Rath Health Programms B.V.","Sourethweg 9 ","NL-6422 PC Heerlen","Deutschland",2007-05-31,2007-08-07
+"CDU",200000,"PERSON","Herr Prof. Dr. Hermann Schnabel","Nordkanalstraße 28","20097 Hamburg","Deutschland",2007-07-11,2007-07-16
+"CDU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2007-07-18,2007-07-20
+"CSU",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München","Deutschland",2007-07-18,2007-07-20
+"SPD",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2007-07-18,2007-07-20
+"FDP",50001,"COMPANY","Allianz Versicherungs-AG","Königinstraße 28","80802 München","Deutschland",2007-07-17,2007-07-20
+"GRÜNE",60001,"COMPANY","Allianz SE","Königinstraße 28","80802 München","Deutschland",2007-07-18,2007-07-20
+"CDU",100000,"COMPANY","CAPITAL Lease GmbH","Harvestehuder Weg 18","20148 Hamburg","Deutschland",2007-06-05,2007-06-05
+"CSU",330000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2007-05-18,2007-05-22
+"CDU",100000,"ORG","Verband der Chemischen Industrie e.V.","Karlstraße 21","60329 Frankfurt am Main","Deutschland",2007-05-25,2007-05-30
+"FDP",75000,"ORG","Verband der Chemischen Industrie e.V.","Karlstraße 21","60329 Frankfurt am Main","Deutschland",2007-05-29,2007-05-31
+"MLPD",200000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2007-02-27,2007-03-05
+"CDU",150000,"COMPANY","Daimler Chrysler AG","Epplestra?e 225","70546 Stuttgart ","Deutschland",2007-03-12,2007-03-14
+"SPD",150000,"COMPANY","Daimler Chrysler AG","Epplestra?e 225","70546 Stuttgart ","Deutschland",2007-03-12,2007-03-19
+"AGFG",224030,"COMPANY","Dr. Rath Education Services B.V.","Sourethweg 9 ","6422 PC Heerlen","Niedlerlande",2006-12-21,2007-02-01
+"CDU",125000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2007-02-01,2007-02-02
+"SPD",64134,"PERSON","Herr Ralf Pollmeier","Pferdsdorferweg 6","99831 Creuzburg","Deutschland",2006-12-31,2007-02-06
+"CDU",94214,"COMPANY","Bayerische Motorenwerke (BMW) AG","Petuelring 130","80788 München ","Deutschland",2006-12-31,2007-02-21
+"CSU",95321,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2006-12-31,2007-02-21
+"SPD",72380,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2006-12-31,2007-02-22
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart ","Deutschland",2006-12-08,2006-12-11
+"FDP",100000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2006-12-08,2006-12-12
+"CDU",100000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main","Deutschland",2006-11-14,2006-11-15
+"SPD",75000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main","Deutschland",2006-11-15,2006-11-17
+"FDP",60000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main","Deutschland",2006-11-14,2006-11-20
+"FDP",200000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60325 Frankfurt am Main","Deutschland",2006-10-20,2006-10-23
+"SPD",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2006-08-29,2006-08-31
+"CDU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2006-08-29,2006-09-04
+"CSU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2006-08-29,2006-09-05
+"GRÜNE",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2006-08-29,2006-08-31
+"FDP",50001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2006-08-29,2006-08-31
+"SPD",150000,"COMPANY","E.ON AG","E.ON Platz 1","40479 Düsseldorf","Deutschland",2006-07-21,2006-07-25
+"CDU",100000,"COMPANY","E.ON AG","E.ON Platz 1","40479 Düsseldorf","Deutschland",2006-07-21,2006-07-26
+"CDU",200000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60325 Frankfurt am Main","Deutschland",2006-07-21,2006-07-26
+"CSU",330000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2006-06-13,2006-06-14
+"MLPD",500000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2006-06-09,2006-06-20
+"CDU",125000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2006-05-08,2006-05-10
+"MLPD",50000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2006-03-16,2006-04-04
+"MLPD",1215000,"PERSON","Herr Michael May ","Jahnstraße 41","47443 Moers","Deutschland",2006-04-18,2006-04-26
+"CSU",78435,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2005-12-31,2006-02-16
+"CDU",70000,"COMPANY","RAG Aktiengesellschaft","Rellinghauser Str. 1-11","45128 Essen","Deutschland",2006-02-14,2006-02-16
+"SPD",93397,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2005-12-31,2006-02-17
+"SPD",100000,"COMPANY","RAG Aktiengesellschaft","Rellinghauser Str. 1-11","45128 Essen","Deutschland",2006-02-15,2006-02-20
+"CDU",81639,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2005-12-31,2006-03-07
+"CDU",100000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2006-03-06,2006-03-08
+"FDP",51917,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2005-12-31,2006-03-13
+"CDU",96544,"COMPANY","B.A.B. MaxiPoster Werbetürme GmbH","Theodorstr. 42-90, Haus 6","22761 Hamburg","Deutschland",2005-10-04,2005-11-04
+"CDU",2334526,"COMPANY","Christlich-Soziale Union in Bayern","Nymphenburger Str. 64 ","80335 München","Deutschland",2005-10-24,2005-10-28
+"CDU",136010,"COMPANY","YOC AG","Dircksenstr. 47","10178 Berlin","Deutschland",2005-09-21,2005-10-07
+"MLPD",614167,"PERSON","Herr Michael May","Jahnstr. 41","47443 Moers","Deutschland",2005-09-30,2005-10-14
+"CDU",250000,"COMPANY","Bankhaus Sal. Oppenheim Jr. & Cie KGaA","Unter Sachsenhausen 4","50667 Köln","Deutschland",2005-09-01,2005-09-06
+"FDP",70000,"ORG","Verband der Chemischen Industrie e.V.","Karlstr. 23","60329 Frankfurt","Deutschland",2005-09-06,2005-09-07
+"CDU",120000,"PERSON","Frau Johanna Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2005-09-06,2005-09-12
+"CDU",120000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2005-09-06,2005-09-12
+"CDU",120000,"PERSON","Herr Stefan Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2005-09-09,2005-09-12
+"CDU",63800,"COMPANY","AIDA Media Ltd.","Einsteinstraße 157","81675 München","Deutschland",2005-09-07,2005-09-16
+"CDU",200000,"PERSON","Herr Prof. Dr. Hermann Schnabel","Nordkanalstraße 28","20097 Hamburg","Deutschland",2005-09-16,2005-09-21
+"CDU",98206,"COMPANY","Panorama Verlags- und Werbegesellschaft mbH","Sudbrackstraße 14-18","33611 Bielefeld","Deutschland",2005-09-16,2005-09-21
+"CDU",300000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60262 Frankfurt am Main","Deutschland",2005-08-10,2005-08-12
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2005-08-19,2005-08-31
+"CDU",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2005-08-10,2005-08-12
+"CDU",100000,"ORG","Verband der Chemischen Industrie e.V.","Karlstraße 21","60329 Frankfurt","Deutschland",2005-08-04,2005-08-08
+"CDU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2005-08-08,2005-08-16
+"CSU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2005-08-11,2005-08-12
+"SPD",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2005-08-10,2005-08-24
+"SPD",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2005-08-08,2005-08-15
+"GRÜNE",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2005-08-12,2005-08-12
+"FDP",50001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2005-08-11,2005-08-22
+"MLPD",175000,"PERSON","Herr Eberhard Schmid","Hasenbergsteige 5","70178 Stuttgart","Deutschland",2005-08-08,2005-08-16
+"CDU",150000,"COMPANY","Commerzbank AG","Kaiserplatz","60311 Frankfurt am Main ","Deutschland",2005-07-07,2005-07-08
+"CDU",125000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2005-07-13,2005-07-15
+"CDU",125000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2005-07-13,2005-07-15
+"CSU",400000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2005-07-15,2005-07-20
+"FDP",60000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2005-07-19,2005-07-25
+"CDU",100000,"COMPANY","E.ON AG","E.ON Platz 1","40479 Düsseldorf","Deutschland",2005-07-26,2005-07-28
+"SPD",150000,"COMPANY","E.ON AG","E.ON Platz 1","40479 Düsseldorf","Deutschland",2005-07-26,2005-07-28
+"CDU",200000,"COMPANY","Dr. Ing. h. c. F. Porsche AG","Porscheplatz 1","70435 Stuttgart","Deutschland",2005-07-27,2005-07-29
+"SPD",200000,"COMPANY","Porsche AG","Porscheplatz 1","70435 Stuttgart","Deutschland",2005-07-27,2005-07-29
+"SPD",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2004-11-29,2004-12-08
+"CDU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2004-11-29,2004-12-02
+"CSU",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2004-11-29,2004-12-01
+"GRÜNE",60001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2004-11-29,2004-11-30
+"FDP",50001,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2004-11-29,2004-12-02
+"CDU",73080,"COMPANY","Abels & Grey, Gesellschaft für strategisches Informations- und Kommunikations-Management mbH","Goethestraße 51a","40237 Düsseldorf","Deutschland",2004-12-07,2004-12-17
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2004-12-20,2004-12-22
+"SPD",71172,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2004-12-21,2004-12-23
+"CDU",100000,"PERSON","Herr Christoph Alexander Kahl","Pferdmengesstr. 3","50968 Köln","Deutschland",2004-08-30,2004-09-07
+"FDP",80000,"COMPANY","Victor's Bau + Wert AG","Deutschmühlental 2","66117 Saarbrücken","Deutschland",2004-08-04,2004-08-09
+"BSU",52000,"PERSON","Herr Reiner Sauer","Wassermannstraße 18","96052 Bamberg","Deutschland",2004-05-14,2004-06-17
+"CDU",100000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2004-07-14,2004-07-16
+"CDU",200000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60262 Frankfurt am Main","Deutschland",2004-06-29,2004-07-01
+"FDP",100000,"COMPANY","Verband der Metallindustrie Baden-Württemberg","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2003-12-04,2004-06-22
+"SPD",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2004-04-15,2004-05-04
+"CDU",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2004-04-15,2004-04-21
+"CDU",100000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2004-05-18,2004-05-25
+"CSU",370000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2004-03-18,2004-03-19
+"CSU",93888,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2004-03-18,2004-03-29
+"FDP",51483,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2004-03-18,2004-04-05
+"CDU",50958,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2003-12-31,2004-04-01
+"CDU",60000,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2003-12-18,2004-02-26
+"CDU",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2003-12-19,2004-01-07
+"CDU",75000,"PERSON","Frau Dr. Karin Fischer","Mühlenberger Weg 16","22587 Hamburg","Deutschland",2004-01-14,2004-01-15
+"SPD",60000,"COMPANY","Allianz Deutschland AG","Königinstr. 28","80802 München","Deutschland",2003-12-17,2004-01-15
+"CDU",200000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60262 Frankfurt am Main","Deutschland",2003-12-01,2003-12-09
+"CDU",100000,"COMPANY","FERRING Arzneimittel GmbH","Wittland 11","24109 Kiel","Deutschland",2003-12-08,2003-12-11
+"CDU",75000,"PERSON","Frau Dr. Karin Fischer","Mühlenberger Weg 16","22587 Hamburg","Deutschland",2003-12-19,2003-12-29
+"SPD",100000,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60262 Frankfurt am Main","Deutschland",2003-12-01,2003-12-10
+"GRÜNE",60000,"COMPANY","Allianz Deutschland AG","Königinstraße 28","80802 München","Deutschland",2003-12-18,2003-12-19
+"FDP",980000,"PERSON","Herr Jürgen W. Möllemann","Coesfeldweg 59","48161 Münster","Deutschland",2002-12-31,2003-12-29
+"CDU",50416,"COMPANY","Carat Wiesbaden GmbH & Co. KG Media Service","Kreuzberger Ring 19","65205 Wiesbaden","Deutschland",2002-12-31,2003-08-27
+"SPD",65894,"COMPANY","Eurolottoclub AG","Am Scheerleck 9","6868 Wecker","Luxemburg",2003-05-29,2003-07-21
+"SPD",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2003-04-11,2003-05-08
+"CDU",92061,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2002-12-31,2003-03-14
+"CSU",89376,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2002-12-31,2003-03-10
+"SPD",65947,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2002-12-31,2003-04-01
+"FDP",59875,"COMPANY","Bayerische Motorenwerke AG","Petuelring 130","80788 München ","Deutschland",2002-12-31,2003-03-26
+"CSU",500000,"ORG","Verband der Bayerischen Metall- und Elektroindustrie e.V.","Max-Joseph-Straße 5 ","80333 München","Deutschland",2003-04-17,2003-04-23
+"CDU",150000,"COMPANY","Daimler Chrysler AG","Epplestraße 225","70546 Stuttgart","Deutschland",2003-04-10,2003-04-16
+"CDU",120000,"COMPANY","ALTANA AG Herbert-Quandt-Haus","Am Pilgerrain 15","61352 Bad Homburg","Deutschland",2003-01-30,2003-02-06
+"CDU",51130,"COMPANY","Deutsche Bank AG","Taunusanlage 12","60262 Frankfurt am Main","Deutschland",2003-02-07,2003-02-13
+"CDU",70000,"COMPANY","Eheleute Bernd und Gertraude Puschendorf","Holstenwall 10","20355 Hamburg","Deutschland",2003-02-13,2003-02-17
+"CDU",75000,"PERSON","Frau Johanna Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2003-01-24,2003-01-31
+"CDU",75000,"PERSON","Herr Stefan Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2003-01-24,2003-01-31
+"CDU",75000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2003-01-24,2003-01-31
+"CSU ",141369,"COMPANY","Pacelli Beteiligungs GmbH & Co. KG","Promenadeplatz 12 ","80333 München ","Deutschland",2002-10-25,2002-11-04
+"CDU ",200000,"ORG","Verband der Metall- und Elektroindustrie Baden-Württemberg e.V.","Löffelstraße 22-24","70597 Stuttgart","Deutschland",2002-08-23,2002-09-03
+"CDU ",180000,"PERSON","Johanna Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2002-09-04,2002-09-17
+"CDU ",180000,"PERSON","Herr Stefan Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2002-09-04,2002-09-17
+"CDU ",170000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2002-09-04,2002-09-17
+"CDU ",100000,"COMPANY","Robert Bosch GmbH","Robert-Bosch-Platz 1","70839 Gerlingen ","Deutschland",2002-09-09,2002-09-17
+"FDP ",80000,"PERSON","Frau Susanne Klatten","Seedammweg 55","61352 Bad Homburg","Deutschland",2002-09-12,2002-09-17
+"FDP ",70000,"PERSON","Frau Johanna Quandt","Seedammweg 55","61352 Bad Homburg","Deutschland",2002-09-12,2002-09-17
+"GRÜNE ",70000,"COMPANY","Ostwind-Verwaltungsgesellschaft mbH","Dänzergasse 8","93047 Regensburg","Deutschland",2002-08-15,2002-08-20
+"SPD",200000,"COMPANY","Tchibo Holding AG","Überseering 18","22297 Hamburg","Deutschland",2002-07-04,2002-07-09

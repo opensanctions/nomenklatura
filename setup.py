@@ -29,7 +29,8 @@ setup(
             "twine",
             "mypy",
             "flake8>=2.6.0",
-            "nose",
+            "pytest",
+            "pytest-cov",
             "coverage>=4.1",
         ]
     },

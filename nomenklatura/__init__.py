@@ -1,8 +1,3 @@
-# shut up useless SA warning:
-import warnings
+from nomenklatura.dataset import Dataset
 
-warnings.filterwarnings("ignore", "Unicode type received non-unicode bind param value.")
-
-from sqlalchemy.exc import SAWarning
-
-warnings.filterwarnings("ignore", category=SAWarning)
+__all__ = ["Dataset"]
