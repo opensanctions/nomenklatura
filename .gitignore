@@ -5,8 +5,4 @@
 _store/*
 .env
 settings.py
-nomenklatura/static/vendor/*
-nomenklatura/static/assets/*
-nomenklatura/static/.webassets-cache/*
-.vagrant/*
-vagrant_settings.py
+.mypy_cache
