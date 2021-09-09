@@ -10,8 +10,7 @@ setup(
     description="Make record linkages on the web.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    classifiers=[],
-    keywords="data mapping identity linkage record",
+    keywords="data mapping identity followthemoney linkage record",
     author="Friedrich Lindenberg",
     author_email="friedrich@pudo.org",
     url="https://github.com/pudo/nomenklatura",
@@ -22,5 +21,5 @@ setup(
     zip_safe=False,
     install_requires=[],
     tests_require=[],
-    entry_points={"console_scripts": ["nk = nomenklatura.manage:main"]},
+    entry_points={"console_scripts": ["nk = nomenklatura.cli:main"]},
 )
