@@ -1,15 +1,20 @@
 ## nomenklatura
 
-Nomenklatura de-duplicates and integrates different names for entities - people, organisations or public bodies - to help you clean up messy data and to find links between different datasets.
+Nomenklatura de-duplicates and integrates different [Follow the Money](https://followthemoney.rtfd.org/) entities. It serves to clean up messy data and to find links between different datasets.
 
-The service will create references for all entities mentioned in a source dataset. It then helps you to define which of these entities are duplicates and what the canonical name for a given entity should be. This information is available in data cleaning tools like OpenRefine or in custom data processing scripts, so that you can automatically apply existing mappings in the future. 
 
-The focus of nomenklatura is on data integration, it does not provide further functionality with regards to the people and organisations that it helps to keep track of. 
+## Reading
+
+* https://dedupe.readthedocs.org/en/latest/
+* https://github.com/OpenRefine/OpenRefine/wiki/Reconcilable-Data-Sources
+* https://github.com/OpenRefine/OpenRefine/wiki/Clustering-In-Depth
+* https://github.com/OpenRefine/OpenRefine/wiki/Reconciliation-Service-API
 
 
 ### Contact, contributions etc.
 
-nomenklatura is developed with generous support by [Knight-Mozilla OpenNews](http://opennews.org) and the [Open Knowledge Foundation Labs](http://okfnlabs.org). The codebase is licensed under the terms of an MIT license (see LICENSE.md).
+This codebase is licensed under the terms of an MIT license (see LICENSE).
 
 We're keen for any contributions, bug fixes and feature suggestions, please use the GitHub issue tracker for this repository. 
 
+Nomenklatura is currently developed thanks to a Prototypefund grant for [OpenSanctions](https://opensanctions.org). Previous iterations of the package were developed with support from [Knight-Mozilla OpenNews](http://opennews.org) and the [Open Knowledge Foundation Labs](http://okfnlabs.org).
