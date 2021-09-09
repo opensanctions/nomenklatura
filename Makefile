@@ -1,6 +1,6 @@
 
 test:
-	pytest --cov=nomenklatura tests/
+	pytest --cov-report html --cov-report term --cov=nomenklatura tests/
 
 types:
 	mypy --strict nomenklatura

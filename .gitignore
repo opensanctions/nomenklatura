@@ -7,3 +7,5 @@ _store/*
 settings.py
 .mypy_cache
 tests/fixtures/donations.frag.ijson
+.coverage
+htmlcov/

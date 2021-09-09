@@ -1,0 +1,234 @@
+import json
+import getpass
+from datetime import datetime
+from collections import defaultdict
+from typing import Any, Dict, Generator, Optional, Set, Tuple, Union
+from followthemoney.dedupe import Judgement
+
+from nomenklatura.util import PathLike
+
+StrIdent = Union[str, "Identifier"]
+Pair = Tuple["Identifier", "Identifier"]
+
+
+class GraphLogicError(Exception):
+    pass
+
+
+class Identifier(object):
+    # https://pypi.org/project/shortuuid/
+    PREFIX = "OSA-"
+
+    __slots__ = ("id", "canonical", "weight")
+
+    def __init__(self, id: str):
+        self.id = id
+        self.weight: int = 1
+        self.canonical = self.id.startswith(self.PREFIX)
+        if self.canonical:
+            self.weight = 2
+
+    def __eq__(self, other: Any) -> bool:
+        return str(self) == str(other)
+
+    def __lt__(self, other: Any) -> bool:
+        return (self.weight, self.id) < (other.weight, other.id)
+
+    def __str__(self) -> str:
+        return self.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    @classmethod
+    def get(cls, id: StrIdent) -> "Identifier":
+        if isinstance(id, str):
+            return cls(id)
+        return id
+
+    @classmethod
+    def pair(cls, left_id: StrIdent, right_id: StrIdent) -> Pair:
+        left = cls.get(left_id)
+        right = cls.get(right_id)
+        if left == right:
+            raise GraphLogicError()
+        return (max(left, right), min(left, right))
+
+
+class Edge(object):
+
+    __slots__ = ("key", "source", "target", "judgement", "score", "user", "timestamp")
+
+    def __init__(
+        self,
+        left_id: StrIdent,
+        right_id: StrIdent,
+        judgement: Judgement = Judgement.NO_JUDGEMENT,
+        score: Optional[float] = None,
+        user: Optional[str] = None,
+        timestamp: Optional[str] = None,
+    ):
+        self.key = Identifier.pair(left_id, right_id)
+        self.target, self.source = self.key
+        self.judgement = judgement
+        self.score = score
+        self.user = user
+        self.timestamp = timestamp
+
+    def other(self, cur: Identifier) -> Identifier:
+        if cur == self.target:
+            return self.source
+        return self.target
+
+    def to_line(self) -> str:
+        row = [
+            self.target.id,
+            self.source.id,
+            self.judgement.value,
+            self.score,
+            self.user,
+            self.timestamp,
+        ]
+        return json.dumps(row) + "\n"
+
+    def __str__(self) -> str:
+        return self.to_line()
+
+    def __hash__(self) -> int:
+        return hash(self.key)
+
+    def __eq__(self, other: Any) -> bool:
+        return hash(self) == hash(other)
+
+    def __lt__(self, other: Any) -> bool:
+        return bool(self.key < other.key)
+
+    @classmethod
+    def from_line(cls, line: str) -> "Edge":
+        data = json.loads(line)
+        return cls(
+            data[0],
+            data[1],
+            judgement=Judgement(data[2]),
+            score=data[3],
+            user=data[4],
+            timestamp=data[5],
+        )
+
+
+class Graph(object):
+    UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
+
+    def __init__(self) -> None:
+        self.edges: Dict[Pair, Edge] = {}
+        self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
+
+    def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
+        key = Identifier.pair(left_id, right_id)
+        return self.edges.get(key)
+
+    def _traverse(self, node: Identifier, seen: Set[Identifier]) -> Set[Identifier]:
+        connected = set([node])
+        if node in seen:
+            return connected
+        seen.add(node)
+        for edge in self.nodes.get(node, []):
+            if edge.judgement == Judgement.POSITIVE:
+                other = edge.other(node)
+                rec = self._traverse(other, seen)
+                connected.update(rec)
+        return connected
+
+    def connected(self, node: Identifier) -> Set[Identifier]:
+        return self._traverse(node, set())
+
+    def get_canonical(self, entity_id: StrIdent) -> str:
+        node = Identifier.get(entity_id)
+        best = max(self.connected(node))
+        if best.canonical:
+            return best.id
+        return node.id
+
+    def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
+        entity = Identifier.get(entity_id)
+        other = Identifier.get(other_id)
+        entity_connected = self.connected(entity)
+        if other in entity_connected:
+            return Judgement.POSITIVE
+        other_connected = self.connected(other)
+        for e in entity_connected:
+            for o in other_connected:
+                edge = self.edges.get(Identifier.pair(e, o))
+                if edge is None:
+                    continue
+                if edge.judgement == Judgement.NEGATIVE:
+                    return Judgement.NEGATIVE
+        return Judgement.NO_JUDGEMENT
+
+    def get_candidates(self, limit: int = 100) -> Generator[Edge, None, None]:
+        edges_all = self.edges.values()
+        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
+        returned = 0
+        cmp = lambda x: x.score or -1.0
+        for edge in sorted(candidates, key=cmp, reverse=True):
+            judgement = self.get_judgement(edge.source, edge.target)
+            if judgement != Judgement.NO_JUDGEMENT:
+                continue
+            # TODO: statement check unique
+            yield edge.target.id, edge.source.id, edge.score
+            returned += 1
+            if returned >= limit:
+                break
+
+    def suggest(self, left_id: StrIdent, right_id: StrIdent, score: float) -> Edge:
+        edge = self.get_edge(left_id, right_id)
+        if edge is not None:
+            if edge.judgement in self.UNDECIDED:
+                edge.score = score
+            return edge
+        return self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
+
+    def decide(
+        self,
+        left_id: StrIdent,
+        right_id: StrIdent,
+        judgement: Judgement,
+        user: Optional[str] = None,
+        score: Optional[float] = None,
+    ) -> Edge:
+        edge = self.get_edge(left_id, right_id)
+        if edge is None:
+            edge = Edge(left_id, right_id)
+        edge.judgement = judgement
+        edge.timestamp = datetime.utcnow().isoformat()
+        edge.user = user or getpass.getuser()
+        edge.score = score or edge.score
+        self._register(edge)
+        return edge
+
+    def _register(self, edge: Edge) -> None:
+        if edge.judgement not in self.UNDECIDED:
+            edge.score = None
+        self.edges[edge.key] = edge
+        self.nodes[edge.source].add(edge)
+        self.nodes[edge.target].add(edge)
+
+    def save(self, path: PathLike) -> None:
+        edges = sorted(self.edges.values())
+        with open(path, "w") as fh:
+            for edge in edges:
+                fh.write(edge.to_line())
+
+    @classmethod
+    def load(cls, path: PathLike) -> "Graph":
+        graph = cls()
+        if not path.exists():
+            return graph
+        with open(path, "r") as fh:
+            while True:
+                line = fh.readline()
+                if not line:
+                    break
+                edge = Edge.from_line(line)
+                graph._register(edge)
+        return graph
