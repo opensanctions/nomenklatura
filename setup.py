@@ -20,9 +20,14 @@ setup(
     include_package_data=True,
     package_data={"nomeklatura": ["py.typed"]},
     zip_safe=False,
-    install_requires=["followthemoney >= 2.6.2"],
+    install_requires=[
+        "followthemoney >= 2.6.2, < 3.0.0",
+        "shortuuid >= 1.0.1, < 2.0.0",
+        "rich >= 10.9.0, < 11.0.0",
+        "textual >= 0.1.10, < 1.0.0",
+    ],
     tests_require=[],
-    entry_points={"console_scripts": ["nk = nomenklatura.cli:main"]},
+    # entry_points={"console_scripts": ["nk = nomenklatura.cli:main"]},
     extras_require={
         "dev": [
             "wheel>=0.29.0",

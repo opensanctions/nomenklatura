@@ -72,7 +72,8 @@ class MemoryLoader(Loader[DS, E]):
                     continue
                 if value not in self.inverted:
                     self.inverted[value] = []
-                self.inverted[value].append((prop.reverse, entity.id))
+                if prop.reverse is not None:
+                    self.inverted[value].append((prop.reverse, entity.id))
 
     def get_entity(self, id: str) -> Optional[E]:
         return self.entities.get(id)

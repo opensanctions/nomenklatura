@@ -1,5 +1,6 @@
 import json
 import getpass
+import shortuuid  # type: ignore
 from datetime import datetime
 from collections import defaultdict
 from typing import Any, Dict, Generator, Optional, Set, Tuple, Union
@@ -40,6 +41,9 @@ class Identifier(object):
     def __hash__(self) -> int:
         return hash(self.id)
 
+    def __len__(self) -> int:
+        return len(self.id)
+
     @classmethod
     def get(cls, id: StrIdent) -> "Identifier":
         if isinstance(id, str):
@@ -53,6 +57,11 @@ class Identifier(object):
         if left == right:
             raise GraphLogicError()
         return (max(left, right), min(left, right))
+
+    @classmethod
+    def make(cls, value: Optional[str] = None) -> "Identifier":
+        key = value or shortuuid.uuid(name="nomenklatura")
+        return cls.get(f"{cls.PREFIX}{key}")
 
 
 class Edge(object):
@@ -165,7 +174,9 @@ class Graph(object):
                     return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
-    def get_candidates(self, limit: int = 100) -> Generator[Edge, None, None]:
+    def get_candidates(
+        self, limit: int = 100
+    ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
         edges_all = self.edges.values()
         candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
         returned = 0

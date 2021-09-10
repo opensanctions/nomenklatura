@@ -4,6 +4,14 @@ from followthemoney.dedupe.judgement import Judgement
 from nomenklatura.graph import Graph, Identifier
 
 
+def test_identifier():
+    ident = Identifier.make()
+    assert len(ident) > len(Identifier.PREFIX) + 5
+    assert ident.id.startswith(Identifier.PREFIX)
+    ident = Identifier.make("banana")
+    assert ident.id == f"{Identifier.PREFIX}banana"
+
+
 def test_graph():
     graph = Graph()
     graph.decide("a1", "a2", Judgement.POSITIVE)

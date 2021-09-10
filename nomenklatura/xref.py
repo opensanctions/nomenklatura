@@ -4,7 +4,9 @@ from nomenklatura.graph import Graph
 from nomenklatura.index import Index
 
 
-def xref(index: Index[DS, E], graph: Graph, entities: Iterable[E], limit: int = 15):
+def xref(
+    index: Index[DS, E], graph: Graph, entities: Iterable[E], limit: int = 15
+) -> None:
     for query in entities:
         assert query.id is not None, query
         for match, score in index.match(query, limit=limit):
