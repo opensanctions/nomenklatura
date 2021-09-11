@@ -1,14 +1,40 @@
-from typing import Iterable
+import math
+import logging
+from typing import Iterable, List
+
 from nomenklatura.loader import DS, E
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
+
+log = logging.getLogger(__name__)
+
+
+def _print_stats(num_entities: int, scores: List[float]) -> None:
+    matches = len(scores)
+    log.info(
+        "Xref: %d entities, %d matches, avg: %.2f, min: %.2f, max: %.2f",
+        num_entities,
+        matches,
+        sum(scores) / max(1, matches),
+        min(scores, default=0.0),
+        max(scores, default=0.0),
+    )
 
 
 def xref(
     index: Index[DS, E], resolver: Resolver, entities: Iterable[E], limit: int = 15
 ) -> None:
-    for query in entities:
+    log.info("Begin xref: %r, resolver: %r", index, resolver)
+    scores: List[float] = []
+    for num_entities, query in enumerate(entities):
         assert query.id is not None, query
         for match, score in index.match(query, limit=limit):
             assert match.id is not None, match
+            log.debug("[%.2f]-> %r x %r", score, query, match)
             resolver.suggest(query.id, match.id, score)
+            scores.append(score)
+
+        if num_entities % 100 == 0 and num_entities > 0:
+            _print_stats(num_entities, scores)
+
+    _print_stats(num_entities, scores)
