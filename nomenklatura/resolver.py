@@ -12,12 +12,11 @@ StrIdent = Union[str, "Identifier"]
 Pair = Tuple["Identifier", "Identifier"]
 
 
-class GraphLogicError(Exception):
+class ResolverLogicError(Exception):
     pass
 
 
 class Identifier(object):
-    # https://pypi.org/project/shortuuid/
     PREFIX = "OSA-"
 
     __slots__ = ("id", "canonical", "weight")
@@ -55,7 +54,7 @@ class Identifier(object):
         left = cls.get(left_id)
         right = cls.get(right_id)
         if left == right:
-            raise GraphLogicError()
+            raise ResolverLogicError()
         return (max(left, right), min(left, right))
 
     @classmethod
@@ -125,7 +124,7 @@ class Edge(object):
         )
 
 
-class Graph(object):
+class Resolver(object):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(self) -> None:
@@ -231,15 +230,15 @@ class Graph(object):
                 fh.write(edge.to_line())
 
     @classmethod
-    def load(cls, path: PathLike) -> "Graph":
-        graph = cls()
+    def load(cls, path: PathLike) -> "Resolver":
+        resolver = cls()
         if not path.exists():
-            return graph
+            return resolver
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
                 if not line:
                     break
                 edge = Edge.from_line(line)
-                graph._register(edge)
-        return graph
+                resolver._register(edge)
+        return resolver
