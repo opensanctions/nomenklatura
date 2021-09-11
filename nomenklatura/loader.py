@@ -64,7 +64,7 @@ class MemoryLoader(Loader[DS, E]):
         super().__init__(dataset)
         self.entities: Dict[str, E] = {}
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
-        log.info("Loading dataset %r to memory...", dataset)
+        log.info("Loading %r to memory...", dataset)
         for entity in entities:
             self.entities[entity.id] = entity
             for prop, value in entity.itervalues():
