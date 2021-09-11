@@ -1,6 +1,5 @@
 import sys
-from followthemoney.types import registry
-from followthemoney.dedupe.judgement import Judgement
+from normality import latinize_text
 from rich.console import RenderableType
 from rich.panel import Panel
 from rich.table import Table
@@ -9,6 +8,8 @@ from textual.app import App
 from textual import log
 from textual.widget import Widget
 from textual.widgets import Footer
+from followthemoney.types import registry
+from followthemoney.dedupe.judgement import Judgement
 
 # from textual.reactive import Reactive
 
@@ -51,6 +52,7 @@ class Comparison(Widget):
             if prop.type == registry.entity:
                 caption = self.dedupe.loader.get_entity(value).caption
             score = prop.type.compare_sets([value], other_values)
+            caption = latinize_text(caption) or caption
             style = "default"
             if score > 0.7:
                 style = "yellow"
@@ -96,7 +98,7 @@ class DedupeApp(App):
     async def on_load(self, event):
         await self.bind("x", "positive", "Match")
         await self.bind("n", "negative", "No match")
-        await self.bind("v", "unsure", "Unsure")
+        await self.bind("u", "unsure", "Unsure")
         await self.bind("s", "save", "Save")
         await self.bind("q", "quit", "Quit")
         # await self.bind("ctrl-c", "quit", "Quit")

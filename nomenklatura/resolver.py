@@ -1,9 +1,10 @@
 import json
 import getpass
+from pathlib import Path
 import shortuuid  # type: ignore
 from datetime import datetime
 from collections import defaultdict
-from typing import Any, Dict, Generator, Optional, Set, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
 from followthemoney.dedupe import Judgement
 
 from nomenklatura.util import PathLike
@@ -17,7 +18,7 @@ class ResolverLogicError(Exception):
 
 
 class Identifier(object):
-    PREFIX = "OSA-"
+    PREFIX = "NK-"
 
     __slots__ = ("id", "canonical", "weight")
 
@@ -43,6 +44,9 @@ class Identifier(object):
     def __len__(self) -> int:
         return len(self.id)
 
+    def __repr__(self) -> str:
+        return f"<I({self.id})>"
+
     @classmethod
     def get(cls, id: StrIdent) -> "Identifier":
         if isinstance(id, str):
@@ -59,7 +63,7 @@ class Identifier(object):
 
     @classmethod
     def make(cls, value: Optional[str] = None) -> "Identifier":
-        key = value or shortuuid.uuid(name="nomenklatura")
+        key = value or shortuuid.uuid()
         return cls.get(f"{cls.PREFIX}{key}")
 
 
@@ -111,6 +115,9 @@ class Edge(object):
     def __lt__(self, other: Any) -> bool:
         return bool(self.key < other.key)
 
+    def __repr__(self) -> str:
+        return f"<E({self.target.id}, {self.source.id}, {self.judgement.value})>"
+
     @classmethod
     def from_line(cls, line: str) -> "Edge":
         data = json.loads(line)
@@ -127,7 +134,8 @@ class Edge(object):
 class Resolver(object):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
-    def __init__(self) -> None:
+    def __init__(self, path: Optional[PathLike] = None) -> None:
+        self.path = path
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
 
@@ -173,14 +181,18 @@ class Resolver(object):
                     return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
+    def _get_suggested(self) -> List[Edge]:
+        """Get all NO_JUDGEMENT edges in descending order of score."""
+        edges_all = self.edges.values()
+        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
+        cmp = lambda x: x.score or -1.0
+        return sorted(candidates, key=cmp, reverse=True)
+
     def get_candidates(
         self, limit: int = 100
     ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
-        edges_all = self.edges.values()
-        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
         returned = 0
-        cmp = lambda x: x.score or -1.0
-        for edge in sorted(candidates, key=cmp, reverse=True):
+        for edge in self._get_suggested():
             judgement = self.get_judgement(edge.source, edge.target)
             if judgement != Judgement.NO_JUDGEMENT:
                 continue
@@ -190,7 +202,11 @@ class Resolver(object):
             if returned >= limit:
                 break
 
-    def suggest(self, left_id: StrIdent, right_id: StrIdent, score: float) -> Edge:
+    def suggest(
+        self, left_id: StrIdent, right_id: StrIdent, score: float
+    ) -> Identifier:
+        """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
+        should make a decision about whether they are the same or not."""
         edge = self.get_edge(left_id, right_id)
         if edge is not None:
             if edge.judgement in self.UNDECIDED:
@@ -205,16 +221,28 @@ class Resolver(object):
         judgement: Judgement,
         user: Optional[str] = None,
         score: Optional[float] = None,
-    ) -> Edge:
+    ) -> Identifier:
         edge = self.get_edge(left_id, right_id)
         if edge is None:
             edge = Edge(left_id, right_id)
+
+        # Canonicalise positive matches, i.e. make both identifiers refer to a
+        # canonical identifier, instead of making a direct link.
+        if judgement == Judgement.POSITIVE:
+            target = max(self.connected(edge.target))
+            if not target.canonical:
+                canonical = Identifier.make()
+                self._remove(edge)
+                self.decide(edge.source, canonical, judgement=judgement, user=user)
+                self.decide(edge.target, canonical, judgement=judgement, user=user)
+                return canonical
+
         edge.judgement = judgement
-        edge.timestamp = datetime.utcnow().isoformat()
+        edge.timestamp = datetime.utcnow().isoformat()[:16]
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
-        return edge
+        return edge.target
 
     def _register(self, edge: Edge) -> None:
         if edge.judgement not in self.UNDECIDED:
@@ -223,15 +251,38 @@ class Resolver(object):
         self.nodes[edge.source].add(edge)
         self.nodes[edge.target].add(edge)
 
-    def save(self, path: PathLike) -> None:
+    def _remove(self, edge: Edge) -> None:
+        """Remove an edge from the graph."""
+        self.edges.pop(edge.key, None)
+        for node in (edge.source, edge.target):
+            if node in self.nodes:
+                self.nodes[node].discard(edge)
+
+    def prune(self, keep: int = 0) -> None:
+        """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
+        highest score. This also checks if a transitive judgement has been
+        established in the mean time and removes those candidates."""
+        kept = 0
+        for edge in self._get_suggested():
+            judgement = self.get_judgement(edge.source, edge.target)
+            if judgement != Judgement.NO_JUDGEMENT:
+                self._remove(edge)
+            if kept >= keep:
+                self._remove(edge)
+            kept += 1
+
+    def save(self) -> None:
+        """Store the resolver adjacency list to a plain text JSON list."""
+        if self.path is None:
+            raise RuntimeError("Resolver has no path")
         edges = sorted(self.edges.values())
-        with open(path, "w") as fh:
+        with open(self.path, "w") as fh:
             for edge in edges:
                 fh.write(edge.to_line())
 
     @classmethod
     def load(cls, path: PathLike) -> "Resolver":
-        resolver = cls()
+        resolver = cls(path=path)
         if not path.exists():
             return resolver
         with open(path, "r") as fh:
@@ -242,3 +293,6 @@ class Resolver(object):
                 edge = Edge.from_line(line)
                 resolver._register(edge)
         return resolver
+
+    def __repr__(self) -> str:
+        return "<Resolver(%r, %d)>" % (self.path, len(self.edges))

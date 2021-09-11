@@ -14,7 +14,8 @@ def test_identifier():
 
 def test_resolver():
     resolver = Resolver()
-    resolver.decide("a1", "a2", Judgement.POSITIVE)
+    a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    assert a_canon.canonical, a_canon
     assert Identifier.get("a2") in resolver.connected(Identifier.get("a1"))
     assert resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
     resolver.decide("b1", "b2", Judgement.POSITIVE)
@@ -25,26 +26,27 @@ def test_resolver():
     resolver.suggest("a1", "b1", 7.0)
     assert resolver.get_judgement("a1", "b1") == Judgement.NEGATIVE
 
-    assert resolver.get_canonical("a1") == "a1"
-    assert resolver.get_canonical("a2") == "a2"
+    assert resolver.get_canonical("a1") == a_canon
+    assert resolver.get_canonical("a2") == a_canon
+    assert resolver.get_canonical("banana") == "banana"
 
     resolver.suggest("c1", "c2", 7.0)
     assert resolver.get_edge("c1", "c2").score == 7.0
     resolver.suggest("c1", "c2", 8.0)
     assert resolver.get_edge("c1", "c2").score == 8.0
-    resolver.decide("c1", "c2", Judgement.POSITIVE)
-    assert resolver.get_edge("c1", "c2").score is None
+    ccn = resolver.decide("c1", "c2", Judgement.POSITIVE)
+    assert resolver.get_edge("c1", "c2") is None
+    assert resolver.get_edge(ccn, "c2").score is None
 
 
 def test_resolver_store():
-    resolver = Resolver()
-    resolver.decide("a1", "a2", Judgement.POSITIVE)
-    resolver.decide("a2", "b2", Judgement.NEGATIVE)
-    resolver.suggest("a1", "c1", 7.0)
-
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
-        resolver.save(path)
+        resolver = Resolver(path)
+        resolver.decide("a1", "a2", Judgement.POSITIVE)
+        resolver.decide("a2", "b2", Judgement.NEGATIVE)
+        resolver.suggest("a1", "c1", 7.0)
+        resolver.save()
 
         other = Resolver.load(path)
         assert len(other.edges) == len(resolver.edges)
@@ -62,3 +64,7 @@ def test_resolver_candidates():
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 2, candidates
     assert candidates[0][2] == 5.0, candidates
+
+    resolver.prune()
+    candidates = list(resolver.get_candidates())
+    assert len(candidates) == 0, candidates
