@@ -121,7 +121,7 @@ class DedupeApp(App):
         self.decide(Judgement.UNSURE)
 
     async def action_save(self) -> None:
-        self.resolver.save("resolver.ijson")
+        self.resolver.save()
 
     async def on_mount(self) -> None:
         self.comp = Comparison(self)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     from nomenklatura.index import Index
     from nomenklatura.xref import xref
 
-    resolver = Resolver()
+    resolver = Resolver(Path("resolve.ijson"))
     loader = FileLoader(Path(sys.argv[1]))
     index = Index(loader)
     index.build()

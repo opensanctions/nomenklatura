@@ -196,7 +196,6 @@ class Resolver(object):
             judgement = self.get_judgement(edge.source, edge.target)
             if judgement != Judgement.NO_JUDGEMENT:
                 continue
-            # TODO: statement check unique
             yield edge.target.id, edge.source.id, edge.score
             returned += 1
             if returned >= limit:
@@ -229,7 +228,9 @@ class Resolver(object):
         # Canonicalise positive matches, i.e. make both identifiers refer to a
         # canonical identifier, instead of making a direct link.
         if judgement == Judgement.POSITIVE:
-            target = max(self.connected(edge.target))
+            connected = set(self.connected(edge.target))
+            connected.update(self.connected(edge.source))
+            target = max(connected)
             if not target.canonical:
                 canonical = Identifier.make()
                 self._remove(edge)

@@ -30,6 +30,13 @@ def test_resolver():
     assert resolver.get_canonical("a2") == a_canon
     assert resolver.get_canonical("banana") == "banana"
 
+    resolver.decide("a1", "a17", Judgement.POSITIVE)
+    assert resolver.get_canonical("a1") == a_canon
+    assert resolver.get_canonical("a17") == a_canon
+    resolver.decide("a1", "a0", Judgement.POSITIVE)
+    assert resolver.get_canonical("a1") == a_canon
+    assert resolver.get_canonical("a0") == a_canon
+
     resolver.suggest("c1", "c2", 7.0)
     assert resolver.get_edge("c1", "c2").score == 7.0
     resolver.suggest("c1", "c2", 8.0)
