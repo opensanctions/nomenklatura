@@ -7,7 +7,7 @@ from rich.text import Text
 from textual.app import App
 from textual import log
 from textual.widget import Widget
-from textual.widgets import Footer
+from textual.widgets import Footer, ScrollView
 from followthemoney.types import registry
 from followthemoney.dedupe.judgement import Judgement
 
@@ -39,7 +39,9 @@ class Comparison(Widget):
             yield prop
 
     def render_column(self, entity):
-        return Text.assemble((entity.schema.label, "blue"), " [%s]" % entity.id)
+        return Text.assemble(
+            (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
+        )
 
     def render_values(self, prop, entity, other):
         values = entity.get(prop, quiet=True)
@@ -90,10 +92,12 @@ class DedupeApp(App):
         self.left = None
         self.right = None
         self.score = 0.0
-        for left_id, right_id, score in self.resolver.get_candidates(limit=1):
+        for left_id, right_id, score in self.resolver.get_candidates(limit=100):
             self.left = self.loader.get_entity(left_id)
             self.right = self.loader.get_entity(right_id)
             self.score = score
+            if self.left is not None and self.right is not None:
+                break
 
     async def on_load(self, event):
         await self.bind("x", "positive", "Match")
@@ -103,31 +107,41 @@ class DedupeApp(App):
         await self.bind("q", "quit", "Quit")
         # await self.bind("ctrl-c", "quit", "Quit")
 
-    def decide(self, judgement):
+    async def decide(self, judgement):
         if self.left is not None and self.right is not None:
             self.resolver.decide(self.left.id, self.right.id, judgement)
         self.load_candidate()
         if self.left is None or self.right is None:
             self.shutdown()
+        self.scroll.home()
         self.comp.refresh()
+        self.scroll.layout.require_update()
+        self.scroll.refresh(layout=True)
+        # await self.scroll.update(self.comp)
+        self.scroll.refresh()
 
     async def action_positive(self) -> None:
-        self.decide(Judgement.POSITIVE)
+        await self.decide(Judgement.POSITIVE)
 
     async def action_negative(self) -> None:
-        self.decide(Judgement.NEGATIVE)
+        await self.decide(Judgement.NEGATIVE)
 
     async def action_unsure(self) -> None:
-        self.decide(Judgement.UNSURE)
+        await self.decide(Judgement.UNSURE)
 
     async def action_save(self) -> None:
         self.resolver.save()
 
+    async def action_quit(self) -> None:
+        self.resolver.save()
+        await self.shutdown()
+
     async def on_mount(self) -> None:
         self.comp = Comparison(self)
+        self.scroll = ScrollView(self.comp)
         self.footer = Footer()
         await self.view.dock(self.footer, edge="bottom")
-        await self.view.dock(self.comp, edge="top")
+        await self.view.dock(self.scroll, edge="top")
 
 
 if __name__ == "__main__":
