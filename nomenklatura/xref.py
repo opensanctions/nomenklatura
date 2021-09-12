@@ -2,6 +2,8 @@ import math
 import logging
 from typing import Iterable, List
 
+# from followthemoney.dedupe.judgement import Judgement
+
 from nomenklatura.loader import DS, E
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
@@ -31,6 +33,9 @@ def xref(
             assert query.id is not None, query
             for match, score in index.match(query, limit=limit):
                 assert match.id is not None, match
+                # judgement = resolver.get_judgement(query.id, match.id)
+                # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
+                #     continue
                 log.debug("[%.2f]-> %r x %r", score, query, match)
                 resolver.suggest(query.id, match.id, score)
                 scores.append(score)
