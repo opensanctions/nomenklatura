@@ -9,4 +9,6 @@ settings.py
 tests/fixtures/donations.frag.ijson
 .coverage
 htmlcov/
+build/
+dist/
 textual.log
