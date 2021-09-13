@@ -27,7 +27,12 @@ setup(
         "textual >= 0.1.10, < 1.0.0",
     ],
     tests_require=[],
-    # entry_points={"console_scripts": ["nk = nomenklatura.cli:main"]},
+    entry_points={
+        "console_scripts": [
+            "nk = nomenklatura.cli:cli",
+            "nomenklatura = nomenklatura.cli:cli",
+        ]
+    },
     extras_require={
         "dev": [
             "wheel>=0.29.0",

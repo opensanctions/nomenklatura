@@ -296,4 +296,5 @@ class Resolver(object):
         return resolver
 
     def __repr__(self) -> str:
-        return "<Resolver(%r, %d)>" % (self.path, len(self.edges))
+        path = str(self.path)
+        return "<Resolver(%r, %d)>" % (path, len(self.edges))

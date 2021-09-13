@@ -26,7 +26,7 @@ def _print_stats(num_entities: int, scores: List[float]) -> None:
 def xref(
     index: Index[DS, E], resolver: Resolver, entities: Iterable[E], limit: int = 15
 ) -> None:
-    log.info("Begin xref: %r, resolver: %r", index, resolver)
+    log.info("Begin xref: %r, resolver: %s", index, resolver)
     scores: List[float] = []
     try:
         for num_entities, query in enumerate(entities):
