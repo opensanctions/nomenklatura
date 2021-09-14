@@ -25,6 +25,8 @@ donations:
             - City
             - Country
           properties:
+            full:
+              template: "{{Street}}, {{City}}"
             city:
               column: City
             street:
