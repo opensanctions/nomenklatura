@@ -2,6 +2,8 @@
 
 Nomenklatura de-duplicates and integrates different [Follow the Money](https://followthemoney.rtfd.org/) entities. It serves to clean up messy data and to find links between different datasets.
 
+![screenshot](./docs/screenshot.png)
+
 ## Usage
 
 You can install `nomenklatura` via PyPI:
