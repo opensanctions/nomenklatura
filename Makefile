@@ -2,10 +2,10 @@
 test:
 	pytest --cov-report html --cov-report term --cov=nomenklatura tests/
 
-types:
-	mypy --strict nomenklatura
+typecheck:
+	mypy --strict nomenklatura/ --exclude nomenklatura/tui/
 
-check: test types
+check: test typecheck
 
 fixtures:
 	ftm map-csv -i tests/fixtures/donations.csv -o tests/fixtures/donations.frag.ijson tests/fixtures/donations.yml

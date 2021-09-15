@@ -5,6 +5,8 @@ import shortuuid  # type: ignore
 from datetime import datetime
 from collections import defaultdict
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
+from followthemoney.types import registry
+from followthemoney.proxy import EntityProxy
 from followthemoney.dedupe import Judgement
 
 from nomenklatura.util import PathLike
@@ -210,7 +212,7 @@ class Resolver(object):
         if edge is not None:
             if edge.judgement in self.UNDECIDED:
                 edge.score = score
-            return edge
+            return edge.target
         return self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
 
     def decide(
@@ -271,6 +273,18 @@ class Resolver(object):
             if kept >= keep:
                 self._remove(edge)
             kept += 1
+
+    def apply(self, proxy: EntityProxy) -> EntityProxy:
+        """Replace all entity references in a given proxy with their canonical
+        identifiers. This is essentially the harmonisation post de-dupe."""
+        proxy.id = self.get_canonical(proxy.id)
+        for prop in proxy.iterprops():
+            if prop.type != registry.entity:
+                continue
+            for value in proxy.pop(prop):
+                canonical = self.get_canonical(value)
+                proxy.add(prop, canonical, cleaned=True)
+        return proxy
 
     def save(self) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""

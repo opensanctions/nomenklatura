@@ -18,12 +18,12 @@ jobs:
           sudo apt-get install -y -qq libicu-dev
           python -m pip install --upgrade pip wheel pyicu
           pip install -e '.[dev]'
-      # - name: Check type annotations (strict)
-      #   run: |
-      #     mypy --strict nomenklatura
+      - name: Check type annotations (strict)
+        run: |
+          make typecheck
       - name: Run tests
         run: |
-          pytest --cov=nomenklatura tests/
+          make test
       - name: Build a distribution
         run: |
           python setup.py sdist bdist_wheel

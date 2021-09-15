@@ -1,5 +1,6 @@
 import json
 import logging
+from nomenklatura.resolver import Resolver
 from typing import (
     Dict,
     Generator,
@@ -60,13 +61,21 @@ class Loader(Generic[DS, E]):
 class MemoryLoader(Loader[DS, E]):
     """Load entities from the given iterable of entities."""
 
-    def __init__(self, dataset: DS, entities: Iterable[E]):
+    def __init__(
+        self, dataset: DS, entities: Iterable[E], resolver: Optional[Resolver] = None
+    ) -> None:
         super().__init__(dataset)
+        self.resolver = resolver
         self.entities: Dict[str, E] = {}
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
         for entity in entities:
-            self.entities[entity.id] = entity
+            if self.resolver is not None:
+                self.resolver.apply(entity)
+            if entity.id in self.entities:
+                self.entities[entity.id].merge(entity)
+            else:
+                self.entities[entity.id] = entity
             for prop, value in entity.itervalues():
                 if prop.type != registry.entity:
                     continue
@@ -76,9 +85,13 @@ class MemoryLoader(Loader[DS, E]):
                     self.inverted[value].append((prop.reverse, entity.id))
 
     def get_entity(self, id: str) -> Optional[E]:
+        if self.resolver is not None:
+            id = self.resolver.get_canonical(id)
         return self.entities.get(id)
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, E], None, None]:
+        if self.resolver is not None:
+            id = self.resolver.get_canonical(id)
         for prop, entity_id in self.inverted.get(id, []):
             entity = self.get_entity(entity_id)
             if entity is not None:
@@ -94,9 +107,9 @@ class MemoryLoader(Loader[DS, E]):
 class FileLoader(MemoryLoader[Dataset, EntityProxy]):
     """Read a given file path into an in-memory entity loader."""
 
-    def __init__(self, path: PathLike) -> None:
+    def __init__(self, path: PathLike, resolver: Optional[Resolver] = None) -> None:
         dataset = Dataset(path.stem, path.stem)
-        super().__init__(dataset, self.read_file(path))
+        super().__init__(dataset, self.read_file(path), resolver=resolver)
 
     def read_file(self, path: PathLike) -> Generator[EntityProxy, None, None]:
         with open(path, "r") as fh:

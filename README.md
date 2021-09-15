@@ -2,9 +2,41 @@
 
 Nomenklatura de-duplicates and integrates different [Follow the Money](https://followthemoney.rtfd.org/) entities. It serves to clean up messy data and to find links between different datasets.
 
+## Usage
+
+You can install `nomenklatura` via PyPI:
+
+```bash
+$ pip install nomenklatura
+```
+
+### Command-line usage
+
+Much of the functionality of `nomenklatura` can be used as a command-line tool. In the following example, we'll assume that you have a file containing [Follow the Money](https://followthemoney.rtfd.org/) entities in your local directory, named `entities.ijson`. If you just want try it out, you can use the file `tests/fixtures/donations.ijson` in this repository for testing (it contains German campaign finance data).
+
+With the file in place, you will cross-reference the entities to generate de-duplication candidates, then run the interactive de-duplication UI in your console, and eventually apply the judgements to generate a new file with merged entities:
+
+```bash
+$ nomenklatura xref entities.ijson
+[...]
+# note there is now a new file, `entities.rslv.ijson` that contains de-duplication info.
+$ nomenklatura dedupe entiites.ijson
+# will pop up a user interface.
+$ nomenklatura apply entities.ijson -o merged.ijson
+# de-duplicated data goes into `merged.ijson`:
+$ cat entities.ijson | wc -l 
+474 entities.ijson
+$ cat entities.ijson | wc -l 
+468 merged.ijson
+```
+
+### Programmatic usage
+
+
+
 ## Design
 
-This package will offer an implementation of an in-memory data deduplication framework centered around the FtM data model. The idea is the following workflow:
+This package offers an implementation of an in-memory data deduplication framework centered around the FtM data model. The idea is the following workflow:
 
 * Accept FtM-shaped entities from a given loader (e.g. a JSON file, or a database)
 * Build an in-memory inverted index of the entities for blocking
@@ -16,8 +48,6 @@ Later on, the following might be added:
 
 * A web application to let users make merge decisions on the web
 * An implementation of the OpenRefine Reconciliation API based on the blocking index
-
-This will be done in typed Python 3.
 
 ## Reading
 
