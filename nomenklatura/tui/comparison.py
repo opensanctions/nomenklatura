@@ -1,24 +1,32 @@
+from typing import TYPE_CHECKING
 from normality import latinize_text
-from rich.console import RenderableType
-from rich.table import Table
-from rich.text import Text
-from textual.widget import Widget
+from rich.console import RenderableType  # type: ignore
+from rich.table import Table  # type: ignore
+from rich.text import Text  # type: ignore
+from textual.widget import Widget  # type: ignore
 from followthemoney.types import registry
+from followthemoney.proxy import EntityProxy
+from followthemoney.property import Property
 
 from nomenklatura.tui.util import comparison_props
 
+if TYPE_CHECKING:
+    from nomenklatura.tui.app import DedupeApp
+
 
 class Comparison(Widget):
-    def __init__(self, dedupe):
+    def __init__(self, dedupe: "DedupeApp") -> None:
         super().__init__()
         self.dedupe = dedupe
 
-    def render_column(self, entity):
+    def render_column(self, entity: EntityProxy) -> Text:
         return Text.assemble(
             (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
         )
 
-    def render_values(self, prop, entity, other):
+    def render_values(
+        self, prop: Property, entity: EntityProxy, other: EntityProxy
+    ) -> Text:
         values = entity.get(prop, quiet=True)
         other_values = other.get_type_values(prop.type)
         text = Text()
@@ -36,7 +44,8 @@ class Comparison(Widget):
                 style = "yellow"
             if score > 0.95:
                 style = "green"
-            text.append(caption, style)
+            if caption is not None:
+                text.append(caption, style)
         return text
 
     def render(self) -> RenderableType:
