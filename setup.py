@@ -6,7 +6,7 @@ with open("README.md") as f:
 
 setup(
     name="nomenklatura",
-    version="1.0.0",
+    version="1.0.1",
     description="Make record linkages in followthemoney data.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,8 +23,8 @@ setup(
     install_requires=[
         "followthemoney >= 2.6.2, < 3.0.0",
         "shortuuid >= 1.0.1, < 2.0.0",
-        "rich >= 10.9.0, < 11.0.0",
-        "textual >= 0.1.10, < 1.0.0",
+        "rich >= 10.9.0, < 11.0.1",
+        "textual >= 0.1.10, < 1.0.1",
     ],
     tests_require=[],
     entry_points={
