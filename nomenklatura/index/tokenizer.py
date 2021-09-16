@@ -1,3 +1,4 @@
+import fingerprints
 from typing import Generic, Optional
 from typing import Any, Dict, Generator, Generic, Tuple, cast
 from normality import normalize, WS
@@ -9,16 +10,17 @@ from nomenklatura.index.util import ngrams
 from nomenklatura.loader import DS, E, Loader
 
 TYPE_WEIGHTS = {
-    registry.country: 0.2,
-    registry.date: 0.2,
-    registry.language: 0.2,
-    registry.iban: 2.0,
-    registry.phone: 2.0,
-    registry.email: 2.0,
+    registry.name: 2.0,
+    registry.country: 1.5,
+    registry.date: 1.5,
+    registry.language: 0.7,
+    registry.iban: 3.0,
+    registry.phone: 3.0,
+    registry.email: 3.0,
     registry.entity: 0.0,
-    registry.topic: 0.1,
-    registry.address: 1.2,
-    registry.identifier: 1.5,
+    registry.topic: 2.1,
+    registry.address: 2.5,
+    registry.identifier: 2.5,
 }
 TEXT_TYPES = (registry.name, registry.text, registry.string, registry.address)
 
@@ -34,8 +36,8 @@ class Tokenizer(Generic[DS, E]):
         if type == registry.entity:
             return
         node_id = type.node_id(value)
+        type_weight = TYPE_WEIGHTS.get(type, 1.0)
         if node_id is not None:
-            type_weight = TYPE_WEIGHTS.get(type, 1.0)
             yield node_id, type_weight
         if type == registry.date and len(value) > 3:
             yield f"y:{value[:4]}", 0.7
@@ -44,8 +46,11 @@ class Tokenizer(Generic[DS, E]):
             if norm is None:
                 return
             for token in norm.split(WS):
-                yield f"w:{token}", 0.5
+                yield f"w:{token}", 0.7
             if type == registry.name:
+                fp = type.node_id_safe(fingerprints.generate(norm))
+                if fp is not None and fp != node_id:
+                    yield fp, type_weight * 0.8
                 for token in ngrams(norm, 2, 4):
                     yield f"g:{token}", 0.5
 

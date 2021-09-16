@@ -1,14 +1,12 @@
 import math
 import pickle
 import logging
+import statistics
+from collections import defaultdict
 from typing import Any, Dict, Generator, Generic, Tuple, cast
-from normality import normalize, WS
 from followthemoney.schema import Schema
-from followthemoney.types import registry
-from followthemoney.types.common import PropertyType
 
 from nomenklatura.util import PathLike
-from nomenklatura.index.util import ngrams
 from nomenklatura.loader import DS, E, Loader
 from nomenklatura.index.entry import IndexEntry
 from nomenklatura.index.tokenizer import Tokenizer
@@ -34,7 +32,7 @@ class Index(Generic[DS, E]):
         loader = self.loader if adjacent else None
         for token, weight in self.tokenizer.entity(entity, loader=loader):
             if token not in self.inverted:
-                self.inverted[token] = IndexEntry(self, token, weight=weight)
+                self.inverted[token] = IndexEntry(self, token)
             self.inverted[token].add(entity.id)
             terms += 1
         self.terms[entity.id] = terms
@@ -56,8 +54,11 @@ class Index(Generic[DS, E]):
         log.info("Built index: %r", self)
 
     def commit(self) -> None:
+        quantiles = statistics.quantiles(self.terms.values(), n=3)
+        min_terms = float(quantiles[0])
+
         for entry in self.inverted.values():
-            entry.compute()
+            entry.compute(min_terms)
 
     def _match_schema(self, entity_id: str, schema: Schema) -> bool:
         tokens = set()
@@ -75,36 +76,35 @@ class Index(Generic[DS, E]):
         """Find entities similar to the given input entity."""
         if not query.schema.matchable:
             return
-        invalid = -1.0
-        matches: Dict[str, float] = {}
-        for token, _ in self.tokenizer.entity(query):
-            entry = self.inverted.get(token)
-            if entry is None or len(entry) == 0:
-                continue
-            idf = math.log(len(self) / len(entry))
-            for entity_id, tf in entry.all_tf():
-                if entity_id == query.id or tf <= 0:
-                    continue
 
-                weight = tf * idf
-                entity_score = matches.get(entity_id)
-                if entity_score == invalid:
-                    continue
-                if entity_score is None:
-                    # Filter out incompatible types:
-                    if not self._match_schema(entity_id, query.schema):
-                        matches[entity_id] = invalid
-                        continue
-                    entity_score = 0
-                matches[entity_id] = entity_score + weight
+        tokens = defaultdict[str, float](float)
+        for token, _ in self.tokenizer.entity(query):
+            tokens[token] += 1
+
+        matches = defaultdict[str, float](float)
+        for token, _ in tokens.items():
+            entry = self.inverted.get(token)
+            if entry is None or entry.idf is None:
+                continue
+            for entity_id, tf in entry.frequencies.items():
+                matches[entity_id] += tf * entry.idf
 
         results = sorted(matches.items(), key=lambda x: x[1], reverse=True)
-        results = [(id, score) for (id, score) in results if score > 0]
         log.debug("Match entity: %r (%d results)", query, len(results))
-        for result_id, score in results[:limit]:
+        returned = 0
+        for result_id, score in results:
+            if score <= 0.0:
+                break
+            if result_id == query.id:
+                continue
+            if not self._match_schema(result_id, query.schema):
+                continue
             entity = self.loader.get_entity(result_id)
             if entity is not None:
+                returned += 1
                 yield entity, score
+            if returned >= limit:
+                break
 
     def save(self, path: PathLike) -> None:
         with open(path, "wb") as fh:
