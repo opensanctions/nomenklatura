@@ -178,6 +178,16 @@ class Resolver(object):
             if canonical == node.id:
                 yield node
 
+    def get_referents(self, canonical_id: StrIdent) -> Set[str]:
+        """Get all the non-canonical entity identifiers which refer to a given
+        canonical identifier."""
+        node = Identifier.get(canonical_id)
+        referents = set[str]()
+        for connected in self.connected(node):
+            if not connected.canonical:
+                referents.add(connected.id)
+        return referents
+
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
         entity = Identifier.get(entity_id)
         other = Identifier.get(other_id)
