@@ -19,8 +19,8 @@ Much of the functionality of `nomenklatura` can be used as a command-line tool. 
 With the file in place, you will cross-reference the entities to generate de-duplication candidates, then run the interactive de-duplication UI in your console, and eventually apply the judgements to generate a new file with merged entities:
 
 ```bash
+# generate merge candidates using an in-memory index:
 $ nomenklatura xref entities.ijson
-[...]
 # note there is now a new file, `entities.rslv.ijson` that contains de-duplication info.
 $ nomenklatura dedupe entiites.ijson
 # will pop up a user interface.
@@ -34,7 +34,14 @@ $ cat entities.ijson | wc -l
 
 ### Programmatic usage
 
+The command-line use of `nomenklatura` is targeted at small datasets which need to be de-duplicated. For more involved scenarios, the package also offers a Python API which can be used to control the semantics of de-duplication.
 
+* `nomenklatura.Dataset` - implements a basic dataset for describing a set of entities.
+* `nomenklatura.Loader` - a general purpose access mechanism for entities. By default, a `nomenklatura.FileLoader` is used to access entity data stored in files, but the loader can be subclassed to work with entities from a database system.
+* `nomenklatura.Index` - a full-text in-memory search index for FtM entities. In the application, this is used to block de-duplication candidates, but the index can also be used to drive an API etc.
+* `nomenklatura.Resolver` - the core of the de-duplication process, the resolver is essentially a graph with edges made out of entity judgements. The resolver can be used to store judgements or get the canonical ID for a given entity.
+
+All of the API classes have extensive type annotations, which should make their integration in any modern Python API simpler.
 
 ## Design
 
