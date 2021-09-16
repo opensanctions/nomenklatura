@@ -46,6 +46,7 @@ class Index(Generic[DS, E]):
 
     def build(self, adjacent: bool = True) -> None:
         """Index all entities in the dataset."""
+        log.info("Building index from: %r...", self.loader)
         self.inverted = {}
         self.terms = {}
         for entity in self.loader:

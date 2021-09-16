@@ -103,6 +103,9 @@ class MemoryLoader(Loader[DS, E]):
     def __len__(self) -> int:
         return len(self.entities)
 
+    def __repr__(self) -> str:
+        return f"<MemoryLoader({self.dataset!r}, {len(self.entities)})>"
+
 
 class FileLoader(MemoryLoader[Dataset, EntityProxy]):
     """Read a given file path into an in-memory entity loader."""
@@ -110,6 +113,7 @@ class FileLoader(MemoryLoader[Dataset, EntityProxy]):
     def __init__(self, path: PathLike, resolver: Optional[Resolver] = None) -> None:
         dataset = Dataset(path.stem, path.stem)
         super().__init__(dataset, self.read_file(path), resolver=resolver)
+        self.path = path
 
     def read_file(self, path: PathLike) -> Generator[EntityProxy, None, None]:
         with open(path, "r") as fh:
@@ -119,3 +123,6 @@ class FileLoader(MemoryLoader[Dataset, EntityProxy]):
                     break
                 data = json.loads(line)
                 yield model.get_proxy(data)
+
+    def __repr__(self):
+        return f"<FileLoader({self.path!r}, {len(self.entities)})>"

@@ -15,6 +15,7 @@ class DedupeApp(App):
         self.loader = loader
         self.resolver = resolver
         self.latinize = False
+        self.ignore = set()
         self.load_candidate()
 
     def load_candidate(self):
@@ -22,11 +23,14 @@ class DedupeApp(App):
         self.right = None
         self.score = 0.0
         for left_id, right_id, score in self.resolver.get_candidates(limit=100):
+            if (left_id, right_id) in self.ignore:
+                continue
             self.left = self.loader.get_entity(left_id)
             self.right = self.loader.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
                 break
+            self.ignore.add((left_id, right_id))
 
     async def on_load(self, event):
         await self.bind("x", "positive", "Match")
