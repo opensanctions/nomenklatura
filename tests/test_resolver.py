@@ -25,6 +25,7 @@ def test_resolver():
     assert resolver.get_judgement("a1", "b1") == Judgement.NEGATIVE
     resolver.suggest("a1", "b1", 7.0)
     assert resolver.get_judgement("a1", "b1") == Judgement.NEGATIVE
+    assert len(list(resolver.canonicals())) == 2, list(resolver.canonicals())
 
     assert resolver.get_canonical("a1") == a_canon
     assert resolver.get_canonical("a2") == a_canon
@@ -36,6 +37,7 @@ def test_resolver():
     resolver.decide("a1", "a0", Judgement.POSITIVE)
     assert resolver.get_canonical("a1") == a_canon
     assert resolver.get_canonical("a0") == a_canon
+    assert len(list(resolver.canonicals())) == 2, list(resolver.canonicals())
 
     resolver.suggest("c1", "c2", 7.0)
     assert resolver.get_edge("c1", "c2").score == 7.0

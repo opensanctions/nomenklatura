@@ -1,8 +1,8 @@
 import json
 import getpass
-from pathlib import Path
 import shortuuid  # type: ignore
 from datetime import datetime
+from functools import lru_cache
 from collections import defaultdict
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
 from followthemoney.types import registry
@@ -157,15 +157,26 @@ class Resolver(object):
                 connected.update(rec)
         return connected
 
+    @lru_cache(maxsize=None)
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
     def get_canonical(self, entity_id: StrIdent) -> str:
+        """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)
         best = max(self.connected(node))
         if best.canonical:
             return best.id
         return node.id
+
+    def canonicals(self) -> Generator[Identifier, None, None]:
+        """Return all the canonical cluster identifiers."""
+        for node in self.nodes.keys():
+            if not node.canonical:
+                continue
+            canonical = self.get_canonical(node)
+            if canonical == node.id:
+                yield node
 
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
         entity = Identifier.get(entity_id)
@@ -183,6 +194,12 @@ class Resolver(object):
                     return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
+    def check_candidate(self, left: Identifier, right: Identifier) -> bool:
+        """Check if the two IDs could be merged, i.e. if there's no existing
+        judgement."""
+        judgement = self.get_judgement(left, right)
+        return judgement == Judgement.NO_JUDGEMENT
+
     def _get_suggested(self) -> List[Edge]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
         edges_all = self.edges.values()
@@ -195,8 +212,7 @@ class Resolver(object):
     ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
         returned = 0
         for edge in self._get_suggested():
-            judgement = self.get_judgement(edge.source, edge.target)
-            if judgement != Judgement.NO_JUDGEMENT:
+            if not self.check_candidate(edge.source, edge.target):
                 continue
             yield edge.target.id, edge.source.id, edge.score
             returned += 1
@@ -253,6 +269,7 @@ class Resolver(object):
         self.edges[edge.key] = edge
         self.nodes[edge.source].add(edge)
         self.nodes[edge.target].add(edge)
+        self.connected.cache_clear()
 
     def _remove(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
@@ -273,6 +290,7 @@ class Resolver(object):
             if kept >= keep:
                 self._remove(edge)
             kept += 1
+        self.connected.cache_clear()
 
     def apply(self, proxy: EntityProxy) -> EntityProxy:
         """Replace all entity references in a given proxy with their canonical
