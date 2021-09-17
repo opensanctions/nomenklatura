@@ -338,5 +338,5 @@ class Resolver(object):
         return resolver
 
     def __repr__(self) -> str:
-        path = str(self.path)
-        return "<Resolver(%r, %d)>" % (path, len(self.edges))
+        path = self.path.name if self.path is not None else ":memory:"
+        return f"<Resolver({path!r}, {len(self.edges)})>"
