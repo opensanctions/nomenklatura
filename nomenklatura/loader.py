@@ -124,5 +124,5 @@ class FileLoader(MemoryLoader[Dataset, EntityProxy]):
                 data = json.loads(line)
                 yield model.get_proxy(data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<FileLoader({self.path!r}, {len(self.entities)})>"
