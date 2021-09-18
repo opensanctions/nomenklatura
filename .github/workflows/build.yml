@@ -5,12 +5,17 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python:
+          - "3.8"
+          - "3.9"
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python }}
       - name: Install dependencies
         env:
           DEBIAN_FRONTEND: noninteractive

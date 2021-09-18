@@ -182,7 +182,7 @@ class Resolver(object):
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
-        referents = set[str]()
+        referents: Set[str] = set()
         for connected in self.connected(node):
             if not connected.canonical:
                 referents.add(connected.id)

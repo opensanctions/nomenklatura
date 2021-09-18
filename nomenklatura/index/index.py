@@ -78,11 +78,11 @@ class Index(Generic[DS, E]):
         if not query.schema.matchable:
             return
 
-        tokens = defaultdict[str, float](float)
+        tokens: Dict[str, float] = defaultdict(float)
         for token, _ in self.tokenizer.entity(query):
             tokens[token] += 1
 
-        matches = defaultdict[str, float](float)
+        matches: Dict[str, float] = defaultdict(float)
         for token, _ in tokens.items():
             entry = self.inverted.get(token)
             if entry is None or entry.idf is None:
