@@ -22,7 +22,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "followthemoney >= 2.6.2, < 3.0.0",
-        "shortuuid >= 1.0.2, < 2.0.0",
+        "shortuuid >= 1.0.1, < 2.0.0",
         "rich >= 10.9.0, < 11.0.2",
         "textual >= 0.1.10, < 1.0.2",
     ],
