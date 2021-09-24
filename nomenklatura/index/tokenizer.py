@@ -22,7 +22,13 @@ TYPE_WEIGHTS = {
     registry.address: 2.5,
     registry.identifier: 2.5,
 }
-TEXT_TYPES = (registry.name, registry.text, registry.string, registry.address)
+TEXT_TYPES = (
+    registry.name,
+    registry.text,
+    registry.string,
+    registry.address,
+    registry.identifier,
+)
 
 
 class Tokenizer(Generic[DS, E]):
@@ -40,7 +46,7 @@ class Tokenizer(Generic[DS, E]):
         if node_id is not None:
             yield node_id, type_weight
         if type == registry.date and len(value) > 3:
-            yield f"y:{value[:4]}", 0.7
+            yield f"y:{value[:4]}", 1.0
         if type in TEXT_TYPES:
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
@@ -70,4 +76,4 @@ class Tokenizer(Generic[DS, E]):
                     if prop.type == registry.date:
                         continue
                     for token, weight in self.value(prop.type, value):
-                        yield token, weight * 0.7
+                        yield token, weight * 0.8

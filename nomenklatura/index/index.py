@@ -32,7 +32,7 @@ class Index(Generic[DS, E]):
         for token, weight in self.tokenizer.entity(entity, loader=loader):
             if token not in self.inverted:
                 self.inverted[token] = IndexEntry(self, token)
-            self.inverted[token].add(entity.id)
+            self.inverted[token].add(entity.id, weight=weight)
             terms += 1
         self.terms[entity.id] = terms
         log.debug("Index entity: %r (%d terms)", entity, terms)
