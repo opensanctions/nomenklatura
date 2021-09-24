@@ -12,17 +12,17 @@ from typing import (
     Tuple,
     TypeVar,
 )
-from followthemoney.proxy import EntityProxy
 from followthemoney.types import registry
 from followthemoney.property import Property
 from followthemoney import model
 
 from nomenklatura.dataset import Dataset
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
 
-E = TypeVar("E", bound=EntityProxy)
+E = TypeVar("E", bound=CompositeEntity)
 DS = TypeVar("DS", bound=Dataset)
 
 
@@ -104,23 +104,27 @@ class MemoryLoader(Loader[DS, E]):
         return f"<MemoryLoader({self.dataset!r}, {len(self.entities)})>"
 
 
-class FileLoader(MemoryLoader[Dataset, EntityProxy]):
+class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
     """Read a given file path into an in-memory entity loader."""
 
     def __init__(self, path: PathLike, resolver: Optional[Resolver] = None) -> None:
         dataset = Dataset(path.stem, path.stem)
-        entities = self.read_file(path)
+        entities = self.read_file(dataset, path)
         super().__init__(dataset, entities, resolver=resolver)
         self.path = path
 
-    def read_file(self, path: PathLike) -> Generator[EntityProxy, None, None]:
+    def read_file(
+        self, dataset: Dataset, path: PathLike
+    ) -> Generator[CompositeEntity, None, None]:
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
                 if not line:
                     break
                 data = json.loads(line)
-                yield model.get_proxy(data)
+                proxy = CompositeEntity(model, data, cleaned=True)
+                proxy.datasets.add(dataset)
+                yield proxy
 
     def __repr__(self) -> str:
         return f"<FileLoader({self.path!r}, {len(self.entities)})>"

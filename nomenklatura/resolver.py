@@ -6,9 +6,9 @@ from functools import lru_cache
 from collections import defaultdict
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
 from followthemoney.types import registry
-from followthemoney.proxy import EntityProxy
 from followthemoney.dedupe import Judgement
 
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.util import PathLike
 
 StrIdent = Union[str, "Identifier"]
@@ -302,10 +302,13 @@ class Resolver(object):
             kept += 1
         self.connected.cache_clear()
 
-    def apply(self, proxy: EntityProxy) -> EntityProxy:
+    def apply(self, proxy: CompositeEntity) -> CompositeEntity:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
-        proxy.id = self.get_canonical(proxy.id)
+        canonical_id = self.get_canonical(proxy.id)
+        if canonical_id != proxy.id:
+            proxy.referents.add(proxy.id)
+            proxy.id = canonical_id
         for prop in proxy.iterprops():
             if prop.type != registry.entity:
                 continue

@@ -33,6 +33,8 @@ def xref(
             assert query.id is not None, query
             for match, score in index.match(query, limit=limit):
                 assert match.id is not None, match
+                if match.id == query.id:
+                    continue
                 # judgement = resolver.get_judgement(query.id, match.id)
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue

@@ -1,3 +1,3 @@
 from pathlib import Path
 
-PathLike = Path
+PathLike = Path  # like

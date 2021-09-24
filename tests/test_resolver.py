@@ -47,6 +47,9 @@ def test_resolver():
     assert resolver.get_edge("c1", "c2") is None
     assert resolver.get_edge(ccn, "c2").score is None
 
+    assert "a1" in resolver.get_referents(a_canon)
+    assert ":memory:" in repr(resolver)
+
 
 def test_resolver_store():
     with NamedTemporaryFile("w") as fh:

@@ -5,9 +5,9 @@ from rich.table import Table  # type: ignore
 from rich.text import Text  # type: ignore
 from textual.widget import Widget  # type: ignore
 from followthemoney.types import registry
-from followthemoney.proxy import EntityProxy
 from followthemoney.property import Property
 
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.tui.util import comparison_props
 
 if TYPE_CHECKING:
@@ -19,13 +19,13 @@ class Comparison(Widget):
         super().__init__()
         self.dedupe = dedupe
 
-    def render_column(self, entity: EntityProxy) -> Text:
+    def render_column(self, entity: CompositeEntity) -> Text:
         return Text.assemble(
             (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
         )
 
     def render_values(
-        self, prop: Property, entity: EntityProxy, other: EntityProxy
+        self, prop: Property, entity: CompositeEntity, other: CompositeEntity
     ) -> Text:
         values = entity.get(prop, quiet=True)
         other_values = other.get_type_values(prop.type)

@@ -17,6 +17,9 @@ def test_get_entity(dloader: FileLoader):
     entity = dloader.get_entity(DAIMLER)
     assert entity is not None, entity
     assert "Daimler" in entity.caption, entity.caption
+    assert len(entity.datasets) == 1
+    for dataset in entity.datasets:
+        assert "donations" in repr(dataset), dataset
 
     adjacent = list(dloader.get_adjacent(entity))
     assert len(adjacent) == 10, len(adjacent)
