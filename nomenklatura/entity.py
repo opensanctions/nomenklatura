@@ -31,7 +31,7 @@ class CompositeEntity(EntityProxy):
             merged.datasets.update(other.datasets)
         return merged
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
         data["referents"] = list(self.referents)
         data["datasets"] = [d.name for d in self.datasets]
