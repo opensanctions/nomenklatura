@@ -28,6 +28,7 @@ def xref(
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", index, resolver)
     scores: List[float] = []
+    num_entities = 0
     try:
         for num_entities, query in enumerate(entities):
             assert query.id is not None, query
