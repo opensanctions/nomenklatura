@@ -32,15 +32,15 @@ def xref(
     try:
         for num_entities, query in enumerate(entities):
             assert query.id is not None, query
-            for match, score in index.match(query, limit=limit):
-                assert match.id is not None, match
-                if match.id == query.id:
+            for match_id, score in index.match(query, limit=limit):
+                assert match_id is not None, match_id
+                if match_id == query.id:
                     continue
                 # judgement = resolver.get_judgement(query.id, match.id)
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.debug("[%.2f]-> %r x %r", score, query, match)
-                resolver.suggest(query.id, match.id, score)
+                resolver.suggest(query.id, match_id, score)
                 scores.append(score)
 
             if num_entities % 100 == 0 and num_entities > 0:

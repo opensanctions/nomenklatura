@@ -28,7 +28,7 @@ def test_index_persist(dloader, dindex):
 def test_index_search(dindex):
     query = model.make_entity("Person")
     query.add("name", "Susanne Klatten")
-    results = list(dindex.match(query))
+    results = list(dindex.match_entities(query))
     assert len(results), len(results)
     first = results[0][0]
     assert first.schema == query.schema, first.schema
@@ -41,7 +41,7 @@ def test_index_search(dindex):
 
     query = model.make_entity("Company")
     query.add("name", "Susanne Klatten")
-    results = list(dindex.match(query))
+    results = list(dindex.match_entities(query))
     assert len(results), len(results)
     first = results[0][0]
     assert first.schema != model.get("Person")

@@ -70,10 +70,19 @@ class Index(Generic[DS, E]):
                 return True
         return False
 
-    def match(
+    def match_entities(
         self, query: E, limit: int = 30
     ) -> Generator[Tuple[E, float], None, None]:
-        """Find entities similar to the given input entity."""
+        """Find entities similar to the given input entity, return entity."""
+        for entity_id, score in self.match(query, limit=limit):
+            entity = self.loader.get_entity(entity_id)
+            if entity is not None:
+                yield entity, score
+
+    def match(
+        self, query: E, limit: int = 30
+    ) -> Generator[Tuple[str, float], None, None]:
+        """Find entities similar to the given input entity, return ID."""
         if not query.schema.matchable:
             return
 
@@ -99,10 +108,9 @@ class Index(Generic[DS, E]):
                 continue
             if not self._match_schema(result_id, query.schema):
                 continue
-            entity = self.loader.get_entity(result_id)
-            if entity is not None:
-                returned += 1
-                yield entity, score
+
+            yield result_id, score
+            returned += 1
             if returned >= limit:
                 break
 
