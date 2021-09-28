@@ -30,7 +30,7 @@ class Comparison(Widget):
         values = entity.get(prop, quiet=True)
         other_values = other.get_type_values(prop.type)
         text = Text()
-        for i, value in enumerate(values):
+        for i, value in enumerate(sorted(values)):
             if i > 0:
                 text.append(" · ")
             caption = prop.type.caption(value)
