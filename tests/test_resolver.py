@@ -50,6 +50,11 @@ def test_resolver():
     assert "a1" in resolver.get_referents(a_canon)
     assert ":memory:" in repr(resolver)
 
+    resolver.explode("a1")
+    assert resolver.get_canonical("a17") == "a17"
+    assert resolver.get_judgement(a_canon, "a1") == Judgement.NO_JUDGEMENT
+    assert resolver.get_judgement("b1", "b2") == Judgement.POSITIVE
+
 
 def test_resolver_store():
     with NamedTemporaryFile("w") as fh:

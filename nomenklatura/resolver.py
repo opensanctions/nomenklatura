@@ -274,7 +274,7 @@ class Resolver(object):
         return edge.target
 
     def _register(self, edge: Edge) -> None:
-        if edge.judgement not in self.UNDECIDED:
+        if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
         self.edges[edge.key] = edge
         self.nodes[edge.source].add(edge)
@@ -287,6 +287,20 @@ class Resolver(object):
         for node in (edge.source, edge.target):
             if node in self.nodes:
                 self.nodes[node].discard(edge)
+
+    def explode(self, node_id: StrIdent) -> None:
+        """Dissolve all edges linked to the cluster to which the node belongs.
+        This is the hard way to make sure we re-do context once we realise
+        there's been a mistake."""
+        node = Identifier.get(node_id)
+        for part in self.connected(node):
+            edges = self.nodes.get(part)
+            if edges is None:
+                continue
+            for edge in list(edges):
+                if edge.judgement != Judgement.NO_JUDGEMENT:
+                    self._remove(edge)
+        self.connected.cache_clear()
 
     def prune(self, keep: int = 0) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the

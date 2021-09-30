@@ -57,7 +57,7 @@ class Tokenizer(Generic[DS, E]):
                 fp = type.node_id_safe(fingerprints.generate(norm))
                 if fp is not None and fp != node_id:
                     yield fp, type_weight * 0.8
-                for token in ngrams(norm, 2, 4):
+                for token in ngrams(norm, 3, 4):
                     yield f"g:{token}", 0.5
 
     def entity(
