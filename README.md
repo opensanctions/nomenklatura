@@ -58,6 +58,15 @@ Later on, the following might be added:
 * A web application to let users make merge decisions on the web
 * An implementation of the OpenRefine Reconciliation API based on the blocking index
 
+### Resolver graph
+
+The key implementation detail of nomenklatura is the `Resolver`, a graph structure that
+manages user decisions regarding entity identity. Edges are `Judgements` of whether
+two entity IDs are the same, not the same, or undecided. The resolver implements an
+algorithm for computing connected components, which can the be used to find the best
+available ID for a cluster of entities. It can also be used to evaluate transitive
+judgements, e.g. if A <> B, and B = C, then we don't need to ask if A = C.
+
 ## Reading
 
 * https://dedupe.readthedocs.org/en/latest/
