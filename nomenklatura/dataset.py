@@ -14,6 +14,9 @@ class Dataset(object):
         except AttributeError:
             return False
 
+    def __lt__(self, other: "Dataset") -> bool:
+        return self.name.__lt__(other.name)
+
     def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.name))
 

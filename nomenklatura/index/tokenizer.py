@@ -6,7 +6,7 @@ from followthemoney.schema import Schema
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
-from nomenklatura.index.util import ngrams
+from nomenklatura.index.util import split_ngrams
 from nomenklatura.loader import DS, E, Loader
 
 TYPE_WEIGHTS = {
@@ -36,7 +36,7 @@ class Tokenizer(Generic[DS, E]):
         return f"s:{schema.name}"
 
     def value(
-        self, type: PropertyType, value: str
+        self, type: PropertyType, value: str, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Perform type-specific token generation for a property value."""
         if type == registry.entity:
@@ -57,16 +57,21 @@ class Tokenizer(Generic[DS, E]):
                 fp = type.node_id_safe(fingerprints.generate(norm))
                 if fp is not None and fp != node_id:
                     yield fp, type_weight * 0.8
-                for token in ngrams(norm, 3, 4):
-                    yield f"g:{token}", 0.5
+
+                if fuzzy:
+                    for token in split_ngrams(norm, 3, 4):
+                        yield f"g:{token}", 0.5
 
     def entity(
-        self, entity: E, loader: Optional[Loader[DS, E]] = None
+        self,
+        entity: E,
+        loader: Optional[Loader[DS, E]] = None,
+        fuzzy: bool = True,
     ) -> Generator[Tuple[str, float], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         yield self.schema_token(entity.schema), 0.0
         for prop, value in entity.itervalues():
-            for token, weight in self.value(prop.type, value):
+            for token, weight in self.value(prop.type, value, fuzzy=fuzzy):
                 yield token, weight
         if loader is not None:
             # Index Address, Identification, Sanction, etc.:
@@ -75,5 +80,5 @@ class Tokenizer(Generic[DS, E]):
                     # Skip interval dates (not to be mixed up with other dates)
                     if prop.type == registry.date:
                         continue
-                    for token, weight in self.value(prop.type, value):
+                    for token, weight in self.value(prop.type, value, fuzzy=fuzzy):
                         yield token, weight * 0.8

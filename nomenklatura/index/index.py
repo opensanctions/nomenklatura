@@ -22,14 +22,14 @@ class Index(Generic[DS, E]):
         self.tokenizer = Tokenizer[DS, E]()
         self.terms: Dict[str, int] = {}
 
-    def index(self, entity: E, adjacent: bool = True) -> None:
+    def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index one entity. This is not idempodent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
             return
         terms = 0
         loader = self.loader if adjacent else None
-        for token, weight in self.tokenizer.entity(entity, loader=loader):
+        for token, weight in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
             if token not in self.inverted:
                 self.inverted[token] = IndexEntry(self, token)
             self.inverted[token].add(entity.id, weight=weight)
@@ -43,13 +43,13 @@ class Index(Generic[DS, E]):
     #     for entry in self.inverted.values():
     #         entry.remove(entity.id)
 
-    def build(self, adjacent: bool = True) -> None:
+    def build(self, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index all entities in the dataset."""
         log.info("Building index from: %r...", self.loader)
         self.inverted = {}
         self.terms = {}
         for entity in self.loader:
-            self.index(entity, adjacent=adjacent)
+            self.index(entity, adjacent=adjacent, fuzzy=fuzzy)
         self.commit()
         log.info("Built index: %r", self)
 
@@ -80,14 +80,14 @@ class Index(Generic[DS, E]):
                 yield entity, score
 
     def match(
-        self, query: E, limit: int = 30
+        self, query: E, limit: int = 30, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
         if not query.schema.matchable:
             return
 
         tokens: Dict[str, float] = defaultdict(float)
-        for token, _ in self.tokenizer.entity(query):
+        for token, _ in self.tokenizer.entity(query, fuzzy=fuzzy):
             tokens[token] += 1
 
         matches: Dict[str, float] = defaultdict(float)
