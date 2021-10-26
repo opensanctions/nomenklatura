@@ -64,6 +64,8 @@ class Index(Generic[DS, E]):
         tokens = set()
         for matchable in schema.matchable_schemata:
             tokens.add(self.tokenizer.schema_token(matchable))
+        for parent in schema.descendants:
+            tokens.add(self.tokenizer.schema_token(parent))
         for token in tokens:
             entry = self.inverted.get(token)
             if entry is not None and entity_id in entry.entities:
@@ -83,9 +85,6 @@ class Index(Generic[DS, E]):
         self, query: E, limit: int = 30, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
-        if not query.schema.matchable:
-            return
-
         tokens: Dict[str, float] = defaultdict(float)
         for token, _ in self.tokenizer.entity(query, fuzzy=fuzzy):
             tokens[token] += 1

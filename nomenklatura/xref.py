@@ -32,6 +32,8 @@ def xref(
     try:
         for num_entities, query in enumerate(entities):
             assert query.id is not None, query
+            if not query.schema.matchable:
+                continue
             for match_id, score in index.match(query, limit=limit):
                 assert match_id is not None, match_id
                 if match_id == query.id:
