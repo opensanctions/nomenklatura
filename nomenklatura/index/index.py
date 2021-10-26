@@ -71,10 +71,10 @@ class Index(Generic[DS, E]):
         return False
 
     def match_entities(
-        self, query: E, limit: int = 30
+        self, query: E, limit: int = 30, fuzzy: bool = True
     ) -> Generator[Tuple[E, float], None, None]:
         """Find entities similar to the given input entity, return entity."""
-        for entity_id, score in self.match(query, limit=limit):
+        for entity_id, score in self.match(query, limit=limit, fuzzy=fuzzy):
             entity = self.loader.get_entity(entity_id)
             if entity is not None:
                 yield entity, score
