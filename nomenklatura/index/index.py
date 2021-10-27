@@ -2,7 +2,7 @@ import pickle
 import logging
 import statistics
 from collections import defaultdict
-from typing import Any, Dict, Generator, Generic, Tuple, cast
+from typing import Any, Dict, Generator, Generic, Optional, Tuple, cast
 from followthemoney.schema import Schema
 
 from nomenklatura.util import PathLike
@@ -72,17 +72,8 @@ class Index(Generic[DS, E]):
                 return True
         return False
 
-    def match_entities(
-        self, query: E, limit: int = 30, fuzzy: bool = True
-    ) -> Generator[Tuple[E, float], None, None]:
-        """Find entities similar to the given input entity, return entity."""
-        for entity_id, score in self.match(query, limit=limit, fuzzy=fuzzy):
-            entity = self.loader.get_entity(entity_id)
-            if entity is not None:
-                yield entity, score
-
     def match(
-        self, query: E, limit: int = 30, fuzzy: bool = True
+        self, query: E, limit: Optional[int] = 30, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
         tokens: Dict[str, float] = defaultdict(float)
@@ -110,6 +101,20 @@ class Index(Generic[DS, E]):
 
             yield result_id, score
             returned += 1
+            if limit is not None and returned >= limit:
+                break
+
+    def match_entities(
+        self, query: E, limit: int = 30, fuzzy: bool = True
+    ) -> Generator[Tuple[E, float], None, None]:
+        """Find entities similar to the given input entity, return entity."""
+        returned = 0
+        for entity_id, score in self.match(query, limit=None, fuzzy=fuzzy):
+            entity = self.loader.get_entity(entity_id)
+            if entity is not None:
+                yield entity, score
+                returned += 1
+
             if returned >= limit:
                 break
 
