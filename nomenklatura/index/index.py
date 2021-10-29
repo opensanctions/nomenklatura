@@ -23,7 +23,7 @@ class Index(Generic[DS, E]):
         self.terms: Dict[str, int] = {}
 
     def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
-        """Index one entity. This is not idempodent, you need to remove the
+        """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
             return

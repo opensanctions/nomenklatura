@@ -1,8 +1,6 @@
-import math
 import logging
-from typing import Iterable, List
-
-# from followthemoney.dedupe.judgement import Judgement
+from typing import Iterable, List, Optional
+from followthemoney.schema import Schema
 
 from nomenklatura.loader import DS, E
 from nomenklatura.resolver import Resolver
@@ -24,7 +22,11 @@ def _print_stats(num_entities: int, scores: List[float]) -> None:
 
 
 def xref(
-    index: Index[DS, E], resolver: Resolver, entities: Iterable[E], limit: int = 15
+    index: Index[DS, E],
+    resolver: Resolver,
+    entities: Iterable[E],
+    limit: int = 15,
+    range: Optional[Schema] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", index, resolver)
     scores: List[float] = []
@@ -33,6 +35,8 @@ def xref(
         for num_entities, query in enumerate(entities):
             assert query.id is not None, query
             if not query.schema.matchable:
+                continue
+            if range is not None and not query.schema.is_a(range):
                 continue
             for match_id, score in index.match(query, limit=limit):
                 assert match_id is not None, match_id
