@@ -16,11 +16,14 @@ log = logging.getLogger(__name__)
 class Index(Generic[DS, E]):
     """An in-memory search index to match entities against a given dataset."""
 
+    __slots__ = "loader", "inverted", "tokenizer", "terms"
+
     def __init__(self, loader: Loader[DS, E]):
         self.loader = loader
-        self.inverted: Dict[str, IndexEntry[DS, E]] = {}
         self.tokenizer = Tokenizer[DS, E]()
-        self.terms: Dict[str, int] = {}
+        # self.entities: Dict[str, int] = {}
+        self.inverted: Dict[str, IndexEntry[DS, E]] = {}
+        self.terms: Dict[int, int] = {}
 
     def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
@@ -31,7 +34,7 @@ class Index(Generic[DS, E]):
         loader = self.loader if adjacent else None
         for token, weight in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
             if token not in self.inverted:
-                self.inverted[token] = IndexEntry(self, token)
+                self.inverted[token] = IndexEntry(self)
             self.inverted[token].add(entity.id, weight=weight)
             terms += 1
         self.terms[entity.id] = terms
@@ -141,15 +144,13 @@ class Index(Generic[DS, E]):
     def to_dict(self) -> Dict[str, Any]:
         """Prepare an index for pickling."""
         return {
-            "dataset": self.loader.dataset.name,
-            "inverted": [t.to_dict() for t in self.inverted.values()],
+            "inverted": {t: e.to_dict() for t, e in self.inverted.items()},
             "terms": self.terms,
         }
 
     def from_dict(self, state: Dict[str, Any]) -> None:
         """Restore a pickled index."""
-        entries = [IndexEntry.from_dict(self, i) for i in state["inverted"]]
-        self.inverted = {e.token: e for e in entries}
+        self.inverted = {t: IndexEntry.from_dict(self, i) for t, i in state["inverted"]}
         self.terms = cast(Dict[str, int], state.get("terms"))
 
     def __len__(self) -> int:

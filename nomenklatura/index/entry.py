@@ -10,11 +10,10 @@ if TYPE_CHECKING:
 class IndexEntry(Generic[DS, E]):
     """A set of entities and a weight associated with a given term in the index."""
 
-    __slots__ = "index", "token", "idf", "entities", "frequencies"
+    __slots__ = "index", "idf", "entities", "frequencies"
 
-    def __init__(self, index: "Index[DS, E]", token: str) -> None:
+    def __init__(self, index: "Index[DS, E]") -> None:
         self.index = index
-        self.token = token
         self.idf: Optional[float] = None
         self.entities: Dict[str, float] = {}
         self.frequencies: Dict[str, float] = {}
@@ -25,10 +24,10 @@ class IndexEntry(Generic[DS, E]):
             self.entities[entity_id] = 0
         self.entities[entity_id] += weight
 
-    def remove(self, entity_id: str) -> None:
+    def remove(self, token: str, entity_id: str) -> None:
         self.entities.pop(entity_id, None)
         if not len(self):
-            self.index.inverted.pop(self.token, None)
+            self.index.inverted.pop(token, None)
 
     def compute(self, min_terms: float) -> None:
         """Compute weighted term frequency for scoring."""
@@ -39,21 +38,18 @@ class IndexEntry(Generic[DS, E]):
             self.frequencies[entity_id] = weight / max(terms, min_terms)
 
     def __repr__(self) -> str:
-        return "<IndexEntry(%r, %r)>" % (self.token, len(self))
+        return "<IndexEntry(%r)>" % len(self)
 
     def __len__(self) -> int:
         return len(self.entities)
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            token=self.token,
-            entities=self.entities,
-        )
+        return self.entities
 
     @classmethod
     def from_dict(
         cls, index: "Index[DS, E]", data: Dict[str, Any]
     ) -> "IndexEntry[DS, E]":
-        obj = cls(index, data["token"])
-        obj.entities = data["entities"]
+        obj = cls(index)
+        obj.entities = data
         return obj
