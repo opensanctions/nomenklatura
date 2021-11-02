@@ -2,7 +2,7 @@ import logging
 from typing import Iterable, List, Optional
 from followthemoney.schema import Schema
 
-from nomenklatura.loader import DS, E
+from nomenklatura.entity import DS, E
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
 
@@ -23,7 +23,7 @@ def _print_stats(num_entities: int, scores: List[float]) -> None:
 
 def xref(
     index: Index[DS, E],
-    resolver: Resolver,
+    resolver: Resolver[E],
     entities: Iterable[E],
     limit: int = 15,
     range: Optional[Schema] = None,

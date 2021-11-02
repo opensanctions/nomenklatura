@@ -4,11 +4,11 @@ import shortuuid  # type: ignore
 from datetime import datetime
 from functools import lru_cache
 from collections import defaultdict
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, Union
 from followthemoney.types import registry
 from followthemoney.dedupe import Judgement
 
-from nomenklatura.entity import CompositeEntity
+from nomenklatura.entity import E, CompositeEntity
 from nomenklatura.util import PathLike
 
 StrIdent = Union[str, "Identifier"]
@@ -133,7 +133,7 @@ class Edge(object):
         )
 
 
-class Resolver(object):
+class Resolver(Generic[E]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(self, path: Optional[PathLike] = None) -> None:
@@ -316,7 +316,7 @@ class Resolver(object):
             kept += 1
         self.connected.cache_clear()
 
-    def apply(self, proxy: CompositeEntity) -> CompositeEntity:
+    def apply(self, proxy: E) -> E:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
         canonical_id = self.get_canonical(proxy.id)
@@ -341,7 +341,7 @@ class Resolver(object):
                 fh.write(edge.to_line())
 
     @classmethod
-    def load(cls, path: PathLike) -> "Resolver":
+    def load(cls, path: PathLike) -> "Resolver[E]":
         resolver = cls(path=path)
         if not path.exists():
             return resolver

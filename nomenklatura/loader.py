@@ -10,20 +10,16 @@ from typing import (
     List,
     Optional,
     Tuple,
-    TypeVar,
 )
 from followthemoney.types import registry
 from followthemoney.property import Property
 from followthemoney import model
 
 from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
+from nomenklatura.entity import CompositeEntity, DS, E
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
-
-E = TypeVar("E", bound=CompositeEntity)
-DS = TypeVar("DS", bound=Dataset)
 
 
 class Loader(Generic[DS, E]):
@@ -62,10 +58,10 @@ class MemoryLoader(Loader[DS, E]):
     """Load entities from the given iterable of entities."""
 
     def __init__(
-        self, dataset: DS, entities: Iterable[E], resolver: Optional[Resolver] = None
+        self, dataset: DS, entities: Iterable[E], resolver: Optional[Resolver[E]] = None
     ) -> None:
         super().__init__(dataset)
-        self.resolver = resolver or Resolver()
+        self.resolver = resolver or Resolver[E]()
         self.entities: Dict[str, E] = {}
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
@@ -107,7 +103,9 @@ class MemoryLoader(Loader[DS, E]):
 class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
     """Read a given file path into an in-memory entity loader."""
 
-    def __init__(self, path: PathLike, resolver: Optional[Resolver] = None) -> None:
+    def __init__(
+        self, path: PathLike, resolver: Optional[Resolver[CompositeEntity]] = None
+    ) -> None:
         dataset = Dataset(path.stem, path.stem)
         entities = self.read_file(dataset, path)
         super().__init__(dataset, entities, resolver=resolver)

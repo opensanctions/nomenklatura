@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, TypeVar, cast
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
 from nomenklatura.dataset import Dataset
 
 if TYPE_CHECKING:
-    from nomenklatura.loader import Loader, DS
+    from nomenklatura.loader import Loader
 
 
 class CompositeEntity(EntityProxy):
@@ -63,3 +63,7 @@ class CompositeEntity(EntityProxy):
         self, loader: "Loader[DS, CompositeEntity]", depth: int = 1
     ) -> Dict[str, Any]:
         return self._to_nested_dict(loader, depth=depth, path=[])
+
+
+E = TypeVar("E", bound=CompositeEntity)
+DS = TypeVar("DS", bound=Dataset)

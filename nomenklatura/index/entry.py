@@ -1,7 +1,7 @@
 import math
-from typing import TYPE_CHECKING, Any, Dict, Generic, Optional
+from typing import TYPE_CHECKING, Any, Dict, Generator, Generic, List, Optional, Tuple
 
-from nomenklatura.loader import DS, E
+from nomenklatura.entity import DS, E
 
 if TYPE_CHECKING:
     from nomenklatura.index.index import Index
@@ -10,32 +10,30 @@ if TYPE_CHECKING:
 class IndexEntry(Generic[DS, E]):
     """A set of entities and a weight associated with a given term in the index."""
 
-    __slots__ = "index", "idf", "entities", "frequencies"
+    __slots__ = "index", "idf", "entities"
 
     def __init__(self, index: "Index[DS, E]") -> None:
         self.index = index
-        self.idf: Optional[float] = None
-        self.entities: Dict[str, float] = {}
-        self.frequencies: Dict[str, float] = {}
+        self.idf: float = 0.0
+        self.entities: Dict[str, float] = dict()
 
     def add(self, entity_id: str, weight: float = 1.0) -> None:
         """Mark the given entity as relevant to the entry's token."""
+        # This is insane and meant to trade perf for memory:
         if entity_id not in self.entities:
             self.entities[entity_id] = 0
         self.entities[entity_id] += weight
 
-    def remove(self, token: str, entity_id: str) -> None:
-        self.entities.pop(entity_id, None)
-        if not len(self):
-            self.index.inverted.pop(token, None)
-
-    def compute(self, min_terms: float) -> None:
+    def compute(self) -> None:
         """Compute weighted term frequency for scoring."""
         self.idf = math.log(len(self.index) / len(self))
-        self.frequencies = {}
+
+    def frequencies(self) -> Generator[Tuple[str, float], None, None]:
+        index = self.index
         for entity_id, weight in self.entities.items():
-            terms = self.index.terms.get(entity_id, 0)
-            self.frequencies[entity_id] = weight / max(terms, min_terms)
+            terms = index.terms.get(entity_id, 0.0)
+            tf = weight / max(terms, index.min_terms)
+            yield entity_id, tf
 
     def __repr__(self) -> str:
         return "<IndexEntry(%r)>" % len(self)
@@ -44,12 +42,12 @@ class IndexEntry(Generic[DS, E]):
         return len(self.entities)
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.entities
+        return {"entities": self.entities}
 
     @classmethod
     def from_dict(
         cls, index: "Index[DS, E]", data: Dict[str, Any]
     ) -> "IndexEntry[DS, E]":
         obj = cls(index)
-        obj.entities = data
+        obj.entities = data["entities"]
         return obj

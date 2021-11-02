@@ -7,6 +7,7 @@ from followthemoney.cli.util import write_object
 from nomenklatura.index.index import Index
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
+from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.xref import xref
 from nomenklatura.tui import DedupeApp
 
@@ -18,12 +19,12 @@ def _path_sibling(path: Path, suffix: str) -> Path:
     return path.parent.joinpath(f"{path.stem}{suffix}")
 
 
-def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver:
+def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[Entity]:
     path = resolver_path or _path_sibling(file_path, ".rslv.ijson")
-    return Resolver.load(Path(path))
+    return Resolver[Entity].load(Path(path))
 
 
-def index_xref(loader: FileLoader, resolver: Resolver) -> None:
+def index_xref(loader: FileLoader, resolver: Resolver[Entity]) -> None:
     index = Index(loader)
     index.build()
     xref(index, resolver, loader)

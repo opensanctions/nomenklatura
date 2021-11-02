@@ -1,12 +1,15 @@
 import pickle
 import logging
 import statistics
+from itertools import combinations
 from collections import defaultdict
-from typing import Any, Dict, Generator, Generic, Optional, Tuple, cast
+from typing import Any, Dict, Generator, Generic, List, Optional, Tuple, cast
 from followthemoney.schema import Schema
 
 from nomenklatura.util import PathLike
-from nomenklatura.loader import DS, E, Loader
+from nomenklatura.resolver import Pair, Identifier
+from nomenklatura.entity import DS, E
+from nomenklatura.loader import Loader
 from nomenklatura.index.entry import IndexEntry
 from nomenklatura.index.tokenizer import Tokenizer
 
@@ -16,35 +19,28 @@ log = logging.getLogger(__name__)
 class Index(Generic[DS, E]):
     """An in-memory search index to match entities against a given dataset."""
 
-    __slots__ = "loader", "inverted", "tokenizer", "terms"
+    __slots__ = "loader", "inverted", "tokenizer", "terms", "min_terms"
 
     def __init__(self, loader: Loader[DS, E]):
         self.loader = loader
         self.tokenizer = Tokenizer[DS, E]()
-        # self.entities: Dict[str, int] = {}
         self.inverted: Dict[str, IndexEntry[DS, E]] = {}
-        self.terms: Dict[int, int] = {}
+        self.terms: Dict[str, float] = {}
 
     def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
             return
-        terms = 0
+        terms = 0.0
         loader = self.loader if adjacent else None
         for token, weight in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
             if token not in self.inverted:
                 self.inverted[token] = IndexEntry(self)
             self.inverted[token].add(entity.id, weight=weight)
-            terms += 1
+            terms += weight
         self.terms[entity.id] = terms
         log.debug("Index entity: %r (%d terms)", entity, terms)
-
-    # def remove(self, entity):
-    #     """Remove an entity from the index."""
-    #     self.terms.pop(entity.id, None)
-    #     for entry in self.inverted.values():
-    #         entry.remove(entity.id)
 
     def build(self, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index all entities in the dataset."""
@@ -58,10 +54,10 @@ class Index(Generic[DS, E]):
 
     def commit(self) -> None:
         quantiles = statistics.quantiles(self.terms.values(), n=3)
-        min_terms = float(quantiles[0])
+        self.min_terms = float(quantiles[0])
 
         for entry in self.inverted.values():
-            entry.compute(min_terms)
+            entry.compute()
 
     def _match_schema(self, entity_id: str, schema: Schema) -> bool:
         tokens = set()
@@ -88,7 +84,7 @@ class Index(Generic[DS, E]):
             entry = self.inverted.get(token)
             if entry is None or entry.idf is None:
                 continue
-            for entity_id, tf in entry.frequencies.items():
+            for entity_id, tf in entry.frequencies():
                 matches[entity_id] += tf * entry.idf
 
         results = sorted(matches.items(), key=lambda x: x[1], reverse=True)
@@ -121,6 +117,31 @@ class Index(Generic[DS, E]):
             if returned >= limit:
                 break
 
+    def pairs(self) -> List[Tuple[Pair, float]]:
+        pairs: Dict[Pair, float] = {}
+        total = len(self.inverted)
+        log.info("Building index blocking pairs (%d)..." % total)
+        for idx, entry in enumerate(self.inverted.values()):
+            if idx % 1000 == 0:
+                log.info("Pairwise xref: %d/%d" % (idx, total))
+
+            lene = len(entry.frequencies)
+            if lene == 1:
+                continue
+            entities = sorted(
+                entry.frequencies.items(), key=lambda f: f[1], reverse=True
+            )[:200]
+            for (left, lw), (right, rw) in combinations(entities, 2):
+                if lw == 0.0 or rw == 0.0:
+                    continue
+                pair = Identifier.pair(left, right)
+                if pair not in pairs:
+                    pairs[pair] = 0
+                score = lw + rw
+                pairs[pair] += score
+
+        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
+
     def save(self, path: PathLike) -> None:
         with open(path, "wb") as fh:
             pickle.dump(self.to_dict(), fh)
@@ -150,8 +171,9 @@ class Index(Generic[DS, E]):
 
     def from_dict(self, state: Dict[str, Any]) -> None:
         """Restore a pickled index."""
-        self.inverted = {t: IndexEntry.from_dict(self, i) for t, i in state["inverted"]}
-        self.terms = cast(Dict[str, int], state.get("terms"))
+        inverted = state["inverted"].items()
+        self.inverted = {t: IndexEntry.from_dict(self, i) for t, i in inverted}
+        self.terms = cast(Dict[str, float], state.get("terms"))
 
     def __len__(self) -> int:
         return len(self.terms)

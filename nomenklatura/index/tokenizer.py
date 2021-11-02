@@ -1,16 +1,16 @@
-import fingerprints
 from typing import Generic, Optional
-from typing import Any, Dict, Generator, Generic, Tuple, cast
+from typing import Any, Dict, Generator, Generic, Tuple
 from normality import normalize, WS
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
 from nomenklatura.index.util import split_ngrams
-from nomenklatura.loader import DS, E, Loader
+from nomenklatura.entity import DS, E
+from nomenklatura.loader import Loader
 
 TYPE_WEIGHTS = {
-    registry.name: 2.0,
+    registry.name: 3.0,
     registry.country: 1.5,
     registry.date: 1.5,
     registry.language: 0.7,
@@ -22,11 +22,16 @@ TYPE_WEIGHTS = {
     registry.address: 2.5,
     registry.identifier: 2.5,
 }
-TEXT_TYPES = (
+SKIP_FULL = (
     registry.name,
+    registry.address,
     registry.text,
     registry.string,
-    registry.address,
+    registry.number,
+    registry.json,
+)
+TEXT_TYPES = (
+    *SKIP_FULL,
     registry.identifier,
 )
 
@@ -39,28 +44,33 @@ class Tokenizer(Generic[DS, E]):
         self, type: PropertyType, value: str, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Perform type-specific token generation for a property value."""
-        if type == registry.entity:
+        if type == (registry.url, registry.topic, registry.entity):
             return
-        node_id = type.node_id(value)
-        type_weight = TYPE_WEIGHTS.get(type, 1.0)
-        if node_id is not None:
-            yield node_id, type_weight
-        if type == registry.date and len(value) > 3:
-            yield f"y:{value[:4]}", 1.0
+        weight = TYPE_WEIGHTS.get(type, 1.0)
+        if type not in SKIP_FULL:
+            token_value = value[:100].lower()
+            token = f"{type.name[:2]}:{token_value}"
+            yield token, weight
+        if type == registry.date and len(value) > 4:
+            yield f"da:{value[:4]}", 1.0
         if type in TEXT_TYPES:
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
                 return
             for token in norm.split(WS):
-                yield f"w:{token}", 0.7
-            if type == registry.name:
-                fp = type.node_id_safe(fingerprints.generate(norm))
-                if fp is not None and fp != node_id:
-                    yield fp, type_weight * 0.8
+                yield f"w:{token}", weight
+                if type == registry.name:
+                    yield f"na:{token}", weight
 
                 if fuzzy:
-                    for token in split_ngrams(norm, 3, 4):
-                        yield f"g:{token}", 0.5
+                    for ngram in split_ngrams(token, 3, 4):
+                        yield f"w:{ngram}", 0.5
+
+    # def value(
+    #     self, type: PropertyType, value: str, fuzzy: bool = True
+    # ) -> Generator[Tuple[str, float], None, None]:
+    #     for token, weight in self._value(type, value, fuzzy=fuzzy):
+    #         yield hash(token), weight
 
     def entity(
         self,
