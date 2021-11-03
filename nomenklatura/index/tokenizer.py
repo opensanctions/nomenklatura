@@ -44,7 +44,7 @@ class Tokenizer(Generic[DS, E]):
         self, type: PropertyType, value: str, fuzzy: bool = True
     ) -> Generator[Tuple[str, float], None, None]:
         """Perform type-specific token generation for a property value."""
-        if type == (registry.url, registry.topic, registry.entity):
+        if type in (registry.url, registry.topic, registry.entity):
             return
         weight = TYPE_WEIGHTS.get(type, 1.0)
         if type not in SKIP_FULL:
@@ -65,12 +65,6 @@ class Tokenizer(Generic[DS, E]):
                 if fuzzy:
                     for ngram in split_ngrams(token, 3, 4):
                         yield f"w:{ngram}", 0.5
-
-    # def value(
-    #     self, type: PropertyType, value: str, fuzzy: bool = True
-    # ) -> Generator[Tuple[str, float], None, None]:
-    #     for token, weight in self._value(type, value, fuzzy=fuzzy):
-    #         yield hash(token), weight
 
     def entity(
         self,

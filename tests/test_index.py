@@ -56,6 +56,16 @@ def test_index_search(dindex):
     assert 0 == len(results), len(results)
 
 
+def test_index_pairs(dloader, dindex: Index):
+    pairs = dindex.pairs()
+    pair, score = pairs[0]
+    entity0 = dloader.get_entity(str(pair[0]))
+    entity1 = dloader.get_entity(str(pair[1]))
+    assert "Schnabel" in entity0.caption
+    assert "Schnabel" in entity1.caption
+    assert score > 0
+
+
 def test_index_filter(dloader, dindex):
     query = dloader.get_entity(DAIMLER)
     query.id = None

@@ -10,10 +10,9 @@ if TYPE_CHECKING:
 class IndexEntry(Generic[DS, E]):
     """A set of entities and a weight associated with a given term in the index."""
 
-    __slots__ = "index", "idf", "entities"
+    __slots__ = "idf", "entities"
 
-    def __init__(self, index: "Index[DS, E]") -> None:
-        self.index = index
+    def __init__(self) -> None:
         self.idf: float = 0.0
         self.entities: Dict[str, float] = dict()
 
@@ -24,12 +23,13 @@ class IndexEntry(Generic[DS, E]):
             self.entities[entity_id] = 0
         self.entities[entity_id] += weight
 
-    def compute(self) -> None:
+    def compute(self, index: "Index[DS, E]") -> None:
         """Compute weighted term frequency for scoring."""
-        self.idf = math.log(len(self.index) / len(self))
+        self.idf = math.log(len(index) / len(self))
 
-    def frequencies(self) -> Generator[Tuple[str, float], None, None]:
-        index = self.index
+    def frequencies(
+        self, index: "Index[DS, E]"
+    ) -> Generator[Tuple[str, float], None, None]:
         for entity_id, weight in self.entities.items():
             terms = index.terms.get(entity_id, 0.0)
             tf = weight / max(terms, index.min_terms)
@@ -45,9 +45,7 @@ class IndexEntry(Generic[DS, E]):
         return {"entities": self.entities}
 
     @classmethod
-    def from_dict(
-        cls, index: "Index[DS, E]", data: Dict[str, Any]
-    ) -> "IndexEntry[DS, E]":
-        obj = cls(index)
+    def from_dict(cls, data: Dict[str, Any]) -> "IndexEntry[DS, E]":
+        obj = cls()
         obj.entities = data["entities"]
         return obj

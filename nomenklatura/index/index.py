@@ -36,7 +36,7 @@ class Index(Generic[DS, E]):
         loader = self.loader if adjacent else None
         for token, weight in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
             if token not in self.inverted:
-                self.inverted[token] = IndexEntry(self)
+                self.inverted[token] = IndexEntry()
             self.inverted[token].add(entity.id, weight=weight)
             terms += weight
         self.terms[entity.id] = terms
@@ -57,7 +57,7 @@ class Index(Generic[DS, E]):
         self.min_terms = float(quantiles[0])
 
         for entry in self.inverted.values():
-            entry.compute()
+            entry.compute(self)
 
     def _match_schema(self, entity_id: str, schema: Schema) -> bool:
         tokens = set()
@@ -84,7 +84,7 @@ class Index(Generic[DS, E]):
             entry = self.inverted.get(token)
             if entry is None or entry.idf is None:
                 continue
-            for entity_id, tf in entry.frequencies():
+            for entity_id, tf in entry.frequencies(self):
                 matches[entity_id] += tf * entry.idf
 
         results = sorted(matches.items(), key=lambda x: x[1], reverse=True)
@@ -118,6 +118,9 @@ class Index(Generic[DS, E]):
                 break
 
     def pairs(self) -> List[Tuple[Pair, float]]:
+        """A second method of doing xref: summing up the pairwise match value
+        for all entities lineraly. This uses a lot of memory but is really
+        fast."""
         pairs: Dict[Pair, float] = {}
         total = len(self.inverted)
         log.info("Building index blocking pairs (%d)..." % total)
@@ -125,12 +128,11 @@ class Index(Generic[DS, E]):
             if idx % 1000 == 0:
                 log.info("Pairwise xref: %d/%d" % (idx, total))
 
-            lene = len(entry.frequencies)
-            if lene == 1:
+            frequencies = list(entry.frequencies(self))
+            if len(frequencies) == 1:
                 continue
-            entities = sorted(
-                entry.frequencies.items(), key=lambda f: f[1], reverse=True
-            )[:200]
+            entities = sorted(frequencies, key=lambda f: f[1], reverse=True)
+            entities = entities[:200]
             for (left, lw), (right, rw) in combinations(entities, 2):
                 if lw == 0.0 or rw == 0.0:
                     continue
@@ -172,7 +174,7 @@ class Index(Generic[DS, E]):
     def from_dict(self, state: Dict[str, Any]) -> None:
         """Restore a pickled index."""
         inverted = state["inverted"].items()
-        self.inverted = {t: IndexEntry.from_dict(self, i) for t, i in inverted}
+        self.inverted = {t: IndexEntry.from_dict(i) for t, i in inverted}
         self.terms = cast(Dict[str, float], state.get("terms"))
 
     def __len__(self) -> int:
