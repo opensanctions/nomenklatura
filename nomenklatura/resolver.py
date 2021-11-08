@@ -328,7 +328,7 @@ class Resolver(Generic[E]):
                 continue
             for value in proxy.pop(prop):
                 canonical = self.get_canonical(value)
-                proxy.add(prop, canonical, cleaned=True)
+                proxy.unsafe_add(prop, canonical, cleaned=True)
         return proxy
 
     def save(self) -> None:
