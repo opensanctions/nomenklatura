@@ -58,7 +58,7 @@ class Field(object):
 
     __slots__ = "len", "avg_len", "tokens", "entities"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.len = 0
         self.avg_len = 0.0
         self.tokens: Dict[str, Entry] = {}

@@ -11,7 +11,7 @@ from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.entity import DS, E
 from nomenklatura.loader import Loader
-from nomenklatura.index.entry import Entry, Field
+from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import (
     NGRAM_FIELD,
     SCHEMA_FIELD,
@@ -48,7 +48,7 @@ class Index(Generic[DS, E]):
         self.loader = loader
         self.tokenizer = Tokenizer[DS, E]()
         self.fields: Dict[str, Field] = {}
-        self.entities = set[str]()
+        self.entities: Set[str] = set()
 
     def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
@@ -77,7 +77,7 @@ class Index(Generic[DS, E]):
             field.compute()
 
     def _match_schema(self, entity_id: str, schema: Schema) -> bool:
-        tokens = set[str]()
+        tokens: Set[str] = set()
         for matchable in schema.matchable_schemata:
             tokens.add(self.tokenizer.schema_token(matchable))
         for parent in schema.descendants:
@@ -200,7 +200,7 @@ class Index(Generic[DS, E]):
         """Restore a pickled index."""
         fields = state["fields"].items()
         self.fields = {t: Field.from_dict(i) for t, i in fields}
-        self.entities = set[str](cast(set[str], state.get("entities")))
+        self.entities: Set[str] = set(cast(Set[str], state.get("entities")))
 
     def __len__(self) -> int:
         return len(self.entities)
