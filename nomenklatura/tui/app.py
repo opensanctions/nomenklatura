@@ -29,7 +29,8 @@ class DedupeApp(App):
             self.right = self.loader.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
-                break
+                if self.left.schema in self.right.schema.matchable_schemata:
+                    break
             self.ignore.add((left_id, right_id))
 
     async def on_load(self, event):
