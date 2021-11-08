@@ -200,7 +200,7 @@ class Index(Generic[DS, E]):
         """Restore a pickled index."""
         fields = state["fields"].items()
         self.fields = {t: Field.from_dict(i) for t, i in fields}
-        self.entities: Set[str] = set(cast(Set[str], state.get("entities")))
+        self.entities = set(cast(Set[str], state.get("entities")))
 
     def __len__(self) -> int:
         return len(self.entities)
