@@ -9,19 +9,9 @@ from nomenklatura.index.util import split_ngrams
 from nomenklatura.entity import DS, E
 from nomenklatura.loader import Loader
 
-TYPE_WEIGHTS = {
-    registry.name: 3.0,
-    registry.country: 1.5,
-    registry.date: 1.5,
-    registry.language: 0.7,
-    registry.iban: 3.0,
-    registry.phone: 3.0,
-    registry.email: 3.0,
-    registry.entity: 0.0,
-    registry.topic: 2.1,
-    registry.address: 2.5,
-    registry.identifier: 2.5,
-}
+SCHEMA_FIELD = "schema"
+NGRAM_FIELD = "ngram"
+WORD_FIELD = "word"
 SKIP_FULL = (
     registry.name,
     registry.address,
@@ -38,51 +28,51 @@ TEXT_TYPES = (
 
 class Tokenizer(Generic[DS, E]):
     def schema_token(self, schema: Schema) -> str:
-        return f"s:{schema.name}"
+        return schema.name
 
     def value(
         self, type: PropertyType, value: str, fuzzy: bool = True
-    ) -> Generator[Tuple[str, float], None, None]:
+    ) -> Generator[Tuple[str, str], None, None]:
         """Perform type-specific token generation for a property value."""
         if type in (registry.url, registry.topic, registry.entity):
             return
-        weight = TYPE_WEIGHTS.get(type, 1.0)
         if type not in SKIP_FULL:
             token_value = value[:100].lower()
-            token = f"{type.name[:2]}:{token_value}"
-            yield token, weight
+            yield type.name, token_value
         if type == registry.date and len(value) > 4:
-            yield f"da:{value[:4]}", 1.0
+            yield type.name, value[:4]
         if type in TEXT_TYPES:
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
                 return
             for token in norm.split(WS):
-                yield f"w:{token}", weight
+                yield WORD_FIELD, token
                 if type == registry.name:
-                    yield f"na:{token}", weight
+                    yield type.name, token
 
                 if fuzzy:
-                    for ngram in split_ngrams(token, 3, 4):
-                        yield f"w:{ngram}", 0.5
+                    for ngram in split_ngrams(token, 2, 3):
+                        yield NGRAM_FIELD, ngram
 
     def entity(
         self,
         entity: E,
         loader: Optional[Loader[DS, E]] = None,
         fuzzy: bool = True,
-    ) -> Generator[Tuple[str, float], None, None]:
+    ) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
-        yield self.schema_token(entity.schema), 0.0
+        yield SCHEMA_FIELD, self.schema_token(entity.schema)
         for prop, value in entity.itervalues():
-            for token, weight in self.value(prop.type, value, fuzzy=fuzzy):
-                yield token, weight
+            for field, token in self.value(prop.type, value, fuzzy=fuzzy):
+                yield field, token
         if loader is not None:
             # Index Address, Identification, Sanction, etc.:
             for prop, other in loader.get_adjacent(entity):
                 for prop, value in other.itervalues():
-                    # Skip interval dates (not to be mixed up with other dates)
-                    if prop.type == registry.date:
+                    if prop.hidden or not prop.matchable:
                         continue
-                    for token, weight in self.value(prop.type, value, fuzzy=fuzzy):
-                        yield token, weight * 0.8
+                    # Skip interval dates (not to be mixed up with other dates)
+                    if prop.type in (registry.date, registry.name):
+                        continue
+                    for field, token in self.value(prop.type, value, fuzzy=fuzzy):
+                        yield field, token
