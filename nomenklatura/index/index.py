@@ -146,11 +146,12 @@ class Index(Generic[DS, E]):
         log.info("Building index blocking pairs...")
         for field_name, field in self.fields.items():
             # if field_name in (SCHEMA_FIELD, NGRAM_FIELD, WORD_FIELD):
-            if field_name in (SCHEMA_FIELD, NGRAM_FIELD):
+            # if field_name in (SCHEMA_FIELD, NGRAM_FIELD):
+            if field_name == SCHEMA_FIELD:
                 continue
             boost = self.BOOSTS.get(field_name, 1.0)
             for idx, entry in enumerate(field.tokens.values()):
-                if idx % 1000 == 0:
+                if idx % 10000 == 0:
                     log.info("Pairwise xref [%s]: %d" % (field_name, idx))
 
                 if len(entry.entities) == 1 or len(entry.entities) > 100:
