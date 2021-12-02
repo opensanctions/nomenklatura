@@ -1,3 +1,4 @@
+import re
 import json
 import getpass
 import shortuuid  # type: ignore
@@ -11,6 +12,7 @@ from followthemoney.dedupe import Judgement
 from nomenklatura.entity import E, CompositeEntity
 from nomenklatura.util import PathLike
 
+QID = re.compile("^Q\d+$")
 StrIdent = Union[str, "Identifier"]
 Pair = Tuple["Identifier", "Identifier"]
 
@@ -30,6 +32,8 @@ class Identifier(object):
         self.canonical = self.id.startswith(self.PREFIX)
         if self.canonical:
             self.weight = 2
+        elif QID.match(id) is not None:
+            self.weight = 3
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
