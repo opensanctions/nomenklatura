@@ -9,10 +9,9 @@ from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, Un
 from followthemoney.types import registry
 from followthemoney.dedupe import Judgement
 
-from nomenklatura.entity import E, CompositeEntity
+from nomenklatura.entity import E
 from nomenklatura.util import PathLike
 
-QID = re.compile("^Q\d+$")
 StrIdent = Union[str, "Identifier"]
 Pair = Tuple["Identifier", "Identifier"]
 
@@ -23,17 +22,18 @@ class ResolverLogicError(Exception):
 
 class Identifier(object):
     PREFIX = "NK-"
+    QID = re.compile("^Q\d+$")
 
     __slots__ = ("id", "canonical", "weight")
 
     def __init__(self, id: str):
         self.id = id
         self.weight: int = 1
-        self.canonical = self.id.startswith(self.PREFIX)
-        if self.canonical:
+        if self.id.startswith(self.PREFIX):
             self.weight = 2
-        elif QID.match(id) is not None:
+        elif self.QID.match(id) is not None:
             self.weight = 3
+        self.canonical = self.weight > 1
 
     def __eq__(self, other: Any) -> bool:
         return str(self) == str(other)
