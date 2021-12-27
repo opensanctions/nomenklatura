@@ -31,6 +31,8 @@ def comparison_props(
     for prop in sorted(props, key=key):
         if prop.hidden:
             continue
+        if prop.type.matchable and not prop.matchable:
+            continue
         # if prop.type == registry.entity:
         #     continue
         yield prop

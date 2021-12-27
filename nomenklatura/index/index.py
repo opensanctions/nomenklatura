@@ -39,7 +39,7 @@ class Index(Generic[DS, E]):
         # registry.entity: 0.0,
         # registry.topic: 2.1,
         # registry.address.name: 2.5,
-        registry.identifier.name: 2.0,
+        registry.identifier.name: 3.0,
     }
 
     __slots__ = "loader", "fields", "tokenizer", "entities"

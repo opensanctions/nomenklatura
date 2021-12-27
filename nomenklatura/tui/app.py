@@ -47,7 +47,8 @@ class DedupeApp(App):
             self.resolver.decide(self.left.id, self.right.id, judgement)
         self.load_candidate()
         if self.left is None or self.right is None:
-            self.shutdown()
+            await self.shutdown()
+            return
         await self.force_render()
 
     async def action_positive(self) -> None:
@@ -74,12 +75,12 @@ class DedupeApp(App):
         await self.shutdown()
 
     async def force_render(self) -> None:
-        self.scroll.home()
         self.comp.refresh()
-        self.scroll.layout.require_update()
+        self.scroll.home()
+        # self.scroll.layout.require_update()
         self.scroll.refresh(layout=True)
-        # await self.scroll.update(self.comp)
-        # self.scroll.refresh()
+        await self.scroll.update(self.comp)
+        self.scroll.refresh()
 
     async def on_mount(self) -> None:
         self.comp = Comparison(self)
