@@ -307,12 +307,14 @@ class Resolver(Generic[E]):
             if node in self.nodes:
                 self.nodes[node].discard(edge)
 
-    def explode(self, node_id: StrIdent) -> None:
+    def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
         This is the hard way to make sure we re-do context once we realise
         there's been a mistake."""
         node = Identifier.get(node_id)
+        affected: Set[str] = set()
         for part in self.connected(node):
+            affected.add(str(part))
             edges = self.nodes.get(part)
             if edges is None:
                 continue
@@ -320,6 +322,7 @@ class Resolver(Generic[E]):
                 if edge.judgement != Judgement.NO_JUDGEMENT:
                     self._remove(edge)
         self.connected.cache_clear()
+        return affected
 
     def prune(self, keep: int = 0) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
