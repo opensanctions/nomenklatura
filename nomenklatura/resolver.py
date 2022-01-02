@@ -192,7 +192,22 @@ class Resolver(Generic[E]):
                 referents.add(connected.id)
         return referents
 
+    def get_resolved_edge(
+        self, left_id: StrIdent, right_id: StrIdent
+    ) -> Optional[Edge]:
+        (left, right) = Identifier.pair(left_id, right_id)
+        left_connected = self.connected(left)
+        right_connected = self.connected(right)
+        for e in left_connected:
+            for o in right_connected:
+                edge = self.edges.get(Identifier.pair(e, o))
+                if edge is None:
+                    continue
+                return edge
+        return None
+
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
+        """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
         other = Identifier.get(other_id)
         entity_connected = self.connected(entity)
@@ -205,7 +220,7 @@ class Resolver(Generic[E]):
                 if edge is None:
                     continue
                 if edge.judgement == Judgement.NEGATIVE:
-                    return Judgement.NEGATIVE
+                    return edge.judgement
         return Judgement.NO_JUDGEMENT
 
     def check_candidate(self, left: Identifier, right: Identifier) -> bool:
