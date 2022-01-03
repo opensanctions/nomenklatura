@@ -100,5 +100,5 @@ async def dedupe(
         resolver=resolver_,
         title="NK De-duplication",
         log="textual.log",
-    )
+    )  # type: ignore
     await app.process_messages()

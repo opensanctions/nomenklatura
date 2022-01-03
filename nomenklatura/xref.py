@@ -46,7 +46,7 @@ async def xref(
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.debug("[%.2f]-> %r x %r", score, query, match)
-                resolver.suggest(query.id, match_id, score)
+                await resolver.suggest(query.id, match_id, score)
                 scores.append(score)
 
             if num_entities % 100 == 0 and num_entities > 0:

@@ -261,7 +261,7 @@ class Resolver(Generic[E]):
             if returned >= limit:
                 break
 
-    def suggest(
+    async def suggest(
         self, left_id: StrIdent, right_id: StrIdent, score: float
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
@@ -271,9 +271,9 @@ class Resolver(Generic[E]):
             if edge.judgement in self.UNDECIDED:
                 edge.score = score
             return edge.target
-        return self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
+        return await self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
 
-    def decide(
+    async def decide(
         self,
         left_id: StrIdent,
         right_id: StrIdent,
@@ -294,8 +294,12 @@ class Resolver(Generic[E]):
             if not target.canonical:
                 canonical = Identifier.make()
                 self._remove(edge)
-                self.decide(edge.source, canonical, judgement=judgement, user=user)
-                self.decide(edge.target, canonical, judgement=judgement, user=user)
+                await self.decide(
+                    edge.source, canonical, judgement=judgement, user=user
+                )
+                await self.decide(
+                    edge.target, canonical, judgement=judgement, user=user
+                )
                 return canonical
 
         edge.judgement = judgement
