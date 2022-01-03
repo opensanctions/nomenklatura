@@ -16,17 +16,17 @@ class DedupeApp(App):
         self.resolver = resolver
         self.latinize = False
         self.ignore = set()
-        self.load_candidate()
+        # self.load_candidate()
 
-    def load_candidate(self):
+    async def load_candidate(self):
         self.left = None
         self.right = None
         self.score = 0.0
-        for left_id, right_id, score in self.resolver.get_candidates(limit=100):
+        async for left_id, right_id, score in self.resolver.get_candidates(limit=100):
             if (left_id, right_id) in self.ignore:
                 continue
-            self.left = self.loader.get_entity(left_id)
-            self.right = self.loader.get_entity(right_id)
+            self.left = await self.loader.get_entity(left_id)
+            self.right = await self.loader.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
                 if self.left.schema in self.right.schema.matchable_schemata:
@@ -45,7 +45,7 @@ class DedupeApp(App):
     async def decide(self, judgement):
         if self.left is not None and self.right is not None:
             self.resolver.decide(self.left.id, self.right.id, judgement)
-        self.load_candidate()
+        await self.load_candidate()
         if self.left is None or self.right is None:
             await self.shutdown()
             return
@@ -83,6 +83,7 @@ class DedupeApp(App):
         self.scroll.refresh()
 
     async def on_mount(self) -> None:
+        await self.load_candidate()
         self.comp = Comparison(self)
         self.scroll = ScrollView(self.comp)
         self.footer = Footer()

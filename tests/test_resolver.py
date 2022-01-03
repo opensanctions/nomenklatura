@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from followthemoney.dedupe.judgement import Judgement
@@ -12,7 +13,8 @@ def test_identifier():
     assert ident.id == f"{Identifier.PREFIX}banana"
 
 
-def test_resolver():
+@pytest.mark.asyncio
+async def test_resolver():
     resolver = Resolver()
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
@@ -56,21 +58,23 @@ def test_resolver():
     assert resolver.get_judgement("b1", "b2") == Judgement.POSITIVE
 
 
-def test_resolver_store():
+@pytest.mark.asyncio
+async def test_resolver_store():
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
         resolver = Resolver(path)
         resolver.decide("a1", "a2", Judgement.POSITIVE)
         resolver.decide("a2", "b2", Judgement.NEGATIVE)
         resolver.suggest("a1", "c1", 7.0)
-        resolver.save()
+        await resolver.save()
 
-        other = Resolver.load(path)
+        other = await Resolver.load(path)
         assert len(other.edges) == len(resolver.edges)
         assert resolver.get_edge("a1", "c1").score == 7.0
 
 
-def test_resolver_candidates():
+@pytest.mark.asyncio
+async def test_resolver_candidates():
     resolver = Resolver()
     resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
@@ -78,10 +82,10 @@ def test_resolver_candidates():
     resolver.suggest("a1", "c1", 5.0)
     resolver.suggest("a1", "d1", 4.0)
 
-    candidates = list(resolver.get_candidates())
+    candidates = list([c async for c in resolver.get_candidates()])
     assert len(candidates) == 2, candidates
     assert candidates[0][2] == 5.0, candidates
 
     resolver.prune()
-    candidates = list(resolver.get_candidates())
+    candidates = list([c async for c in resolver.get_candidates()])
     assert len(candidates) == 0, candidates

@@ -25,6 +25,8 @@ setup(
         "shortuuid >= 1.0.1, < 2.0.0",
         "rich >= 10.9.0, < 11.0.2",
         "textual >= 0.1.10, < 1.0.2",
+        "aiofiles",
+        "types-aiofiles",
     ],
     tests_require=[],
     entry_points={
@@ -41,6 +43,7 @@ setup(
             "flake8>=2.6.0",
             "pytest",
             "pytest-cov",
+            "pytest-asyncio",
             "coverage>=4.1",
         ]
     },
