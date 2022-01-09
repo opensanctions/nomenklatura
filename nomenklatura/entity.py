@@ -40,7 +40,7 @@ class CompositeEntity(EntityProxy):
         data["datasets"] = [d.name for d in self.datasets]
         return data
 
-    def _to_nested_dict(
+    async def _to_nested_dict(
         self, loader: "Loader[DS, CompositeEntity]", depth: int, path: List[str]
     ) -> Dict[str, Any]:
         next_depth = depth if self.schema.edge else depth - 1
@@ -49,20 +49,20 @@ class CompositeEntity(EntityProxy):
         if next_depth < 0:
             return data
         nested: Dict[str, Any] = {}
-        for prop, adjacent in loader.get_adjacent(self):
+        async for prop, adjacent in loader.get_adjacent(self):
             if adjacent.id in next_path:
                 continue
-            value = adjacent._to_nested_dict(loader, next_depth, next_path)
+            value = await adjacent._to_nested_dict(loader, next_depth, next_path)
             if prop.name not in nested:
                 nested[prop.name] = []
             nested[prop.name].append(value)
         data["properties"].update(nested)
         return data
 
-    def to_nested_dict(
+    async def to_nested_dict(
         self, loader: "Loader[DS, CompositeEntity]", depth: int = 1
     ) -> Dict[str, Any]:
-        return self._to_nested_dict(loader, depth=depth, path=[])
+        return await self._to_nested_dict(loader, depth=depth, path=[])
 
 
 E = TypeVar("E", bound=CompositeEntity)
