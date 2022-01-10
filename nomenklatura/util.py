@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 PathLike = Path  # like
 

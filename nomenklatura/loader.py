@@ -2,18 +2,7 @@ import json
 import logging
 import aiofiles
 from nomenklatura.resolver import Resolver
-from typing import (
-    AsyncGenerator,
-    AsyncIterator,
-    Dict,
-    Generator,
-    Generic,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-)
+from typing import AsyncGenerator, Dict, Generic, Iterable, List, Optional, Tuple
 from followthemoney.types import registry
 from followthemoney.property import Property
 from followthemoney import model
