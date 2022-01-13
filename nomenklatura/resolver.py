@@ -194,7 +194,9 @@ class Resolver(Generic[E]):
             if canonical == node.id:
                 yield node
 
-    def get_referents(self, canonical_id: StrIdent, canonicals=True) -> Set[str]:
+    def get_referents(
+        self, canonical_id: StrIdent, canonicals: bool = True
+    ) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
