@@ -194,14 +194,15 @@ class Resolver(Generic[E]):
             if canonical == node.id:
                 yield node
 
-    def get_referents(self, canonical_id: StrIdent) -> Set[str]:
+    def get_referents(self, canonical_id: StrIdent, canonicals=True) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
         referents: Set[str] = set()
         for connected in self.connected(node):
-            if not connected.canonical:
-                referents.add(connected.id)
+            if not canonicals and connected.canonical:
+                continue
+            referents.add(connected.id)
         return referents
 
     def get_resolved_edge(
