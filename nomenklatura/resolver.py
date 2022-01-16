@@ -192,6 +192,8 @@ class Resolver(Generic[E]):
         for connected in self.connected(node):
             if canonicals and not connected.canonical:
                 continue
+            if connected == node:
+                continue
             referents.add(connected.id)
         return referents
 
