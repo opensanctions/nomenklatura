@@ -13,7 +13,7 @@ setup(
     keywords="data mapping identity followthemoney linkage record",
     author="Friedrich Lindenberg",
     author_email="friedrich@pudo.org",
-    url="https://github.com/pudo/nomenklatura",
+    url="https://github.com/opensanctions/nomenklatura",
     license="MIT",
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     namespace_packages=[],
@@ -23,8 +23,8 @@ setup(
     install_requires=[
         "followthemoney >= 2.6.2, < 3.0.0",
         "shortuuid >= 1.0.1, < 2.0.0",
-        "rich >= 10.9.0, < 11.0.2",
-        "textual >= 0.1.10, < 1.0.2",
+        "rich >= 10.9.0, < 12.0.0",
+        "textual >= 0.1.10, < 1.0.0",
     ],
     tests_require=[],
     entry_points={

@@ -48,6 +48,9 @@ def test_resolver():
     assert resolver.get_edge(ccn, "c2").score is None
 
     assert "a1" in resolver.get_referents(a_canon)
+    assert "a1" in resolver.get_referents(a_canon, canonicals=False)
+    # assert a_canon.id in resolver.get_referents(a_canon)
+    assert a_canon.id not in resolver.get_referents(a_canon, canonicals=False)
     assert ":memory:" in repr(resolver)
 
     resolver.explode("a1")

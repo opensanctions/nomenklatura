@@ -1,4 +1,3 @@
-import re
 import json
 import getpass
 import shortuuid  # type: ignore
@@ -10,7 +9,7 @@ from followthemoney.types import registry
 from followthemoney.dedupe import Judgement
 
 from nomenklatura.entity import E
-from nomenklatura.util import PathLike
+from nomenklatura.util import PathLike, is_qid
 
 StrIdent = Union[str, "Identifier"]
 Pair = Tuple["Identifier", "Identifier"]
@@ -22,7 +21,6 @@ class ResolverLogicError(Exception):
 
 class Identifier(object):
     PREFIX = "NK-"
-    QID = re.compile("^Q\d+$")
 
     __slots__ = ("id", "canonical", "weight")
 
@@ -31,7 +29,7 @@ class Identifier(object):
         self.weight: int = 1
         if self.id.startswith(self.PREFIX):
             self.weight = 2
-        elif self.QID.match(id) is not None:
+        elif is_qid(id):
             self.weight = 3
         self.canonical = self.weight > 1
 
@@ -190,7 +188,7 @@ class Resolver(Generic[E]):
         node = Identifier.get(canonical_id)
         referents: Set[str] = set()
         for connected in self.connected(node):
-            if canonicals and not connected.canonical:
+            if not canonicals and connected.canonical:
                 continue
             if connected == node:
                 continue
