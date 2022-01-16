@@ -346,7 +346,7 @@ class Resolver(Generic[E]):
         identifiers. This is essentially the harmonisation post de-dupe."""
         canonical_id = self.get_canonical(proxy.id)
         if canonical_id != proxy.id:
-            proxy.referents.add(proxy.id)
+            proxy.referents = self.get_referents(canonical_id)
             proxy.id = canonical_id
         for prop in proxy.iterprops():
             if prop.type != registry.entity:
