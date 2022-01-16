@@ -1,23 +1,11 @@
 import re
 import json
 import getpass
-import aiofiles
 import shortuuid  # type: ignore
 from datetime import datetime
 from functools import lru_cache
 from collections import defaultdict
-from typing import (
-    Any,
-    AsyncGenerator,
-    Dict,
-    Generator,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, Union
 from followthemoney.types import registry
 from followthemoney.dedupe import Judgement
 
@@ -34,7 +22,7 @@ class ResolverLogicError(Exception):
 
 class Identifier(object):
     PREFIX = "NK-"
-    QID = re.compile(r"^Q\d+$")
+    QID = re.compile("^Q\d+$")
 
     __slots__ = ("id", "canonical", "weight")
 
@@ -180,7 +168,7 @@ class Resolver(Generic[E]):
     def get_canonical(self, entity_id: StrIdent) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)
-        best: Identifier = max(self.connected(node))
+        best = max(self.connected(node))
         if best.canonical:
             return best.id
         return node.id
@@ -202,7 +190,7 @@ class Resolver(Generic[E]):
         node = Identifier.get(canonical_id)
         referents: Set[str] = set()
         for connected in self.connected(node):
-            if not canonicals and connected.canonical:
+            if canonicals and not connected.canonical:
                 continue
             referents.add(connected.id)
         return referents
@@ -238,7 +226,7 @@ class Resolver(Generic[E]):
                     return edge.judgement
         return Judgement.NO_JUDGEMENT
 
-    async def check_candidate(self, left: Identifier, right: Identifier) -> bool:
+    def check_candidate(self, left: Identifier, right: Identifier) -> bool:
         """Check if the two IDs could be merged, i.e. if there's no existing
         judgement."""
         judgement = self.get_judgement(left, right)
@@ -251,20 +239,19 @@ class Resolver(Generic[E]):
         cmp = lambda x: x.score or -1.0
         return sorted(candidates, key=cmp, reverse=True)
 
-    async def get_candidates(
+    def get_candidates(
         self, limit: int = 100
-    ) -> AsyncGenerator[Tuple[str, str, Optional[float]], None]:
+    ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
         returned = 0
         for edge in self._get_suggested():
-            check = await self.check_candidate(edge.source, edge.target)
-            if not check:
+            if not self.check_candidate(edge.source, edge.target):
                 continue
             yield edge.target.id, edge.source.id, edge.score
             returned += 1
             if returned >= limit:
                 break
 
-    async def suggest(
+    def suggest(
         self, left_id: StrIdent, right_id: StrIdent, score: float
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
@@ -274,9 +261,9 @@ class Resolver(Generic[E]):
             if edge.judgement in self.UNDECIDED:
                 edge.score = score
             return edge.target
-        return await self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
+        return self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
 
-    async def decide(
+    def decide(
         self,
         left_id: StrIdent,
         right_id: StrIdent,
@@ -297,12 +284,8 @@ class Resolver(Generic[E]):
             if not target.canonical:
                 canonical = Identifier.make()
                 self._remove(edge)
-                await self.decide(
-                    edge.source, canonical, judgement=judgement, user=user
-                )
-                await self.decide(
-                    edge.target, canonical, judgement=judgement, user=user
-                )
+                self.decide(edge.source, canonical, judgement=judgement, user=user)
+                self.decide(edge.target, canonical, judgement=judgement, user=user)
                 return canonical
 
         edge.judgement = judgement
@@ -313,7 +296,6 @@ class Resolver(Generic[E]):
         return edge.target
 
     def _register(self, edge: Edge) -> None:
-        # Do not use this directly!
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
         self.edges[edge.key] = edge
@@ -322,16 +304,11 @@ class Resolver(Generic[E]):
         self.connected.cache_clear()
 
     def _remove(self, edge: Edge) -> None:
-        # Do not use this directly!
+        """Remove an edge from the graph."""
         self.edges.pop(edge.key, None)
         for node in (edge.source, edge.target):
             if node in self.nodes:
                 self.nodes[node].discard(edge)
-
-    def remove_edge(self, edge: Edge) -> None:
-        """Remove an edge from the graph."""
-        self._remove(edge)
-        self.connected.cache_clear()
 
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
@@ -379,23 +356,23 @@ class Resolver(Generic[E]):
                 proxy.unsafe_add(prop, canonical, cleaned=True)
         return proxy
 
-    async def save(self) -> None:
+    def save(self) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
         if self.path is None:
             raise RuntimeError("Resolver has no path")
         edges = sorted(self.edges.values())
-        async with aiofiles.open(self.path, "w") as fh:
+        with open(self.path, "w") as fh:
             for edge in edges:
-                await fh.write(edge.to_line())
+                fh.write(edge.to_line())
 
     @classmethod
-    async def load(cls, path: PathLike) -> "Resolver[E]":
+    def load(cls, path: PathLike) -> "Resolver[E]":
         resolver = cls(path=path)
         if not path.exists():
             return resolver
-        async with aiofiles.open(path, "r") as fh:
+        with open(path, "r") as fh:
             while True:
-                line = await fh.readline()
+                line = fh.readline()
                 if not line:
                     break
                 edge = Edge.from_line(line)

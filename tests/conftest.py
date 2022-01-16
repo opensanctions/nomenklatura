@@ -1,6 +1,5 @@
 import json
 import pytest
-import asyncio
 from pathlib import Path
 
 from nomenklatura.loader import FileLoader
@@ -24,19 +23,12 @@ def donations_json(donations_path):
 
 
 @pytest.fixture(scope="module")
-async def dloader(donations_path):
-    return await FileLoader.from_file(donations_path)
+def dloader(donations_path):
+    return FileLoader(donations_path)
 
 
 @pytest.fixture(scope="module")
-async def dindex(dloader):
+def dindex(dloader):
     index = Index(dloader)
-    await index.build()
+    index.build()
     return index
-
-
-@pytest.fixture(scope="module")
-def event_loop(request):
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()

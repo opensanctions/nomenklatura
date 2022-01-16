@@ -1,15 +1,13 @@
-import pytest
 from nomenklatura.loader import FileLoader
 
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 
 
-@pytest.mark.asyncio
-async def test_nested_entity(dloader: FileLoader):
-    entity = await dloader.get_entity(DAIMLER)
+def test_nested_entity(dloader: FileLoader):
+    entity = dloader.get_entity(DAIMLER)
     assert entity is not None, entity
-    data = await entity.to_nested_dict(dloader)
+    data = entity.to_nested_dict(dloader)
     properties = data["properties"]
     addresses = properties["addressEntity"]
     assert len(addresses) == 2, addresses

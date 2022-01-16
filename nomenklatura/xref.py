@@ -21,7 +21,7 @@ def _print_stats(num_entities: int, scores: List[float]) -> None:
     )
 
 
-async def xref(
+def xref(
     index: Index[DS, E],
     resolver: Resolver[E],
     entities: Iterable[E],
@@ -38,7 +38,7 @@ async def xref(
                 continue
             if range is not None and not query.schema.is_a(range):
                 continue
-            async for match_id, score in index.match(query, limit=limit):
+            for match_id, score in index.match(query, limit=limit):
                 assert match_id is not None, match_id
                 if match_id == query.id:
                     continue
@@ -46,7 +46,7 @@ async def xref(
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.debug("[%.2f]-> %r x %r", score, query, match)
-                await resolver.suggest(query.id, match_id, score)
+                resolver.suggest(query.id, match_id, score)
                 scores.append(score)
 
             if num_entities % 100 == 0 and num_entities > 0:

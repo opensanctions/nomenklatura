@@ -1,10 +1,9 @@
-from rich.text import Text  # type: ignore
+import asyncio
 from textual.app import App
 from textual.widgets import Footer, ScrollView
 from followthemoney.dedupe.judgement import Judgement
 
-from nomenklatura.resolver import Resolver
-from nomenklatura.tui.comparison import render_comparison
+from nomenklatura.tui.comparison import Comparison
 
 # from textual import log
 # from textual.reactive import Reactive
@@ -14,30 +13,26 @@ class DedupeApp(App):
     def __init__(self, loader=None, resolver=None, **kwargs):
         super().__init__(**kwargs)
         self.loader = loader
-        self.resolver: Resolver = resolver
+        self.resolver = resolver
         self.latinize = False
         self.ignore = set()
+        # self.load_candidate()
 
     async def load_candidate(self):
-        self.comp = Text("No candidates loaded.", justify="center")
         self.left = None
         self.right = None
         self.score = 0.0
-        async for left_id, right_id, score in self.resolver.get_candidates(limit=100):
+        for left_id, right_id, score in self.resolver.get_candidates(limit=100):
             if (left_id, right_id) in self.ignore:
                 continue
-            left = await self.loader.get_entity(left_id)
-            right = await self.loader.get_entity(right_id)
-            if left is not None and right is not None:
-                if left.schema in right.schema.matchable_schemata:
-                    self.left = left
-                    self.right = right
-                    self.score = score
-                    self.comp = await render_comparison(
-                        self.loader, left, right, score, latinize=self.latinize
-                    )
+            self.left = self.loader.get_entity(left_id)
+            self.right = self.loader.get_entity(right_id)
+            self.score = score
+            if self.left is not None and self.right is not None:
+                if self.left.schema in self.right.schema.matchable_schemata:
                     break
             self.ignore.add((left_id, right_id))
+            asyncio.sleep(0)
 
     async def on_load(self, event):
         await self.bind("x", "positive", "Match")
@@ -50,7 +45,7 @@ class DedupeApp(App):
 
     async def decide(self, judgement):
         if self.left is not None and self.right is not None:
-            await self.resolver.decide(self.left.id, self.right.id, judgement)
+            self.resolver.decide(self.left.id, self.right.id, judgement)
         await self.load_candidate()
         if self.left is None or self.right is None:
             await self.shutdown()
@@ -68,40 +63,29 @@ class DedupeApp(App):
 
     async def action_latinize(self) -> None:
         self.latinize = not self.latinize
-        self.comp = await render_comparison(
-            self.loader, self.left, self.right, self.score, latinize=self.latinize
-        )
         await self.force_render()
 
     async def action_save(self) -> None:
-        self.comp = Text("Saving...", justify="center")
-        await self.force_render()
-        await self.resolver.save()
-        self.comp = await render_comparison(
-            self.loader, self.left, self.right, self.score, latinize=self.latinize
-        )
-        await self.force_render()
+        self.resolver.save()
 
     async def action_quit(self) -> None:
-        self.comp = Text("Saving...", justify="center")
-        await self.force_render()
-        await self.resolver.save()
+        self.resolver.save()
         await self.shutdown()
 
     async def action_exit(self) -> None:
         await self.shutdown()
 
     async def force_render(self) -> None:
-        # self.comp.refresh()
+        self.comp.refresh()
         self.scroll.home()
         # self.scroll.layout.require_update()
         self.scroll.refresh(layout=True)
         await self.scroll.update(self.comp)
-        # self.scroll.refresh()
+        self.scroll.refresh()
 
     async def on_mount(self) -> None:
         await self.load_candidate()
-        # self.comp = Comparison(self)
+        self.comp = Comparison(self)
         self.scroll = ScrollView(self.comp)
         self.footer = Footer()
         await self.view.dock(self.footer, edge="bottom")

@@ -1,5 +1,5 @@
 from typing import Generic, Optional
-from typing import Generator, Generic, Tuple, AsyncGenerator
+from typing import Any, Dict, Generator, Generic, Tuple
 from normality import normalize, WS
 from followthemoney.schema import Schema
 from followthemoney.types import registry
@@ -57,12 +57,12 @@ class Tokenizer(Generic[DS, E]):
                     for ngram in split_ngrams(token, 2, 3):
                         yield NGRAM_FIELD, ngram
 
-    async def entity(
+    def entity(
         self,
         entity: E,
         loader: Optional[Loader[DS, E]] = None,
         fuzzy: bool = True,
-    ) -> AsyncGenerator[Tuple[str, str], None]:
+    ) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         yield SCHEMA_FIELD, self.schema_token(entity.schema)
         for prop, value in entity.itervalues():
@@ -70,7 +70,7 @@ class Tokenizer(Generic[DS, E]):
                 yield field, token
         if loader is not None:
             # Index Address, Identification, Sanction, etc.:
-            async for prop, other in loader.get_adjacent(entity):
+            for prop, other in loader.get_adjacent(entity):
                 for prop, value in other.itervalues():
                     if prop.hidden or not prop.matchable:
                         continue

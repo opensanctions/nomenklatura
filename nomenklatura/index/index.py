@@ -1,18 +1,9 @@
 import pickle
 import logging
+import statistics
 from itertools import combinations
 from collections import defaultdict
-from typing import (
-    Any,
-    AsyncGenerator,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    cast,
-)
+from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, cast
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 
@@ -59,27 +50,25 @@ class Index(Generic[DS, E]):
         self.fields: Dict[str, Field] = {}
         self.entities: Set[str] = set()
 
-    async def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
+    def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
             return
         loader = self.loader if adjacent else None
-        async for field, token in self.tokenizer.entity(
-            entity, loader=loader, fuzzy=fuzzy
-        ):
+        for field, token in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
             if field not in self.fields:
                 self.fields[field] = Field()
             self.fields[field].add(entity.id, token)
         self.entities.add(entity.id)
 
-    async def build(self, adjacent: bool = True, fuzzy: bool = True) -> None:
+    def build(self, adjacent: bool = True, fuzzy: bool = True) -> None:
         """Index all entities in the dataset."""
         log.info("Building index from: %r...", self.loader)
         self.fields = {}
         self.entities = set()
-        async for entity in self.loader.entities():
-            await self.index(entity, adjacent=adjacent, fuzzy=fuzzy)
+        for entity in self.loader:
+            self.index(entity, adjacent=adjacent, fuzzy=fuzzy)
         self.commit()
         log.info("Built index: %r", self)
 
@@ -101,13 +90,13 @@ class Index(Generic[DS, E]):
                     return True
         return False
 
-    async def match(
+    def match(
         self, query: E, limit: Optional[int] = 30, fuzzy: bool = True
-    ) -> AsyncGenerator[Tuple[str, float], None]:
+    ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
 
         matches: Dict[str, float] = defaultdict(float)
-        async for field_, token in self.tokenizer.entity(query, fuzzy=fuzzy):
+        for field_, token in self.tokenizer.entity(query, fuzzy=fuzzy):
             try:
                 field = self.fields[field_]
             except KeyError:
@@ -135,13 +124,13 @@ class Index(Generic[DS, E]):
             if limit is not None and returned >= limit:
                 break
 
-    async def match_entities(
+    def match_entities(
         self, query: E, limit: int = 30, fuzzy: bool = True
-    ) -> AsyncGenerator[Tuple[E, float], None]:
+    ) -> Generator[Tuple[E, float], None, None]:
         """Find entities similar to the given input entity, return entity."""
         returned = 0
-        async for entity_id, score in self.match(query, limit=None, fuzzy=fuzzy):
-            entity = await self.loader.get_entity(entity_id)
+        for entity_id, score in self.match(query, limit=None, fuzzy=fuzzy):
+            entity = self.loader.get_entity(entity_id)
             if entity is not None:
                 yield entity, score
                 returned += 1
@@ -181,17 +170,17 @@ class Index(Generic[DS, E]):
 
         return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
 
-    async def save(self, path: PathLike) -> None:
+    def save(self, path: PathLike) -> None:
         with open(path, "wb") as fh:
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    async def load(cls, loader: Loader[DS, E], path: PathLike) -> "Index[DS, E]":
+    def load(cls, loader: Loader[DS, E], path: PathLike) -> "Index[DS, E]":
         index = Index(loader)
         if not path.exists():
             log.debug("Cannot load: %r", index)
-            await index.build()
-            await index.save(path)
+            index.build()
+            index.save(path)
             return index
 
         with open(path, "rb") as fh:
