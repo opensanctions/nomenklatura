@@ -1,5 +1,6 @@
 import click
 import logging
+import asyncio
 from pathlib import Path
 from typing import Optional
 from followthemoney.cli.util import write_object
@@ -85,4 +86,14 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
     loader = FileLoader(path, resolver=resolver_)
     if xref:
         index_xref(loader, resolver_)
-    DedupeApp.run(loader=loader, resolver=resolver_)
+
+    async def run_app() -> None:
+        app = DedupeApp(
+            loader=loader,
+            resolver=resolver_,
+            title="NK De-duplication",
+            log="textual.log",
+        )  # type: ignore
+        await app.process_messages()
+
+    asyncio.run(run_app())

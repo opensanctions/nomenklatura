@@ -45,7 +45,7 @@ def xref(
                 # judgement = resolver.get_judgement(query.id, match.id)
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
-                # log.debug("[%.2f]-> %r x %r", score, query, match)
+                # log.info("[%.2f]-> %r x %r", score, query.id, match_id)
                 resolver.suggest(query.id, match_id, score)
                 scores.append(score)
 

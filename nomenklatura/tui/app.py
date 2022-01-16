@@ -1,9 +1,10 @@
 import asyncio
+from rich.text import Text  # type: ignore
 from textual.app import App
 from textual.widgets import Footer, ScrollView
 from followthemoney.dedupe.judgement import Judgement
 
-from nomenklatura.tui.comparison import Comparison
+from nomenklatura.tui.comparison import render_comparison
 
 # from textual import log
 # from textual.reactive import Reactive
@@ -16,13 +17,13 @@ class DedupeApp(App):
         self.resolver = resolver
         self.latinize = False
         self.ignore = set()
-        # self.load_candidate()
 
     async def load_candidate(self):
+        self.comp = Text("No candidates loaded.", justify="center")
         self.left = None
         self.right = None
         self.score = 0.0
-        for left_id, right_id, score in self.resolver.get_candidates(limit=100):
+        for left_id, right_id, score in self.resolver.get_candidates(limit=1000):
             if (left_id, right_id) in self.ignore:
                 continue
             self.left = self.loader.get_entity(left_id)
@@ -30,6 +31,14 @@ class DedupeApp(App):
             self.score = score
             if self.left is not None and self.right is not None:
                 if self.left.schema in self.right.schema.matchable_schemata:
+                    self.score = score
+                    self.comp = await render_comparison(
+                        self.loader,
+                        self.left,
+                        self.right,
+                        score,
+                        latinize=self.latinize,
+                    )
                     break
             self.ignore.add((left_id, right_id))
             asyncio.sleep(0)
@@ -63,12 +72,23 @@ class DedupeApp(App):
 
     async def action_latinize(self) -> None:
         self.latinize = not self.latinize
+        self.comp = await render_comparison(
+            self.loader, self.left, self.right, self.score, latinize=self.latinize
+        )
         await self.force_render()
 
     async def action_save(self) -> None:
+        self.comp = Text("Saving...", justify="center")
+        await self.force_render()
         self.resolver.save()
+        self.comp = await render_comparison(
+            self.loader, self.left, self.right, self.score, latinize=self.latinize
+        )
+        await self.force_render()
 
     async def action_quit(self) -> None:
+        self.comp = Text("Saving...", justify="center")
+        await self.force_render()
         self.resolver.save()
         await self.shutdown()
 
@@ -76,16 +96,12 @@ class DedupeApp(App):
         await self.shutdown()
 
     async def force_render(self) -> None:
-        self.comp.refresh()
         self.scroll.home()
-        # self.scroll.layout.require_update()
         self.scroll.refresh(layout=True)
         await self.scroll.update(self.comp)
-        self.scroll.refresh()
 
     async def on_mount(self) -> None:
         await self.load_candidate()
-        self.comp = Comparison(self)
         self.scroll = ScrollView(self.comp)
         self.footer = Footer()
         await self.view.dock(self.footer, edge="bottom")
