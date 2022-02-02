@@ -41,7 +41,7 @@ class DedupeApp(App):
                     )
                     break
             self.ignore.add((left_id, right_id))
-            asyncio.sleep(0)
+            await asyncio.sleep(0)
 
     async def on_load(self, event):
         await self.bind("x", "positive", "Match")
