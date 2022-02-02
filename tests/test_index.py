@@ -12,7 +12,7 @@ def test_index_build(dloader):
     assert len(index) == 0, index.terms
     assert len(index.fields) == 0, index.fields
     index.build()
-    assert len(index) == 95, len(index.terms)
+    assert len(index) == 184, len(index)
 
 
 def test_index_persist(dloader, dindex):
@@ -51,10 +51,12 @@ def test_index_search(dindex):
     assert "Klatten" not in first.caption
 
     query = model.make_entity("Address")
-    assert not query.schema.matchable
+    matchies = [s.name for s in query.schema.matchable_schemata]
+    assert "Person" not in matchies, matchies
+    assert len(matchies) == 1, matchies
     query.add("full", "Susanne Klatten")
-    results = list(dindex.match(query))
-    assert 0 == len(results), len(results)
+    for entity, _ in dindex.match_entities(query):
+        assert entity.schema.name == "Address"
 
 
 def test_index_pairs(dloader, dindex: Index):

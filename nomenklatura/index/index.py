@@ -1,6 +1,5 @@
 import pickle
 import logging
-import statistics
 from itertools import combinations
 from collections import defaultdict
 from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, cast
@@ -83,11 +82,14 @@ class Index(Generic[DS, E]):
         for parent in schema.descendants:
             tokens.add(self.tokenizer.schema_token(parent))
         field = self.fields.get(SCHEMA_FIELD)
-        if field is not None:
-            for token in tokens:
-                entry = field.tokens.get(token)
-                if entry is not None and entity_id in entry.entities:
-                    return True
+        if field is None:
+            return False
+        for token in tokens:
+            entry = field.tokens.get(token)
+            if entry is None:
+                continue
+            if entity_id in entry.entities:
+                return True
         return False
 
     def match(
