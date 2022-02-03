@@ -28,7 +28,7 @@ class Index(Generic[DS, E]):
         SCHEMA_FIELD: 0.0,
         NGRAM_FIELD: 0.2,
         WORD_FIELD: 0.5,
-        registry.name.name: 2.0,
+        registry.name.name: 10.0,
         # registry.country.name: 1.5,
         # registry.date.name: 1.5,
         # registry.language: 0.7,
