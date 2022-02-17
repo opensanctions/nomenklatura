@@ -1,8 +1,8 @@
-from typing import cast, List, Set
+import fingerprints
+from typing import List, Optional, Set
 from functools import lru_cache
 from normality import normalize
 from normality.constants import SLUG_CATEGORIES, WS
-from fingerprints import generate as fpgen
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 from nomenklatura.entity import CompositeEntity as Entity
@@ -14,10 +14,15 @@ def _entity_key_date(entity: Entity) -> List[str]:
     return dates
 
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=5000)
+def fp_gen(text: str) -> Optional[str]:
+    return fingerprints.generate(text)
+
+
+@lru_cache(maxsize=5000)
 def _clean_text(text: str) -> List[str]:
     tokens: List[str] = []
-    cleaned = normalize(text, replace_categories=SLUG_CATEGORIES)
+    cleaned = normalize(text, latinize=True, replace_categories=SLUG_CATEGORIES)
     if cleaned is None:
         return tokens
     for token in cleaned.split(WS):
@@ -107,9 +112,9 @@ def name_tokens_weighted(left: Entity, right: Entity) -> float:
 
 
 def name_fingerprints_weighted(left: Entity, right: Entity) -> float:
-    left_values = [fpgen(n) for n in left.get_type_values(registry.name)]
+    left_values = [fp_gen(n) for n in left.get_type_values(registry.name)]
     left_values_ = [n for n in left_values if n is not None]
-    right_values = [fpgen(n) for n in right.get_type_values(registry.name)]
+    right_values = [fp_gen(n) for n in right.get_type_values(registry.name)]
     right_values_ = [n for n in right_values if n is not None]
     return _tokens_weighted(left_values_, right_values_)
 
@@ -133,9 +138,9 @@ def all_tokens_weighted(left: Entity, right: Entity) -> float:
 def common_countries(left: Entity, right: Entity) -> float:
     left_cs = set(left.get_type_values(registry.country))
     right_cs = set(right.get_type_values(registry.country))
-    num = max(1, max(len(left_cs), len(right_cs)))
+    # num = max(1, max(len(left_cs), len(right_cs)))
     common = left_cs.intersection(right_cs)
-    return float(len(common)) / float(num)
+    return min(1.0, float(len(common)) / float(3))
 
 
 def different_countries(left: Entity, right: Entity) -> float:
@@ -145,7 +150,15 @@ def different_countries(left: Entity, right: Entity) -> float:
     return float(len(different))
 
 
-PREDICATES = [
+def schema_compare(left: Entity, right: Entity) -> float:
+    if left.schema == right.schema:
+        return 1.0
+    if left.schema in right.schema.matchable_schemata:
+        return 0.9
+    return 0.0
+
+
+FEATURES = [
     name_matches,
     name_tokens,
     name_tokens_weighted,
@@ -160,4 +173,5 @@ PREDICATES = [
     email_ftm_compare,
     identifier_ftm_compare,
     country_ftm_compare,
+    schema_compare,
 ]

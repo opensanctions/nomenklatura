@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, TypeVar, cast
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
-from nomenklatura.dataset import Dataset
+from nomenklatura.dataset import Dataset, DatasetIndex
 
 if TYPE_CHECKING:
     from nomenklatura.loader import Loader
@@ -63,6 +63,23 @@ class CompositeEntity(EntityProxy):
         self, loader: "Loader[DS, CompositeEntity]", depth: int = 1
     ) -> Dict[str, Any]:
         return self._to_nested_dict(loader, depth=depth, path=[])
+
+    @classmethod
+    def from_data(
+        cls,
+        model: Model,
+        data: Dict[str, Any],
+        datasets: DatasetIndex,
+        cleaned: bool = True,
+    ) -> "CompositeEntity":
+        obj = cls(model, data, cleaned=cleaned)
+        obj.id = data["id"]
+        for dataset_name in data.get("datasets", []):
+            dataset = datasets.get(dataset_name)
+            if dataset is not None:
+                obj.datasets.add(dataset)
+        obj.referents.update(data.get("referents", []))
+        return obj
 
 
 E = TypeVar("E", bound=CompositeEntity)

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 
 class Dataset(object):
@@ -22,3 +22,6 @@ class Dataset(object):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}({self.name!r})>"
+
+
+DatasetIndex = Dict[str, Dataset]
