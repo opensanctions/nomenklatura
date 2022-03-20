@@ -2,16 +2,17 @@ import fingerprints
 from typing import List, Optional, Set
 from functools import lru_cache
 from normality import normalize
+from prefixdate import Precision
 from normality.constants import SLUG_CATEGORIES, WS
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 from nomenklatura.entity import CompositeEntity as Entity
 
 
-def _entity_key_date(entity: Entity) -> List[str]:
-    dates = entity.get("birthDate", quiet=True)
-    dates.extend(entity.get("incorporationDate", quiet=True))
-    return dates
+def has_intersection(left, right):
+    if len(set(left).intersection(right)) > 0:
+        return 1.0
+    return 0.0
 
 
 @lru_cache(maxsize=5000)
@@ -47,36 +48,89 @@ def _tokenize_set(texts: List[str]) -> Set[str]:
     return tokens
 
 
+def _entity_key_dates(entity: Entity, precision: Precision) -> Set[str]:
+    values = entity.get("birthDate", quiet=True)
+    values.extend(entity.get("incorporationDate", quiet=True))
+    dates = set()
+    for value in values:
+        if len(value) >= precision.value:
+            dates.add(value[: precision.value])
+    return dates
+
+
+def _key_date_part_matches(left: Entity, right: Entity, precision: Precision) -> float:
+    left_dates = _entity_key_dates(left, precision)
+    right_dates = _entity_key_dates(right, precision)
+    return has_intersection(left_dates, right_dates)
+
+
+def key_day_matches(left: Entity, right: Entity) -> float:
+    return _key_date_part_matches(left, right, Precision.DAY)
+
+
+def key_month_matches(left: Entity, right: Entity) -> float:
+    return _key_date_part_matches(left, right, Precision.MONTH)
+
+
+def key_year_matches(left: Entity, right: Entity) -> float:
+    return _key_date_part_matches(left, right, Precision.YEAR)
+
+
 def _typed_compare(left: Entity, right: Entity, type_: PropertyType) -> float:
     left_values = left.get_type_values(type_)
     right_values = right.get_type_values(type_)
     return registry.date.compare_sets(left_values, right_values)
 
 
-def key_date_matches(left: Entity, right: Entity) -> float:
-    left_dates = _entity_key_date(left)
-    right_dates = _entity_key_date(right)
-    return registry.date.compare_sets(left_dates, right_dates)
+def _typed_intersection(left: Entity, right: Entity, type_: PropertyType) -> float:
+    left_values = left.get_type_values(type_)
+    right_values = right.get_type_values(type_)
+    return has_intersection(left_values, right_values)
 
 
-def phone_ftm_compare(left: Entity, right: Entity) -> float:
-    return _typed_compare(left, right, registry.phone)
+# def phone_ftm_compare(left: Entity, right: Entity) -> float:
+#     return _typed_compare(left, right, registry.phone)
 
 
-def email_ftm_compare(left: Entity, right: Entity) -> float:
-    return _typed_compare(left, right, registry.email)
+def phone_intersection(left: Entity, right: Entity) -> float:
+    return _typed_intersection(left, right, registry.phone)
+
+
+# def email_ftm_compare(left: Entity, right: Entity) -> float:
+#     return _typed_compare(left, right, registry.email)
+
+
+def email_intersection(left: Entity, right: Entity) -> float:
+    return _typed_intersection(left, right, registry.email)
 
 
 def name_ftm_compare(left: Entity, right: Entity) -> float:
     return _typed_compare(left, right, registry.name)
 
 
-def identifier_ftm_compare(left: Entity, right: Entity) -> float:
-    return _typed_compare(left, right, registry.identifier)
+# def identifier_ftm_compare(left: Entity, right: Entity) -> float:
+#     return _typed_compare(left, right, registry.identifier)
 
 
-def country_ftm_compare(left: Entity, right: Entity) -> float:
-    return _typed_compare(left, right, registry.country)
+def identifier_intersection(left: Entity, right: Entity) -> float:
+    return _typed_intersection(left, right, registry.identifier)
+
+
+# def country_ftm_compare(left: Entity, right: Entity) -> float:
+#     return _typed_compare(left, right, registry.country)
+
+
+# def country_intersection(left: Entity, right: Entity) -> float:
+#     return _typed_intersection(left, right, registry.country)
+
+
+def country_disjoint(left: Entity, right: Entity) -> float:
+    left_values = left.get_type_values(registry.country)
+    right_values = right.get_type_values(registry.country)
+    if len(left_values) and len(right_values):
+        if set(left_values).isdisjoint(right_values):
+            return 1.0
+    return 0.0
 
 
 def name_matches(left: Entity, right: Entity) -> float:
@@ -135,43 +189,56 @@ def all_tokens_weighted(left: Entity, right: Entity) -> float:
     return _tokens_weighted(left_values, right_values)
 
 
-def common_countries(left: Entity, right: Entity) -> float:
-    left_cs = set(left.get_type_values(registry.country))
-    right_cs = set(right.get_type_values(registry.country))
-    # num = max(1, max(len(left_cs), len(right_cs)))
-    common = left_cs.intersection(right_cs)
-    return min(1.0, float(len(common)) / float(3))
+# def common_countries(left: Entity, right: Entity) -> float:
+#     left_cs = set(left.get_type_values(registry.country))
+#     right_cs = set(right.get_type_values(registry.country))
+#     # num = max(1, max(len(left_cs), len(right_cs)))
+#     common = left_cs.intersection(right_cs)
+#     return min(1.0, float(len(common)) / float(3))
 
 
-def different_countries(left: Entity, right: Entity) -> float:
-    left_cs = set(left.get_type_values(registry.country))
-    right_cs = set(right.get_type_values(registry.country))
-    different = left_cs.symmetric_difference(right_cs)
-    return float(len(different))
+# def different_countries(left: Entity, right: Entity) -> float:
+#     left_cs = set(left.get_type_values(registry.country))
+#     right_cs = set(right.get_type_values(registry.country))
+#     different = left_cs.symmetric_difference(right_cs)
+#     return float(len(different))
 
 
-def schema_compare(left: Entity, right: Entity) -> float:
+def schema_same(left: Entity, right: Entity) -> float:
     if left.schema == right.schema:
         return 1.0
+    return 0.0
+
+
+def schema_matchable(left: Entity, right: Entity) -> float:
     if left.schema in right.schema.matchable_schemata:
-        return 0.9
+        return 1.0
     return 0.0
 
 
 FEATURES = [
-    name_matches,
-    name_tokens,
-    name_tokens_weighted,
-    name_fingerprints_weighted,
-    address_tokens_weighted,
+    # name_matches,
+    # name_tokens,
+    # name_tokens_weighted,
+    # address_tokens_weighted,
     all_tokens_weighted,
-    common_countries,
-    different_countries,
-    key_date_matches,
-    phone_ftm_compare,
+    # common_countries,
+    # different_countries,
+    # key_date_matches,
+    # phone_ftm_compare,
+    # email_ftm_compare,
+    # identifier_ftm_compare,
+    # country_ftm_compare,
+    name_fingerprints_weighted,
+    # key_day_matches,
+    # key_month_matches,
+    key_year_matches,
     name_ftm_compare,
-    email_ftm_compare,
-    identifier_ftm_compare,
-    country_ftm_compare,
-    schema_compare,
+    phone_intersection,
+    email_intersection,
+    identifier_intersection,
+    # country_intersection,
+    country_disjoint,
+    # schema_same,
+    schema_matchable,
 ]

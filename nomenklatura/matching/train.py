@@ -1,9 +1,10 @@
 import json
 import click
 import pickle
+import random
 import logging
 import numpy as np
-from typing import List
+from typing import Dict, List
 from pprint import pprint
 from followthemoney import model
 from followthemoney.dedupe import Judgement
@@ -21,10 +22,10 @@ from sklearn import metrics
 log = logging.getLogger(__name__)
 
 
-def apply_predicates(pair: JudgedPair):
+def apply_predicates(left: CompositeEntity, right: CompositeEntity) -> Dict[str, float]:
     scores = {}
     for func in FEATURES:
-        scores[func.__name__] = func(pair.left, pair.right)
+        scores[func.__name__] = func(left, right)
     return scores
 
 
@@ -34,7 +35,7 @@ def pairs_to_arrays(pairs: List[JudgedPair]):
     for idx, pair in enumerate(pairs):
         if idx > 0 and idx % 10000 == 0:
             print("computing features: %s...." % idx)
-        preds = apply_predicates(pair)
+        preds = apply_predicates(pair.left, pair.right)
         xvals = list(preds.values())
         xrows.append(xvals)
 
@@ -55,8 +56,11 @@ def read_pairs(pairs_file):
             judgement = Judgement(data["judgement"])
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue
+            if not left_entity.schema.is_a("LegalEntity"):
+                continue
             pair = JudgedPair[CompositeEntity](left_entity, right_entity, judgement)
             pairs.append(pair)
+    random.shuffle(pairs)
     return pairs
 
 
@@ -95,8 +99,85 @@ def train_matcher(pairs_file):
     with open("nkmatch.pkl", "wb") as fh:
         fh.write(mdl)
 
+    use_matcher()
+
+
+def compare(left, right):
+    with open("nkmatch.pkl", "rb") as fh:
+        pipe = pickle.loads(fh.read())
+
+    features = apply_predicates(left, right)
+    npfeat = np.array([list(features.values())])
+    pred = pipe.predict_proba(npfeat)
+    print("-----------------")
+    print(left, right)
+    print(npfeat)
+    print(pred)
+
+
+# @click.command()
+def use_matcher():
+    data1 = {
+        "id": "left-putin",
+        "schema": "Person",
+        "properties": {
+            "name": ["Vladimir Putin"],
+            "birthDate": ["1952-10-07"],
+            "country": ["ru"],
+        },
+    }
+    entity1 = CompositeEntity.from_data(model, data1, [])
+    compare(entity1, entity1)
+
+    data2 = {
+        "id": "right-putin",
+        "schema": "Person",
+        "properties": {
+            "name": ["Vladimir Vladimirovich Putin"],
+            "birthDate": ["1952-10-07"],
+            "nationality": ["ru"],
+        },
+    }
+    entity2 = CompositeEntity.from_data(model, data2, [])
+    compare(entity1, entity2)
+
+    data2 = {
+        "id": "right-putin",
+        "schema": "Person",
+        "properties": {
+            "name": ["Vladimir Vladimirovich Putin"],
+            "birthDate": ["1952-10-07"],
+        },
+    }
+    entity2 = CompositeEntity.from_data(model, data2, [])
+    compare(entity1, entity2)
+
+    data3 = {
+        "id": "other-guy",
+        "schema": "Person",
+        "properties": {
+            "name": ["Saddam Hussein"],
+            "birthDate": ["1937-04-28"],
+        },
+    }
+    entity3 = CompositeEntity.from_data(model, data3, [])
+    compare(entity1, entity3)
+
+    data4 = {
+        "id": "other-guy",
+        "schema": "Person",
+        "properties": {
+            "name": ["Saddam Hussein"],
+            "birthDate": ["1937"],
+            "nationality": ["iq"],
+        },
+    }
+    entity4 = CompositeEntity.from_data(model, data4, [])
+    compare(entity1, entity4)
+
 
 if __name__ == "__main__":
     # configure_logging()
     logging.basicConfig(level=logging.INFO)
     train_matcher()
+    # use_matcher()
