@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include nomenklatura/py.typed
+recursive-include nomenklatura/data *
+prune tests

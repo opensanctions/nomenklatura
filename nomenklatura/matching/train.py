@@ -1,16 +1,17 @@
-import json
 import click
-import pickle
 import random
 import logging
 import numpy as np
-from typing import Dict, List
+import multiprocessing
+from typing import Dict, Iterable
 from pprint import pprint
 from followthemoney import model
 from followthemoney.dedupe import Judgement
+from concurrent.futures import ThreadPoolExecutor
 from nomenklatura.entity import CompositeEntity
-from nomenklatura.matching.pairs import JudgedPair
+from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.features import FEATURES
+from nomenklatura.matching.model import save_matcher, load_matcher
 
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -22,6 +23,14 @@ from sklearn import metrics
 log = logging.getLogger(__name__)
 
 
+# def randomize_entity(entity: CompositeEntity):
+#     if entity.has("firstName", quiet=True) and entity.has("lastName", quiet=True):
+#         rand = random.randint(0, 10)
+#         if rand < 3:
+#             entity.pop("name", quiet=True)
+#             entity.pop("alias", quiet=True)
+
+
 def apply_predicates(left: CompositeEntity, right: CompositeEntity) -> Dict[str, float]:
     scores = {}
     for func in FEATURES:
@@ -29,53 +38,55 @@ def apply_predicates(left: CompositeEntity, right: CompositeEntity) -> Dict[str,
     return scores
 
 
-def pairs_to_arrays(pairs: List[JudgedPair]):
+def pair_convert(pair: JudgedPair):
+    judgement = 1 if pair.judgement == Judgement.POSITIVE else 0
+    features = [f(pair.left, pair.right) for f in FEATURES]
+    return features, judgement
+
+
+def pairs_to_arrays(pairs: Iterable[JudgedPair]):
     xrows = []
     yrows = []
-    for idx, pair in enumerate(pairs):
-        if idx > 0 and idx % 10000 == 0:
-            print("computing features: %s...." % idx)
-        preds = apply_predicates(pair.left, pair.right)
-        xvals = list(preds.values())
-        xrows.append(xvals)
+    threads = multiprocessing.cpu_count()
+    print("compute threads", threads)
+    with ThreadPoolExecutor(max_workers=threads) as excecutor:
+        results = excecutor.map(pair_convert, pairs)
+        for idx, (x, y) in enumerate(results):
+            if idx > 0 and idx % 10000 == 0:
+                print("computing features: %s...." % idx)
+            xrows.append(x)
+            yrows.append(y)
 
-        yval = 0
-        if pair.judgement == Judgement.POSITIVE:
-            yval = 1
-        yrows.append(yval)
     return np.array(xrows), np.array(yrows)
-
-
-def read_pairs(pairs_file):
-    pairs = []
-    with open(pairs_file, "r") as fh:
-        while line := fh.readline():
-            data = json.loads(line)
-            left_entity = CompositeEntity.from_dict(model, data["left"])
-            right_entity = CompositeEntity.from_dict(model, data["right"])
-            judgement = Judgement(data["judgement"])
-            if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
-                continue
-            if not left_entity.schema.is_a("LegalEntity"):
-                continue
-            pair = JudgedPair[CompositeEntity](left_entity, right_entity, judgement)
-            pairs.append(pair)
-    random.shuffle(pairs)
-    return pairs
 
 
 @click.command()
 @click.argument("pairs_file", type=click.Path(exists=True, file_okay=True))
 def train_matcher(pairs_file):
-    pairs = read_pairs(pairs_file)
+    pairs = []
+    for pair in read_pairs(pairs_file):
+        # HACK: support more eventually:
+        if not pair.left.schema.is_a("LegalEntity"):
+            continue
+        # randomize_entity(pair.left)
+        # randomize_entity(pair.right)
+        pairs.append(pair)
+    # random.shuffle(pairs)
+    # pairs = pairs[:30000]
     print("total pairs", len(pairs))
-    print("positive", len([p for p in pairs if p.judgement == Judgement.POSITIVE]))
-    print("negative", len([p for p in pairs if p.judgement == Judgement.NEGATIVE]))
+    # print("positive", len([p for p in pairs if p.judgement == Judgement.POSITIVE]))
+    # print("negative", len([p for p in pairs if p.judgement == Judgement.NEGATIVE]))
     X, y = pairs_to_arrays(pairs)
+    print("built data")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    print("built training data")
+    print("computed test/train split")
     # based on: https://www.datacamp.com/community/tutorials/understanding-logistic-regression-python
-    logreg = LogisticRegression(class_weight={0: 0.95, 1: 0.05})
+    # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
+    # logreg = LogisticRegression(penalty="l1", solver="liblinear")
+    # logreg = LogisticRegression(penalty="l2")
+    logreg = LogisticRegression(penalty="l2")
+    # logreg = LogisticRegression(penalty="elasticnet", solver="saga", l1_ratio=0.5)
+    # logreg = LogisticRegressionCV()
     print("training model...")
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
@@ -83,6 +94,7 @@ def train_matcher(pairs_file):
     coef_named = {n.__name__: c for n, c in zip(FEATURES, coef)}
     print("Coefficients:")
     pprint(coef_named)
+    save_matcher(pipe)
 
     y_pred = pipe.predict(X_test)
     cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
@@ -95,23 +107,17 @@ def train_matcher(pairs_file):
     auc = metrics.roc_auc_score(y_test, y_pred_proba)
     print("AUC:", auc)
 
-    mdl = pickle.dumps(pipe)
-    with open("nkmatch.pkl", "wb") as fh:
-        fh.write(mdl)
-
     use_matcher()
 
 
 def compare(left, right):
-    with open("nkmatch.pkl", "rb") as fh:
-        pipe = pickle.loads(fh.read())
-
+    pipe = load_matcher()
     features = apply_predicates(left, right)
     npfeat = np.array([list(features.values())])
     pred = pipe.predict_proba(npfeat)
     print("-----------------")
     print(left, right)
-    print(npfeat)
+    # print(npfeat)
     print(pred)
 
 

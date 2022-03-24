@@ -18,7 +18,7 @@ setup(
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     namespace_packages=[],
     include_package_data=True,
-    package_data={"nomeklatura": ["py.typed"]},
+    package_data={"": ["nomenklatura/data/*", "nomenklatura/py.typed"]},
     zip_safe=False,
     install_requires=[
         "followthemoney >= 2.6.2, < 3.0.0",
