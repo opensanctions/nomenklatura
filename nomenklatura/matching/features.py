@@ -9,8 +9,8 @@ from followthemoney.types.common import PropertyType
 from nomenklatura.entity import CompositeEntity as Entity
 
 from nomenklatura.matching.util import has_disjoint, has_intersection
-from nomenklatura.matching.util import compare_sets
-from nomenklatura.matching.dates import key_day_disjoint, key_day_matches
+from nomenklatura.matching.util import compare_sets, has_overlap
+from nomenklatura.matching.dates import key_day_matches
 from nomenklatura.matching.dates import key_year_matches
 
 
@@ -76,10 +76,10 @@ def _typed_compare(left: Entity, right: Entity, type_: PropertyType) -> float:
     return type_.compare_sets(left_values, right_values)
 
 
-def _typed_intersection(left: Entity, right: Entity, type_: PropertyType) -> float:
-    left_values = left.get_type_values(type_)
-    right_values = right.get_type_values(type_)
-    return has_intersection(left_values, right_values)
+# def _typed_intersection(left: Entity, right: Entity, type_: PropertyType) -> float:
+#     left_values = left.get_type_values(type_)
+#     right_values = right.get_type_values(type_)
+#     return has_intersection(left_values, right_values)
 
 
 def _props_pair(left: Entity, right: Entity, props: List[str]):
@@ -91,46 +91,53 @@ def _props_pair(left: Entity, right: Entity, props: List[str]):
     return left_values, right_values
 
 
-def _props_match(
-    left: Entity, right: Entity, props: List[str], max: float = 3.0
-) -> float:
-    lv, rv = _props_pair(left, right, props)
-    lv = _tokenize_set(lv)
-    rv = _tokenize_set(rv)
-    # overlap = len(left_values.intersection(right_values))
-    # print("NAMES", left_values, right_values)
-    # return min(max, len(set(lv).intersection(rv))) / float(max)
-    # return compare_sets(lv, rv, compare_names_jaro)
-    return has_disjoint(lv, rv)
-    # return has_intersection(lv, rv)
+# def _props_match(
+#     left: Entity, right: Entity, props: List[str], max: float = 3.0
+# ) -> float:
+#     lv, rv = _props_pair(left, right, props)
+#     lv = _tokenize_set(lv)
+#     rv = _tokenize_set(rv)
+#     # overlap = len(left_values.intersection(right_values))
+#     # print("NAMES", left_values, right_values)
+#     # return min(max, len(set(lv).intersection(rv))) / float(max)
+#     # return compare_sets(lv, rv, compare_names_jaro)
+#     return has_disjoint(lv, rv)
+#     # return has_intersection(lv, rv)
 
 
 def birth_place(left: Entity, right: Entity) -> float:
     lv, rv = _props_pair(left, right, ["birthPlace"])
     lv = _tokenize_set(lv)
     rv = _tokenize_set(rv)
-    overlap = len(lv.intersection(rv))
-    base = max(1, min(len(lv), len(rv)))
-    return 1 - (overlap / base)
+    # overlap = len(lv.intersection(rv))
+    # base = max(1, min(len(lv), len(rv)))
+    # return 1 - (overlap / base)
+    return has_overlap(lv, rv)
 
 
 def first_name_match(left: Entity, right: Entity) -> float:
     """Person first name matches."""
     props = ["firstName"]
-    return _props_match(left, right, props)
-    # return 0.0
+    lv, rv = _props_pair(left, right, props)
+    lv = _tokenize_set(lv)
+    rv = _tokenize_set(rv)
+    return has_overlap(lv, rv)
 
 
-def middle_names(left: Entity, right: Entity) -> float:
-    props = ["secondName", "middleName", "fatherName"]
-    # props = ["secondName", "middleName"]
-    return _props_match(left, right, props)
-    # return 0.0
+# def middle_names(left: Entity, right: Entity) -> float:
+#     props = ["secondName", "middleName", "fatherName"]
+#     lv, rv = _props_pair(left, right, props)
+#     lv = _tokenize_set(lv)
+#     rv = _tokenize_set(rv)
+#     return has_overlap(lv, rv)
 
 
 def family_names(left: Entity, right: Entity) -> float:
     props = ["lastName"]
-    return _props_match(left, right, props)
+    lv, rv = _props_pair(left, right, props)
+    lv = _tokenize_set(lv)
+    rv = _tokenize_set(rv)
+    return has_overlap(lv, rv)
 
 
 def gender_disjoint(left: Entity, right: Entity) -> float:
@@ -149,10 +156,10 @@ def phone_ftm_compare(left: Entity, right: Entity) -> float:
     return _typed_compare(left, right, registry.phone)
 
 
-def phone_mismatch(left: Entity, right: Entity) -> float:
-    left_values = left.get_type_values(registry.phone)
-    right_values = right.get_type_values(registry.phone)
-    return has_disjoint(left_values, right_values)
+# def phone_mismatch(left: Entity, right: Entity) -> float:
+#     left_values = left.get_type_values(registry.phone)
+#     right_values = right.get_type_values(registry.phone)
+#     return has_overlap(left_values, right_values)
 
 
 # def phone_intersection(left: Entity, right: Entity) -> float:
@@ -183,8 +190,8 @@ def identifier_ftm_compare(left: Entity, right: Entity) -> float:
 #     return _typed_compare(left, right, registry.country)
 
 
-def country_intersection(left: Entity, right: Entity) -> float:
-    return _typed_intersection(left, right, registry.country)
+# def country_intersection(left: Entity, right: Entity) -> float:
+#     return _typed_intersection(left, right, registry.country)
 
 
 def country_disjoint(left: Entity, right: Entity) -> float:
@@ -237,10 +244,10 @@ def _tokens_weighted(left: List[str], right: List[str]) -> float:
     return float(common_len) / float(tokens)
 
 
-def name_tokens_weighted(left: Entity, right: Entity) -> float:
-    left_values = left.get_type_values(registry.name)
-    right_values = right.get_type_values(registry.name)
-    return _tokens_weighted(left_values, right_values)
+# def name_tokens_weighted(left: Entity, right: Entity) -> float:
+#     left_values = left.get_type_values(registry.name)
+#     right_values = right.get_type_values(registry.name)
+#     return _tokens_weighted(left_values, right_values)
 
 
 # def name_fingerprints_weighted(left: Entity, right: Entity) -> float:
@@ -304,14 +311,14 @@ FEATURES = [
     # country_ftm_compare,
     # name_normalized,
     key_day_matches,
-    key_day_disjoint,
+    # key_day_disjoint,
     key_year_matches,
     birth_place,
     first_name_match,
-    middle_names,
+    # middle_names,
     family_names,
     gender_disjoint,
-    phone_mismatch,
+    # phone_mismatch,
     # name_ftm_compare,
     # phone_intersection,
     # email_intersection,

@@ -13,11 +13,11 @@ from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.features import FEATURES
 from nomenklatura.matching.model import save_matcher, load_matcher
 
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn import metrics
+from sklearn.pipeline import make_pipeline  # type: ignore
+from sklearn.preprocessing import StandardScaler  # type: ignore
+from sklearn.model_selection import train_test_split  # type: ignore
+from sklearn.linear_model import LogisticRegression  # type: ignore
+from sklearn import metrics  # type: ignore
 
 
 log = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ def use_matcher():
             "country": ["ru"],
         },
     }
-    entity1 = CompositeEntity.from_data(model, data1, [])
+    entity1 = CompositeEntity.from_data(model, data1, {})
     compare(entity1, entity1)
 
     data2 = {
@@ -144,7 +144,7 @@ def use_matcher():
             "nationality": ["ru"],
         },
     }
-    entity2 = CompositeEntity.from_data(model, data2, [])
+    entity2 = CompositeEntity.from_data(model, data2, {})
     compare(entity1, entity2)
 
     data2 = {
@@ -155,7 +155,7 @@ def use_matcher():
             "birthDate": ["1952-10-07"],
         },
     }
-    entity2 = CompositeEntity.from_data(model, data2, [])
+    entity2 = CompositeEntity.from_data(model, data2, {})
     compare(entity1, entity2)
 
     data3 = {
@@ -166,7 +166,7 @@ def use_matcher():
             "birthDate": ["1937-04-28"],
         },
     }
-    entity3 = CompositeEntity.from_data(model, data3, [])
+    entity3 = CompositeEntity.from_data(model, data3, {})
     compare(entity1, entity3)
 
     data4 = {
@@ -178,7 +178,7 @@ def use_matcher():
             "nationality": ["iq"],
         },
     }
-    entity4 = CompositeEntity.from_data(model, data4, [])
+    entity4 = CompositeEntity.from_data(model, data4, {})
     compare(entity1, entity4)
 
 

@@ -1,8 +1,8 @@
-from typing import Iterable, List
+from typing import Iterable, List, Set
 from prefixdate import Precision
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.util import has_disjoint, has_intersection
+from nomenklatura.matching.util import has_disjoint, has_overlap
 
 KEY_DATES = ["birthDate", "incorporationDate", "registrationDate", "startDate"]
 
@@ -13,7 +13,7 @@ def _entity_key_dates(entity: Entity) -> List[str]:
     return values
 
 
-def _dates_precision(values: Iterable[str], precision: Precision):
+def _dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
     dates = set()
     for value in values:
         if len(value) >= precision.value:
@@ -24,13 +24,7 @@ def _dates_precision(values: Iterable[str], precision: Precision):
 def key_day_matches(left: Entity, right: Entity) -> float:
     left_days = _dates_precision(_entity_key_dates(left), Precision.DAY)
     right_days = _dates_precision(_entity_key_dates(right), Precision.DAY)
-    return has_intersection(left_days, right_days)
-
-
-def key_day_disjoint(left: Entity, right: Entity) -> float:
-    left_days = _dates_precision(_entity_key_dates(left), Precision.DAY)
-    right_days = _dates_precision(_entity_key_dates(right), Precision.DAY)
-    return has_disjoint(left_days, right_days)
+    return has_overlap(left_days, right_days)
 
 
 def key_year_matches(left: Entity, right: Entity) -> float:

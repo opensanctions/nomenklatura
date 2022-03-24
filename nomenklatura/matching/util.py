@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Callable, Iterable, List, Optional, Sequence, TypeVar
+from typing import Callable, Hashable, Iterable, List, Optional, Sequence, TypeVar
 
 
 V = TypeVar("V")
@@ -12,12 +12,20 @@ def has_intersection(left: Iterable[V], right: Iterable[V]) -> float:
     return 0.0
 
 
-def has_disjoint(left: Sequence[V], right: Sequence[V]) -> float:
+def has_disjoint(left: Sequence[Hashable], right: Sequence[Hashable]) -> float:
     """Returns 1.0 if both sequences are non-empty but have no common values."""
     if len(left) and len(right):
         if set(left).isdisjoint(right):
             return 1.0
     return 0.0
+
+
+def has_overlap(left: Sequence[Hashable], right: Sequence[Hashable]) -> float:
+    if not len(left) or not len(right):
+        return 0.0
+    if set(left).isdisjoint(right):
+        return -1.0
+    return 1.0
 
 
 def compare_sets(
