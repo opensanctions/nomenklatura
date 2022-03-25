@@ -1,3 +1,4 @@
+from base64 import encode
 import click
 import random
 import logging
@@ -10,8 +11,8 @@ from followthemoney.dedupe import Judgement
 from concurrent.futures import ThreadPoolExecutor
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
-from nomenklatura.matching.features import FEATURES
-from nomenklatura.matching.model import save_matcher, load_matcher
+from nomenklatura.matching.features import FEATURES, encode_pair
+from nomenklatura.matching.model import save_matcher, compare_scored
 
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
@@ -31,16 +32,16 @@ log = logging.getLogger(__name__)
 #             entity.pop("alias", quiet=True)
 
 
-def apply_predicates(left: CompositeEntity, right: CompositeEntity) -> Dict[str, float]:
-    scores = {}
-    for func in FEATURES:
-        scores[func.__name__] = func(left, right)
-    return scores
+# def apply_predicates(left: CompositeEntity, right: CompositeEntity) -> Dict[str, float]:
+#     scores = {}
+#     for func in FEATURES:
+#         scores[func.__name__] = func(left, right)
+#     return scores
 
 
 def pair_convert(pair: JudgedPair):
     judgement = 1 if pair.judgement == Judgement.POSITIVE else 0
-    features = [f(pair.left, pair.right) for f in FEATURES]
+    features = encode_pair(pair.left, pair.right)
     return features, judgement
 
 
@@ -91,10 +92,10 @@ def train_matcher(pairs_file):
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
-    coef_named = {n.__name__: c for n, c in zip(FEATURES, coef)}
+    coefficients = {n.__name__: c for n, c in zip(FEATURES, coef)}
     print("Coefficients:")
-    pprint(coef_named)
-    save_matcher(pipe)
+    pprint(coefficients)
+    save_matcher(pipe, coefficients)
 
     y_pred = pipe.predict(X_test)
     cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
@@ -111,14 +112,10 @@ def train_matcher(pairs_file):
 
 
 def compare(left, right):
-    pipe = load_matcher()
-    features = apply_predicates(left, right)
-    npfeat = np.array([list(features.values())])
-    pred = pipe.predict_proba(npfeat)
-    print("-----------------")
-    print(left, right)
-    # print(npfeat)
-    print(pred)
+    print(repr(left), repr(right))
+    score, features = compare_scored(left, right)
+    print("Score: ", score)
+    print("Features: ", features)
 
 
 # @click.command()
@@ -185,5 +182,5 @@ def use_matcher():
 if __name__ == "__main__":
     # configure_logging()
     logging.basicConfig(level=logging.INFO)
-    train_matcher()
-    # use_matcher()
+    # train_matcher()
+    use_matcher()
