@@ -12,6 +12,8 @@ from nomenklatura.matching.features.misc import schema_match
 
 Encoded = List[float]
 
+# TODO: introduce name length as a feature?????
+
 FEATURES = [
     name_match,
     name_token_overlap,

@@ -1,6 +1,5 @@
 from base64 import encode
 import click
-import random
 import logging
 import numpy as np
 import multiprocessing
@@ -12,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.features import FEATURES, encode_pair
-from nomenklatura.matching.model import save_matcher, compare_scored
+from nomenklatura.matching.model import explain_matcher, save_matcher, compare_scored
 
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
@@ -84,10 +83,7 @@ def train_matcher(pairs_file):
     # based on: https://www.datacamp.com/community/tutorials/understanding-logistic-regression-python
     # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
     # logreg = LogisticRegression(penalty="l1", solver="liblinear")
-    # logreg = LogisticRegression(penalty="l2")
     logreg = LogisticRegression(penalty="l2")
-    # logreg = LogisticRegression(penalty="elasticnet", solver="saga", l1_ratio=0.5)
-    # logreg = LogisticRegressionCV()
     print("training model...")
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
@@ -112,10 +108,12 @@ def train_matcher(pairs_file):
 
 
 def compare(left, right):
+    print("---------------------------")
     print(repr(left), repr(right))
     score, features = compare_scored(left, right)
     print("Score: ", score)
-    print("Features: ", features)
+    print("Features: ")
+    pprint(features)
 
 
 # @click.command()
@@ -183,4 +181,5 @@ if __name__ == "__main__":
     # configure_logging()
     logging.basicConfig(level=logging.INFO)
     # train_matcher()
+    pprint(explain_matcher())
     use_matcher()

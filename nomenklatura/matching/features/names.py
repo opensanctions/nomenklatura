@@ -1,6 +1,6 @@
 import fingerprints
 import Levenshtein  # type: ignore
-from typing import Iterable, Set
+from typing import Iterable, Set, cast
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
@@ -19,7 +19,7 @@ def normalize_names(raws: Iterable[str]) -> Set[str]:
 
 
 def compare_levenshtein(left: str, right: str) -> float:
-    distance = Levenshtein.distance(left, right)
+    distance = cast(int, Levenshtein.distance(left, right))
     base = max((0, len(left), len(right)))
     return 1 - (distance / base)
 
