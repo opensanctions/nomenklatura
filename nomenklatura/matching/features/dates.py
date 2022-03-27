@@ -16,6 +16,7 @@ def with_precision(values: Iterable[str], precision: Precision) -> Set[str]:
 
 
 def key_day_matches(left: Entity, right: Entity) -> float:
+    """The birth date or incorporation date of the two entities is the same."""
     left_dates, right_dates = props_pair(left, right, KEY_DATES)
     left_days = with_precision(left_dates, Precision.DAY)
     right_days = with_precision(right_dates, Precision.DAY)
@@ -23,6 +24,7 @@ def key_day_matches(left: Entity, right: Entity) -> float:
 
 
 def key_year_matches(left: Entity, right: Entity) -> float:
+    """The birth date or incorporation year of the two entities is the same."""
     left_dates, right_dates = props_pair(left, right, KEY_DATES)
     left_years = with_precision(left_dates, Precision.YEAR)
     right_years = with_precision(right_dates, Precision.YEAR)

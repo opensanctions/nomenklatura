@@ -6,6 +6,7 @@ from typing import Optional
 from followthemoney.cli.util import write_object
 
 from nomenklatura.index.index import Index
+from nomenklatura.matching.train import train_matcher
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
 from nomenklatura.entity import CompositeEntity as Entity
@@ -97,3 +98,9 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
         await app.process_messages()
 
     asyncio.run(run_app())
+
+
+@cli.command("train-matcher", help="Train a matching model from judgement pairs")
+@click.argument("pairs_file", type=click.Path(exists=True, file_okay=True))
+def train_matcher_(pairs_file):
+    train_matcher(pairs_file)

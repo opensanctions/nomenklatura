@@ -1,20 +1,15 @@
 import pickle
 import numpy as np
-from typing import Dict, Optional, Tuple, TypedDict, cast
+from typing import Dict, Tuple, cast
 from functools import cache
 from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.features import FEATURES, Encoded, encode_pair
+from nomenklatura.matching.features import FEATURES, encode_pair
+from nomenklatura.matching.types import FeatureDocs, MatchingResult
 
 MODEL_PATH = DATA_PATH.joinpath("match-regression.pkl")
-
-
-class FeatureDoc(TypedDict):
-    name: str
-    description: Optional[str]
-    coefficient: float
 
 
 def save_matcher(pipe: Pipeline, coefficients: Dict[str, float]) -> None:
@@ -38,9 +33,9 @@ def load_matcher() -> Tuple[Pipeline, Dict[str, float]]:
     return pipe, coefficients
 
 
-def explain_matcher() -> Dict[str, FeatureDoc]:
+def explain_matcher() -> FeatureDocs:
     """Return an explanation of the features and their coefficients."""
-    features: Dict[str, FeatureDoc] = {}
+    features: FeatureDocs = {}
     _, coefficients = load_matcher()
     for func in FEATURES:
         name = func.__name__
@@ -51,7 +46,7 @@ def explain_matcher() -> Dict[str, FeatureDoc]:
     return features
 
 
-def compare_scored(left: Entity, right: Entity) -> Tuple[float, Dict[str, float]]:
+def compare_scored(left: Entity, right: Entity) -> MatchingResult:
     """Encode a comparison of the two entities, apply the model and return a score."""
     pipe, _ = load_matcher()
     encoded = encode_pair(left, right)
@@ -59,4 +54,4 @@ def compare_scored(left: Entity, right: Entity) -> Tuple[float, Dict[str, float]
     pred = pipe.predict_proba(npfeat)
     score = cast(float, pred[0][1])
     features = {f.__name__: c for f, c in zip(FEATURES, encoded)}
-    return score, features
+    return {"score": score, "features": features}
