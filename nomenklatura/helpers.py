@@ -2,7 +2,7 @@ from normality import stringify
 from typing import Any, List, Tuple
 
 
-def join_text(*parts: Tuple[Any], sep=" ") -> str:
+def join_text(*parts: Any, sep: str = " ") -> str:
     """Join all the non-null arguments using sep."""
     texts: List[str] = []
     for part in parts:

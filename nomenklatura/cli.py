@@ -102,5 +102,5 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
 
 @cli.command("train-matcher", help="Train a matching model from judgement pairs")
 @click.argument("pairs_file", type=click.Path(exists=True, file_okay=True))
-def train_matcher_(pairs_file):
+def train_matcher_(pairs_file: Path) -> None:
     train_matcher(pairs_file)
