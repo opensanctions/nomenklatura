@@ -21,26 +21,12 @@ class Entry(object):
 
     def compute(self, field: "Field") -> None:
         """Compute weighted term frequency for scoring."""
-        # lene = len(self.entities)
-        # idf = 1 + ((field.len - lene + 0.5) / (lene + 0.5))
-        # self.idf = math.log(idf)
         self.idf = math.log(field.len / len(self.entities))
 
     def frequencies(self, field: "Field") -> Generator[Tuple[str, float], None, None]:
-        # https://www.elastic.co/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables
-        # k1 = 1.2
-        # b = 0.75
         for entity_id, mentions in self.entities.items():
             field_len = max(1, field.entities[entity_id])
             yield entity_id, (mentions / field_len)
-            # try:
-            #     field_len = max(1, field.entities[entity_id])
-            #     # tf = weight / max(1, terms)
-            #     len_coeff = 1 - b + b * (field_len / field.avg_len)
-            #     tf = (mentions * (k1 + 1)) / (mentions + k1 * len_coeff)
-            #     yield entity_id, tf
-            # except KeyError:
-            #     continue
 
     def __repr__(self) -> str:
         return "<Entry(%r)>" % len(self.entities)

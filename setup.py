@@ -18,13 +18,14 @@ setup(
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     namespace_packages=[],
     include_package_data=True,
-    package_data={"nomeklatura": ["py.typed"]},
+    package_data={"": ["nomenklatura/data/*", "nomenklatura/py.typed"]},
     zip_safe=False,
     install_requires=[
         "followthemoney >= 2.6.2, < 3.0.0",
         "shortuuid >= 1.0.1, < 2.0.0",
         "rich >= 10.9.0, < 13.0.0",
         "textual >= 0.1.10, < 1.0.0",
+        "scikit-learn == 1.0.2",
     ],
     tests_require=[],
     entry_points={

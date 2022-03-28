@@ -47,6 +47,7 @@ class Tokenizer(Generic[DS, E]):
                 return
             tokens = norm.split(WS)
             if type == registry.name:
+                yield type.name, norm
                 yield type.name, " ".join(sorted(tokens))
             for token in tokens:
                 yield WORD_FIELD, token
