@@ -14,8 +14,7 @@ def birth_place(left: Entity, right: Entity) -> float:
 
 def gender_mismatch(left: Entity, right: Entity) -> float:
     """Both entities have a different gender associated with them."""
-    lv = set([v for v in left.get("gender", quiet=True) if v in ("male", "female")])
-    rv = set([v for v in right.get("gender", quiet=True) if v in ("male", "female")])
+    lv, rv = props_pair(left, right, ["gender"])
     return has_disjoint(lv, rv)
 
 
