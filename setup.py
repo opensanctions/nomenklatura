@@ -26,6 +26,7 @@ setup(
         "rich >= 10.9.0, < 13.0.0",
         "textual >= 0.1.10, < 1.0.0",
         "scikit-learn == 1.0.2",
+        "click >= 8.0.0, < 8.1.0",
     ],
     tests_require=[],
     entry_points={
