@@ -11,4 +11,5 @@ tests/fixtures/donations.frag.ijson
 htmlcov/
 build/
 dist/
+data/
 textual.log
