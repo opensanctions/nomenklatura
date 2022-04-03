@@ -6,6 +6,7 @@ class FeatureDoc(TypedDict):
 
     description: Optional[str]
     coefficient: float
+    url: str
 
 
 FeatureDocs = Dict[str, FeatureDoc]

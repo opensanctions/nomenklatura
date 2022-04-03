@@ -1,15 +1,19 @@
 import pickle
 import numpy as np
+from pathlib import Path
 from typing import Dict, Tuple, cast
 from functools import cache
 from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 
+from nomenklatura import __version__
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.features import FEATURES, encode_pair
 from nomenklatura.matching.types import FeatureDocs, MatchingResult
 
+BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
 MODEL_PATH = DATA_PATH.joinpath("match-regression.pkl")
+CODE_PATH = DATA_PATH.joinpath("..").resolve()
 
 
 def save_matcher(pipe: Pipeline, coefficients: Dict[str, float]) -> None:
@@ -18,6 +22,7 @@ def save_matcher(pipe: Pipeline, coefficients: Dict[str, float]) -> None:
     with open(MODEL_PATH, "wb") as fh:
         fh.write(mdl)
     load_matcher.cache_clear()
+    explain_matcher.cache_clear()
 
 
 @cache
@@ -33,15 +38,20 @@ def load_matcher() -> Tuple[Pipeline, Dict[str, float]]:
     return pipe, coefficients
 
 
+@cache
 def explain_matcher() -> FeatureDocs:
     """Return an explanation of the features and their coefficients."""
     features: FeatureDocs = {}
     _, coefficients = load_matcher()
     for func in FEATURES:
         name = func.__name__
+        code_path = Path(func.__code__.co_filename).relative_to(CODE_PATH)
+        line_no = func.__code__.co_firstlineno
+        url = BASE_URL % (__version__, code_path, line_no)
         features[name] = {
             "description": func.__doc__,
             "coefficient": coefficients[name],
+            "url": url,
         }
     return features
 

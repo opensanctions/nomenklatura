@@ -40,6 +40,7 @@ def test_explain_matcher():
     for _, desc in explanation.items():
         assert len(desc["description"]) > 0, desc
         assert desc["coefficient"] != 0.0, desc
+        assert "github" in desc["url"], desc
 
 
 def test_compare_entities():
