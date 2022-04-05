@@ -1,5 +1,7 @@
 import logging
 from typing import Iterable, List, Optional
+
+from followthemoney.dedupe import Judgement
 from followthemoney.schema import Schema
 
 from nomenklatura.entity import DS, E
@@ -27,6 +29,7 @@ def xref(
     entities: Iterable[E],
     limit: int = 15,
     range: Optional[Schema] = None,
+    threshold: Optional[int] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", index, resolver)
     scores: List[float] = []
@@ -46,7 +49,13 @@ def xref(
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.info("[%.2f]-> %r x %r", score, query.id, match_id)
-                resolver.suggest(query.id, match_id, score)
+                if not threshold:
+                    resolver.suggest(query.id, match_id, score)
+                else:
+                    judgement = Judgement.NEGATIVE
+                    if score > threshold:
+                        judgement = Judgement.POSITIVE
+                    resolver.decide(query.id, match_id, judgement, score=score)
                 scores.append(score)
 
             if num_entities % 100 == 0 and num_entities > 0:
