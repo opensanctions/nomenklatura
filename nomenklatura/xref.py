@@ -7,6 +7,7 @@ from followthemoney.schema import Schema
 from nomenklatura.entity import DS, E
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
+from nomenklatura.matching import compare_scored
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def xref(
     entities: Iterable[E],
     limit: int = 15,
     range: Optional[Schema] = None,
-    threshold: Optional[int] = None,
+    auto_threshold: Optional[float] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", index, resolver)
     scores: List[float] = []
@@ -41,21 +42,21 @@ def xref(
                 continue
             if range is not None and not query.schema.is_a(range):
                 continue
-            for match_id, score in index.match(query, limit=limit):
-                assert match_id is not None, match_id
-                if match_id == query.id:
+            for match, score in index.match_entities(query, limit=limit):
+                assert match.id is not None, match.id
+                if match.id == query.id:
                     continue
                 # judgement = resolver.get_judgement(query.id, match.id)
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.info("[%.2f]-> %r x %r", score, query.id, match_id)
-                if not threshold:
-                    resolver.suggest(query.id, match_id, score)
-                else:
-                    judgement = Judgement.NEGATIVE
-                    if score > threshold:
-                        judgement = Judgement.POSITIVE
-                    resolver.decide(query.id, match_id, judgement, score=score)
+                result = compare_scored(query, match)
+                score = result["score"]
+                if auto_threshold is not None and score > auto_threshold:
+                    log.info("Auto-merge [%.2f]: %s <> %s", score, query, match)
+                    resolver.decide(query.id, match.id, Judgement.POSITIVE)
+                    continue
+                resolver.suggest(query.id, match.id, score)
                 scores.append(score)
 
             if num_entities % 100 == 0 and num_entities > 0:
