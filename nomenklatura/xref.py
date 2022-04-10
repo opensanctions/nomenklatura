@@ -7,6 +7,8 @@ from followthemoney.schema import Schema
 from nomenklatura.entity import DS, E
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
+from nomenklatura.matching import compare_scored
+
 
 log = logging.getLogger(__name__)
 
@@ -41,22 +43,26 @@ def xref(
                 continue
             if range is not None and not query.schema.is_a(range):
                 continue
-            for match_id, score in index.match(query, limit=limit):
-                assert match_id is not None, match_id
-                if match_id == query.id:
+            for match_, score in index.match_entities(query, limit=limit):
+                assert match_.id is not None, match_.id
+                if match_.id == query.id:
                     continue
                 # judgement = resolver.get_judgement(query.id, match.id)
                 # if judgement in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 #     continue
                 # log.info("[%.2f]-> %r x %r", score, query.id, match_id)
                 if not threshold:
-                    resolver.suggest(query.id, match_id, score)
+                    resolver.suggest(query.id, match_.id, score)
+                    scores.append(score)
                 else:
+                    result = compare_scored(query, match_)
+                    score = result["score"]
                     judgement = Judgement.NEGATIVE
                     if score > threshold:
                         judgement = Judgement.POSITIVE
-                    resolver.decide(query.id, match_id, judgement, score=score)
-                scores.append(score)
+                    resolver.decide(
+                        query.id, match_.id, judgement, score=score
+                    )
 
             if num_entities % 100 == 0 and num_entities > 0:
                 _print_stats(num_entities, scores)
