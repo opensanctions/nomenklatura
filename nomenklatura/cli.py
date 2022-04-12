@@ -10,7 +10,7 @@ from nomenklatura.matching.train import train_matcher
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.xref import xref
+from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp
 
 
@@ -24,16 +24,6 @@ def _path_sibling(path: Path, suffix: str) -> Path:
 def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[Entity]:
     path = resolver_path or _path_sibling(file_path, ".rslv.ijson")
     return Resolver[Entity].load(Path(path))
-
-
-def index_xref(
-    loader: FileLoader,
-    resolver: Resolver[Entity],
-    auto_threshold: Optional[float] = None,
-) -> None:
-    index = Index(loader)
-    index.build()
-    xref(index, resolver, loader, auto_threshold=auto_threshold)
 
 
 @click.group(help="Nomenklatura data integration")
@@ -60,7 +50,7 @@ def xref_file(
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
-    index_xref(loader, resolver_, auto_threshold=auto_threshold)
+    run_xref(loader, resolver_, auto_threshold=auto_threshold)
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
 
@@ -93,7 +83,7 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
     if xref:
-        index_xref(loader, resolver_)
+        run_xref(loader, resolver_)
 
     async def run_app() -> None:
         app = DedupeApp(
@@ -105,6 +95,7 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
         await app.process_messages()
 
     asyncio.run(run_app())
+    resolver_.save()
 
 
 @cli.command("train-matcher", help="Train a matching model from judgement pairs")

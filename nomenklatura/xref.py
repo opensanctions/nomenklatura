@@ -5,6 +5,7 @@ from followthemoney.dedupe import Judgement
 from followthemoney.schema import Schema
 
 from nomenklatura.entity import DS, E
+from nomenklatura.loader import Loader
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
 from nomenklatura.matching import compare_scored
@@ -25,18 +26,20 @@ def _print_stats(num_entities: int, scores: List[float]) -> None:
 
 
 def xref(
-    index: Index[DS, E],
+    loader: Loader[DS, E],
     resolver: Resolver[E],
-    entities: Iterable[E],
     limit: int = 15,
+    fuzzy: bool = False,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
 ) -> None:
-    log.info("Begin xref: %r, resolver: %s", index, resolver)
+    log.info("Begin xref: %r, resolver: %s", loader, resolver)
+    index = Index(loader)
+    index.build(fuzzy=fuzzy, adjacent=False)
     scores: List[float] = []
     num_entities = 0
     try:
-        for num_entities, query in enumerate(entities):
+        for num_entities, query in enumerate(loader):
             assert query.id is not None, query
             if not query.schema.matchable:
                 continue
