@@ -45,12 +45,24 @@ def index(path: Path, index: Optional[Path] = None) -> None:
 @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
+@click.option("-l", "--limit", type=click.INT, default=5000)
+@click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
 def xref_file(
-    path: Path, resolver: Optional[Path] = None, auto_threshold: Optional[float] = None
+    path: Path,
+    resolver: Optional[Path] = None,
+    auto_threshold: Optional[float] = None,
+    limit: int = 5000,
+    scored: bool = True,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
-    run_xref(loader, resolver_, auto_threshold=auto_threshold)
+    run_xref(
+        loader,
+        resolver_,
+        auto_threshold=auto_threshold,
+        scored=scored,
+        limit=limit,
+    )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
 
