@@ -213,6 +213,8 @@ class Resolver(Generic[E]):
         """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
         other = Identifier.get(other_id)
+        if is_qid(entity.id) and is_qid(other.id):
+            return Judgement.NEGATIVE
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
