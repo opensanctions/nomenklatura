@@ -26,10 +26,14 @@ def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[En
     return Resolver[Entity].load(Path(path))
 
 
-def index_xref(loader: FileLoader, resolver: Resolver[Entity]) -> None:
+def index_xref(
+    loader: FileLoader,
+    resolver: Resolver[Entity],
+    auto_threshold: Optional[float] = None,
+) -> None:
     index = Index(loader)
     index.build()
-    xref(index, resolver, loader)
+    xref(index, resolver, loader, auto_threshold=auto_threshold)
 
 
 @click.group(help="Nomenklatura data integration")
@@ -50,10 +54,13 @@ def index(path: Path, index: Optional[Path] = None) -> None:
 @cli.command("xref", help="Generate dedupe candidates")
 @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
-def xref_file(path: Path, resolver: Optional[Path] = None) -> None:
+@click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
+def xref_file(
+    path: Path, resolver: Optional[Path] = None, auto_threshold: Optional[float] = None
+) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
-    index_xref(loader, resolver_)
+    index_xref(loader, resolver_, auto_threshold=auto_threshold)
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
 

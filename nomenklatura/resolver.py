@@ -273,7 +273,7 @@ class Resolver(Generic[E]):
     ) -> Identifier:
         edge = self.get_edge(left_id, right_id)
         if edge is None:
-            edge = Edge(left_id, right_id)
+            edge = Edge(left_id, right_id, judgement=judgement)
 
         # Canonicalise positive matches, i.e. make both identifiers refer to a
         # canonical identifier, instead of making a direct link.
