@@ -49,25 +49,25 @@ class Index(Generic[DS, E]):
         self.fields: Dict[str, Field] = {}
         self.entities: Set[str] = set()
 
-    def index(self, entity: E, adjacent: bool = True, fuzzy: bool = True) -> None:
+    def index(self, entity: E, adjacent: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
             return
         loader = self.loader if adjacent else None
-        for field, token in self.tokenizer.entity(entity, loader=loader, fuzzy=fuzzy):
+        for field, token in self.tokenizer.entity(entity, loader=loader):
             if field not in self.fields:
                 self.fields[field] = Field()
             self.fields[field].add(entity.id, token)
         self.entities.add(entity.id)
 
-    def build(self, adjacent: bool = True, fuzzy: bool = True) -> None:
+    def build(self, adjacent: bool = True) -> None:
         """Index all entities in the dataset."""
         log.info("Building index from: %r...", self.loader)
         self.fields = {}
         self.entities = set()
         for entity in self.loader:
-            self.index(entity, adjacent=adjacent, fuzzy=fuzzy)
+            self.index(entity, adjacent=adjacent)
         self.commit()
         log.info("Built index: %r", self)
 
@@ -93,12 +93,12 @@ class Index(Generic[DS, E]):
         return False
 
     def match(
-        self, query: E, limit: Optional[int] = 30, fuzzy: bool = True
+        self, query: E, limit: Optional[int] = 30
     ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
 
         matches: Dict[str, float] = defaultdict(float)
-        for field_, token in self.tokenizer.entity(query, fuzzy=fuzzy):
+        for field_, token in self.tokenizer.entity(query):
             try:
                 field = self.fields[field_]
             except KeyError:
@@ -127,11 +127,11 @@ class Index(Generic[DS, E]):
                 break
 
     def match_entities(
-        self, query: E, limit: int = 30, fuzzy: bool = True
+        self, query: E, limit: int = 30
     ) -> Generator[Tuple[E, float], None, None]:
         """Find entities similar to the given input entity, return entity."""
         returned = 0
-        for entity_id, score in self.match(query, limit=None, fuzzy=fuzzy):
+        for entity_id, score in self.match(query, limit=None):
             entity = self.loader.get_entity(entity_id)
             if entity is not None:
                 yield entity, score

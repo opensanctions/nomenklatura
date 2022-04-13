@@ -40,15 +40,12 @@ def test_index_search(dindex):
     query = model.make_entity("Person")
     query.add("name", "Henry Ford")
     results = list(dindex.match(query))
-    assert len(results), len(results)
+    assert not len(results), len(results)
 
     query = model.make_entity("Company")
     query.add("name", "Susanne Klatten")
     results = list(dindex.match_entities(query))
-    assert len(results), len(results)
-    first = results[0][0]
-    assert first.schema != model.get("Person")
-    assert "Klatten" not in first.caption
+    assert not len(results), len(results)
 
     query = model.make_entity("Address")
     matchies = [s.name for s in query.schema.matchable_schemata]
@@ -65,9 +62,9 @@ def test_index_pairs(dloader, dindex: Index):
     tokenizer = dindex.tokenizer
     pair, score = pairs[0]
     entity0 = dloader.get_entity(str(pair[0]))
-    tokens0 = set(tokenizer.entity(entity0, fuzzy=False))
+    tokens0 = set(tokenizer.entity(entity0))
     entity1 = dloader.get_entity(str(pair[1]))
-    tokens1 = set(tokenizer.entity(entity1, fuzzy=False))
+    tokens1 = set(tokenizer.entity(entity1))
     overlap = tokens0.intersection(tokens1)
     assert len(overlap) > 0, overlap
     # assert "Schnabel" in (overlap, tokens0, tokens1)

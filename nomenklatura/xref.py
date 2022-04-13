@@ -29,14 +29,14 @@ def xref(
     loader: Loader[DS, E],
     resolver: Resolver[E],
     limit: int = 5000,
-    fuzzy: bool = False,
     scored: bool = True,
+    adjacent: bool = False,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", loader, resolver)
     index = Index(loader)
-    index.build(fuzzy=fuzzy, adjacent=False)
+    index.build(adjacent=adjacent)
     try:
         scores: List[float] = []
         suggested = 0
@@ -63,8 +63,11 @@ def xref(
                 result = compare_scored(left, right)
                 score = result["score"]
             scores.append(score)
-            # if len(left.datasets.intersection(right.datasets)) > 0:
-            #     score = score * 0.5
+
+            # Not sure this is globally a good idea.
+            if len(left.datasets.intersection(right.datasets)) > 0:
+                score = score * 0.7
+
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
                 resolver.decide(left_id, right_id, Judgement.POSITIVE)

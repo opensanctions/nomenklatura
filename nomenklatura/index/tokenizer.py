@@ -1,6 +1,5 @@
-from typing import Generic, Optional
-from typing import Any, Dict, Generator, Generic, Tuple
 from normality import normalize, WS
+from typing import Generic, Optional, Generator, Generic, Tuple
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
@@ -31,7 +30,7 @@ class Tokenizer(Generic[DS, E]):
         return schema.name
 
     def value(
-        self, type: PropertyType, value: str, fuzzy: bool = True
+        self, type: PropertyType, value: str
     ) -> Generator[Tuple[str, str], None, None]:
         """Perform type-specific token generation for a property value."""
         if type in (registry.url, registry.topic, registry.entity):
@@ -54,20 +53,15 @@ class Tokenizer(Generic[DS, E]):
                 if type == registry.name:
                     yield type.name, token
 
-                if fuzzy:
-                    for ngram in split_ngrams(token, 2, 3):
-                        yield NGRAM_FIELD, ngram
-
     def entity(
         self,
         entity: E,
         loader: Optional[Loader[DS, E]] = None,
-        fuzzy: bool = True,
     ) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         yield SCHEMA_FIELD, self.schema_token(entity.schema)
         for prop, value in entity.itervalues():
-            for field, token in self.value(prop.type, value, fuzzy=fuzzy):
+            for field, token in self.value(prop.type, value):
                 yield field, token
         if loader is not None:
             # Index Address, Identification, Sanction, etc.:
@@ -78,5 +72,5 @@ class Tokenizer(Generic[DS, E]):
                     # Skip interval dates (not to be mixed up with other dates)
                     if prop.type in (registry.date, registry.name):
                         continue
-                    for field, token in self.value(prop.type, value, fuzzy=fuzzy):
+                    for field, token in self.value(prop.type, value):
                         yield field, token
