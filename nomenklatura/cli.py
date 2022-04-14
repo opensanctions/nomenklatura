@@ -1,9 +1,11 @@
+import json
 import click
 import logging
 import asyncio
 from pathlib import Path
 from typing import Optional
-from followthemoney.cli.util import write_object
+from followthemoney import model
+from followthemoney.cli.util import write_object, read_entities
 
 from nomenklatura.index.index import Index
 from nomenklatura.matching.train import train_matcher
@@ -79,12 +81,20 @@ def xref_prune(resolver: Path, keep: int = 0) -> None:
 @cli.command("apply", help="Output merged entities")
 @click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.option("-o", "--outfile", type=click.File("w"), default="-")  # noqa
-@click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
+@click.option(
+    "-r", "--resolver", required=True, type=click.Path(writable=True, path_type=Path)
+)
 def apply(path: Path, outfile: click.File, resolver: Optional[Path]) -> None:
     resolver_ = _get_resolver(path, resolver)
-    loader = FileLoader(path, resolver=resolver_)
-    for entity in loader:
-        write_object(outfile, entity)  # type: ignore
+    with open(path, "r") as fh:
+        while True:
+            line = fh.readline()
+            if not line:
+                break
+            data = json.loads(line)
+            proxy = Entity.from_data(model, data, {})
+            proxy = resolver_.apply(proxy)
+            write_object(outfile, proxy)
 
 
 @cli.command("dedupe", help="Interactively judge xref candidates")
