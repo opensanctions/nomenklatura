@@ -94,7 +94,7 @@ def apply(path: Path, outfile: click.File, resolver: Optional[Path]) -> None:
             data = json.loads(line)
             proxy = Entity.from_data(model, data, {})
             proxy = resolver_.apply(proxy)
-            write_object(outfile, proxy)
+            write_object(outfile, proxy)  # type: ignore
 
 
 @cli.command("dedupe", help="Interactively judge xref candidates")
