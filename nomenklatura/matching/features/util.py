@@ -1,7 +1,8 @@
+import Levenshtein  # type: ignore
 from itertools import product
 from normality import normalize
 from normality.constants import WS
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable, List, cast
 from typing import Optional, Set, Tuple, TypeVar
 from followthemoney.types.common import PropertyType
 
@@ -32,6 +33,12 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
     if set(left).isdisjoint(right):
         return -1.0
     return 1.0
+
+
+def compare_levenshtein(left: str, right: str) -> float:
+    distance = cast(int, Levenshtein.distance(left, right))
+    base = max((0, len(left), len(right)))
+    return 1 - (distance / base)
 
 
 def props_pair(

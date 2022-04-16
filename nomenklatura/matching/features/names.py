@@ -1,27 +1,32 @@
+import re
 import fingerprints
-import Levenshtein  # type: ignore
-from typing import Iterable, Set, cast
+from normality import WS
+from typing import Iterable, List, Set
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import has_intersection, has_overlap
-from nomenklatura.matching.features.util import compare_sets, tokenize_pair
-from nomenklatura.matching.features.util import props_pair, type_pair
+from nomenklatura.matching.features.util import (
+    has_disjoint,
+    has_intersection,
+    has_overlap,
+    compare_sets,
+    tokenize_pair,
+    props_pair,
+    type_pair,
+    compare_levenshtein,
+)
+
+FIND_NUM = re.compile("\d{2,}")
 
 
 def normalize_names(raws: Iterable[str]) -> Set[str]:
     names = set()
     for raw in raws:
         name = fingerprints.generate(raw, keep_order=False)
-        if name is not None:
-            names.add(name[:128])
+        if name is None:
+            continue
+        names.add(name[:128])
     return names
-
-
-def compare_levenshtein(left: str, right: str) -> float:
-    distance = cast(int, Levenshtein.distance(left, right))
-    base = max((0, len(left), len(right)))
-    return 1 - (distance / base)
 
 
 def name_levenshtein(left: Entity, right: Entity) -> float:
@@ -57,3 +62,16 @@ def name_token_overlap(left: Entity, right: Entity) -> float:
     common = lv.intersection(rv)
     tokens = min(len(lv), len(rv))
     return float(len(common)) / float(max(2.0, tokens))
+
+
+def _extract_numbers(values: List[str]) -> Set[str]:
+    numbers: Set[str] = set()
+    for value in values:
+        numbers.update(FIND_NUM.findall(value))
+    return numbers
+
+
+def name_numbers(left: Entity, right: Entity) -> float:
+    """Find if names contain numbers, score if the numbers are different."""
+    lv, rv = type_pair(left, right, registry.name)
+    return has_disjoint(_extract_numbers(lv), _extract_numbers(rv))

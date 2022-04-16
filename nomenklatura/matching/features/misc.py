@@ -1,8 +1,9 @@
+from normality import normalize
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import has_disjoint
-from nomenklatura.matching.features.util import has_overlap
+from nomenklatura.matching.features.util import has_disjoint, has_overlap
+from nomenklatura.matching.features.util import compare_levenshtein, compare_sets
 from nomenklatura.matching.features.util import props_pair, type_pair, tokenize_pair
 
 
@@ -10,6 +11,14 @@ def birth_place(left: Entity, right: Entity) -> float:
     """Same place of birth."""
     lv, rv = tokenize_pair(props_pair(left, right, ["birthPlace"]))
     return has_overlap(lv, rv)
+
+
+def address_match(left: Entity, right: Entity) -> float:
+    """Text similarity between addresses."""
+    lv, rv = type_pair(left, right, registry.address)
+    lvn = [normalize(v) for v in lv]
+    rvn = [normalize(v) for v in rv]
+    return compare_sets(lvn, rvn, compare_levenshtein)
 
 
 def gender_mismatch(left: Entity, right: Entity) -> float:
@@ -41,10 +50,3 @@ def country_mismatch(left: Entity, right: Entity) -> float:
     """Both entities are linked to different countries."""
     lv, rv = type_pair(left, right, registry.country)
     return has_disjoint(set(lv), set(rv))
-
-
-def schema_match(left: Entity, right: Entity) -> float:
-    """The type of both entities matches exactly."""
-    if left.schema == right.schema:
-        return 1.0
-    return 0.0
