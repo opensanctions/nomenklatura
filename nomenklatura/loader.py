@@ -16,33 +16,33 @@ from followthemoney.property import Property
 from followthemoney import model
 
 from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity, DS, E
+from nomenklatura.entity import CompositeEntity, DS, CE
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
 
 
-class Loader(Generic[DS, E]):
+class Loader(Generic[DS, CE]):
     """An abstract base class for implementing"""
 
     def __init__(self, dataset: DS):
         self.dataset = dataset
 
-    def get_entity(self, id: str) -> Optional[E]:
+    def get_entity(self, id: str) -> Optional[CE]:
         raise NotImplemented
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, E], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         raise NotImplemented
 
-    def __iter__(self) -> Iterator[E]:
+    def __iter__(self) -> Iterator[CE]:
         raise NotImplemented
 
     def __len__(self) -> int:
         raise NotImplemented
 
     def get_adjacent(
-        self, entity: E, inverted: bool = True
-    ) -> Generator[Tuple[Property, E], None, None]:
+        self, entity: CE, inverted: bool = True
+    ) -> Generator[Tuple[Property, CE], None, None]:
         for prop, value in entity.itervalues():
             if prop.type == registry.entity:
                 child = self.get_entity(value)
@@ -54,15 +54,18 @@ class Loader(Generic[DS, E]):
                 yield prop, adjacent
 
 
-class MemoryLoader(Loader[DS, E]):
+class MemoryLoader(Loader[DS, CE]):
     """Load entities from the given iterable of entities."""
 
     def __init__(
-        self, dataset: DS, entities: Iterable[E], resolver: Optional[Resolver[E]] = None
+        self,
+        dataset: DS,
+        entities: Iterable[CE],
+        resolver: Optional[Resolver[CE]] = None,
     ) -> None:
         super().__init__(dataset)
-        self.resolver = resolver or Resolver[E]()
-        self.entities: Dict[str, E] = {}
+        self.resolver = resolver or Resolver[CE]()
+        self.entities: Dict[str, CE] = {}
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
         for entity in entities:
@@ -79,18 +82,18 @@ class MemoryLoader(Loader[DS, E]):
                 if prop.reverse is not None:
                     self.inverted[value].append((prop.reverse, entity.id))
 
-    def get_entity(self, id: str) -> Optional[E]:
+    def get_entity(self, id: str) -> Optional[CE]:
         canonical_id = self.resolver.get_canonical(id)
         return self.entities.get(canonical_id)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, E], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         canonical_id = self.resolver.get_canonical(id)
         for prop, entity_id in self.inverted.get(canonical_id, []):
             entity = self.get_entity(entity_id)
             if entity is not None:
                 yield prop, entity
 
-    def __iter__(self) -> Iterator[E]:
+    def __iter__(self) -> Iterator[CE]:
         return iter(self.entities.values())
 
     def __len__(self) -> int:

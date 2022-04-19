@@ -8,7 +8,7 @@ from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, Un
 from followthemoney.types import registry
 from followthemoney.dedupe import Judgement
 
-from nomenklatura.entity import E
+from nomenklatura.entity import CE
 from nomenklatura.util import PathLike, is_qid
 
 StrIdent = Union[str, "Identifier"]
@@ -135,7 +135,7 @@ class Edge(object):
         )
 
 
-class Resolver(Generic[E]):
+class Resolver(Generic[CE]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(self, path: Optional[PathLike] = None) -> None:
@@ -343,7 +343,7 @@ class Resolver(Generic[E]):
             kept += 1
         self.connected.cache_clear()
 
-    def apply(self, proxy: E) -> E:
+    def apply(self, proxy: CE) -> CE:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
         canonical_id = self.get_canonical(proxy.id)
@@ -368,7 +368,7 @@ class Resolver(Generic[E]):
                 fh.write(edge.to_line())
 
     @classmethod
-    def load(cls, path: PathLike) -> "Resolver[E]":
+    def load(cls, path: PathLike) -> "Resolver[CE]":
         resolver = cls(path=path)
         if not path.exists():
             return resolver

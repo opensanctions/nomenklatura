@@ -1,10 +1,10 @@
 import logging
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from followthemoney.dedupe import Judgement
 from followthemoney.schema import Schema
 
-from nomenklatura.entity import DS, E
+from nomenklatura.entity import DS, CE
 from nomenklatura.loader import Loader
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
@@ -26,8 +26,8 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
 
 
 def xref(
-    loader: Loader[DS, E],
-    resolver: Resolver[E],
+    loader: Loader[DS, CE],
+    resolver: Resolver[CE],
     limit: int = 5000,
     scored: bool = True,
     adjacent: bool = False,

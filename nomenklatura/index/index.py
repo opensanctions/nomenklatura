@@ -8,7 +8,7 @@ from followthemoney.types import registry
 
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
-from nomenklatura.entity import DS, E
+from nomenklatura.entity import DS, CE
 from nomenklatura.loader import Loader
 from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import (
@@ -21,7 +21,7 @@ from nomenklatura.index.tokenizer import (
 log = logging.getLogger(__name__)
 
 
-class Index(Generic[DS, E]):
+class Index(Generic[DS, CE]):
     """An in-memory search index to match entities against a given dataset."""
 
     BOOSTS = {
@@ -43,13 +43,13 @@ class Index(Generic[DS, E]):
 
     __slots__ = "loader", "fields", "tokenizer", "entities"
 
-    def __init__(self, loader: Loader[DS, E]):
+    def __init__(self, loader: Loader[DS, CE]):
         self.loader = loader
-        self.tokenizer = Tokenizer[DS, E]()
+        self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
         self.entities: Set[str] = set()
 
-    def index(self, entity: E, adjacent: bool = True) -> None:
+    def index(self, entity: CE, adjacent: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable:
@@ -93,7 +93,7 @@ class Index(Generic[DS, E]):
         return False
 
     def match(
-        self, query: E, limit: Optional[int] = 30
+        self, query: CE, limit: Optional[int] = 30
     ) -> Generator[Tuple[str, float], None, None]:
         """Find entities similar to the given input entity, return ID."""
 
@@ -127,8 +127,8 @@ class Index(Generic[DS, E]):
                 break
 
     def match_entities(
-        self, query: E, limit: int = 30
-    ) -> Generator[Tuple[E, float], None, None]:
+        self, query: CE, limit: int = 30
+    ) -> Generator[Tuple[CE, float], None, None]:
         """Find entities similar to the given input entity, return entity."""
         returned = 0
         for entity_id, score in self.match(query, limit=None):
@@ -177,7 +177,7 @@ class Index(Generic[DS, E]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, loader: Loader[DS, E], path: PathLike) -> "Index[DS, E]":
+    def load(cls, loader: Loader[DS, CE], path: PathLike) -> "Index[DS, CE]":
         index = Index(loader)
         if not path.exists():
             log.debug("Cannot load: %r", index)

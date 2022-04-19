@@ -44,9 +44,9 @@ def test_explain_matcher():
 
 
 def test_compare_entities():
-    cand = Entity.from_data(model, candidate, {})
-    match = Entity.from_data(model, putin, {})
-    mismatch = Entity.from_data(model, saddam, {})
+    cand = Entity.from_dict(model, candidate)
+    match = Entity.from_dict(model, putin)
+    mismatch = Entity.from_dict(model, saddam)
 
     res_match = compare_scored(cand, match)
     res_mismatch = compare_scored(cand, mismatch)
@@ -56,8 +56,8 @@ def test_compare_entities():
 
 
 def test_compare_features():
-    cand = Entity.from_data(model, candidate, {})
-    match = Entity.from_data(model, putin, {})
+    cand = Entity.from_dict(model, candidate)
+    match = Entity.from_dict(model, putin)
     ref_match = compare_scored(cand, match)
     ref_score = ref_match["score"]
 

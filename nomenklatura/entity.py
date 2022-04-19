@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import Type, TypeVar
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
@@ -6,6 +7,9 @@ from nomenklatura.dataset import Dataset, DatasetIndex
 
 if TYPE_CHECKING:
     from nomenklatura.loader import Loader
+
+CE = TypeVar("CE", bound="CompositeEntity")
+DS = TypeVar("DS", bound=Dataset)
 
 
 class CompositeEntity(EntityProxy):
@@ -25,13 +29,12 @@ class CompositeEntity(EntityProxy):
         self.referents: Set[str] = set()
         """The IDs of all entities which are included in this canonical entity."""
 
-    def merge(self, other: "EntityProxy") -> "CompositeEntity":
+    def merge(self: CE, other: CE) -> CE:
         """Merge another entity proxy into this one. For composite entities, this
         will update the datasets and referents data accordingly."""
-        merged = cast(CompositeEntity, super().merge(other))
-        if isinstance(other, CompositeEntity):
-            merged.referents.update(other.referents)
-            merged.datasets.update(other.datasets)
+        merged = super().merge(other)
+        merged.referents.update(other.referents)
+        merged.datasets.update(other.datasets)
         return merged
 
     def to_dict(self) -> Dict[str, Any]:
@@ -41,7 +44,7 @@ class CompositeEntity(EntityProxy):
         return data
 
     def _to_nested_dict(
-        self, loader: "Loader[DS, CompositeEntity]", depth: int, path: List[str]
+        self: CE, loader: "Loader[DS, CE]", depth: int, path: List[str]
     ) -> Dict[str, Any]:
         next_depth = depth if self.schema.edge else depth - 1
         next_path = path + [self.id]
@@ -60,19 +63,19 @@ class CompositeEntity(EntityProxy):
         return data
 
     def to_nested_dict(
-        self, loader: "Loader[DS, CompositeEntity]", depth: int = 1
+        self: CE, loader: "Loader[DS, CE]", depth: int = 1
     ) -> Dict[str, Any]:
         return self._to_nested_dict(loader, depth=depth, path=[])
 
     @classmethod
-    def from_data(
-        cls,
+    def from_dict(
+        cls: Type[CE],
         model: Model,
         data: Dict[str, Any],
-        datasets: DatasetIndex,
         cleaned: bool = True,
-    ) -> "CompositeEntity":
-        obj = cls(model, data, cleaned=cleaned)
+        datasets: DatasetIndex = {},
+    ) -> CE:
+        obj = super().from_dict(model, data, cleaned=cleaned)
         obj.id = data["id"]
         for dataset_name in data.get("datasets", []):
             dataset = datasets.get(dataset_name)
@@ -80,7 +83,3 @@ class CompositeEntity(EntityProxy):
                 obj.datasets.add(dataset)
         obj.referents.update(data.get("referents", []))
         return obj
-
-
-E = TypeVar("E", bound=CompositeEntity)
-DS = TypeVar("DS", bound=Dataset)

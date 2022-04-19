@@ -8,21 +8,21 @@ from textual.widget import Widget  # type: ignore
 from followthemoney.types import registry
 from followthemoney.property import Property
 
-from nomenklatura.loader import Loader, DS, E
+from nomenklatura.loader import Loader, DS, CE
 from nomenklatura.tui.util import comparison_props
 
 if TYPE_CHECKING:
     from nomenklatura.tui.app import DedupeApp
 
 
-def render_column(entity: E) -> Text:
+def render_column(entity: CE) -> Text:
     return Text.assemble(
         (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
     )
 
 
 async def render_values(
-    loader: Loader[DS, E], prop: Property, entity: E, other: E, latinize: bool
+    loader: Loader[DS, CE], prop: Property, entity: CE, other: CE, latinize: bool
 ) -> Text:
     values = entity.get(prop, quiet=True)
     other_values = other.get_type_values(prop.type)
@@ -49,7 +49,7 @@ async def render_values(
 
 
 async def render_comparison(
-    loader: Loader[DS, E], left: E, right: E, score: float, latinize: bool = False
+    loader: Loader[DS, CE], left: CE, right: CE, score: float, latinize: bool = False
 ) -> Table:
     if left is None or right is None:
         return Text("No candidates loaded.", justify="center")

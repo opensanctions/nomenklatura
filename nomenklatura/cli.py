@@ -92,7 +92,7 @@ def apply(path: Path, outfile: click.File, resolver: Optional[Path]) -> None:
             if not line:
                 break
             data = json.loads(line)
-            proxy = Entity.from_data(model, data, {})
+            proxy = Entity.from_dict(model, data)
             proxy = resolver_.apply(proxy)
             write_object(outfile, proxy)  # type: ignore
 

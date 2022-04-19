@@ -2,7 +2,7 @@ from typing import Generator
 from followthemoney.types import registry
 from followthemoney.property import Property
 
-from nomenklatura.entity import CompositeEntity
+from nomenklatura.entity import CE
 
 TYPE_ORDER = {
     registry.name: -6,
@@ -14,9 +14,7 @@ TYPE_ORDER = {
 }
 
 
-def comparison_props(
-    left: CompositeEntity, right: CompositeEntity
-) -> Generator[Property, None, None]:
+def comparison_props(left: CE, right: CE) -> Generator[Property, None, None]:
     """Return an ordered list of properties to be shown in a comparison of
     the two given entities."""
     props = set(left.iterprops())

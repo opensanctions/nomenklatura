@@ -4,8 +4,7 @@ from followthemoney.schema import Schema
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
-from nomenklatura.index.util import split_ngrams
-from nomenklatura.entity import DS, E
+from nomenklatura.entity import DS, CE
 from nomenklatura.loader import Loader
 
 SCHEMA_FIELD = "schema"
@@ -25,7 +24,7 @@ TEXT_TYPES = (
 )
 
 
-class Tokenizer(Generic[DS, E]):
+class Tokenizer(Generic[DS, CE]):
     def schema_token(self, schema: Schema) -> str:
         return schema.name
 
@@ -55,8 +54,8 @@ class Tokenizer(Generic[DS, E]):
 
     def entity(
         self,
-        entity: E,
-        loader: Optional[Loader[DS, E]] = None,
+        entity: CE,
+        loader: Optional[Loader[DS, CE]] = None,
     ) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         yield SCHEMA_FIELD, self.schema_token(entity.schema)
