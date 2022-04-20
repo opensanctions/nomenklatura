@@ -8,7 +8,9 @@ from textual.widget import Widget  # type: ignore
 from followthemoney.types import registry
 from followthemoney.property import Property
 
-from nomenklatura.loader import Loader, DS, CE
+from nomenklatura.dataset import DS
+from nomenklatura.entity import CE
+from nomenklatura.loader import Loader
 from nomenklatura.tui.util import comparison_props
 
 if TYPE_CHECKING:

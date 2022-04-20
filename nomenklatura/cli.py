@@ -5,7 +5,7 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 from followthemoney import model
-from followthemoney.cli.util import write_object, read_entities
+from followthemoney.cli.util import write_object
 
 from nomenklatura.index.index import Index
 from nomenklatura.matching.train import train_matcher

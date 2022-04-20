@@ -1,4 +1,6 @@
-from typing import Any, Dict
+from typing import Any, Dict, TypeVar
+
+DS = TypeVar("DS", bound="Dataset")
 
 
 class Dataset(object):

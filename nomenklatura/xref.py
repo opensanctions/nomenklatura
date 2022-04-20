@@ -4,7 +4,8 @@ from typing import List, Optional
 from followthemoney.dedupe import Judgement
 from followthemoney.schema import Schema
 
-from nomenklatura.entity import DS, CE
+from nomenklatura.dataset import DS
+from nomenklatura.entity import CE
 from nomenklatura.loader import Loader
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index

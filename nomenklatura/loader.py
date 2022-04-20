@@ -15,8 +15,8 @@ from followthemoney.types import registry
 from followthemoney.property import Property
 from followthemoney import model
 
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity, DS, CE
+from nomenklatura.dataset import Dataset, DS
+from nomenklatura.entity import CompositeEntity, CE
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)

@@ -8,7 +8,8 @@ from followthemoney.types import registry
 
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
-from nomenklatura.entity import DS, CE
+from nomenklatura.dataset import DS
+from nomenklatura.entity import CE
 from nomenklatura.loader import Loader
 from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import (
