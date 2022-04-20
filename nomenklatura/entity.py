@@ -3,13 +3,12 @@ from typing import Type, TypeVar
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
-from nomenklatura.dataset import Dataset, DatasetIndex
+from nomenklatura.dataset import DS
 
 if TYPE_CHECKING:
     from nomenklatura.loader import Loader
 
 CE = TypeVar("CE", bound="CompositeEntity")
-DS = TypeVar("DS", bound=Dataset)
 
 
 class CompositeEntity(EntityProxy):
@@ -23,7 +22,7 @@ class CompositeEntity(EntityProxy):
         cleaned: bool = True,
     ) -> None:
         super().__init__(model, data, key_prefix=key_prefix, cleaned=cleaned)
-        self.datasets: Set[Dataset] = set()
+        self.datasets: Set[str] = set()
         """The set of datasets from which information in this entity is derived."""
 
         self.referents: Set[str] = set()
@@ -40,7 +39,7 @@ class CompositeEntity(EntityProxy):
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
         data["referents"] = list(self.referents)
-        data["datasets"] = [d.name for d in self.datasets]
+        data["datasets"] = list(self.datasets)
         return data
 
     def _to_nested_dict(
@@ -69,17 +68,9 @@ class CompositeEntity(EntityProxy):
 
     @classmethod
     def from_dict(
-        cls: Type[CE],
-        model: Model,
-        data: Dict[str, Any],
-        cleaned: bool = True,
-        datasets: DatasetIndex = {},
+        cls: Type[CE], model: Model, data: Dict[str, Any], cleaned: bool = True
     ) -> CE:
         obj = super().from_dict(model, data, cleaned=cleaned)
-        obj.id = data["id"]
-        for dataset_name in data.get("datasets", []):
-            dataset = datasets.get(dataset_name)
-            if dataset is not None:
-                obj.datasets.add(dataset)
         obj.referents.update(data.get("referents", []))
+        obj.datasets.update(data.get("datasets", []))
         return obj

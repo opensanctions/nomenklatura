@@ -70,7 +70,7 @@ async def render_comparison(
         await asyncio.sleep(0)
 
     ds_label = Text("Sources", "grey bold")
-    ds_left = Text(", ".join([d.name for d in left.datasets]))
-    ds_right = Text(", ".join([d.name for d in right.datasets]))
+    ds_left = Text(", ".join(left.datasets))
+    ds_right = Text(", ".join(right.datasets))
     table.add_row(ds_label, ds_left, ds_right)
     return table
