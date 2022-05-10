@@ -2,8 +2,8 @@ import asyncio
 from rich.text import Text  # type: ignore
 from textual.app import App
 from textual.widgets import Footer, ScrollView
-from followthemoney.dedupe.judgement import Judgement
 
+from nomenklatura.judgement import Judgement
 from nomenklatura.tui.comparison import render_comparison
 
 # from textual import log

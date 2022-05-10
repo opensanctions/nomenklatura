@@ -1,6 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from followthemoney.dedupe.judgement import Judgement
+
+from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
 
 

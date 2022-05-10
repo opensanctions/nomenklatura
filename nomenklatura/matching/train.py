@@ -9,9 +9,9 @@ from sklearn.preprocessing import StandardScaler  # type: ignore
 from sklearn.model_selection import train_test_split  # type: ignore
 from sklearn.linear_model import LogisticRegression  # type: ignore
 from sklearn import metrics  # type: ignore
-from followthemoney.dedupe import Judgement
 from concurrent.futures import ThreadPoolExecutor
 
+from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.features import FEATURES, encode_pair
 from nomenklatura.matching.model import explain_matcher, save_matcher, compare_scored

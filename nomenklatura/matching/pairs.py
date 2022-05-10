@@ -1,9 +1,9 @@
 import json
 from typing import Generator
 from followthemoney import model
-from followthemoney.dedupe import Judgement
 
 from nomenklatura.entity import CompositeEntity
+from nomenklatura.judgement import Judgement
 from nomenklatura.util import PathLike
 
 

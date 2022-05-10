@@ -6,9 +6,9 @@ from functools import lru_cache
 from collections import defaultdict
 from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, Union
 from followthemoney.types import registry
-from followthemoney.dedupe import Judgement
 
 from nomenklatura.entity import CE
+from nomenklatura.judgement import Judgement
 from nomenklatura.util import PathLike, is_qid
 
 StrIdent = Union[str, "Identifier"]
