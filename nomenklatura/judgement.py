@@ -10,7 +10,7 @@ class Judgement(Enum):
     UNSURE = "unsure"
     NO_JUDGEMENT = "no_judgement"
 
-    def __add__(self, other):
+    def __add__(self, other: "Judgement") -> "Judgement":
         pair = {self, other}
         if pair == {Judgement.POSITIVE}:
             return Judgement.POSITIVE
@@ -18,5 +18,5 @@ class Judgement(Enum):
             return Judgement.NEGATIVE
         return Judgement.UNSURE
 
-    def to_dict(self):
+    def to_dict(self) -> str:
         return str(self.value)
