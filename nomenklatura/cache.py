@@ -1,10 +1,16 @@
 import os
-import shelve
+import math
 from pathlib import Path
-from datetime import datetime
+from random import randint
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
-from abc import ABC, abstractmethod
+from typing import Dict, Optional, Union, Generator
+from datetime import datetime, timedelta
+from sqlalchemy import MetaData, create_engine
+from sqlalchemy import Table, Column, DateTime, Unicode
+from sqlalchemy.engine import Engine
+from sqlalchemy.future import select
+from sqlalchemy.sql.expression import delete
+from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
 
@@ -13,54 +19,107 @@ Value = Union[str, None]
 
 @dataclass
 class CacheValue:
-    value: Optional[str]
+    key: str
+    dataset: Optional[str]
+    text: Value
     timestamp: datetime
 
 
-class Cache(ABC):
-    @abstractmethod
-    def set(self, dataset: DS, key: str, value: Value) -> None:
-        pass
+def randomize_cache(days: int) -> timedelta:
+    min_cache = max(1, math.ceil(days * 0.7))
+    max_cache = math.ceil(days * 1.3)
+    return timedelta(days=randint(min_cache, max_cache))
 
-    @abstractmethod
-    def get(self, dataset: DS, key: str) -> Optional[CacheValue]:
-        pass
 
-    def has(self, dataset: DS, key: str) -> bool:
-        return self.get(dataset, key) is not None
+class Cache(object):
+    CACHE_PATH = os.environ.get("NOMENKLATURA_CACHE_PATH", ".nk_cache.db")
+
+    def __init__(
+        self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
+    ) -> None:
+        self.dataset = dataset
+        self._engine = engine
+        self._table = Table(
+            "cache",
+            metadata,
+            Column("key", Unicode(), index=True, nullable=False, unique=True),
+            Column("text", Unicode(), nullable=True),
+            Column("dataset", Unicode(), nullable=False),
+            Column("timestamp", DateTime, index=True),
+        )
+        if create:
+            metadata.create_all(checkfirst=True)
+
+        self._preload: Dict[str, CacheValue] = {}
+
+    def set(self, key: str, value: Value) -> None:
+        cache: Cache = {
+            "timestamp": datetime.utcnow(),
+            "key": key,
+            "dataset": self.dataset.name,
+            "text": value,
+        }
+
+        istmt = upsert(self._table).values([cache])
+        values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
+        stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
+        with self._engine.begin() as conn:
+            conn.execute(stmt)
+
+    def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
+        cache_cutoff = None
+        if max_age is not None:
+            cache_cutoff = datetime.utcnow() - randomize_cache(max_age)
+
+        cache = self._preload.get(key)
+        if cache is not None:
+            if cache_cutoff is not None and cache.timestamp < cache_cutoff:
+                return None
+            return cache.text
+
+        q = select(self._table.c.text)
+        q = q.filter(self._table.c.key == key)
+        if cache_cutoff is not None:
+            q = q.filter(self._table.c.timestamp > cache_cutoff)
+        q = q.order_by(self._table.c.timestamp.desc())
+        q = q.limit(1)
+        with self._engine.connect() as conn:
+            result = conn.execute(q)
+            row = result.fetchone()
+            if row is not None:
+                return row.text
+        return None
+
+    def has(self, key: str) -> bool:
+        return self.get(key) is not None
+
+    def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
+        q = select(self._table)
+        if like is not None:
+            q = q.filter(self._table.c.key.like(like))
+
+        with self._engine.connect() as conn:
+            result = conn.execution_options(stream_results=True).execute(q)
+            for row in result:
+                yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
+
+    def preload(self, like: Optional[str] = None) -> None:
+        for cache in self.all(like=like):
+            self._preload[cache.key] = cache
+
+    def clear(self) -> None:
+        with self._engine.begin() as conn:
+            pq = delete(self._table)
+            pq = pq.where(self._table.c.dataset == self.dataset.name)
+            conn.execute(pq)
 
     def close(self) -> None:
-        pass
+        self._engine.dispose()
 
-
-class FileCache(Cache):
-    CACHE_PATH = os.environ.get("NOMENKLATURA_CACHE_PATH", ".nk_cache")
-
-    def __init__(self):
-        self.path = Path(self.CACHE_PATH).resolve()
-        self._files: Dict[str, shelve.Shelf] = {}
-
-    def _get_db(self, dataset: DS) -> shelve.Shelf:
-        self.path.mkdir(exist_ok=True, parents=True)
-        if dataset.name not in self._files:
-            ds_path = self.path / f"{dataset.name}.cache"
-            self._files[dataset.name] = shelve.open(ds_path.as_posix(), "c")
-        return self._files[dataset.name]
-
-    def set(self, dataset: DS, key: str, value: Value) -> None:
-        db = self._get_db(dataset)
-        ts = datetime.utcnow().timestamp()
-        db[key] = dict(v=value, ts=ts)
-
-    def get(self, dataset: DS, key: str) -> Optional[CacheValue]:
-        db = self._get_db(dataset)
-        data = db.get(key)
-        if data is None:
-            return None
-        print(data)
-        ts = datetime.fromtimestamp(data["ts"])
-        return CacheValue(data["v"], ts)
-
-    def close(self) -> None:
-        for db in self._files.values():
-            db.close()
+    @classmethod
+    def make_default(cls, dataset: DS):
+        path = Path(cls.CACHE_PATH).resolve()
+        db_uri = f"sqlite:///{path.as_posix()}"
+        engine = create_engine(db_uri)
+        metadata = MetaData(bind=engine)
+        return cls(engine, metadata, dataset, create=True)
