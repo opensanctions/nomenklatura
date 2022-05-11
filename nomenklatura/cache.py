@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 from random import randint
 from dataclasses import dataclass
-from typing import Dict, Optional, Union, Generator
+from typing import cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, DateTime, Unicode
@@ -53,7 +53,7 @@ class Cache(object):
         self._preload: Dict[str, CacheValue] = {}
 
     def set(self, key: str, value: Value) -> None:
-        cache: Cache = {
+        cache = {
             "timestamp": datetime.utcnow(),
             "key": key,
             "dataset": self.dataset.name,
@@ -87,7 +87,7 @@ class Cache(object):
             result = conn.execute(q)
             row = result.fetchone()
             if row is not None:
-                return row.text
+                return cast(Optional[str], row.text)
         return None
 
     def has(self, key: str) -> bool:
@@ -117,7 +117,7 @@ class Cache(object):
         self._engine.dispose()
 
     @classmethod
-    def make_default(cls, dataset: DS):
+    def make_default(cls, dataset: DS) -> "Cache":
         path = Path(cls.CACHE_PATH).resolve()
         db_uri = f"sqlite:///{path.as_posix()}"
         engine = create_engine(db_uri)
