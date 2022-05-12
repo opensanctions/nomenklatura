@@ -33,7 +33,10 @@ setup(
         "console_scripts": [
             "nk = nomenklatura.cli:cli",
             "nomenklatura = nomenklatura.cli:cli",
-        ]
+        ],
+        "nomenklatura.enrichers": [
+            "yente = nomenklatura.enrich.yente:YenteEnricher",
+        ],
     },
     extras_require={
         "dev": [
@@ -44,6 +47,7 @@ setup(
             "pytest",
             "pytest-cov",
             "coverage>=4.1",
+            "types-setuptools",
         ]
     },
 )

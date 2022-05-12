@@ -1,17 +1,20 @@
 import json
+import yaml
 import click
 import logging
 import asyncio
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Generator, Tuple
 from followthemoney import model
 from followthemoney.cli.util import write_object
 
-from nomenklatura.index.index import Index
+from nomenklatura.cache import Cache
 from nomenklatura.matching.train import train_matcher
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
+from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp
 
@@ -23,6 +26,27 @@ def _path_sibling(path: Path, suffix: str) -> Path:
     return path.parent.joinpath(f"{path.stem}{suffix}")
 
 
+def _path_entities(path: Path) -> Generator[Entity, None, None]:
+    with open(path, "r") as fh:
+        while True:
+            line = fh.readline()
+            if not line:
+                break
+            data = json.loads(line)
+            yield Entity.from_dict(model, data)
+
+
+def _load_enricher(path: Path) -> Tuple[Dataset, Enricher]:
+    with open(path, "r") as fh:
+        data = yaml.safe_load(fh)
+        dataset = Dataset(data.pop("name"), data.pop("title"))
+        cache = Cache.make_default(dataset)
+        enricher = make_enricher(dataset, cache, data)
+        if enricher is None:
+            raise TypeError("Could not load enricher")
+        return dataset, enricher
+
+
 def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[Entity]:
     path = resolver_path or _path_sibling(file_path, ".rslv.ijson")
     return Resolver[Entity].load(Path(path))
@@ -31,16 +55,6 @@ def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[En
 @click.group(help="Nomenklatura data integration")
 def cli() -> None:
     logging.basicConfig(level=logging.INFO)
-
-
-@cli.command("index", help="Index entities from the given file")
-@click.argument("path", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.option("-i", "--index", type=click.Path(writable=True, path_type=Path))
-def index(path: Path, index: Optional[Path] = None) -> None:
-    loader = FileLoader(path)
-    index_path = index or _path_sibling(path, ".idx.pkl")
-    index_obj = Index.load(loader, index_path)
-    index_obj.save(index_path)
 
 
 @cli.command("xref", help="Generate dedupe candidates")
@@ -86,15 +100,9 @@ def xref_prune(resolver: Path, keep: int = 0) -> None:
 )
 def apply(path: Path, outfile: click.File, resolver: Optional[Path]) -> None:
     resolver_ = _get_resolver(path, resolver)
-    with open(path, "r") as fh:
-        while True:
-            line = fh.readline()
-            if not line:
-                break
-            data = json.loads(line)
-            proxy = Entity.from_dict(model, data)
-            proxy = resolver_.apply(proxy)
-            write_object(outfile, proxy)  # type: ignore
+    for proxy in _path_entities(path):
+        proxy = resolver_.apply(proxy)
+        write_object(outfile, proxy)  # type: ignore
 
 
 @cli.command("dedupe", help="Interactively judge xref candidates")
@@ -124,3 +132,52 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
 @click.argument("pairs_file", type=click.Path(exists=True, file_okay=True))
 def train_matcher_(pairs_file: Path) -> None:
     train_matcher(pairs_file)
+
+
+@cli.command("match", help="Generate matches from an enrichment source")
+@click.argument("config", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.argument(
+    "entities", type=click.Path(exists=True, dir_okay=False, path_type=Path)
+)
+@click.option("-o", "--outfile", type=click.File("w"), default="-")  # noqa
+@click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
+def match_command(
+    config: Path, entities: Path, outfile: click.File, resolver: Optional[Path]
+) -> None:
+    resolver_ = _get_resolver(entities, resolver)
+    _, enricher = _load_enricher(config)
+    try:
+        for proxy in match(enricher, resolver_, _path_entities(entities)):
+            write_object(outfile, proxy)  # type: ignore
+    finally:
+        resolver_.save()
+        enricher.close()
+
+
+@cli.command("enrich", help="Fetch extra info from an enrichment source")
+@click.argument("config", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.argument(
+    "entities", type=click.Path(exists=True, dir_okay=False, path_type=Path)
+)
+@click.option("-o", "--outfile", type=click.File("w"), default="-")  # noqa
+@click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
+@click.option("--expand/--no-expand", is_flag=True, type=click.BOOL, default=True)
+def enrich_command(
+    config: Path,
+    entities: Path,
+    outfile: click.File,
+    resolver: Optional[Path],
+    expand: bool,
+) -> None:
+    resolver_ = _get_resolver(entities, resolver)
+    _, enricher = _load_enricher(config)
+    try:
+        for proxy in enrich(
+            enricher,
+            resolver_,
+            _path_entities(entities),
+            expand=expand,
+        ):
+            write_object(outfile, proxy)  # type: ignore
+    finally:
+        enricher.close()

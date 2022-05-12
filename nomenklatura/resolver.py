@@ -228,9 +228,11 @@ class Resolver(Generic[CE]):
                     return edge.judgement
         return Judgement.NO_JUDGEMENT
 
-    def check_candidate(self, left: Identifier, right: Identifier) -> bool:
+    def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
         """Check if the two IDs could be merged, i.e. if there's no existing
         judgement."""
+        if left == right:
+            return False
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 

@@ -1,9 +1,10 @@
 import os
 import math
+import json
 from pathlib import Path
 from random import randint
 from dataclasses import dataclass
-from typing import cast, Dict, Optional, Union, Generator
+from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, DateTime, Unicode
@@ -66,6 +67,9 @@ class Cache(object):
         with self._engine.begin() as conn:
             conn.execute(stmt)
 
+    def set_json(self, key: str, value: Any) -> None:
+        return self.set(key, json.dumps(value))
+
     def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
         cache_cutoff = None
         if max_age is not None:
@@ -89,6 +93,12 @@ class Cache(object):
             if row is not None:
                 return cast(Optional[str], row.text)
         return None
+
+    def get_json(self, key: str, max_age: Optional[int] = None) -> Optional[Any]:
+        text = self.get(key, max_age=max_age)
+        if text is None:
+            return None
+        return json.loads(text)
 
     def has(self, key: str) -> bool:
         return self.get(key) is not None

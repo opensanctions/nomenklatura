@@ -1,0 +1,6 @@
+name: offshoreleaks
+title: ICIJ OffshoreLeaks
+type: yente
+endpoint: https://api.opensanctions.org/match/offshoreleaks
+token: nk-default
+cache_days: 90
