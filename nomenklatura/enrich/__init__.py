@@ -65,15 +65,15 @@ def enrich(
                 continue
 
             log.info("Enrich [%s]: %r", entity, match)
-            match.datasets.add(enricher.dataset.name)
-            match = resolver.apply(match)
-            yield match
-
             if expand:
                 for adjacent in enricher.expand(match):
                     adjacent.datasets.add(enricher.dataset.name)
                     adjacent = resolver.apply(adjacent)
                     yield adjacent
+
+            match.datasets.add(enricher.dataset.name)
+            match = resolver.apply(match)
+            yield match
 
 
 def get_enrichers() -> Generator[Type[Enricher], None, None]:
