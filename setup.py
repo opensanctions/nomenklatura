@@ -48,6 +48,7 @@ setup(
             "pytest-cov",
             "coverage>=4.1",
             "types-setuptools",
+            "types-requests",
         ]
     },
 )
