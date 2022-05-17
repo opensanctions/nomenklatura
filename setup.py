@@ -36,6 +36,7 @@ setup(
         ],
         "nomenklatura.enrichers": [
             "yente = nomenklatura.enrich.yente:YenteEnricher",
+            "nominatim = nomenklatura.enrich.nominatim:NominatimEnricher",
         ],
     },
     extras_require={

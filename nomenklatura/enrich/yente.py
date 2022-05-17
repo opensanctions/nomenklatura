@@ -1,6 +1,7 @@
+import json
 import logging
 from typing import Any, Generator
-from requests import Session
+from requests.exceptions import RequestException
 from urllib.parse import urljoin
 from banal import ensure_list
 from followthemoney.types import registry
@@ -14,13 +15,14 @@ log = logging.getLogger(__name__)
 
 
 class YenteEnricher(Enricher):
+    """Uses the `yente` match API to look up entities in a specific dataset."""
+
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self._api = config.pop("api")
         self._dataset = config.pop("dataset", "default")
         self._token = config.pop("token", "nomenklatura")
-        self._session = Session()
-        self._session.headers["Authorization"] = f"Bearer {self._token}"
+        self.session.headers["Authorization"] = f"Bearer {self._token}"
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
@@ -30,7 +32,7 @@ class YenteEnricher(Enricher):
         response = self.cache.get_json(cache_key, max_age=self.cache_days)
         if response is None:
             data = {"queries": {"entity": entity.to_dict()}}
-            resp = self._session.post(url, json=data)
+            resp = self.session.post(url, json=data)
             response = resp.json().get("responses", {}).get("entity", {})
             self.cache.set_json(cache_key, response)
         for result in response.get("results", []):
@@ -49,16 +51,10 @@ class YenteEnricher(Enricher):
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
         url = urljoin(self._api, f"entities/{entity.id}?nested=true")
-        response = self.cache.get_json(url, max_age=self.cache_days)
-        if response is None:
-            resp = self._session.get(url)
-            if resp.status_code != 200:
-                log.warning("Error: %s", resp.text)
-                return
-            response = resp.json()
-            self.cache.set_json(url, response)
+        try:
+            text = self.http_get_cached(url)
+            response = json.loads(text)
+        except RequestException:
+            log.exception("Failed to fetch: %s", url)
+            return
         yield from self._traverse_nested(entity, response)
-
-    def close(self) -> None:
-        super().close()
-        self._session.close()
