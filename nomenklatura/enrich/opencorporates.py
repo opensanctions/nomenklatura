@@ -1,8 +1,8 @@
 import logging
 from normality import slugify
-from typing import Any, Dict, Generator, Optional
+from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
-from banal import ensure_list, ensure_dict
+from banal import ensure_dict
 from followthemoney.types import registry
 
 from nomenklatura.entity import CE
@@ -23,7 +23,7 @@ class OpenCorporatesEnricher(Enricher):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         token_var = "${OPENCORPORATES_API_TOKEN}"
-        self.api_token = self.get_config_expand("api_token", token_var)
+        self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
         if self.api_token == token_var:
             self.api_token = None
         if self.api_token is None:
@@ -45,26 +45,31 @@ class OpenCorporatesEnricher(Enricher):
         clone.add("opencorporatesUrl", entity.get("opencorporatesUrl"))
         yield clone
 
-    def make_entity_id(self, url: str):
+    def make_entity_id(self, url: str) -> str:
         parsed = urlparse(url)
         path = slugify(parsed.path, sep="-")
         return f"oc-{path}"
 
-    def jurisdiction_to_country(self, juris: str):
-        return juris.split("_", 1)[0]
+    def jurisdiction_to_country(self, juris: Optional[Any]) -> Optional[str]:
+        if juris is None:
+            return None
+        return str(juris).split("_", 1)[0]
 
     def company_entity(
         self, ref: CE, data: Dict[str, Any], entity: Optional[CE] = None
     ) -> CE:
         if "company" in data:
             data = ensure_dict(data.get("company", data))
+        oc_url = cast(Optional[str], data.get("opencorporates_url"))
+        if oc_url is None:
+            raise ValueError("Company has no URL: %r" % data)
         if entity is None:
             entity = self.make_entity(ref, "Company")
-            entity.id = self.make_entity_id(data.get("opencorporates_url"))
+            entity.id = self.make_entity_id(oc_url)
         entity.add("name", data.get("name"))
 
         # TODO: make this an adjacent object?
-        address = ensure_dict(data.get("registered_address"))
+        address: Dict[str, Any] = ensure_dict(data.get("registered_address"))
         entity.add("country", address.get("country"))
 
         juris = self.jurisdiction_to_country(data.get("jurisdiction_code"))
@@ -77,17 +82,17 @@ class OpenCorporatesEnricher(Enricher):
         entity.add("dissolutionDate", data.get("dissolution_date"))
         entity.add("status", data.get("current_status"))
         entity.add("registrationNumber", data.get("company_number"))
-        entity.add("opencorporatesUrl", data.get("opencorporates_url"))
+        entity.add("opencorporatesUrl", oc_url)
         source = data.get("source", {})
         entity.add("publisher", source.get("publisher"))
         entity.add("publisherUrl", source.get("url"))
         entity.add("retrievedAt", source.get("retrieved_at"))
-        for code in ensure_list(data.get("industry_codes")):
+        for code in data.get("industry_codes", []):
             code = code.get("industry_code", code)
             entity.add("sector", code.get("description"))
-        for previous in ensure_list(data.get("previous_names")):
+        for previous in data.get("previous_names", []):
             entity.add("previousName", previous.get("company_name"))
-        for alias in ensure_list(data.get("alternative_names")):
+        for alias in data.get("alternative_names", []):
             entity.add("alias", alias.get("company_name"))
         return entity
 
@@ -111,13 +116,13 @@ class OpenCorporatesEnricher(Enricher):
     #     entity.add("retrievedAt", source.get("retrieved_at"))
     #     return entity
 
-    def names_query(self, entity: CE):
+    def names_query(self, entity: CE) -> str:
         # names = entity.get_type_values(registry.name)
         # names = set([n.lower() for n in names])
         # print(names)
         return entity.caption
 
-    def search_companies(self, entity: CE):
+    def search_companies(self, entity: CE) -> Generator[CE, None, None]:
         countries = entity.get_type_values(registry.country)
         q = self.names_query(entity)
         params = {"q": q, "sparse": True, "country_codes": countries}

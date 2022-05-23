@@ -22,9 +22,9 @@ class Enricher(ABC):
         self.config = config
         self._session: Optional[Session] = None
 
-    def get_config_expand(self, name, default=None):
+    def get_config_expand(self, name: str, default: Optional[str] = None) -> str:
         value = self.config.get(name, default)
-        return os.path.expandvars(value)
+        return str(os.path.expandvars(value))
 
     @property
     def session(self) -> Session:
@@ -48,7 +48,7 @@ class Enricher(ABC):
 
     def http_get_json_cached(
         self, url: str, params: ParamsType = None, hidden: ParamsType = None
-    ) -> str:
+    ) -> Any:
         return json.loads(self.http_get_cached(url, params, hidden))
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
