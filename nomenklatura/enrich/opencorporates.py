@@ -1,12 +1,15 @@
-import os
 import logging
-import requests
-from urllib.parse import urlencode
+from normality import slugify
+from typing import Any, Dict, Generator, Optional
+from urllib.parse import urlparse
 from banal import ensure_list, ensure_dict
-from requests.exceptions import RequestException
+from followthemoney.types import registry
 
-from followthemoney import model
-from nomenklatura.enrich.common import Enricher
+from nomenklatura.entity import CE
+from nomenklatura.dataset import DS
+from nomenklatura.cache import Cache
+from nomenklatura.enrich.common import Enricher, EnricherConfig
+
 
 log = logging.getLogger(__name__)
 
@@ -17,73 +20,76 @@ class OpenCorporatesEnricher(Enricher):
     UI_PART = "://opencorporates.com/"
     API_PART = "://api.opencorporates.com/v0.4/"
 
-    # def __init__(self):
-    #     self.session = requests.Session()
-    #     env_var = "ENRICH_OPENCORPORATES_API_TOKEN"
-    #     self.api_token = os.environ.get(env_var)
-    #     if self.api_token is None:
-    #         log.warning("OpenCorporates has no API token ($%s)" % env_var)
+    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
+        super().__init__(dataset, cache, config)
+        token_var = "${OPENCORPORATES_API_TOKEN}"
+        self.api_token = self.get_config_expand("api_token", token_var)
+        if self.api_token == token_var:
+            self.api_token = None
+        if self.api_token is None:
+            log.warning("OpenCorporates has no API token (%s)" % token_var)
 
-    # def make_url(self, url, params=None):
-    #     url = url.replace(self.UI_PART, self.API_PART)
-    #     if params is not None:
-    #         query = urlencode(params)
-    #         url = "%s?%s" % (url, query)
-    #     return url
+    def match(self, entity: CE) -> Generator[CE, None, None]:
+        if not entity.schema.matchable:
+            return
 
-    # def get_api(self, url):
-    #     if self.cache.has(url):
-    #         return self.cache.get(url)
+        if entity.schema.name in ["Company", "Organization", "LegalEntity"]:
+            yield from self.search_companies(entity)
+        if entity.schema.name in ["Person", "LegalEntity", "Company", "Organization"]:
+            # yield from self.search_officers(entity)
+            pass
 
-    #     auth = {}
-    #     if self.api_token:
-    #         auth["api_token"] = self.api_token
-    #     try:
-    #         log.info("Enrich: %s", url)
-    #         res = self.session.get(url, params=auth)
-    #         if res.status_code != 200:
-    #             log.warning("Non-200 response: %s", res.content)
-    #             return {}
-    #         data = res.json()
-    #     except RequestException:
-    #         log.exception("OpenCorporates API Error")
-    #         return {}
-    #     self.cache.store(url, data)
-    #     if "error" in data:
-    #         return {}
-    #     return data
+    def expand(self, entity: CE) -> Generator[CE, None, None]:
+        clone = self.make_entity(entity, entity.schema.name)
+        clone.id = entity.id
+        clone.add("opencorporatesUrl", entity.get("opencorporatesUrl"))
+        yield clone
 
-    # def company_entity(self, data, entity=None):
-    #     if "company" in data:
-    #         data = ensure_dict(data.get("company", data))
-    #     if entity is None:
-    #         entity = model.make_entity("Company")
-    #         entity.make_id(data.get("opencorporates_url"))
-    #     entity.add("name", data.get("name"))
-    #     address = ensure_dict(data.get("registered_address"))
-    #     entity.add("country", address.get("country"))
-    #     entity.add("jurisdiction", data.get("jurisdiction_code"))
-    #     entity.add("alias", data.get("alternative_names"))
-    #     entity.add("address", data.get("registered_address_in_full"))
-    #     entity.add("sourceUrl", data.get("registry_url"))
-    #     entity.add("legalForm", data.get("company_type"))
-    #     entity.add("incorporationDate", data.get("incorporation_date"))
-    #     entity.add("dissolutionDate", data.get("dissolution_date"))
-    #     entity.add("status", data.get("current_status"))
-    #     entity.add("registrationNumber", data.get("company_number"))
-    #     entity.add("opencorporatesUrl", data.get("opencorporates_url"))
-    #     source = data.get("source", {})
-    #     entity.add("publisher", source.get("publisher"))
-    #     entity.add("publisherUrl", source.get("url"))
-    #     entity.add("retrievedAt", source.get("retrieved_at"))
-    #     for code in ensure_list(data.get("industry_codes")):
-    #         code = code.get("industry_code", code)
-    #         entity.add("sector", code.get("description"))
-    #     for previous in ensure_list(data.get("previous_names")):
-    #         entity.add("previousName", previous.get("company_name"))
-    #     for alias in ensure_list(data.get("alternative_names")):
-    #         entity.add("alias", alias.get("company_name"))
-    #     return entity
+    def make_entity_id(self, url: str):
+        parsed = urlparse(url)
+        path = slugify(parsed.path, sep="-")
+        return f"oc-{path}"
+
+    def jurisdiction_to_country(self, juris: str):
+        return juris.split("_", 1)[0]
+
+    def company_entity(
+        self, ref: CE, data: Dict[str, Any], entity: Optional[CE] = None
+    ) -> CE:
+        if "company" in data:
+            data = ensure_dict(data.get("company", data))
+        if entity is None:
+            entity = self.make_entity(ref, "Company")
+            entity.id = self.make_entity_id(data.get("opencorporates_url"))
+        entity.add("name", data.get("name"))
+
+        # TODO: make this an adjacent object?
+        address = ensure_dict(data.get("registered_address"))
+        entity.add("country", address.get("country"))
+
+        juris = self.jurisdiction_to_country(data.get("jurisdiction_code"))
+        entity.add("jurisdiction", juris)
+        entity.add("alias", data.get("alternative_names"))
+        entity.add("address", data.get("registered_address_in_full"))
+        entity.add("sourceUrl", data.get("registry_url"))
+        entity.add("legalForm", data.get("company_type"))
+        entity.add("incorporationDate", data.get("incorporation_date"))
+        entity.add("dissolutionDate", data.get("dissolution_date"))
+        entity.add("status", data.get("current_status"))
+        entity.add("registrationNumber", data.get("company_number"))
+        entity.add("opencorporatesUrl", data.get("opencorporates_url"))
+        source = data.get("source", {})
+        entity.add("publisher", source.get("publisher"))
+        entity.add("publisherUrl", source.get("url"))
+        entity.add("retrievedAt", source.get("retrieved_at"))
+        for code in ensure_list(data.get("industry_codes")):
+            code = code.get("industry_code", code)
+            entity.add("sector", code.get("description"))
+        for previous in ensure_list(data.get("previous_names")):
+            entity.add("previousName", previous.get("company_name"))
+        for alias in ensure_list(data.get("alternative_names")):
+            entity.add("alias", alias.get("company_name"))
+        return entity
 
     # def officer_entity(self, data, entity=None):
     #     if "officer" in data:
@@ -105,24 +111,29 @@ class OpenCorporatesEnricher(Enricher):
     #     entity.add("retrievedAt", source.get("retrieved_at"))
     #     return entity
 
-    # def get_query(self, entity):
-    #     params = {"q": entity.caption, "sparse": True}
-    #     for jurisdiction in entity.get("jurisdiction"):
-    #         params["jurisdiction_code"] = jurisdiction.lower()
-    #     return params
+    def names_query(self, entity: CE):
+        # names = entity.get_type_values(registry.name)
+        # names = set([n.lower() for n in names])
+        # print(names)
+        return entity.caption
 
-    # def search_companies(self, entity):
-    #     params = self.get_query(entity)
-    #     for page in range(1, 9):
-    #         params["page"] = page
-    #         url = self.make_url(self.COMPANY_SEARCH_API, params)
-    #         results = self.get_api(url)
-    #         companies = results.get("results", {}).get("companies")
-    #         for company in ensure_list(companies):
-    #             proxy = self.company_entity(company)
-    #             yield self.make_match(entity, proxy)
-    #         if page >= results.get("total_pages", 0):
-    #             break
+    def search_companies(self, entity: CE):
+        countries = entity.get_type_values(registry.country)
+        q = self.names_query(entity)
+        params = {"q": q, "sparse": True, "country_codes": countries}
+        for page in range(1, 9):
+            params["page"] = page
+            results = self.http_get_json_cached(
+                self.COMPANY_SEARCH_API,
+                params=params,
+                hidden={"api_token": self.api_token},
+            )
+            # print(results)
+            for company in results.get("results", {}).get("companies", []):
+                proxy = self.company_entity(entity, company)
+                yield proxy
+            if page >= results.get("total_pages", 0):
+                break
 
     # def search_officers(self, entity):
     #     params = self.get_query(entity)
@@ -139,8 +150,7 @@ class OpenCorporatesEnricher(Enricher):
 
     # def enrich_entity(self, entity):
     #     schema = entity.schema.name
-    #     if schema in ["Company", "Organization", "LegalEntity"]:
-    #         yield from self.search_companies(entity)
+
     #     if schema in ["Person", "LegalEntity", "Company", "Organization"]:
     #         yield from self.search_officers(entity)
 
