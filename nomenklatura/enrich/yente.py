@@ -31,7 +31,14 @@ class YenteEnricher(Enricher):
         cache_key = f"{url}:{entity.id}"
         response = self.cache.get_json(cache_key, max_age=self.cache_days)
         if response is None:
-            data = {"queries": {"entity": entity.to_dict()}}
+            data = {
+                "queries": {
+                    "entity": {
+                        "schema": entity.schema.name,
+                        "properties": entity.properties,
+                    }
+                }
+            }
             resp = self.session.post(url, json=data)
             response = resp.json().get("responses", {}).get("entity", {})
             self.cache.set_json(cache_key, response)
@@ -52,8 +59,7 @@ class YenteEnricher(Enricher):
     def expand(self, entity: CE) -> Generator[CE, None, None]:
         url = urljoin(self._api, f"entities/{entity.id}?nested=true")
         try:
-            text = self.http_get_cached(url)
-            response = json.loads(text)
+            response = self.http_get_json_cached(url)
         except RequestException:
             log.exception("Failed to fetch: %s", url)
             return

@@ -1,3 +1,5 @@
+import os
+import json
 from typing import Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
@@ -20,6 +22,10 @@ class Enricher(ABC):
         self.config = config
         self._session: Optional[Session] = None
 
+    def get_config_expand(self, name, default=None):
+        value = self.config.get(name, default)
+        return os.path.expandvars(value)
+
     @property
     def session(self) -> Session:
         if self._session is None:
@@ -27,15 +33,23 @@ class Enricher(ABC):
             self._session.headers["User-Agent"] = f"nomenklatura/{__version__}"
         return self._session
 
-    def http_get_cached(self, url: str, params: ParamsType = None) -> str:
+    def http_get_cached(
+        self, url: str, params: ParamsType = None, hidden: ParamsType = None
+    ) -> str:
         url = normalize_url(url, params=params)
         response = self.cache.get(url, max_age=self.cache_days)
         if response is None:
-            resp = self.session.get(url)
+            hidden_url = normalize_url(url, params=hidden)
+            resp = self.session.get(hidden_url)
             resp.raise_for_status()
             response = resp.text
             self.cache.set(url, response)
         return response
+
+    def http_get_json_cached(
+        self, url: str, params: ParamsType = None, hidden: ParamsType = None
+    ) -> str:
+        return json.loads(self.http_get_cached(url, params, hidden))
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
         return type(entity).from_dict(model, data, cleaned=False)

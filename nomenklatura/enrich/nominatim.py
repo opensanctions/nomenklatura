@@ -45,8 +45,7 @@ class NominatimEnricher(Enricher):
             osm_id = result["osm_id"]
             addr.id = f"osm-{osm_type}-{osm_id}"
             addr.add("full", result["display_name"])
-            # TODO:
-            print("-> ", repr(addr))
+            # TODO: address details
             yield addr
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
