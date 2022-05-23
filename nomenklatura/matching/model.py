@@ -60,7 +60,7 @@ def compare_scored(left: Entity, right: Entity) -> MatchingResult:
     """Encode a comparison of the two entities, apply the model and return a score."""
     pipe, _ = load_matcher()
     encoded = encode_pair(left, right)
-    npfeat = np.array([encoded])  # type: ignore
+    npfeat = np.array([encoded])
     pred = pipe.predict_proba(npfeat)
     score = cast(float, pred[0][1])
     features = {f.__name__: c for f, c in zip(FEATURES, encoded)}
