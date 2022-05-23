@@ -47,6 +47,7 @@ class Cache(object):
             Column("text", Unicode(), nullable=True),
             Column("dataset", Unicode(), nullable=False),
             Column("timestamp", DateTime, index=True),
+            extend_existing=True,
         )
         if create:
             metadata.create_all(checkfirst=True)
@@ -125,6 +126,12 @@ class Cache(object):
 
     def close(self) -> None:
         self._engine.dispose()
+
+    def __repr__(self) -> str:
+        return f"<Cache({self._engine.url!r})>"
+
+    def __hash__(self) -> int:
+        return hash((self._engine, self._table.name))
 
     @classmethod
     def make_default(cls, dataset: DS) -> "Cache":

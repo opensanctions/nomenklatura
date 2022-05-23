@@ -30,6 +30,13 @@ def test_cache():
     cache.close()
 
 
+def test_cache_utils():
+    ds = Dataset("test", "Test Case")
+    cache = Cache.make_default(ds)
+    assert "test.sqlite" in repr(cache)
+    assert hash(cache) != 0
+
+
 def test_preload_cache():
     ds = Dataset("test", "Test Case")
     cache = Cache.make_default(ds)
