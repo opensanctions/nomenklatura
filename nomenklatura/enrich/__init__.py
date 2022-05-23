@@ -1,6 +1,6 @@
 import logging
+from importlib import import_module
 from typing import Iterable, Generator, Optional, Type, cast
-from pkg_resources import iter_entry_points
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -76,13 +76,12 @@ def enrich(
             yield match
 
 
-def get_enrichers() -> Generator[Type[Enricher], None, None]:
-    for ep in iter_entry_points("nomenklatura.enrichers"):
-        yield cast(Type[Enricher], ep.load())
-
-
-def get_enricher(name: str) -> Optional[Type[Enricher]]:
-    for ep in iter_entry_points("nomenklatura.enrichers"):
-        if ep.name == name:
-            return cast(Type[Enricher], ep.load())
-    return None
+def get_enricher(import_path: str) -> Optional[Type[Enricher]]:
+    if ":" not in import_path:
+        raise RuntimeError("Invalid import path: %r" % import_path)
+    module_name, clazz_name = import_path.split(":", 1)
+    module = import_module(module_name)
+    clazz = getattr(module, clazz_name)
+    if clazz is None or not issubclass(clazz, Enricher):
+        raise RuntimeError("Invalid enricher: %r" % import_path)
+    return cast(Type[Enricher], clazz)
