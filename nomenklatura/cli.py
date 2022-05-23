@@ -121,7 +121,7 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
             resolver=resolver_,
             title="NK De-duplication",
             log="textual.log",
-        )  # type: ignore
+        )
         await app.process_messages()
 
     asyncio.run(run_app())

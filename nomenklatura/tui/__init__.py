@@ -11,14 +11,15 @@ if __name__ == "__main__":
     from pathlib import Path
     from nomenklatura.loader import FileLoader
     from nomenklatura.resolver import Resolver
+    from nomenklatura.entity import CompositeEntity
     from nomenklatura.index import Index
     from nomenklatura.xref import xref
 
-    resolver = Resolver(Path("resolve.ijson"))
+    resolver = Resolver[CompositeEntity](Path("resolve.ijson"))
     loader = FileLoader(Path(sys.argv[1]))
     index = Index(loader)
     index.build()
-    xref(index, resolver, list(loader))
+    xref(loader, resolver)
     DedupeApp.run(
         title="NK De-duplication", log="textual.log", loader=loader, resolver=resolver
     )

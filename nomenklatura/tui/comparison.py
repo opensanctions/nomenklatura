@@ -1,10 +1,8 @@
 import asyncio
 from typing import TYPE_CHECKING
 from normality import latinize_text
-from rich.console import RenderableType  # type: ignore
-from rich.table import Table  # type: ignore
-from rich.text import Text  # type: ignore
-from textual.widget import Widget  # type: ignore
+from rich.table import Table
+from rich.text import Text
 from followthemoney.types import registry
 from followthemoney.property import Property
 
@@ -12,9 +10,6 @@ from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.loader import Loader
 from nomenklatura.tui.util import comparison_props
-
-if TYPE_CHECKING:
-    from nomenklatura.tui.app import DedupeApp
 
 
 def render_column(entity: CE) -> Text:
