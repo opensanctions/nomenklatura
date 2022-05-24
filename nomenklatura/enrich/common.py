@@ -38,10 +38,15 @@ class Enricher(ABC):
         return self._session
 
     def http_get_cached(
-        self, url: str, params: ParamsType = None, hidden: ParamsType = None
+        self,
+        url: str,
+        params: ParamsType = None,
+        hidden: ParamsType = None,
+        cache_days: Optional[int] = None,
     ) -> str:
         url = normalize_url(url, params=params)
-        response = self.cache.get(url, max_age=self.cache_days)
+        cache_days_ = cache_days or self.cache_days
+        response = self.cache.get(url, max_age=cache_days_)
         if response is None:
             hidden_url = normalize_url(url, params=hidden)
             resp = self.session.get(hidden_url)
@@ -51,9 +56,14 @@ class Enricher(ABC):
         return response
 
     def http_get_json_cached(
-        self, url: str, params: ParamsType = None, hidden: ParamsType = None
+        self,
+        url: str,
+        params: ParamsType = None,
+        hidden: ParamsType = None,
+        cache_days: Optional[int] = None,
     ) -> Any:
-        return json.loads(self.http_get_cached(url, params, hidden))
+        res = self.http_get_cached(url, params, hidden=hidden, cache_days=cache_days)
+        return json.loads(res)
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
         return type(entity).from_dict(model, data, cleaned=False)
