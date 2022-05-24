@@ -21,12 +21,12 @@ class CompositeEntity(EntityProxy):
         key_prefix: Optional[str] = None,
         cleaned: bool = True,
     ) -> None:
-        super().__init__(model, data, key_prefix=key_prefix, cleaned=cleaned)
         self.datasets: Set[str] = set()
         """The set of datasets from which information in this entity is derived."""
 
         self.referents: Set[str] = set()
         """The IDs of all entities which are included in this canonical entity."""
+        super().__init__(model, data, key_prefix=key_prefix, cleaned=cleaned)
 
     def merge(self: CE, other: CE) -> CE:
         """Merge another entity proxy into this one. For composite entities, this

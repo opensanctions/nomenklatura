@@ -22,8 +22,12 @@ class Enricher(ABC):
         self.config = config
         self._session: Optional[Session] = None
 
-    def get_config_expand(self, name: str, default: Optional[str] = None) -> str:
+    def get_config_expand(
+        self, name: str, default: Optional[str] = None
+    ) -> Optional[str]:
         value = self.config.get(name, default)
+        if value is None:
+            return None
         return str(os.path.expandvars(value))
 
     @property

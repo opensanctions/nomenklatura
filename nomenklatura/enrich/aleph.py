@@ -1,84 +1,76 @@
+import os
+import uuid
 import logging
-from pprint import pprint  # noqa
-
-# from alephclient.api import AlephAPI
+from banal import is_mapping, ensure_list, hash_data
+from typing import Any, Dict, cast, Generator, Optional
+from urllib.parse import urljoin
+from functools import cached_property
 from requests.exceptions import RequestException
-from banal import is_mapping, ensure_dict, ensure_list, hash_data
-
-from followthemoney import model
 from followthemoney.exc import InvalidData
-from nomenklatura.enrich.common import Enricher
+
+from nomenklatura.entity import CE
+from nomenklatura.dataset import DS
+from nomenklatura.cache import Cache
+from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.util import normalize_url
 
 log = logging.getLogger(__name__)
 
 
 class AlephEnricher(Enricher):
-    def __init__(self) -> None:
-        # self.api = AlephAPI()
-        pass
+    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
+        super().__init__(dataset, cache, config)
+        self._host = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")
+        self._host = self.get_config_expand("host") or self._host
+        self._base_url = urljoin(self._host, "/api/2/")
+        self._collection = self.get_config_expand("collection")
+        self._api_key = os.environ.get("ALEPH_API_KEY")
+        self._api_key = self.get_config_expand("api_key") or self._api_key
+        if self._api_key is not None:
+            self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
+        self.session.headers["X-Aleph-Session"] = str(uuid.uuid4())
 
-    # def get_api(self, url):
-    #     data = self.cache.get(url)
-    #     if data is not None:
-    #         return data
-    #     try:
-    #         log.info("Aleph fetch: %s", url)
-    #         res = self.api.session.get(url)
-    #         if res.status_code != 200:
-    #             return {}
-    #         data = res.json()
-    #         self.cache.store(url, data)
-    #         return data
-    #     except RequestException:
-    #         log.exception("Error calling Aleph API")
-    #         return {}
+    @cached_property
+    def collection_id(self) -> Optional[str]:
+        if self._collection is None:
+            return None
+        url = urljoin(self._base_url, "collections")
+        url = normalize_url(url, {"filter:foreign_id": self._collection})
+        res = self.session.get(url)
+        res.raise_for_status()
+        response = res.json()
+        for result in response.get("results", []):
+            return cast(str, result["id"])
+        return None
 
-    # def post_match(self, url, proxy):
-    #     data = proxy.to_dict()
-    #     key = proxy.id or hash_data(data)
-    #     key = hash_data((url, key))
-    #     if self.cache.has(key):
-    #         log.info("Cached [%s]: %s", key, url)
-    #         return self.cache.get(key)
+    def load_aleph_entity(self, entity: CE, data: Dict[str, Any]) -> Optional[CE]:
+        data["referents"] = [data["id"]]
+        try:
+            proxy = super().load_entity(entity, data)
+        except InvalidData:
+            log.warning("Server model mismatch: %s" % data.get("schema"))
+            return None
+        links = data.get("links", {})
+        proxy.add("alephUrl", links.get("self"), quiet=True, cleaned=True)
+        collection = data.get("collection", {})
+        proxy.add("publisher", collection.get("label"), quiet=True, cleaned=True)
+        # clinks = collection.get("links", {})
+        # entity.add("publisherUrl", clinks.get("ui"), quiet=True, cleaned=True)
+        return proxy
 
-    #     log.info("Enrich: %r", proxy)
-    #     try:
-    #         res = self.api.session.post(url, json=data)
-    #     except RequestException:
-    #         log.exception("Error calling Aleph matcher")
-    #         return {}
-    #     if res.status_code != 200:
-    #         return {}
-    #     data = res.json()
-    #     self.cache.store(key, data)
-    #     return data
-
-    # def convert_entity(self, data):
-    #     data = ensure_dict(data)
-    #     if "properties" not in data or "schema" not in data:
-    #         return
-    #     try:
-    #         entity = model.get_proxy(data, cleaned=False)
-    #     except InvalidData:
-    #         log.error("Server model mismatch: %s" % data.get("schema"))
-    #         return
-    #     entity.id = data.get("id")
-    #     links = ensure_dict(data.get("links"))
-    #     entity.add("alephUrl", links.get("self"), quiet=True, cleaned=True)
-    #     collection = data.get("collection", {})
-    #     entity.add("publisher", collection.get("label"), quiet=True, cleaned=True)
-    #     clinks = collection.get("links", {})
-    #     entity.add("publisherUrl", clinks.get("ui"), quiet=True, cleaned=True)
-    #     return entity
-
-    # def convert_nested(self, data):
-    #     entity = self.convert_entity(data)
-    #     properties = ensure_dict(data.get("properties"))
-    #     for prop, values in properties.items():
-    #         for value in ensure_list(values):
-    #             if is_mapping(value):
-    #                 yield self.convert_entity(value)
-    #     yield entity
+    def convert_nested(
+        self, entity: CE, data: Dict[str, Any]
+    ) -> Generator[CE, None, None]:
+        proxy = self.load_aleph_entity(entity, data)
+        if proxy is not None:
+            yield proxy
+        properties = data.get("properties", {})
+        for prop, values in properties.items():
+            for value in ensure_list(values):
+                if is_mapping(value):
+                    proxy = self.load_aleph_entity(entity, value)
+                    if proxy is not None:
+                        yield proxy
 
     # def enrich_entity(self, entity):
     #     url = self.api._make_url("match")
@@ -108,3 +100,35 @@ class AlephEnricher(Enricher):
     #             search_api = res.get("next")
     #             if search_api is None:
     #                 break
+
+    def match(self, entity: CE) -> Generator[CE, None, None]:
+        if not entity.schema.matchable:
+            return
+        url = urljoin(self._base_url, f"match")
+        if self.collection_id is not None:
+            url = normalize_url(url, {"collection_ids": self.collection_id})
+        query = {
+            "schema": entity.schema.name,
+            "properties": entity.properties,
+        }
+        cache_id = entity.id or hash_data(query)
+        cache_key = f"{url}:{cache_id}"
+        response = self.cache.get_json(cache_key, max_age=self.cache_days)
+        if response is None:
+            resp = self.session.post(url, json=query)
+            resp.raise_for_status()
+            response = resp.json()
+            self.cache.set_json(cache_key, response)
+        for result in response.get("results", []):
+            proxy = self.load_aleph_entity(entity, result)
+            if proxy is not None:
+                yield proxy
+
+    def expand(self, entity: CE) -> Generator[CE, None, None]:
+        url = urljoin(self._base_url, f"entities/{entity.id}")
+        try:
+            response = self.http_get_json_cached(url)
+        except RequestException:
+            log.exception("Failed to fetch: %s", url)
+            return
+        yield from self.convert_nested(entity, response)

@@ -33,6 +33,8 @@ class NominatimEnricher(Enricher):
             log.info("OpenStreetMap geocoded [%s]: %d results", full, len(results))
             for result in results:
                 yield result
+                # FIXME: only best result for now.
+                return
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.is_a("Address"):
