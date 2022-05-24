@@ -1,0 +1,3 @@
+name: wikidata
+title: Wikidata
+type: nomenklatura.enrich.wikidata:WikidataEnricher

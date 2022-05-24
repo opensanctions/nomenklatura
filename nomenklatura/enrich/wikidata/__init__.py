@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 class WikidataEnricher(Enricher):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
+        self.cache.preload(f"{WD_API}%")
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         wikidata_id = self.get_wikidata_id(entity)
@@ -37,7 +38,23 @@ class WikidataEnricher(Enricher):
                     yield proxy
             return
 
-        # TODO: wbsearchentities
+        if not entity.schema.is_a("Person"):
+            return
+
+        for name in entity.get("name", quiet=True):
+            params = {
+                "format": "json",
+                "search": name,
+                "action": "wbsearchentities",
+                "language": "de",
+            }
+            data = self.http_get_json_cached(WD_API, params=params)
+            for result in data["search"]:
+                item = self.fetch_item(result["id"])
+                if item is not None:
+                    proxy = self.item_proxy(entity, item, schema=entity.schema.name)
+                    if proxy is not None:
+                        yield proxy
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
         wikidata_id = self.get_wikidata_id(entity)

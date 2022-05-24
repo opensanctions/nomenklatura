@@ -42,7 +42,7 @@ def make_position(
     return position
 
 
-def qualify_value(enricher: WikidataEnricher, value: str, claim: Claim) -> str:
+def qualify_value(enricher: "WikidataEnricher", value: str, claim: Claim) -> str:
     starts = set()
     for qual in claim.get_qualifier("P580"):
         starts.add(qual.text(enricher))

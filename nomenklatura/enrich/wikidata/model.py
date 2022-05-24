@@ -21,7 +21,7 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, enricher: WikidataEnricher) -> Optional[str]:
+    def property_label(self, enricher: "WikidataEnricher") -> Optional[str]:
         return enricher.get_label(self.property)
 
     @property
@@ -30,7 +30,7 @@ class Snak(object):
             return stringify(self._value.get("id"))
         return None
 
-    def text(self, enricher: WikidataEnricher) -> Optional[str]:
+    def text(self, enricher: "WikidataEnricher") -> Optional[str]:
         return snak_value_to_string(enricher, self.value_type, self._value)
 
 
