@@ -20,15 +20,15 @@ log = logging.getLogger(__name__)
 class AlephEnricher(Enricher):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
-        self._host = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")
+        self._host: str = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")
         self._host = self.get_config_expand("host") or self._host
-        self._base_url = urljoin(self._host, "/api/2/")
-        self._collection = self.get_config_expand("collection")
-        self._api_key = os.environ.get("ALEPH_API_KEY")
-        self._api_key = self.get_config_expand("api_key") or self._api_key
-        self._ns = None
+        self._base_url: str = urljoin(self._host, "/api/2/")
+        self._collection: Optional[str] = self.get_config_expand("collection")
+        self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
+        self._api_key: Optional[str] = os.environ.get("ALEPH_API_KEY")
+        self._api_key = self.get_config_expand("api_key") or self._api_key
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
         self.session.headers["X-Aleph-Session"] = str(uuid.uuid4())

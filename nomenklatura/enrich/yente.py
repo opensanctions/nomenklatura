@@ -1,6 +1,6 @@
 import logging
 from banal import ensure_list
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
@@ -19,10 +19,10 @@ class YenteEnricher(Enricher):
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
-        self._api = config.pop("api")
-        self._dataset = config.pop("dataset", "default")
-        self._token = config.pop("token", "nomenklatura")
-        self._ns = None
+        self._api: str = config.pop("api")
+        self._dataset: str = config.pop("dataset", "default")
+        self._token: str = config.pop("token", "nomenklatura")
+        self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
         self.session.headers["Authorization"] = f"Bearer {self._token}"
