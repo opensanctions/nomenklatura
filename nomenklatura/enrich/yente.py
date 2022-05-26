@@ -68,11 +68,11 @@ class YenteEnricher(Enricher):
                 if isinstance(value, dict):
                     yield from self._traverse_nested(entity, value)
 
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
-        url = self.make_url(entity)
-        for source_url in entity.get("sourceUrl", quiet=True):
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        url = self.make_url(match)
+        for source_url in match.get("sourceUrl", quiet=True):
             if source_url.startswith(self._api):
                 url = source_url
         url = normalize_url(url, {"nested": True})
         response = self.http_get_json_cached(url)
-        yield from self._traverse_nested(entity, response)
+        yield from self._traverse_nested(match, response)

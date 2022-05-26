@@ -131,10 +131,10 @@ class AlephEnricher(Enricher):
                     entity = self._ns.apply(entity)
                 yield proxy
 
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
-        url = urljoin(self._base_url, f"entities/{entity.id}")
-        for aleph_url in entity.get("alephUrl", quiet=True):
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        url = urljoin(self._base_url, f"entities/{match.id}")
+        for aleph_url in match.get("alephUrl", quiet=True):
             if aleph_url.startswith(self._base_url):
                 url = aleph_url.replace("/entities/", "/api/2/entities/")
         response = self.http_get_json_cached(url)
-        yield from self.convert_nested(entity, response)
+        yield from self.convert_nested(match, response)

@@ -31,7 +31,7 @@ def match(
 ) -> Generator[CE, None, None]:
     for entity in entities:
         yield entity
-        for match in enricher.match(entity):
+        for match in enricher.match_wrapped(entity):
             if not resolver.check_candidate(entity.id, match.id):
                 continue
             if not entity.schema.can_match(match.schema):
@@ -50,13 +50,13 @@ def enrich(
     enricher: Enricher, resolver: Resolver[CE], entities: Iterable[CE]
 ) -> Generator[CE, None, None]:
     for entity in entities:
-        for match in enricher.match(entity):
+        for match in enricher.match_wrapped(entity):
             judgement = resolver.get_judgement(match.id, entity.id)
             if judgement != Judgement.POSITIVE:
                 continue
 
             log.info("Enrich [%s]: %r", entity, match)
-            for adjacent in enricher.expand(match):
+            for adjacent in enricher.expand_wrapped(entity, match):
                 adjacent.datasets.add(enricher.dataset.name)
                 adjacent = resolver.apply(adjacent)
                 yield adjacent

@@ -39,10 +39,10 @@ class OpenCorporatesEnricher(Enricher):
             # yield from self.search_officers(entity)
             pass
 
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
-        clone = self.make_entity(entity, entity.schema.name)
-        clone.id = entity.id
-        clone.add("opencorporatesUrl", entity.get("opencorporatesUrl"))
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        clone = self.make_entity(match, match.schema.name)
+        clone.id = match.id
+        clone.add("opencorporatesUrl", match.get("opencorporatesUrl"))
         yield clone
 
     def make_entity_id(self, url: str) -> str:

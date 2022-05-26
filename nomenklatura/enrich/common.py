@@ -21,6 +21,7 @@ class Enricher(ABC):
         self.cache = cache
         self.config = config
         self.cache_days = int(config.pop("cache_days", 90))
+        self.schemata = config.pop("schemata", [])
         self._session: Optional[Session] = None
 
     def get_config_expand(
@@ -79,12 +80,22 @@ class Enricher(ABC):
         data = {"schema": schema}
         return type(entity).from_dict(model, data)
 
+    def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
+        if len(self.schemata) and entity.schema.name not in self.schemata:
+            return
+        yield from self.match(entity)
+
+    def expand_wrapped(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        if len(self.schemata) and entity.schema.name not in self.schemata:
+            return
+        yield from self.expand(entity, match)
+
     @abstractmethod
     def match(self, entity: CE) -> Generator[CE, None, None]:
         raise NotImplementedError()
 
     @abstractmethod
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
         raise NotImplementedError()
 
     def close(self) -> None:

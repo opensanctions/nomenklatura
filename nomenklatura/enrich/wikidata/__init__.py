@@ -12,6 +12,7 @@ from nomenklatura.enrich.wikidata.props import (
     PROPS_DIRECT,
     PROPS_FAMILY,
     PROPS_QUALIFIED,
+    PROPS_TOPICS,
 )
 from nomenklatura.enrich.wikidata.model import Claim, Item
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -58,16 +59,18 @@ class WikidataEnricher(Enricher):
                     if proxy is not None:
                         yield proxy
 
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
-        wikidata_id = self.get_wikidata_id(entity)
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        wikidata_id = self.get_wikidata_id(match)
         if wikidata_id is None:
             return
         item = self.fetch_item(wikidata_id)
         if item is None:
             return
-        proxy = self.item_proxy(entity, item, schema=entity.schema.name)
+        proxy = self.item_proxy(match, item, schema=match.schema.name)
         if proxy is None:
             return
+        if "role.pep" in entity.get("topics", quiet=True):
+            proxy.add("topics", "role.pep")
         yield proxy
         yield from self.item_graph(proxy, item)
 
@@ -123,15 +126,14 @@ class WikidataEnricher(Enricher):
         if item is None:
             return
 
-        props = {}
-        # Hacky: is an entity is a PEP, then by definition their relatives and
-        # associates are RCA (relatives and close associates).
-        if "role.pep" in proxy.get("topics"):
-            props["topics"] = "role.rca"
-
         other = self.item_proxy(proxy, item, schema=other_schema)
         if other is None:
             return
+        # Hacky: if an entity is a PEP, then by definition their relatives and
+        # associates are RCA (relatives and close associates).
+        if "role.pep" in proxy.get("topics", quiet=True):
+            if "role.pep" not in other.get("topics"):
+                other.add("topics", "role.rca")
         yield other
         yield from self.item_graph(other, item, depth=depth - 1, seen=seen)
         link = self.make_entity(proxy, schema)
@@ -229,6 +231,8 @@ class WikidataEnricher(Enricher):
                 value = claim.text(self)
                 if ftm_prop in PROPS_QUALIFIED and value is not None:
                     value = qualify_value(self, value, claim)
+                if ftm_prop == "topics" and claim.qid is not None:
+                    value = PROPS_TOPICS.get(claim.qid)
                 proxy.add(ftm_prop, value)
 
         return proxy

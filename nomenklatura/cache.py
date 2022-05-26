@@ -1,6 +1,7 @@
 import os
 import math
 import json
+import logging
 from pathlib import Path
 from random import randint
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
 
+log = logging.getLogger(__name__)
 Value = Union[str, None]
 
 
@@ -115,6 +117,7 @@ class Cache(object):
                 yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
     def preload(self, like: Optional[str] = None) -> None:
+        log.info("Pre-loading cache: %r", like)
         for cache in self.all(like=like):
             self._preload[cache.key] = cache
 

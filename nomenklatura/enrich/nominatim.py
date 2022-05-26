@@ -63,5 +63,5 @@ class NominatimEnricher(Enricher):
             addr.add("postalCode", addr_data.get("postcode"))
             yield addr
 
-    def expand(self, entity: CE) -> Generator[CE, None, None]:
-        yield entity
+    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+        yield match

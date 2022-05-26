@@ -35,6 +35,7 @@ PROPS_DIRECT = {
     "P21": "gender",
     "P39": "position",
     "P140": "religion",
+    "P106": "topics",
     "P569": "birthDate",
     "P5056": "fatherName",
     "P570": "deathDate",
@@ -55,3 +56,11 @@ PROPS_QUALIFIED = (
     "position",
     "education",
 )
+
+PROPS_TOPICS = {
+    "Q82955": "role.pep",
+    "Q193391": "role.diplo",
+    "Q392651": "role.spy",
+    "Q14886050": "crime.terror",
+    "Q16533": "role.judge",
+}
