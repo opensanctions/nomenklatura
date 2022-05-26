@@ -2,11 +2,13 @@ import json
 import logging
 from pprint import pprint
 from normality import collapse_spaces
-from typing import Dict, Iterable, Generator
+from typing import Any, Dict, Iterable, Generator
 from requests.exceptions import RequestException
 
 from nomenklatura.entity import CE
-from nomenklatura.enrich.common import Enricher
+from nomenklatura.dataset import DS
+from nomenklatura.cache import Cache
+from nomenklatura.enrich.common import Enricher, EnricherConfig
 
 
 log = logging.getLogger(__name__)
@@ -14,7 +16,11 @@ NOMINATIM = "https://nominatim.openstreetmap.org/search.php"
 
 
 class NominatimEnricher(Enricher):
-    def search_nominatim(self, address: CE) -> Iterable[Dict[str, str]]:
+    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
+        super().__init__(dataset, cache, config)
+        self.cache.preload(f"{NOMINATIM}%")
+
+    def search_nominatim(self, address: CE) -> Iterable[Dict[str, Any]]:
         for full in address.get("full"):
             full_norm = collapse_spaces(full)
             params = {
@@ -47,7 +53,14 @@ class NominatimEnricher(Enricher):
             osm_id = result["osm_id"]
             addr.id = f"osm-{osm_type}-{osm_id}"
             addr.add("full", result["display_name"])
-            # TODO: address details
+            # addr.add("latitude", result.get("lat"))
+            # addr.add("longitude", result.get("lon"))
+            addr_data: Dict[str, str] = result.get("address", {})
+            addr.add("country", addr_data.get("country"))
+            addr.add("country", addr_data.get("country_code"))
+            addr.add("city", addr_data.get("city"))
+            addr.add("state", addr_data.get("state"))
+            addr.add("postalCode", addr_data.get("postcode"))
             yield addr
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
