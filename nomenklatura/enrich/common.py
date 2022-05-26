@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Any, Dict, Optional, Generator
+from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
 from followthemoney import model
@@ -18,8 +18,8 @@ class Enricher(ABC):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         self.dataset = dataset
         self.cache = cache
-        self.cache_days = int(config.pop("cache_days", 90))
         self.config = config
+        self.cache_days = int(config.pop("cache_days", 90))
         self._session: Optional[Session] = None
 
     def get_config_expand(
@@ -29,6 +29,9 @@ class Enricher(ABC):
         if value is None:
             return None
         return str(os.path.expandvars(value))
+
+    def get_config_int(self, name: str, default: Union[int, str]) -> int:
+        return int(self.config.get(name, default))
 
     @property
     def session(self) -> Session:

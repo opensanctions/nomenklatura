@@ -1,3 +1,6 @@
 name: wikidata
 title: Wikidata
 type: nomenklatura.enrich.wikidata:WikidataEnricher
+depth: 1
+cache_days: 10
+label_cache_days: 100

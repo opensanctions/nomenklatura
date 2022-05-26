@@ -24,6 +24,8 @@ log = logging.getLogger(__name__)
 class WikidataEnricher(Enricher):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
+        self.depth = self.get_config_int("depth", 1)
+        self.label_cache_days = self.get_config_int("label_cache_days", 100)
         self.cache.preload(f"{WD_API}%")
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
@@ -87,15 +89,19 @@ class WikidataEnricher(Enricher):
         return cast(Dict[str, Any], data)
 
     def fetch_item(self, qid: str) -> Optional[Item]:
-        data = self.wikibase_getentities(qid, cache_days=14)
+        data = self.wikibase_getentities(qid, cache_days=self.cache_days)
         entity = data.get("entities", {}).get(qid)
         if entity is None:
             return None
-        return Item(cast(Dict[str, Any], entity))
+        return Item(entity)
 
     @cache
     def get_label(self, qid: str) -> Optional[str]:
-        data = self.wikibase_getentities(qid, cache_days=100, props="labels")
+        data = self.wikibase_getentities(
+            qid,
+            cache_days=self.label_cache_days,
+            props="labels",
+        )
         entity = data.get("entities", {}).get(qid)
         label = pick_obj_lang(entity.get("labels", {}))
         return label
@@ -167,12 +173,14 @@ class WikidataEnricher(Enricher):
         self,
         proxy: CE,
         item: Item,
-        depth: int = 1,
+        depth: Optional[int] = None,
         seen: Optional[Set[str]] = None,
     ) -> Generator[CE, None, None]:
         if seen is None:
             seen = set()
         seen = seen.union([item.id])
+        if depth is None:
+            depth = self.depth
         for claim in item.claims:
             # TODO: memberships, employers?
             if claim.property in PROPS_FAMILY:
