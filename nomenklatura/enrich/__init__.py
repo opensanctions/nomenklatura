@@ -47,10 +47,7 @@ def match(
 
 # nk enrich -i entities.json -r resolver.json -o combined.json
 def enrich(
-    enricher: Enricher,
-    resolver: Resolver[CE],
-    entities: Iterable[CE],
-    expand: bool = True,
+    enricher: Enricher, resolver: Resolver[CE], entities: Iterable[CE]
 ) -> Generator[CE, None, None]:
     for entity in entities:
         # Check if any positive matches:
@@ -65,15 +62,10 @@ def enrich(
                 continue
 
             log.info("Enrich [%s]: %r", entity, match)
-            if expand:
-                for adjacent in enricher.expand(match):
-                    adjacent.datasets.add(enricher.dataset.name)
-                    adjacent = resolver.apply(adjacent)
-                    yield adjacent
-
-            match.datasets.add(enricher.dataset.name)
-            match = resolver.apply(match)
-            yield match
+            for adjacent in enricher.expand(match):
+                adjacent.datasets.add(enricher.dataset.name)
+                adjacent = resolver.apply(adjacent)
+                yield adjacent
 
 
 def get_enricher(import_path: str) -> Optional[Type[Enricher]]:
