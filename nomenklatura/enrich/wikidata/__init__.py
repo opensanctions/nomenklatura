@@ -111,9 +111,7 @@ class WikidataEnricher(Enricher):
         source_prop: str,
         target_prop: str,
     ) -> Generator[CE, None, None]:
-        if depth < 1 or claim.qid in seen:
-            return
-        if claim.qid is None:
+        if depth < 1 or claim.qid is None or claim.qid in seen:
             return
         item = self.fetch_item(claim.qid)
         if item is None:
@@ -129,7 +127,7 @@ class WikidataEnricher(Enricher):
         if other is None:
             return
         yield other
-        yield from self.item_graph(other, item)
+        yield from self.item_graph(other, item, depth=depth - 1, seen=seen)
         link = self.make_entity(proxy, schema)
         min_id, max_id = sorted((proxy.id, other.id))
         link.id = f"wd-{claim.property}-{min_id}-{max_id}"
@@ -174,9 +172,7 @@ class WikidataEnricher(Enricher):
     ) -> Generator[CE, None, None]:
         if seen is None:
             seen = set()
-        seen = seen.union([proxy.id])
-        if proxy is not None:
-            yield proxy
+        seen = seen.union([item.id])
         for claim in item.claims:
             # TODO: memberships, employers?
             if claim.property in PROPS_FAMILY:
@@ -214,7 +210,7 @@ class WikidataEnricher(Enricher):
         proxy.add("alias", item.aliases)
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
-            log.info("Person is not a Q5 [%s]: %s", item.id, item.label)
+            log.debug("Person is not a Q5 [%s]: %s", item.id, item.label)
             return None
 
         for claim in item.claims:
@@ -227,6 +223,4 @@ class WikidataEnricher(Enricher):
                     value = qualify_value(self, value, claim)
                 proxy.add(ftm_prop, value)
 
-        # if h.check_person_cutoff(proxy):
-        #     return
         return proxy
