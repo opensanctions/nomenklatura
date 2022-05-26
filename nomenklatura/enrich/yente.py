@@ -1,14 +1,15 @@
 import logging
-from typing import Any, Generator
-from requests.exceptions import RequestException
-from urllib.parse import urljoin
 from banal import ensure_list
+from typing import Any, Generator
+from urllib.parse import urljoin
 from followthemoney.types import registry
+from followthemoney.namespace import Namespace
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.util import normalize_url
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +22,13 @@ class YenteEnricher(Enricher):
         self._api = config.pop("api")
         self._dataset = config.pop("dataset", "default")
         self._token = config.pop("token", "nomenklatura")
+        self._ns = None
+        if self.get_config_bool("strip_namespace"):
+            self._ns = Namespace()
         self.session.headers["Authorization"] = f"Bearer {self._token}"
+
+    def make_url(self, entity: CE) -> str:
+        return urljoin(self._api, f"entities/{entity.id}")
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
@@ -42,10 +49,16 @@ class YenteEnricher(Enricher):
             response = resp.json().get("responses", {}).get("entity", {})
             self.cache.set_json(cache_key, response)
         for result in response.get("results", []):
-            yield self.load_entity(entity, result)
+            proxy = self.load_entity(entity, result)
+            proxy.add("sourceUrl", self.make_url(proxy))
+            if self._ns is not None:
+                proxy = self._ns.apply(proxy)
+            yield proxy
 
     def _traverse_nested(self, entity: CE, response: Any) -> Generator[CE, None, None]:
         entity = self.load_entity(entity, response)
+        if self._ns is not None:
+            entity = self._ns.apply(entity)
         yield entity
         for prop_name, values in response.get("properties", {}).items():
             prop = entity.schema.properties.get(prop_name)
@@ -56,10 +69,10 @@ class YenteEnricher(Enricher):
                     yield from self._traverse_nested(entity, value)
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
-        url = urljoin(self._api, f"entities/{entity.id}?nested=true")
-        try:
-            response = self.http_get_json_cached(url)
-        except RequestException:
-            log.exception("Failed to fetch: %s", url)
-            return
+        url = self.make_url(entity)
+        for source_url in entity.get("sourceUrl", quiet=True):
+            if source_url.startswith(self._api):
+                url = source_url
+        url = normalize_url(url, {"nested": True})
+        response = self.http_get_json_cached(url)
         yield from self._traverse_nested(entity, response)

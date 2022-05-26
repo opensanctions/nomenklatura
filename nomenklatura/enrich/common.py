@@ -1,5 +1,6 @@
 import os
 import json
+from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
@@ -32,6 +33,9 @@ class Enricher(ABC):
 
     def get_config_int(self, name: str, default: Union[int, str]) -> int:
         return int(self.config.get(name, default))
+
+    def get_config_bool(self, name: str, default: Union[bool, str] = False) -> int:
+        return as_bool(self.config.get(name, default))
 
     @property
     def session(self) -> Session:

@@ -5,8 +5,8 @@ from banal import is_mapping, ensure_list, hash_data
 from typing import Any, Dict, cast, Generator, Optional
 from urllib.parse import urljoin
 from functools import cached_property
-from requests.exceptions import RequestException
 from followthemoney.exc import InvalidData
+from followthemoney.namespace import Namespace
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -26,6 +26,9 @@ class AlephEnricher(Enricher):
         self._collection = self.get_config_expand("collection")
         self._api_key = os.environ.get("ALEPH_API_KEY")
         self._api_key = self.get_config_expand("api_key") or self._api_key
+        self._ns = None
+        if self.get_config_bool("strip_namespace"):
+            self._ns = Namespace()
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
         self.session.headers["X-Aleph-Session"] = str(uuid.uuid4())
@@ -63,6 +66,8 @@ class AlephEnricher(Enricher):
     ) -> Generator[CE, None, None]:
         proxy = self.load_aleph_entity(entity, data)
         if proxy is not None:
+            if self._ns is not None:
+                entity = self._ns.apply(entity)
             yield proxy
         properties = data.get("properties", {})
         for prop, values in properties.items():
@@ -122,13 +127,14 @@ class AlephEnricher(Enricher):
         for result in response.get("results", []):
             proxy = self.load_aleph_entity(entity, result)
             if proxy is not None:
+                if self._ns is not None:
+                    entity = self._ns.apply(entity)
                 yield proxy
 
     def expand(self, entity: CE) -> Generator[CE, None, None]:
         url = urljoin(self._base_url, f"entities/{entity.id}")
-        try:
-            response = self.http_get_json_cached(url)
-        except RequestException:
-            log.exception("Failed to fetch: %s", url)
-            return
+        for aleph_url in entity.get("alephUrl", quiet=True):
+            if aleph_url.startswith(self._base_url):
+                url = aleph_url.replace("/entities/", "/api/2/entities/")
+        response = self.http_get_json_cached(url)
         yield from self.convert_nested(entity, response)

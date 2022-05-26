@@ -4,4 +4,5 @@ type: nomenklatura.enrich.yente:YenteEnricher
 api: https://api.opensanctions.org/
 dataset: offshoreleaks
 token: nk-default
+strip_namespace: true
 cache_days: 90
