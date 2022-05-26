@@ -34,5 +34,5 @@ def test_wikidata_match():
 def test_wikidata_enrich():
     enricher = load_enricher()
     ent = CompositeEntity.from_dict(model, {"schema": "Person", "id": "Q7747"})
-    adjacent = list(enricher.expand(ent))
+    adjacent = list(enricher.expand(ent, ent))
     assert len(adjacent) > 3, adjacent

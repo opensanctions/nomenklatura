@@ -55,7 +55,7 @@ def test_nominatim_enrich():
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
     ent = CompositeEntity.from_dict(model, data)
-    adjacent = list(enricher.expand(ent))
+    adjacent = list(enricher.expand(ent, ent))
     assert len(adjacent) == 1, adjacent
 
 
