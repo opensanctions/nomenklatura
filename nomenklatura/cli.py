@@ -161,23 +161,16 @@ def match_command(
 )
 @click.option("-o", "--outfile", type=click.File("w"), default="-")  # noqa
 @click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
-@click.option("--expand/--no-expand", is_flag=True, type=click.BOOL, default=True)
 def enrich_command(
     config: Path,
     entities: Path,
     outfile: click.File,
     resolver: Optional[Path],
-    expand: bool,
 ) -> None:
     resolver_ = _get_resolver(entities, resolver)
     _, enricher = _load_enricher(config)
     try:
-        for proxy in enrich(
-            enricher,
-            resolver_,
-            _path_entities(entities),
-            expand=expand,
-        ):
+        for proxy in enrich(enricher, resolver_, _path_entities(entities)):
             write_object(outfile, proxy)  # type: ignore
     finally:
         enricher.close()

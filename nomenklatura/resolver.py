@@ -213,6 +213,8 @@ class Resolver(Generic[CE]):
         """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
         other = Identifier.get(other_id)
+        if entity == other:
+            return Judgement.POSITIVE
         if is_qid(entity.id) and is_qid(other.id):
             return Judgement.NEGATIVE
         entity_connected = self.connected(entity)
@@ -231,8 +233,6 @@ class Resolver(Generic[CE]):
     def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
         """Check if the two IDs could be merged, i.e. if there's no existing
         judgement."""
-        if left == right:
-            return False
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 

@@ -50,14 +50,8 @@ def enrich(
     enricher: Enricher, resolver: Resolver[CE], entities: Iterable[CE]
 ) -> Generator[CE, None, None]:
     for entity in entities:
-        # Check if any positive matches:
-        entity_id = Identifier.get(entity.id)
-        connected = resolver.connected(entity_id)
-        if len(connected) == 1:
-            continue
-
         for match in enricher.match(entity):
-            judgement = resolver.get_judgement(match.id, entity_id)
+            judgement = resolver.get_judgement(match.id, entity.id)
             if judgement != Judgement.POSITIVE:
                 continue
 

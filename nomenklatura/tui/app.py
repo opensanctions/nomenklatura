@@ -1,4 +1,5 @@
 import asyncio
+from pydoc import resolve
 from typing import Any, Dict, Union, Optional, Set, Tuple
 from rich.text import Text
 from rich.console import RenderableType
@@ -40,11 +41,14 @@ class DedupeApp(App):
         for left_id, right_id, score in self.resolver.get_candidates(limit=1000):
             if (left_id, right_id) in self.ignore or score is None:
                 continue
+            if not self.resolver.check_candidate(left_id, right_id):
+                self.ignore.add((left_id, right_id))
+                continue
             self.left = self.loader.get_entity(left_id)
             self.right = self.loader.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
-                if self.left.schema in self.right.schema.matchable_schemata:
+                if self.left.schema.can_match(self.right.schema):
                     self.score = score
                     self.comp = await render_comparison(
                         self.loader,
