@@ -5,7 +5,7 @@ from nomenklatura.matching.features.dates import key_day_matches, key_year_match
 from nomenklatura.matching.features.names import first_name_match, family_name_match
 from nomenklatura.matching.features.names import name_levenshtein, name_match
 from nomenklatura.matching.features.names import name_token_overlap, name_numbers
-from nomenklatura.matching.features.misc import phone_match, email_match
+from nomenklatura.matching.features.misc import phone_match, email_match, address_match
 from nomenklatura.matching.features.misc import identifier_match, birth_place
 from nomenklatura.matching.features.misc import gender_mismatch, country_mismatch
 
@@ -30,7 +30,7 @@ FEATURES = [
     birth_place,
     gender_mismatch,
     country_mismatch,
-    # address_match,
+    address_match,
 ]
 
 

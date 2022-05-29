@@ -50,8 +50,10 @@ def train_matcher(pairs_file: PathLike) -> None:
     pairs = []
     for pair in read_pairs(pairs_file):
         # HACK: support more eventually:
-        if not pair.left.schema.is_a("LegalEntity"):
-            continue
+        # if not pair.left.schema.is_a("LegalEntity"):
+        #     continue
+        if pair.judgement == Judgement.UNSURE:
+            pair.judgement = Judgement.NEGATIVE
         # randomize_entity(pair.left)
         # randomize_entity(pair.right)
         pairs.append(pair)
