@@ -4,6 +4,7 @@ from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
 from followthemoney.types import registry
+from requests.exceptions import HTTPError
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -128,11 +129,15 @@ class OpenCorporatesEnricher(Enricher):
         params = {"q": q, "sparse": True, "country_codes": countries}
         for page in range(1, 9):
             params["page"] = page
-            results = self.http_get_json_cached(
-                self.COMPANY_SEARCH_API,
-                params=params,
-                hidden={"api_token": self.api_token},
-            )
+            try:
+                results = self.http_get_json_cached(
+                    self.COMPANY_SEARCH_API,
+                    params=params,
+                    hidden={"api_token": self.api_token},
+                )
+            except HTTPError as exc:
+                log.error("Failed to search [%s]: %s", exc.response.status_code, q)
+                break
             # print(results)
             for company in results.get("results", {}).get("companies", []):
                 proxy = self.company_entity(entity, company)
