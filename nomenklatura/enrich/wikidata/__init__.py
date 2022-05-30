@@ -1,6 +1,7 @@
 import logging
 from functools import cache
 from typing import cast, Generator, Any, Dict, Optional, Set
+from followthemoney.helpers import check_person_cutoff
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -28,6 +29,11 @@ class WikidataEnricher(Enricher):
         self.depth = self.get_config_int("depth", 1)
         self.label_cache_days = self.get_config_int("label_cache_days", 100)
         self.cache.preload(f"{WD_API}%")
+
+    def keep_entity(self, entity: CE) -> bool:
+        if check_person_cutoff(entity):
+            return False
+        return True
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         wikidata_id = self.get_wikidata_id(entity)
@@ -67,7 +73,7 @@ class WikidataEnricher(Enricher):
         if item is None:
             return
         proxy = self.item_proxy(match, item, schema=match.schema.name)
-        if proxy is None:
+        if proxy is None or not self.keep_entity(proxy):
             return
         if "role.pep" in entity.get("topics", quiet=True):
             proxy.add("topics", "role.pep")
@@ -127,7 +133,7 @@ class WikidataEnricher(Enricher):
             return
 
         other = self.item_proxy(proxy, item, schema=other_schema)
-        if other is None:
+        if proxy is None or not self.keep_entity(proxy):
             return
         # Hacky: if an entity is a PEP, then by definition their relatives and
         # associates are RCA (relatives and close associates).
