@@ -1,6 +1,6 @@
 import logging
 from banal import ensure_list
-from typing import Any, Generator, Optional
+from typing import Any, Dict, Generator, Optional
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
@@ -54,6 +54,13 @@ class YenteEnricher(Enricher):
             if self._ns is not None:
                 proxy = self._ns.apply(proxy)
             yield proxy
+
+    def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
+        proxy = super().load_entity(entity, data)
+        for prop in proxy.iterprops():
+            if prop.stub:
+                proxy.pop(prop)
+        return proxy
 
     def _traverse_nested(self, entity: CE, response: Any) -> Generator[CE, None, None]:
         entity = self.load_entity(entity, response)
