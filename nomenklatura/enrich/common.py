@@ -74,7 +74,11 @@ class Enricher(ABC):
         return json.loads(res)
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
-        return type(entity).from_dict(model, data, cleaned=False)
+        proxy = type(entity).from_dict(model, data, cleaned=False)
+        for prop in proxy.iterprops():
+            if prop.stub:
+                proxy.pop(prop)
+        return proxy
 
     def make_entity(self, entity: CE, schema: str) -> CE:
         data = {"schema": schema}
