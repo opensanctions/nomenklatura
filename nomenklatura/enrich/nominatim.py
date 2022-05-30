@@ -49,8 +49,10 @@ class NominatimEnricher(Enricher):
         for result in self.search_nominatim(entity):
             # pprint(result)
             addr = self.make_entity(entity, "Address")
-            osm_type = result["osm_type"]
-            osm_id = result["osm_id"]
+            osm_type = result.get("osm_type")
+            osm_id = result.get("osm_id")
+            if osm_id is None or osm_type is None:
+                continue
             addr.id = f"osm-{osm_type}-{osm_id}"
             addr.add("full", result["display_name"])
             # addr.add("latitude", result.get("lat"))
