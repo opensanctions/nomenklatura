@@ -219,6 +219,8 @@ class WikidataEnricher(Enricher):
     def item_proxy(self, ref: CE, item: Item, schema: str = "Person") -> Optional[CE]:
         proxy = self.make_entity(ref, schema)
         proxy.id = item.id
+        if item.modified is None:
+            return None
         proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
         proxy.add("name", item.label)

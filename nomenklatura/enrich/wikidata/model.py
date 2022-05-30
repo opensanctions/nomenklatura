@@ -67,13 +67,13 @@ class Item(object):
         self.id: str = data.pop("id")
         self.modified: Optional[str] = data.pop("modified", None)
 
-        labels: Dict[str, Dict[str, str]] = data.pop("labels")
+        labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
         self.label = pick_obj_lang(labels)
         self.aliases: Set[str] = set()
         for obj in labels.values():
             self.aliases.add(obj["value"])
 
-        aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases")
+        aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases", {})
         for lang in aliases.values():
             for obj in lang:
                 self.aliases.add(obj["value"])
@@ -81,7 +81,7 @@ class Item(object):
         if self.label is not None:
             self.aliases.discard(self.label)
 
-        descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions")
+        descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions", {})
         self.description = pick_obj_lang(descriptions)
 
         self.claims: List[Claim] = []
@@ -91,7 +91,7 @@ class Item(object):
                 self.claims.append(Claim(value, prop))
 
         # TODO: get back to this later:
-        data.pop("sitelinks")
+        data.pop("sitelinks", None)
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:
