@@ -43,7 +43,7 @@ class WikidataEnricher(Enricher):
             item = self.fetch_item(wikidata_id)
             if item is not None:
                 proxy = self.item_proxy(entity, item, schema=entity.schema.name)
-                if proxy is not None:
+                if proxy is not None and self.keep_entity(proxy):
                     yield proxy
             return
 
@@ -62,7 +62,7 @@ class WikidataEnricher(Enricher):
                 item = self.fetch_item(result["id"])
                 if item is not None:
                     proxy = self.item_proxy(entity, item, schema=entity.schema.name)
-                    if proxy is not None:
+                    if proxy is not None and self.keep_entity(proxy):
                         yield proxy
 
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
@@ -133,7 +133,7 @@ class WikidataEnricher(Enricher):
             return
 
         other = self.item_proxy(proxy, item, schema=other_schema)
-        if proxy is None or not self.keep_entity(proxy):
+        if other is None or not self.keep_entity(other):
             return
         # Hacky: if an entity is a PEP, then by definition their relatives and
         # associates are RCA (relatives and close associates).
