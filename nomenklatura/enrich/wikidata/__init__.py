@@ -235,6 +235,9 @@ class WikidataEnricher(Enricher):
             if claim.property is None:
                 continue
             ftm_prop = PROPS_DIRECT.get(claim.property)
+            if ftm_prop not in proxy.schema.properties:
+                log.warning("Entity %r does not have property: %s", proxy, ftm_prop)
+                continue
             if ftm_prop is not None:
                 value = claim.text(self)
                 if ftm_prop in PROPS_QUALIFIED and value is not None:
