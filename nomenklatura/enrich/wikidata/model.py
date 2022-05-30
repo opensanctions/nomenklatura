@@ -65,7 +65,7 @@ class Item(object):
 
     def __init__(self, data: Dict[str, Any]) -> None:
         self.id: str = data.pop("id")
-        self.modified: str = data.pop("modified")
+        self.modified: Optional[str] = data.pop("modified", None)
 
         labels: Dict[str, Dict[str, str]] = data.pop("labels")
         self.label = pick_obj_lang(labels)
