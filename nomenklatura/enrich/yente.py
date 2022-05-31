@@ -66,6 +66,11 @@ class YenteEnricher(Enricher):
                 continue
             for value in ensure_list(values):
                 if isinstance(value, dict):
+                    if prop.reverse is not None and not prop.reverse.stub:
+                        reverse = prop.reverse.name
+                        if reverse not in value["properties"]:
+                            value["properties"][reverse] = []
+                        value["properties"][reverse].append(entity.id)
                     yield from self._traverse_nested(entity, value)
 
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
