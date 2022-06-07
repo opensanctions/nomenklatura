@@ -5,7 +5,7 @@ from typing import Any, Mapping, Union, Iterable, Tuple
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
-QID = re.compile(r"^Q\d+$")
+QID = re.compile(r"^Q(\d+)$")
 PathLike = Path  # like
 ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
 
