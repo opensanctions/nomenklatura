@@ -22,6 +22,7 @@ class YenteEnricher(Enricher):
         self._api: str = config.pop("api")
         self._dataset: str = config.pop("dataset", "default")
         self._token: str = config.pop("token", "nomenklatura")
+        self._threshold: Optional[float] = config.pop("threshold")
         self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
@@ -34,6 +35,8 @@ class YenteEnricher(Enricher):
         if not entity.schema.matchable:
             return
         url = urljoin(self._api, f"match/{self._dataset}")
+        if self._threshold is not None:
+            url = normalize_url(url, {"threshold": self._threshold})
         cache_key = f"{url}:{entity.id}"
         response = self.cache.get_json(cache_key, max_age=self.cache_days)
         if response is None:
