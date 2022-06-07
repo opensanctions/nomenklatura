@@ -97,8 +97,9 @@ class WikidataEnricher(Enricher):
         data = self.http_get_json_cached(WD_API, params=params, cache_days=cache_days)
         return cast(Dict[str, Any], data)
 
-    def fetch_item(self, qid: str) -> Optional[Item]:
-        data = self.wikibase_getentities(qid, cache_days=self.cache_days)
+    def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
+        cache_days = self.cache_days if cache_days is None else cache_days
+        data = self.wikibase_getentities(qid, cache_days=cache_days)
         entity = data.get("entities", {}).get(qid)
         if entity is None:
             return None
