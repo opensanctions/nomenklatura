@@ -13,6 +13,13 @@ def test_identifier():
     assert ident.id == f"{Identifier.PREFIX}banana"
 
 
+def test_qid_identifier():
+    ident_low = Identifier("Q3481")
+    ident_hi = Identifier("Q63481")
+    assert ident_low.id == "Q3481"
+    assert ident_hi.id == "Q63481"
+
+
 def test_resolver():
     resolver = Resolver()
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
@@ -39,6 +46,11 @@ def test_resolver():
     assert resolver.get_canonical("a1") == a_canon
     assert resolver.get_canonical("a0") == a_canon
     assert len(list(resolver.canonicals())) == 2, list(resolver.canonicals())
+
+    resolver.decide("a1", "a42", Judgement.POSITIVE)
+    assert resolver.get_canonical("a42") == a_canon
+    resolver.remove("a42")
+    assert resolver.get_canonical("a42") == "a42"
 
     resolver.suggest("c1", "c2", 7.0)
     assert resolver.get_edge("c1", "c2").score == 7.0

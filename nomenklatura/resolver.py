@@ -34,7 +34,7 @@ class Identifier(object):
         self.canonical = self.weight > 1
 
     def __eq__(self, other: Any) -> bool:
-        return str(self) == str(other)
+        return self.id == str(other)
 
     def __lt__(self, other: Any) -> bool:
         return (self.weight, self.id) < (other.weight, other.id)
@@ -62,7 +62,7 @@ class Identifier(object):
         left = cls.get(left_id)
         right = cls.get(right_id)
         if left == right:
-            raise ResolverLogicError()
+            raise ResolverLogicError("%s/%s" % (left, right))
         return (max(left, right), min(left, right))
 
     @classmethod
@@ -215,8 +215,6 @@ class Resolver(Generic[CE]):
         other = Identifier.get(other_id)
         if entity == other:
             return Judgement.POSITIVE
-        if is_qid(entity.id) and is_qid(other.id):
-            return Judgement.NEGATIVE
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
@@ -228,6 +226,8 @@ class Resolver(Generic[CE]):
                     continue
                 if edge.judgement == Judgement.NEGATIVE:
                     return edge.judgement
+        if is_qid(entity.id) and is_qid(other.id):
+            return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
     def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
@@ -287,7 +287,7 @@ class Resolver(Generic[CE]):
             target = max(connected)
             if not target.canonical:
                 canonical = Identifier.make()
-                self._remove(edge)
+                self._remove_edge(edge)
                 self.decide(edge.source, canonical, judgement=judgement, user=user)
                 self.decide(edge.target, canonical, judgement=judgement, user=user)
                 return canonical
@@ -307,12 +307,27 @@ class Resolver(Generic[CE]):
         self.nodes[edge.target].add(edge)
         self.connected.cache_clear()
 
-    def _remove(self, edge: Edge) -> None:
+    def _remove_edge(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
         self.edges.pop(edge.key, None)
         for node in (edge.source, edge.target):
             if node in self.nodes:
                 self.nodes[node].discard(edge)
+
+    def _remove_node(self, node: Identifier) -> None:
+        """Remove a node from the graph."""
+        edges = self.nodes.get(node)
+        if edges is None:
+            return
+        for edge in list(edges):
+            if edge.judgement != Judgement.NO_JUDGEMENT:
+                self._remove_edge(edge)
+
+    def remove(self, node_id: StrIdent) -> None:
+        """Remove all edges linking to the given node from the graph."""
+        node = Identifier.get(node_id)
+        self._remove_node(node)
+        self.connected.cache_clear()
 
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
@@ -322,12 +337,7 @@ class Resolver(Generic[CE]):
         affected: Set[str] = set()
         for part in self.connected(node):
             affected.add(str(part))
-            edges = self.nodes.get(part)
-            if edges is None:
-                continue
-            for edge in list(edges):
-                if edge.judgement != Judgement.NO_JUDGEMENT:
-                    self._remove(edge)
+            self._remove_node(part)
         self.connected.cache_clear()
         return affected
 
@@ -339,9 +349,9 @@ class Resolver(Generic[CE]):
         for edge in self._get_suggested():
             judgement = self.get_judgement(edge.source, edge.target)
             if judgement != Judgement.NO_JUDGEMENT:
-                self._remove(edge)
+                self._remove_edge(edge)
             if kept >= keep:
-                self._remove(edge)
+                self._remove_edge(edge)
             kept += 1
         self.connected.cache_clear()
 
