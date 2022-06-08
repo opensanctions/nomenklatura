@@ -35,6 +35,7 @@ def xref(
     adjacent: bool = False,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
+    user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", loader, resolver)
     index = Index(loader)
@@ -82,9 +83,9 @@ def xref(
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
-                resolver.decide(left_id, right_id, Judgement.POSITIVE)
+                resolver.decide(left_id, right_id, Judgement.POSITIVE, user=user)
                 continue
-            resolver.suggest(left.id, right.id, score)
+            resolver.suggest(left.id, right.id, score, user=user)
             if suggested > limit:
                 break
             suggested += 1

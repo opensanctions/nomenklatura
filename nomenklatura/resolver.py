@@ -256,7 +256,11 @@ class Resolver(Generic[CE]):
                 break
 
     def suggest(
-        self, left_id: StrIdent, right_id: StrIdent, score: float
+        self,
+        left_id: StrIdent,
+        right_id: StrIdent,
+        score: float,
+        user: Optional[str] = None,
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
         should make a decision about whether they are the same or not."""
@@ -265,7 +269,9 @@ class Resolver(Generic[CE]):
             if edge.judgement in self.UNDECIDED:
                 edge.score = score
             return edge.target
-        return self.decide(left_id, right_id, Judgement.NO_JUDGEMENT, score=score)
+        return self.decide(
+            left_id, right_id, Judgement.NO_JUDGEMENT, score=score, user=user
+        )
 
     def decide(
         self,
