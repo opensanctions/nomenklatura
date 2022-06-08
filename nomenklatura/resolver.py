@@ -303,6 +303,7 @@ class Resolver(Generic[CE]):
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
+        self.connected.cache_clear()
         return edge.target
 
     def _register(self, edge: Edge) -> None:
@@ -311,7 +312,6 @@ class Resolver(Generic[CE]):
         self.edges[edge.key] = edge
         self.nodes[edge.source].add(edge)
         self.nodes[edge.target].add(edge)
-        self.connected.cache_clear()
 
     def _remove_edge(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
