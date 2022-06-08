@@ -22,7 +22,7 @@ class YenteEnricher(Enricher):
         self._api: str = config.pop("api")
         self._dataset: str = config.pop("dataset", "default")
         self._token: str = config.pop("token", "nomenklatura")
-        self._threshold: Optional[float] = config.pop("threshold")
+        self._threshold: Optional[float] = config.pop("threshold", None)
         self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
