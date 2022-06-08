@@ -85,10 +85,9 @@ def xref_file(
 
 @cli.command("prune", help="Remove dedupe candidates")
 @click.argument("resolver", type=click.Path(exists=True, path_type=Path))
-@click.option("-k", "--keep", type=int, default=0)
-def xref_prune(resolver: Path, keep: int = 0) -> None:
+def xref_prune(resolver: Path) -> None:
     resolver_ = _get_resolver(resolver, resolver)
-    resolver_.prune(keep=keep)
+    resolver_.prune()
     resolver_.save()
 
 

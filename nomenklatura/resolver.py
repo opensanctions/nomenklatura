@@ -244,7 +244,7 @@ class Resolver(Generic[CE]):
         return sorted(candidates, key=cmp, reverse=True)
 
     def get_candidates(
-        self, limit: int = 100
+        self, limit: Optional[int] = None
     ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
         returned = 0
         for edge in self._get_suggested():
@@ -252,7 +252,7 @@ class Resolver(Generic[CE]):
                 continue
             yield edge.target.id, edge.source.id, edge.score
             returned += 1
-            if returned >= limit:
+            if limit is not None and returned >= limit:
                 break
 
     def suggest(
@@ -266,7 +266,7 @@ class Resolver(Generic[CE]):
         should make a decision about whether they are the same or not."""
         edge = self.get_edge(left_id, right_id)
         if edge is not None:
-            if edge.judgement in self.UNDECIDED:
+            if edge.judgement == Judgement.NO_JUDGEMENT:
                 edge.score = score
             return edge.target
         return self.decide(
@@ -347,18 +347,13 @@ class Resolver(Generic[CE]):
         self.connected.cache_clear()
         return affected
 
-    def prune(self, keep: int = 0) -> None:
+    def prune(self) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
         highest score. This also checks if a transitive judgement has been
         established in the mean time and removes those candidates."""
-        kept = 0
-        for edge in self._get_suggested():
-            judgement = self.get_judgement(edge.source, edge.target)
-            if judgement != Judgement.NO_JUDGEMENT:
+        for edge in list(self.edges.values()):
+            if edge.judgement == Judgement.NO_JUDGEMENT:
                 self._remove_edge(edge)
-            if kept >= keep:
-                self._remove_edge(edge)
-            kept += 1
         self.connected.cache_clear()
 
     def apply(self, proxy: CE) -> CE:

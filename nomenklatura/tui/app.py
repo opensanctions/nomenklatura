@@ -38,8 +38,11 @@ class DedupeApp(App):
         self.left = None
         self.right = None
         self.score = 0.0
-        for left_id, right_id, score in self.resolver.get_candidates(limit=1000):
-            if (left_id, right_id) in self.ignore or score is None:
+        for left_id, right_id, score in self.resolver.get_candidates():
+            if (left_id, right_id) in self.ignore:
+                continue
+            if score is None:
+                self.ignore.add((left_id, right_id))
                 continue
             if not self.resolver.check_candidate(left_id, right_id):
                 self.ignore.add((left_id, right_id))
@@ -49,7 +52,6 @@ class DedupeApp(App):
             self.score = score
             if self.left is not None and self.right is not None:
                 if self.left.schema.can_match(self.right.schema):
-                    self.score = score
                     self.comp = await render_comparison(
                         self.loader,
                         self.left,
@@ -75,6 +77,7 @@ class DedupeApp(App):
             return
         if self.left is not None and self.right is not None:
             self.resolver.decide(self.left.id, self.right.id, judgement)
+            self.ignore.add((self.left.id, self.right.id))
         await self.load_candidate()
         if self.left is None or self.right is None:
             await self.shutdown()  # type: ignore
