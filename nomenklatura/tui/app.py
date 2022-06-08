@@ -84,6 +84,17 @@ class DedupeApp(App):
             return
         await self.force_render()
 
+    async def save_resolver(self) -> None:
+        if self.resolver is None:
+            await self.shutdown()  # type: ignore
+            return
+        self.comp = Text("Saving...", justify="center")
+        await self.force_render()
+        self.resolver.save()
+        self.comp = Text("Saved.", justify="center")
+        await self.force_render()
+        await asyncio.sleep(1)
+
     async def action_positive(self) -> None:
         await self.decide(Judgement.POSITIVE)
 
@@ -106,25 +117,12 @@ class DedupeApp(App):
         await self.force_render()
 
     async def action_save(self) -> None:
-        self.comp = Text("Saving...", justify="center")
-        await self.force_render()
-        if self.resolver is not None:
-            self.resolver.save()
-        if self.loader is not None and self.left is not None and self.right is not None:
-            self.comp = await render_comparison(
-                self.loader,
-                self.left,
-                self.right,
-                self.score,
-                latinize=self.latinize,
-            )
+        await self.save_resolver()
+        await self.load_candidate()
         await self.force_render()
 
     async def action_quit(self) -> None:
-        self.comp = Text("Saving...", justify="center")
-        await self.force_render()
-        if self.resolver is not None:
-            self.resolver.save()
+        await self.save_resolver()
         await self.shutdown()  # type: ignore
 
     async def action_exit(self) -> None:
