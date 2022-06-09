@@ -209,6 +209,12 @@ class Resolver(Generic[CE]):
                 return edge
         return None
 
+    def _pair_judgement(self, left: Identifier, right: Identifier) -> Judgement:
+        edge = self.edges.get(Identifier.pair(left, right))
+        if edge is not None:
+            return edge.judgement
+        return Judgement.NO_JUDGEMENT
+
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
         """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
@@ -218,14 +224,20 @@ class Resolver(Generic[CE]):
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
+
+        # HACK: this would mark pairs only as unsure if the unsure judgement
+        # had been made on the current canonical combination:
+        # canon_edge = self._pair_judgement(max(entity_connected), max(other_connected))
+        # if canon_edge == Judgement.UNSURE:
+        #     return Judgement.UNSURE
+
         other_connected = self.connected(other)
         for e in entity_connected:
             for o in other_connected:
-                edge = self.edges.get(Identifier.pair(e, o))
-                if edge is None:
-                    continue
-                if edge.judgement == Judgement.NEGATIVE:
-                    return edge.judgement
+                judgement = self._pair_judgement(e, o)
+                if judgement != Judgement.NO_JUDGEMENT:
+                    return judgement
+
         if is_qid(entity.id) and is_qid(other.id):
             return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
