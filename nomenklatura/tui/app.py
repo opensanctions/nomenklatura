@@ -1,6 +1,5 @@
 import asyncio
-from pydoc import resolve
-from typing import Any, Dict, Union, Optional, Set, Tuple
+from typing import Any, Optional, Set, Tuple
 from rich.text import Text
 from rich.console import RenderableType
 from textual.app import App
