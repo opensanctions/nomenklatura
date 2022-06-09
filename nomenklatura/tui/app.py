@@ -36,7 +36,7 @@ class DedupeApp(App):
     async def load_candidate(self) -> None:
         if self.loader is None or self.resolver is None:
             return
-        self.comp = Text("No candidates loaded.", justify="center")
+        self.comp = Text("No candidates.", justify="center")
         self.left = None
         self.right = None
         self.score = 0.0
@@ -76,12 +76,14 @@ class DedupeApp(App):
         await self.bind("q", "exit", "Exit now")
 
     async def decide(self, judgement: Judgement) -> None:
-        if self.resolver is None or self.left is None or self.right is None:
+        if self.resolver is None:
             return await self.shutdown()  # type: ignore
+        if self.left is None or self.right is None:
+            await self.load_candidate()
+            await self.force_render()
+            return
         self.resolver.decide(self.left.id, self.right.id, judgement=judgement)
         await self.load_candidate()
-        if self.left is None or self.right is None:
-            return await self.shutdown()  # type: ignore
         await self.force_render()
 
     async def save_resolver(self) -> None:
