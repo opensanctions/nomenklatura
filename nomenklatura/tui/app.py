@@ -19,12 +19,14 @@ class DedupeApp(App):
         self,
         loader: Optional[Loader[DS, CE]] = None,
         resolver: Optional[Resolver[CE]] = None,
+        url_base: Optional[str] = None,
         **kwargs: Any
     ):
         super().__init__(**kwargs)
         self.loader = loader
         self.resolver = resolver
         self.latinize = False
+        self.url_base = url_base
         self.ignore: Set[Tuple[str, str]] = set()
         self.comp: Optional[RenderableType] = None
         self.left: Optional[CE] = None
@@ -58,6 +60,7 @@ class DedupeApp(App):
                         self.right,
                         score,
                         latinize=self.latinize,
+                        url_base=self.url_base,
                     )
                     break
             self.ignore.add((left_id, right_id))
@@ -109,6 +112,7 @@ class DedupeApp(App):
                 self.right,
                 self.score,
                 latinize=self.latinize,
+                url_base=self.url_base,
             )
         await self.force_render()
 

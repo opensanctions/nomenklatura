@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text
@@ -35,6 +35,8 @@ async def render_values(
         score = prop.type.compare_sets([value], other_values)
         if latinize:
             caption = latinize_text(caption) or caption
+        if prop.name == "wikidataId":
+            caption = f"https://wikidata.org/wiki/{value}"
         style = "default"
         if score > 0.7:
             style = "yellow"
@@ -46,7 +48,12 @@ async def render_values(
 
 
 async def render_comparison(
-    loader: Loader[DS, CE], left: CE, right: CE, score: float, latinize: bool = False
+    loader: Loader[DS, CE],
+    left: CE,
+    right: CE,
+    score: float,
+    latinize: bool = False,
+    url_base: Optional[str] = None,
 ) -> Table:
     if left is None or right is None:
         return Text("No candidates loaded.", justify="center")
@@ -68,4 +75,11 @@ async def render_comparison(
     ds_left = Text(", ".join(left.datasets))
     ds_right = Text(", ".join(right.datasets))
     table.add_row(ds_label, ds_left, ds_right)
+
+    if url_base is not None:
+        ds_label = Text("URL", "grey bold")
+        ds_left = Text(url_base % left.id)
+        ds_right = Text(url_base % right.id)
+        table.add_row(ds_label, ds_left, ds_right)
+
     return table
