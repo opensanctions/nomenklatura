@@ -27,6 +27,7 @@ class YenteEnricher(Enricher):
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
         self.session.headers["Authorization"] = f"Bearer {self._token}"
+        self.cache.preload(f"{self._api}%")
 
     def make_url(self, entity: CE) -> str:
         return urljoin(self._api, f"entities/{entity.id}")
