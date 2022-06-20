@@ -27,6 +27,7 @@ setup(
         "textual >= 0.1.10, < 1.0.0",
         "scikit-learn == 1.1.1",
         "click >= 8.0.0, < 8.1.0",
+        "orjson >= 3.7, < 4.0",
     ],
     tests_require=[],
     entry_points={

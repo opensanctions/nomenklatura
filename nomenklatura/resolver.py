@@ -392,6 +392,21 @@ class Resolver(Generic[CE]):
             for edge in edges:
                 fh.write(edge.to_line())
 
+    def merge(self, path: PathLike) -> None:
+        with open(path, "r") as fh:
+            while True:
+                line = fh.readline()
+                if not line:
+                    break
+                edge = Edge.from_line(line)
+                self.decide(
+                    edge.source,
+                    edge.target,
+                    judgement=edge.judgement,
+                    user=edge.user,
+                    score=edge.score,
+                )
+
     @classmethod
     def load(cls, path: PathLike) -> "Resolver[CE]":
         resolver = cls(path=path)
