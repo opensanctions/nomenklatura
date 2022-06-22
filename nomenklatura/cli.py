@@ -1,13 +1,12 @@
-import sys
 import yaml
 import click
-import orjson
 import logging
 import asyncio
 from pathlib import Path
-from contextlib import contextmanager
-from typing import BinaryIO, Iterable, Optional, Generator, Tuple
-from followthemoney import model
+from typing import Iterable, Optional, Tuple
+from followthemoney.cli.util import path_writer, InPath, OutPath
+from followthemoney.cli.util import path_entities, write_entity
+from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
 from nomenklatura.matching.train import train_matcher
@@ -17,38 +16,16 @@ from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.xref import xref as run_xref
-from nomenklatura.util import PathLike, write_entity
 from nomenklatura.tui import DedupeApp
 
 
 log = logging.getLogger(__name__)
 
-InPath = click.Path(dir_okay=False, readable=True, path_type=Path)
 ResPath = click.Path(dir_okay=False, writable=True, path_type=Path)
-OutPath = click.Path(dir_okay=False, writable=True, path_type=Path, allow_dash=True)
 
 
 def _path_sibling(path: Path, suffix: str) -> Path:
     return path.parent.joinpath(f"{path.stem}{suffix}")
-
-
-def _path_entities(path: PathLike) -> Generator[Entity, None, None]:
-    with open(path, "rb") as fh:
-        while True:
-            line = fh.readline()
-            if not line:
-                break
-            data = orjson.loads(line)
-            yield Entity.from_dict(model, data)
-
-
-@contextmanager
-def _path_write(path: PathLike) -> Generator[BinaryIO, None, None]:
-    if str(path) == "-":
-        yield sys.stdout.buffer
-    else:
-        with open(path, "wb") as fh:
-            yield fh
 
 
 def _load_enricher(path: Path) -> Tuple[Dataset, Enricher]:
@@ -112,38 +89,25 @@ def xref_prune(resolver: Path) -> None:
 @click.option("-r", "--resolver", required=True, type=ResPath)
 def apply(path: Path, outpath: Path, resolver: Optional[Path]) -> None:
     resolver_ = _get_resolver(path, resolver)
-    with _path_write(outpath) as outfh:
-        for proxy in _path_entities(path):
+    with path_writer(outpath) as outfh:
+        for proxy in path_entities(path, Entity):
             proxy = resolver_.apply(proxy)
             write_entity(outfh, proxy)
 
 
-@cli.command("sorted-merge", help="Merge sort-order entities")
+@cli.command("sorted-aggregate", help="Merge sort-order entities")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
-def sorted_merge(path: Path, outpath: Path) -> None:
-    entity: Optional[Entity] = None
-    with _path_write(outpath) as outfh:
-        for next_entity in _path_entities(path):
-            if entity is None:
-                entity = next_entity
-                continue
-            if next_entity.id == entity.id:
-                entity = entity.merge(next_entity)
-                continue
-            write_entity(outfh, entity)
-            entity = next_entity
-
-        if entity is not None:
-            write_entity(outfh, entity)
+def sorted_aggregate_(path: Path, outpath: Path) -> None:
+    sorted_aggregate(path, outpath, Entity)
 
 
 @cli.command("make-sortable", help="Convert entities into plain-text sortable form")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
-def make_sortable(path: str, outpath: str) -> None:
-    with _path_write(outpath) as outfh:
-        for entity in _path_entities(path):
+def make_sortable(path: Path, outpath: Path) -> None:
+    with path_writer(outpath) as outfh:
+        for entity in path_entities(path, Entity):
             write_entity(outfh, entity)
 
 
@@ -171,7 +135,7 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
 
 @cli.command("merge-resolver", help="Merge resolver configs")
 @click.argument("outpath", type=OutPath)
-@click.option("-i", "--inputs", type=ResPath, multiple=True)
+@click.option("-i", "--inputs", type=InPath, multiple=True)
 def merge_resolver(outpath: Path, inputs: Iterable[Path]) -> None:
     resolver = Resolver[Entity].load(outpath)
     for path in inputs:
@@ -191,13 +155,17 @@ def train_matcher_(pairs_file: Path) -> None:
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-r", "--resolver", type=ResPath)
 def match_command(
-    config: Path, entities: Path, outpath: Path, resolver: Optional[Path]
+    config: Path,
+    entities: Path,
+    outpath: Path,
+    resolver: Optional[Path],
 ) -> None:
     resolver_ = _get_resolver(entities, resolver)
     _, enricher = _load_enricher(config)
     try:
-        with _path_write(outpath) as fh:
-            for proxy in match(enricher, resolver_, _path_entities(entities)):
+        with path_writer(outpath) as fh:
+            stream = path_entities(entities, Entity)
+            for proxy in match(enricher, resolver_, stream):
                 write_entity(fh, proxy)
     finally:
         resolver_.save()
@@ -208,7 +176,7 @@ def match_command(
 @click.argument("config", type=InPath)
 @click.argument("entities", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")  # noqa
-@click.option("-r", "--resolver", type=click.Path(writable=True, path_type=Path))
+@click.option("-r", "--resolver", type=ResPath)
 def enrich_command(
     config: Path,
     entities: Path,
@@ -218,8 +186,9 @@ def enrich_command(
     resolver_ = _get_resolver(entities, resolver)
     _, enricher = _load_enricher(config)
     try:
-        with _path_write(outpath) as fh:
-            for proxy in enrich(enricher, resolver_, _path_entities(entities)):
+        with path_writer(outpath) as fh:
+            stream = path_entities(entities, Entity)
+            for proxy in enrich(enricher, resolver_, stream):
                 write_entity(fh, proxy)
     finally:
         enricher.close()

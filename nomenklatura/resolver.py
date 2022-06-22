@@ -1,5 +1,6 @@
 import json
 import getpass
+from pathlib import Path
 import shortuuid  # type: ignore
 from datetime import datetime
 from functools import lru_cache
@@ -138,7 +139,7 @@ class Edge(object):
 class Resolver(Generic[CE]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
-    def __init__(self, path: Optional[PathLike] = None) -> None:
+    def __init__(self, path: Optional[Path] = None) -> None:
         self.path = path
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
@@ -408,7 +409,7 @@ class Resolver(Generic[CE]):
                 )
 
     @classmethod
-    def load(cls, path: PathLike) -> "Resolver[CE]":
+    def load(cls, path: Path) -> "Resolver[CE]":
         resolver = cls(path=path)
         if not path.exists():
             return resolver

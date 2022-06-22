@@ -2,8 +2,7 @@ from enum import Enum
 
 
 class Judgement(Enum):
-    """A judgement of whether two entities are the same. This should really not live in
-    FtM but it is used in both Aleph and nomenklatura."""
+    """A judgement of whether two entities are the same."""
 
     POSITIVE = "positive"
     NEGATIVE = "negative"

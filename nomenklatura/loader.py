@@ -1,6 +1,5 @@
 import json
 import logging
-from nomenklatura.resolver import Resolver
 from typing import (
     Dict,
     Generator,
@@ -15,6 +14,7 @@ from followthemoney.types import registry
 from followthemoney.property import Property
 from followthemoney import model
 
+from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset, DS
 from nomenklatura.entity import CompositeEntity, CE
 from nomenklatura.util import PathLike

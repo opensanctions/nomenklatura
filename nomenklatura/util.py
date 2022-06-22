@@ -1,9 +1,8 @@
 import re
 import os
-import orjson
 from pathlib import Path
 from followthemoney.proxy import E
-from typing import BinaryIO, Any, Mapping, Union, Iterable, Tuple
+from typing import Any, Mapping, Union, Iterable, Tuple
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
@@ -26,13 +25,3 @@ def normalize_url(url: str, params: ParamsType = None) -> str:
         query.extend(sorted(values))
     parsed = parsed._replace(query=urlencode(query))
     return urlunparse(parsed)
-
-
-def write_entity(fh: BinaryIO, entity: E) -> None:
-    data = entity.to_dict()
-    entity_id = data.pop("id")
-    assert entity_id is not None, data
-    sort_data = dict(id=entity_id)
-    sort_data.update(data)
-    out = orjson.dumps(sort_data, option=orjson.OPT_APPEND_NEWLINE)
-    fh.write(out)
