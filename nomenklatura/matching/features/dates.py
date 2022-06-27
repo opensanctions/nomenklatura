@@ -15,10 +15,17 @@ def with_precision(values: Iterable[str], precision: Precision) -> Set[str]:
     return dates
 
 
+def flip_day_month(value: str) -> str:
+    # This is such a common mistake we just consider flips as matches.
+    year, month, day = value.split("-", 2)
+    return f"{year}-{day}-{month}"
+
+
 def key_day_matches(left: Entity, right: Entity) -> float:
     """The birth date or incorporation date of the two entities is the same."""
     left_dates, right_dates = props_pair(left, right, KEY_DATES)
     left_days = with_precision(left_dates, Precision.DAY)
+    left_days.update([flip_day_month(d) for d in left_days])
     right_days = with_precision(right_dates, Precision.DAY)
     return has_overlap(left_days, right_days)
 

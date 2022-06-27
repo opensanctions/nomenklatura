@@ -7,16 +7,15 @@ from nomenklatura.entity import CompositeEntity as Entity
 
 from nomenklatura.matching.features.util import (
     has_disjoint,
-    has_intersection,
+    # has_intersection,
     has_overlap,
+    extract_numbers,
     compare_sets,
     tokenize_pair,
     props_pair,
     type_pair,
     compare_levenshtein,
 )
-
-FIND_NUM = re.compile("\d{2,}")
 
 
 def normalize_names(raws: Iterable[str]) -> Set[str]:
@@ -53,7 +52,9 @@ def name_match(left: Entity, right: Entity) -> float:
     """Check for exact name matches between the two entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
-    return has_intersection(lvn, rvn)
+    common = [len(n) for n in lvn.intersection(rvn)]
+    return max(common, default=0)
+    # return has_intersection(lvn, rvn)
 
 
 def name_token_overlap(left: Entity, right: Entity) -> float:
@@ -64,14 +65,7 @@ def name_token_overlap(left: Entity, right: Entity) -> float:
     return float(len(common)) / float(max(2.0, tokens))
 
 
-def _extract_numbers(values: List[str]) -> Set[str]:
-    numbers: Set[str] = set()
-    for value in values:
-        numbers.update(FIND_NUM.findall(value))
-    return numbers
-
-
 def name_numbers(left: Entity, right: Entity) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
-    return has_disjoint(_extract_numbers(lv), _extract_numbers(rv))
+    return has_disjoint(extract_numbers(lv), extract_numbers(rv))

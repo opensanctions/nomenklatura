@@ -1,3 +1,4 @@
+import re
 import Levenshtein  # type: ignore
 from itertools import product
 from normality import normalize
@@ -9,6 +10,7 @@ from followthemoney.types.common import PropertyType
 from nomenklatura.entity import CompositeEntity
 
 V = TypeVar("V")
+FIND_NUM = re.compile("\d{2,}")
 
 
 def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
@@ -35,10 +37,17 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
     return 1.0
 
 
+def extract_numbers(values: List[str]) -> Set[str]:
+    numbers: Set[str] = set()
+    for value in values:
+        numbers.update(FIND_NUM.findall(value))
+    return numbers
+
+
 def compare_levenshtein(left: str, right: str) -> float:
     distance = cast(int, Levenshtein.distance(left, right))
-    base = max((0, len(left), len(right)))
-    return 1 - (distance / base)
+    base = max((1, len(left), len(right)))
+    return 1.0 - (distance / float(base))
 
 
 def props_pair(
