@@ -25,8 +25,6 @@ async def render_values(
     other_values = other.get_type_values(prop.type)
     text = Text()
     for i, value in enumerate(sorted(values)):
-        if i > 0:
-            text.append(" · ")
         caption = prop.type.caption(value)
         if prop.type == registry.entity:
             sub = loader.get_entity(value)
@@ -43,6 +41,8 @@ async def render_values(
         if score > 0.95:
             style = "green"
         if caption is not None:
+            if i > 0:
+                text.append(" · ", "gray")
             text.append(caption, style)
     return text
 

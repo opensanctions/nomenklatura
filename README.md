@@ -48,7 +48,7 @@ All of the API classes have extensive type annotations, which should make their 
 This package offers an implementation of an in-memory data deduplication framework centered around the FtM data model. The idea is the following workflow:
 
 * Accept FtM-shaped entities from a given loader (e.g. a JSON file, or a database)
-* Build an in-memory inverted index of the entities for blocking
+* Build an in-memory inverted index of the entities for dedupe blocking
 * Generate merge candidates using the blocking index and FtM compare
 * Provide a file-based storage format for merge challenges and decisions
 * Provide a text-based user interface to let users make merge decisions
@@ -56,7 +56,6 @@ This package offers an implementation of an in-memory data deduplication framewo
 Later on, the following might be added:
 
 * A web application to let users make merge decisions on the web
-* An implementation of the OpenRefine Reconciliation API based on the blocking index
 
 ### Resolver graph
 
