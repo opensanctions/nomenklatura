@@ -1,3 +1,4 @@
+from pathlib import Path
 import pickle
 import logging
 from itertools import combinations
@@ -178,7 +179,7 @@ class Index(Generic[DS, CE]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, loader: Loader[DS, CE], path: PathLike) -> "Index[DS, CE]":
+    def load(cls, loader: Loader[DS, CE], path: Path) -> "Index[DS, CE]":
         index = Index(loader)
         if not path.exists():
             log.debug("Cannot load: %r", index)

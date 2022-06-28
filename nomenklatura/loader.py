@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 from typing import (
     Dict,
     Generator,
@@ -107,7 +108,7 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
     """Read a given file path into an in-memory entity loader."""
 
     def __init__(
-        self, path: PathLike, resolver: Optional[Resolver[CompositeEntity]] = None
+        self, path: Path, resolver: Optional[Resolver[CompositeEntity]] = None
     ) -> None:
         dataset = Dataset(path.stem, path.stem)
         entities = self.read_file(dataset, path)
@@ -115,7 +116,7 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
         self.path = path
 
     def read_file(
-        self, dataset: Dataset, path: PathLike
+        self, dataset: Dataset, path: Path
     ) -> Generator[CompositeEntity, None, None]:
         with open(path, "r") as fh:
             while True:
