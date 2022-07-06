@@ -2,7 +2,7 @@ from normality import normalize
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import has_disjoint, has_overlap
+from nomenklatura.matching.features.util import has_disjoint, has_overlap, has_schema
 from nomenklatura.matching.features.util import compare_levenshtein, compare_sets
 from nomenklatura.matching.features.util import props_pair, type_pair, extract_numbers
 
@@ -54,6 +54,17 @@ def email_match(left: Entity, right: Entity) -> float:
 def identifier_match(left: Entity, right: Entity) -> float:
     """Matching identifiers (e.g. passports, national ID cards, registration or
     tax numbers) between the two entities."""
+    if has_schema(left, right, "Organization"):
+        return 0.0
+    lv, rv = type_pair(left, right, registry.identifier)
+    return has_overlap(set(lv), set(rv))
+
+
+def org_identifier_match(left: Entity, right: Entity) -> float:
+    """Matching identifiers (e.g. registration or tax numbers) between two
+    organizations or companies."""
+    if not has_schema(left, right, "Organization"):
+        return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
     return has_overlap(set(lv), set(rv))
 

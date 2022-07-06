@@ -1,27 +1,18 @@
-import re
 import fingerprints
-from normality import WS
-from typing import Iterable, List, Set
+from typing import Iterable, Set
 from followthemoney.types import registry
-from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import (
-    has_disjoint,
-    # has_intersection,
-    has_overlap,
-    extract_numbers,
-    compare_sets,
-    tokenize_pair,
-    props_pair,
-    type_pair,
-    compare_levenshtein,
-)
+from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.matching.features.util import has_disjoint, has_overlap
+from nomenklatura.matching.features.util import extract_numbers, compare_sets
+from nomenklatura.matching.features.util import tokenize_pair, props_pair
+from nomenklatura.matching.features.util import type_pair, compare_levenshtein
 
 
 def normalize_names(raws: Iterable[str]) -> Set[str]:
     names = set()
     for raw in raws:
-        name = fingerprints.generate(raw, keep_order=False)
+        name = fingerprints.generate(raw)
         if name is None:
             continue
         names.add(name[:128])

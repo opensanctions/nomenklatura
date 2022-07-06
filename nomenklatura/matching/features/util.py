@@ -7,7 +7,7 @@ from typing import Callable, Iterable, List, cast
 from typing import Optional, Set, Tuple, TypeVar
 from followthemoney.types.common import PropertyType
 
-from nomenklatura.entity import CompositeEntity
+from nomenklatura.entity import CompositeEntity as Entity
 
 V = TypeVar("V")
 FIND_NUM = re.compile("\d{2,}")
@@ -37,6 +37,15 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
     return 1.0
 
 
+def has_schema(left: Entity, right: Entity, schema: str) -> bool:
+    """Check if one of the entities has the required schema."""
+    if left.schema.is_a(schema) or right.schema.is_a(schema):
+        if not left.schema.can_match(right.schema):
+            return False
+        return True
+    return False
+
+
 def extract_numbers(values: List[str]) -> Set[str]:
     numbers: Set[str] = set()
     for value in values:
@@ -51,7 +60,7 @@ def compare_levenshtein(left: str, right: str) -> float:
 
 
 def props_pair(
-    left: CompositeEntity, right: CompositeEntity, props: List[str]
+    left: Entity, right: Entity, props: List[str]
 ) -> Tuple[Set[str], Set[str]]:
     left_values: Set[str] = set()
     right_values: Set[str] = set()
@@ -62,7 +71,7 @@ def props_pair(
 
 
 def type_pair(
-    left: CompositeEntity, right: CompositeEntity, type_: PropertyType
+    left: Entity, right: Entity, type_: PropertyType
 ) -> Tuple[List[str], List[str]]:
     left_values = left.get_type_values(type_)
     right_values = right.get_type_values(type_)

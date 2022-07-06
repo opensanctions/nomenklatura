@@ -9,6 +9,7 @@ from nomenklatura.matching.features.misc import phone_match, email_match
 from nomenklatura.matching.features.misc import address_match, address_numbers
 from nomenklatura.matching.features.misc import identifier_match, birth_place
 from nomenklatura.matching.features.misc import gender_mismatch, country_mismatch
+from nomenklatura.matching.features.misc import org_identifier_match
 
 # from nomenklatura.matching.features.misc import address_match
 
@@ -31,6 +32,7 @@ FEATURES = [
     birth_place,
     gender_mismatch,
     country_mismatch,
+    org_identifier_match,
     address_match,
     address_numbers,
 ]
