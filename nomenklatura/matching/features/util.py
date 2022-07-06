@@ -1,7 +1,8 @@
+from functools import lru_cache
 import re
 import Levenshtein  # type: ignore
 from itertools import product
-from normality import normalize
+from normality import normalize, slugify
 from normality.constants import WS
 from typing import Callable, Iterable, List, cast
 from typing import Optional, Set, Tuple, TypeVar
@@ -95,10 +96,15 @@ def compare_sets(
     return select_func(results)
 
 
+@lru_cache(maxsize=1000)
+def normalize_text(text: str) -> Optional[str]:
+    return slugify(text, sep=WS)
+
+
 def tokenize(texts: Iterable[str]) -> Set[str]:
     tokens: Set[str] = set()
     for text in texts:
-        cleaned = normalize(text, ascii=True)
+        cleaned = normalize_text(text)
         if cleaned is None:
             continue
         for token in cleaned.split(WS):

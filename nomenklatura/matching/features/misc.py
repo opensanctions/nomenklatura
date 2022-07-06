@@ -1,7 +1,7 @@
-from normality import normalize
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
+from nomenklatura.matching.features.util import normalize_text
 from nomenklatura.matching.features.util import has_disjoint, has_overlap, has_schema
 from nomenklatura.matching.features.util import compare_levenshtein, compare_sets
 from nomenklatura.matching.features.util import props_pair, type_pair, extract_numbers
@@ -10,16 +10,16 @@ from nomenklatura.matching.features.util import props_pair, type_pair, extract_n
 def birth_place(left: Entity, right: Entity) -> float:
     """Same place of birth."""
     lv, rv = props_pair(left, right, ["birthPlace"])
-    lvn = [normalize(v) for v in lv]
-    rvn = [normalize(v) for v in rv]
+    lvn = [normalize_text(v) for v in lv]
+    rvn = [normalize_text(v) for v in rv]
     return compare_sets(lvn, rvn, compare_levenshtein)
 
 
 def address_match(left: Entity, right: Entity) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(left, right, registry.address)
-    lvn = [normalize(v) for v in lv]
-    rvn = [normalize(v) for v in rv]
+    lvn = [normalize_text(v) for v in lv]
+    rvn = [normalize_text(v) for v in rv]
     return compare_sets(lvn, rvn, compare_levenshtein)
 
 

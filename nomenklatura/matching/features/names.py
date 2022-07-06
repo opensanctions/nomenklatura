@@ -3,7 +3,7 @@ from typing import Iterable, Set
 from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.features.util import has_disjoint, has_overlap
+from nomenklatura.matching.features.util import has_disjoint, has_overlap, has_schema
 from nomenklatura.matching.features.util import extract_numbers, compare_sets
 from nomenklatura.matching.features.util import tokenize_pair, props_pair
 from nomenklatura.matching.features.util import type_pair, compare_levenshtein
@@ -44,7 +44,7 @@ def name_match(left: Entity, right: Entity) -> float:
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
     common = [len(n) for n in lvn.intersection(rvn)]
-    return max(common, default=0)
+    return float(max(common, default=0))
     # return has_intersection(lvn, rvn)
 
 

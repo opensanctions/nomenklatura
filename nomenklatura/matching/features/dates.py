@@ -4,8 +4,6 @@ from prefixdate import Precision
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.features.util import props_pair, has_overlap
 
-KEY_DATES = ["birthDate", "incorporationDate", "registrationDate", "startDate"]
-
 
 def with_precision(values: Iterable[str], precision: Precision) -> Set[str]:
     dates = set()
@@ -21,18 +19,18 @@ def flip_day_month(value: str) -> str:
     return f"{year}-{day}-{month}"
 
 
-def key_day_matches(left: Entity, right: Entity) -> float:
+def dob_matches(left: Entity, right: Entity) -> float:
     """The birth date or incorporation date of the two entities is the same."""
-    left_dates, right_dates = props_pair(left, right, KEY_DATES)
+    left_dates, right_dates = props_pair(left, right, ["birthDate"])
     left_days = with_precision(left_dates, Precision.DAY)
     left_days.update([flip_day_month(d) for d in left_days])
     right_days = with_precision(right_dates, Precision.DAY)
     return has_overlap(left_days, right_days)
 
 
-def key_year_matches(left: Entity, right: Entity) -> float:
+def dob_year_matches(left: Entity, right: Entity) -> float:
     """The birth date or incorporation year of the two entities is the same."""
-    left_dates, right_dates = props_pair(left, right, KEY_DATES)
+    left_dates, right_dates = props_pair(left, right, ["birthDate"])
     left_years = with_precision(left_dates, Precision.YEAR)
     right_years = with_precision(right_dates, Precision.YEAR)
     if len(left_years.intersection(right_dates)) > 0:
