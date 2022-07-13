@@ -1,3 +1,4 @@
+TS=$(shell date +%Y%m%d%H%M)
 
 test:
 	pytest --cov-report html --cov-report term --cov=nomenklatura tests/
@@ -9,7 +10,7 @@ check: test typecheck
 
 data/pairs.json:
 	mkdir -p data/
-	curl -o data/pairs.json https://data.opensanctions.org/contrib/training/pairs.json
+	curl -o data/pairs.json https://data.opensanctions.org/contrib/training/pairs.json?_xxx=$(TS)
 
 train: data/pairs.json
 	nomenklatura train-matcher data/pairs.json
