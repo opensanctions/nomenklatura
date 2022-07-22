@@ -1,3 +1,4 @@
+import math
 import fingerprints
 from typing import Iterable, Set
 from followthemoney.types import registry
@@ -44,7 +45,10 @@ def name_match(left: Entity, right: Entity) -> float:
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
     common = [len(n) for n in lvn.intersection(rvn)]
-    return float(max(common, default=0))
+    max_common = max(common, default=0)
+    if max_common == 0:
+        return 0.0
+    return math.log(float(max_common))
     # return has_intersection(lvn, rvn)
 
 
