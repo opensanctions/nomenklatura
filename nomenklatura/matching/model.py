@@ -50,7 +50,7 @@ def explain_matcher() -> FeatureDocs:
         url = BASE_URL % (__version__, code_path, line_no)
         features[name] = {
             "description": func.__doc__,
-            "coefficient": coefficients[name],
+            "coefficient": float(coefficients[name]),
             "url": url,
         }
     return features
@@ -63,5 +63,5 @@ def compare_scored(left: Entity, right: Entity) -> MatchingResult:
     npfeat = np.array([encoded])
     pred = pipe.predict_proba(npfeat)
     score = cast(float, pred[0][1])
-    features = {f.__name__: c for f, c in zip(FEATURES, encoded)}
+    features = {f.__name__: float(c) for f, c in zip(FEATURES, encoded)}
     return {"score": score, "features": features}
