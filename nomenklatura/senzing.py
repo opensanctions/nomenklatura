@@ -33,7 +33,7 @@ def map_feature(entity: CE, features: List[Feature], prop: str, attr: str) -> No
 def senzing_adjacent_features(
     entity: CE, loader: Loader[DS, CE]
 ) -> Generator[Feature, None, None]:
-    for _, adj in loader.get_adjacent(entity.id):
+    for _, adj in loader.get_adjacent(entity):
         adj_data: Optional[Dict[str, Optional[str]]] = None
         if adj.schema.name == "Address":
             adj_data = {
