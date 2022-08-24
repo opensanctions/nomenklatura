@@ -64,7 +64,7 @@ def senzing_adjacent_features(
 def senzing_record(
     data_source: str, entity: CE, loader: Optional[Loader[DS, CE]] = None
 ) -> Optional[SenzingRecord]:
-    if not entity.schema.matchable:
+    if not entity.schema.matchable or entity.schema.name == "Address":
         return None
     record: SenzingRecord = {
         "DATA_SOURCE": data_source,
