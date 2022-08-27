@@ -106,6 +106,13 @@ class Cache(object):
     def has(self, key: str) -> bool:
         return self.get(key) is not None
 
+    def delete(self, key: str) -> None:
+        self._preload.pop(key, None)
+        with self._engine.begin() as conn:
+            pq = delete(self._table)
+            pq = pq.where(self._table.c.key == key)
+            conn.execute(pq)
+
     def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
         q = select(self._table)
         if like is not None:

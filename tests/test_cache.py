@@ -27,6 +27,10 @@ def test_cache():
     res = cache.get("name")
     assert res is None, res
 
+    cache.set("banana", "TestCase")
+    cache.delete("banana")
+    assert not cache.has("banana")
+
     cache.close()
 
 

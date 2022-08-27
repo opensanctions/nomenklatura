@@ -63,6 +63,10 @@ class Enricher(ABC):
             self.cache.set(url, response)
         return response
 
+    def http_remove_cache(self, url: str, params: ParamsType = None) -> None:
+        url = normalize_url(url, params=params)
+        self.cache.delete(url)
+
     def http_get_json_cached(
         self,
         url: str,
