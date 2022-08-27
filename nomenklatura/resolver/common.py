@@ -1,0 +1,2 @@
+class ResolverLogicError(Exception):
+    pass
