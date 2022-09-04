@@ -1,5 +1,6 @@
 import json
-from typing import Any, Optional
+from typing import Any, Dict, Optional, Union
+from sqlalchemy.engine import Row
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent
@@ -29,6 +30,16 @@ class Edge(object):
         if cur == self.target:
             return self.source
         return self.target
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "target_id": self.target.id,
+            "source_id": self.source.id,
+            "judgement": self.judgement.value,
+            "score": self.score,
+            "user": self.user,
+            "timestamp": self.timestamp,
+        }
 
     def to_line(self) -> str:
         row = [
@@ -66,4 +77,15 @@ class Edge(object):
             score=data[3],
             user=data[4],
             timestamp=data[5],
+        )
+
+    @classmethod
+    def from_dict(cls, data: Union[Row, Dict[str, Any]]) -> "Edge":
+        return cls(
+            left_id=data["target_id"],
+            right_id=data["source_id"],
+            judgement=Judgement(data["judgement"]),
+            score=data["score"],
+            user=data["user"],
+            timestamp=data["timestamp"],
         )

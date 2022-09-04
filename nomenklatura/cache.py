@@ -2,12 +2,11 @@ import os
 import math
 import json
 import logging
-from pathlib import Path
 from random import randint
 from dataclasses import dataclass
 from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import select
@@ -15,6 +14,7 @@ from sqlalchemy.sql.expression import delete
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
+from nomenklatura.db import get_engine, get_metadata
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -145,8 +145,6 @@ class Cache(object):
 
     @classmethod
     def make_default(cls, dataset: DS) -> "Cache":
-        path = Path(cls.CACHE_PATH).resolve()
-        db_uri = f"sqlite:///{path.as_posix()}"
-        engine = create_engine(db_uri)
-        metadata = MetaData(bind=engine)
-        return cls(engine, metadata, dataset, create=True)
+        engine = get_engine()
+        meta = get_metadata()
+        return cls(engine, meta, dataset, create=True)

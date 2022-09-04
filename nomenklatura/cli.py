@@ -16,6 +16,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
+from nomenklatura.resolver.db import DatabaseResolver
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp
@@ -208,6 +209,13 @@ def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
                 continue
             out = orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
             outfh.write(out)
+
+
+@cli.command("import-resolver", help="Load file-based resolver info to database")
+@click.argument("source", type=ResPath)
+def import_resolver(source: Path) -> None:
+    db = DatabaseResolver[Entity].make_default()
+    db.merge(source)
 
 
 if __name__ == "__main__":
