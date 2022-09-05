@@ -126,12 +126,12 @@ class Resolver(Generic[CE]):
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 
-    def _get_suggested(self) -> List[Edge]:
+    def _get_suggested(self) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
         edges_all = self.edges.values()
         candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
         cmp = lambda x: x.score or -1.0
-        return sorted(candidates, key=cmp, reverse=True)
+        yield from sorted(candidates, key=cmp, reverse=True)
 
     def get_candidates(
         self, limit: Optional[int] = None
