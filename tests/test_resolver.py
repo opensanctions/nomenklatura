@@ -20,8 +20,8 @@ def test_qid_identifier():
     assert ident_hi.id == "Q63481"
 
 
-def test_resolver():
-    resolver = Resolver()
+def test_resolver(engine):
+    resolver = Resolver.make_default(engine=engine)
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
     assert Identifier.get("a2") in resolver.connected(Identifier.get("a1"))
@@ -72,22 +72,23 @@ def test_resolver():
     assert resolver.get_judgement("b1", "b2") == Judgement.POSITIVE
 
 
-def test_resolver_store():
+def test_resolver_store(engine):
+    resolver = Resolver.make_default(engine=engine)
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
-        resolver = Resolver(path)
         resolver.decide("a1", "a2", Judgement.POSITIVE)
         resolver.decide("a2", "b2", Judgement.NEGATIVE)
         resolver.suggest("a1", "c1", 7.0)
-        resolver.save()
+        resolver.save(path)
 
-        other = Resolver.load(path)
+        other = resolver.load(path)
         assert len(other.edges) == len(resolver.edges)
         assert resolver.get_edge("a1", "c1").score == 7.0
 
 
-def test_resolver_candidates():
-    resolver = Resolver()
+def test_resolver_candidates(engine):
+    resolver = Resolver.make_default(engine=engine)
+    raise TypeError("%r" % resolver)
     resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
     resolver.suggest("a1", "b2", 7.0)

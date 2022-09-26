@@ -1,71 +1,154 @@
 import getpass
-from pathlib import Path
 from datetime import datetime
-from functools import lru_cache
-from collections import defaultdict
-from typing import Dict, Generator, Generic, List, Optional, Set, Tuple
+from typing import Dict, Generator, Generic, Optional, Set, Tuple
 from followthemoney.types import registry
+from sqlalchemy import MetaData, or_, alias, func
+from sqlalchemy import Table, Column, Unicode, Float
+from sqlalchemy.engine import Engine
+from sqlalchemy.future import select
+from sqlalchemy.sql.expression import delete
+from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
+from nomenklatura.db import get_engine, ensure_tx, Conn
+from nomenklatura.resolver.identifier import Identifier, StrIdent
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.util import PathLike, is_qid
 
 
 class Resolver(Generic[CE]):
-    UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
+    """A graph of entity identity judgements, used to compute connected components
+    to determine canonical IDs for entities."""
 
-    def __init__(self, path: Optional[Path] = None) -> None:
-        self.path = path
-        self.edges: Dict[Pair, Edge] = {}
-        self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
+    def __init__(
+        self, engine: Engine, metadata: MetaData, create: bool = False
+    ) -> None:
+        self._connected_cache: Dict[Identifier, Set[Identifier]] = {}
+        self._engine = engine
+        self._table = Table(
+            "resolverxxx",
+            metadata,
+            Column(
+                "target",
+                Unicode(512),
+                index=True,
+                nullable=False,
+                primary_key=True,
+            ),
+            Column(
+                "source",
+                Unicode(512),
+                index=True,
+                nullable=False,
+                primary_key=True,
+            ),
+            Column("judgement", Unicode(14), nullable=False),
+            Column("score", Float, nullable=True),
+            Column("user", Unicode(512), nullable=False),
+            Column("timestamp", Unicode(28)),
+            extend_existing=True,
+        )
+        if create:
+            metadata.create_all(bind=engine, checkfirst=True)
 
-    def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
+    def get_edge(
+        self, left_id: StrIdent, right_id: StrIdent, conn_: Conn = None
+    ) -> Optional[Edge]:
         key = Identifier.pair(left_id, right_id)
-        return self.edges.get(key)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.target == key[0].id)
+        stmt = stmt.where(self._table.c.source == key[1].id)
+        with ensure_tx(conn_) as conn:
+            res = conn.execute(stmt).fetchone()
+            if res is None:
+                return None
+            return Edge.from_dict(res)
 
-    def _traverse(self, node: Identifier, seen: Set[Identifier]) -> Set[Identifier]:
+    def connected(self, node: Identifier, conn_: Conn = None) -> Set[Identifier]:
+        """
+        WITH RECURSIVE connected AS (
+            SELECT r.target_id AS node_id
+                FROM resolver r
+                WHERE r.source_id = 'Q7747' AND r.judgement = 'positive'
+            UNION
+            SELECT r.source_id AS node_id
+                FROM resolver r
+                WHERE r.target_id = 'Q7747' AND r.judgement = 'positive'
+            UNION
+            SELECT r.source_id AS node_id
+                FROM connected c LEFT JOIN resolver r
+                WHERE r.target_id = c.node_id AND r.judgement = 'positive'
+            UNION
+            SELECT r.target_id AS node_id
+                FROM connected c LEFT JOIN resolver r
+                WHERE r.source_id = c.node_id AND r.judgement = 'positive'
+        )
+        SELECT node_id FROM connected;
+        """
+        if node in self._connected_cache:
+            return self._connected_cache[node]
+        positive = Judgement.POSITIVE.value
+        rslv = alias(self._table, "r")
+        target = rslv.c.target
+        source = rslv.c.source
+        judgement = rslv.c.judgement
+        stmt_t = select(target.label("node"))
+        stmt_t = stmt_t.where(source == node.id, judgement == positive)
+        cte = stmt_t.cte("connected", recursive=True)
+        cte_alias = cte.alias("c")
+        stmt_s = select(source.label("node"))
+        stmt_s = stmt_s.where(target == node.id, judgement == positive)
+        stmt_rs = select(source.label("node"))
+        stmt_rs = stmt_rs.join(cte_alias, cte_alias.c.node == target)
+        stmt_rs = stmt_rs.where(judgement == positive)
+        stmt_rt = select(target.label("node"))
+        stmt_rt = stmt_rt.join(cte_alias, cte_alias.c.node == source)
+        stmt_rt = stmt_rt.where(judgement == positive)
+        cte = cte.union(stmt_s, stmt_rs, stmt_rt)  # type: ignore
+
+        stmt = select(cte.c.node)
         connected = set([node])
-        if node in seen:
-            return connected
-        seen.add(node)
-        for edge in self.nodes.get(node, []):
-            if edge.judgement == Judgement.POSITIVE:
-                other = edge.other(node)
-                rec = self._traverse(other, seen)
-                connected.update(rec)
+        with ensure_tx(conn_) as conn:
+            for row in conn.execute(stmt).fetchall():
+                connected.add(Identifier(row.node))
+        self._connected_cache[node] = connected
         return connected
 
-    @lru_cache(maxsize=None)
-    def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._traverse(node, set())
-
-    def get_canonical(self, entity_id: StrIdent) -> str:
+    def get_canonical(self, entity_id: StrIdent, conn_: Conn = None) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)
-        best = max(self.connected(node))
+        best = max(self.connected(node, conn_=conn_))
         if best.canonical:
             return best.id
         return node.id
 
-    def canonicals(self) -> Generator[Identifier, None, None]:
+    def canonicals(self, _conn: Conn = None) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
-        for node in self.nodes.keys():
-            if not node.canonical:
-                continue
-            canonical = self.get_canonical(node)
-            if canonical == node.id:
-                yield node
+        col = func.distinct(self._table.c.target)
+        stmt = self._table.select(col.alias("node"))
+        stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        with ensure_tx(_conn) as conn:
+            rows = conn.execute(stmt).fetchall()
+            seen: Set[Identifier] = set()
+            for row in rows:
+                node = Identifier(row.node)
+                if not node.canonical or node in seen:
+                    continue
+                connected = self.connected(node, _conn=conn)
+                for linked in connected:
+                    if linked.canonical:
+                        seen.add(linked)
+                yield max(connected)
 
     def get_referents(
-        self, canonical_id: StrIdent, canonicals: bool = True
+        self, canonical_id: StrIdent, canonicals: bool = True, conn_: Conn = None
     ) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
         referents: Set[str] = set()
-        for connected in self.connected(node):
+        for connected in self.connected(node, conn_=conn_):
             if not canonicals and connected.canonical:
                 continue
             if connected == node:
@@ -74,45 +157,42 @@ class Resolver(Generic[CE]):
         return referents
 
     def get_resolved_edge(
-        self, left_id: StrIdent, right_id: StrIdent
+        self, left_id: StrIdent, right_id: StrIdent, conn_: Conn = None
     ) -> Optional[Edge]:
         (left, right) = Identifier.pair(left_id, right_id)
-        left_connected = self.connected(left)
-        right_connected = self.connected(right)
+        left_connected = self.connected(left, conn_=conn_)
+        right_connected = self.connected(right, conn_=conn_)
         for e in left_connected:
             for o in right_connected:
                 edge = self.edges.get(Identifier.pair(e, o))
-                if edge is None:
-                    continue
-                return edge
+                if edge is not None:
+                    return edge
         return None
 
-    def _pair_judgement(self, left: Identifier, right: Identifier) -> Judgement:
-        edge = self.edges.get(Identifier.pair(left, right))
+    def _pair_judgement(
+        self, left: Identifier, right: Identifier, conn_: Conn = None
+    ) -> Judgement:
+        edge = self.get_edge(left, right, conn_=conn_)
         if edge is not None:
             return edge.judgement
         return Judgement.NO_JUDGEMENT
 
-    def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
+    def get_judgement(
+        self, entity_id: StrIdent, other_id: StrIdent, conn_: Conn = None
+    ) -> Judgement:
         """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
         other = Identifier.get(other_id)
         if entity == other:
             return Judgement.POSITIVE
-        entity_connected = self.connected(entity)
+        entity_connected = self.connected(entity, conn_=conn_)
         if other in entity_connected:
             return Judgement.POSITIVE
 
-        # HACK: this would mark pairs only as unsure if the unsure judgement
-        # had been made on the current canonical combination:
-        # canon_edge = self._pair_judgement(max(entity_connected), max(other_connected))
-        # if canon_edge == Judgement.UNSURE:
-        #     return Judgement.UNSURE
-
-        other_connected = self.connected(other)
+        other_connected = self.connected(other, conn_=conn_)
         for e in entity_connected:
             for o in other_connected:
-                judgement = self._pair_judgement(e, o)
+                judgement = self._pair_judgement(e, o, conn_=conn_)
                 if judgement != Judgement.NO_JUDGEMENT:
                     return judgement
 
@@ -120,25 +200,32 @@ class Resolver(Generic[CE]):
             return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
-    def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
+    def check_candidate(
+        self, left: StrIdent, right: StrIdent, conn_: Conn = None
+    ) -> bool:
         """Check if the two IDs could be merged, i.e. if there's no existing
         judgement."""
-        judgement = self.get_judgement(left, right)
+        judgement = self.get_judgement(left, right, conn_=conn_)
         return judgement == Judgement.NO_JUDGEMENT
 
-    def _get_suggested(self) -> Generator[Edge, None, None]:
+    def _get_suggested(self, conn_: Conn = None) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
-        edges_all = self.edges.values()
-        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
-        cmp = lambda x: x.score or -1.0
-        yield from sorted(candidates, key=cmp, reverse=True)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.score != None)
+        stmt = stmt.order_by(self._table.c.score.desc())
+        with ensure_tx(conn_) as conn:
+            cursor = conn.execute(stmt)
+            while batch := cursor.fetchmany(25):
+                for row in batch:
+                    yield Edge.from_dict(row)
 
     def get_candidates(
-        self, limit: Optional[int] = None
+        self, limit: Optional[int] = None, conn_: Conn = None
     ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
         returned = 0
-        for edge in self._get_suggested():
-            if not self.check_candidate(edge.source, edge.target):
+        for edge in self._get_suggested(conn_=conn_):
+            if not self.check_candidate(edge.source, edge.target, conn_=conn_):
                 continue
             yield edge.target.id, edge.source.id, edge.score
             returned += 1
@@ -151,16 +238,22 @@ class Resolver(Generic[CE]):
         right_id: StrIdent,
         score: float,
         user: Optional[str] = None,
+        conn_: Conn = None,
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
         should make a decision about whether they are the same or not."""
-        edge = self.get_edge(left_id, right_id)
+        edge = self.get_edge(left_id, right_id, conn_=conn_)
         if edge is not None:
             if edge.judgement == Judgement.NO_JUDGEMENT:
                 edge.score = score
             return edge.target
         return self.decide(
-            left_id, right_id, Judgement.NO_JUDGEMENT, score=score, user=user
+            left_id,
+            right_id,
+            Judgement.NO_JUDGEMENT,
+            score=score,
+            user=user,
+            conn_=conn_,
         )
 
     def decide(
@@ -170,60 +263,80 @@ class Resolver(Generic[CE]):
         judgement: Judgement,
         user: Optional[str] = None,
         score: Optional[float] = None,
+        conn_: Conn = None,
     ) -> Identifier:
-        edge = self.get_edge(left_id, right_id)
+        edge = self.get_edge(left_id, right_id, conn_=conn_)
         if edge is None:
             edge = Edge(left_id, right_id, judgement=judgement)
 
         # Canonicalise positive matches, i.e. make both identifiers refer to a
         # canonical identifier, instead of making a direct link.
         if judgement == Judgement.POSITIVE:
-            connected = set(self.connected(edge.target))
-            connected.update(self.connected(edge.source))
+            connected = set(self.connected(edge.target, conn_=conn_))
+            connected.update(self.connected(edge.source, conn_=conn_))
             target = max(connected)
             if not target.canonical:
                 canonical = Identifier.make()
-                self._remove_edge(edge)
-                self.decide(edge.source, canonical, judgement=judgement, user=user)
-                self.decide(edge.target, canonical, judgement=judgement, user=user)
+                self._remove_edge(edge, conn_=conn_)
+                self.decide(
+                    edge.source, canonical, judgement=judgement, user=user, conn_=conn_
+                )
+                self.decide(
+                    edge.target, canonical, judgement=judgement, user=user, conn_=conn_
+                )
                 return canonical
 
         edge.judgement = judgement
         edge.timestamp = datetime.utcnow().isoformat()[:16]
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
-        self._register(edge)
-        self.connected.cache_clear()
+        self._register(edge, conn_=conn_)
+        self._clear_cache()
         return edge.target
 
-    def _register(self, edge: Edge) -> None:
+    def _register(self, edge: Edge, conn_: Conn = None) -> None:
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
-        self.edges[edge.key] = edge
-        self.nodes[edge.source].add(edge)
-        self.nodes[edge.target].add(edge)
+        istmt = upsert(self._table).values([edge.to_dict()])
+        values = dict(
+            judgement=istmt.excluded.judgement,
+            score=istmt.excluded.score,
+            user=istmt.excluded.user,
+            timestamp=istmt.excluded.timestamp,
+        )
+        stmt = istmt.on_conflict_do_update(
+            index_elements=["source_id", "target_id"], set_=values
+        )
+        with ensure_tx(conn_) as conn:
+            conn.execute(stmt)
 
-    def _remove_edge(self, edge: Edge) -> None:
+    def _remove_edge(self, edge: Edge, conn_: Conn = None) -> None:
         """Remove an edge from the graph."""
-        self.edges.pop(edge.key, None)
-        for node in (edge.source, edge.target):
-            if node in self.nodes:
-                self.nodes[node].discard(edge)
+        stmt = delete(self._table)
+        stmt = stmt.where(self._table.c.source == edge.source.id)
+        stmt = stmt.where(self._table.c.target == edge.target.id)
+        with ensure_tx(conn_) as conn:
+            conn.execute(stmt)
 
-    def _remove_node(self, node: Identifier) -> None:
+    def _remove_node(self, node: Identifier, conn_: Conn = None) -> None:
         """Remove a node from the graph."""
-        edges = self.nodes.get(node)
-        if edges is None:
-            return
-        for edge in list(edges):
-            if edge.judgement != Judgement.NO_JUDGEMENT:
-                self._remove_edge(edge)
+        stmt = delete(self._table)
+        cond = or_(
+            self._table.c.source == node.id,
+            self._table.c.target == node.id,
+        )
+        stmt = stmt.where(cond)
+        with ensure_tx(conn_) as conn:
+            conn.execute(stmt)
+
+    def _clear_cache(self) -> None:
+        self._connected_cache = {}
 
     def remove(self, node_id: StrIdent) -> None:
         """Remove all edges linking to the given node from the graph."""
         node = Identifier.get(node_id)
         self._remove_node(node)
-        self.connected.cache_clear()
+        self._clear_cache()
 
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
@@ -234,17 +347,18 @@ class Resolver(Generic[CE]):
         for part in self.connected(node):
             affected.add(str(part))
             self._remove_node(part)
-        self.connected.cache_clear()
+        self._clear_cache()
         return affected
 
     def prune(self) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
         highest score. This also checks if a transitive judgement has been
         established in the mean time and removes those candidates."""
-        for edge in list(self.edges.values()):
-            if edge.judgement == Judgement.NO_JUDGEMENT:
-                self._remove_edge(edge)
-        self.connected.cache_clear()
+        stmt = delete(self._table)
+        stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        with ensure_tx() as conn:
+            conn.execute(stmt)
+        self._clear_cache()
 
     def apply(self, proxy: CE) -> CE:
         """Replace all entity references in a given proxy with their canonical
@@ -261,44 +375,42 @@ class Resolver(Generic[CE]):
                 proxy.unsafe_add(prop, canonical, cleaned=True)
         return proxy
 
-    def save(self) -> None:
-        """Store the resolver adjacency list to a plain text JSON list."""
-        if self.path is None:
-            raise RuntimeError("Resolver has no path")
-        edges = sorted(self.edges.values())
-        with open(self.path, "w") as fh:
-            for edge in edges:
-                fh.write(edge.to_line())
+    def save(self, path: PathLike) -> None:
+        with ensure_tx() as conn:
+            with open(path, "w") as fh:
+                res = conn.execute(select(self._table))
+                while True:
+                    rows = res.fetchmany(10000)
+                    if rows is None or not len(rows):
+                        break
+                    for row in rows:
+                        edge = Edge.from_dict(row)
+                        line = edge.to_line()
+                        fh.write(f"{line}\n")
 
-    def merge(self, path: PathLike) -> None:
-        with open(path, "r") as fh:
-            while True:
-                line = fh.readline()
-                if not line:
-                    break
-                edge = Edge.from_line(line)
-                self.decide(
-                    edge.source,
-                    edge.target,
-                    judgement=edge.judgement,
-                    user=edge.user,
-                    score=edge.score,
-                )
+    def load(self, path: PathLike) -> None:
+        with ensure_tx() as conn:
+            with open(path, "r") as fh:
+                while True:
+                    line = fh.readline()
+                    if not line:
+                        break
+                    edge = Edge.from_line(line)
+                    self.decide(
+                        edge.source,
+                        edge.target,
+                        judgement=edge.judgement,
+                        user=edge.user,
+                        score=edge.score,
+                        conn_=conn,
+                    )
 
     @classmethod
-    def load(cls, path: Path) -> "Resolver[CE]":
-        resolver = cls(path=path)
-        if not path.exists():
-            return resolver
-        with open(path, "r") as fh:
-            while True:
-                line = fh.readline()
-                if not line:
-                    break
-                edge = Edge.from_line(line)
-                resolver._register(edge)
-        return resolver
+    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":
+        if engine is None:
+            engine = get_engine()
+        meta = MetaData(bind=engine)
+        return cls(engine, meta, create=True)
 
     def __repr__(self) -> str:
-        path = self.path.name if self.path is not None else ":memory:"
-        return f"<Resolver({path!r}, {len(self.edges)})>"
+        return f"<Resolver({self._table!r})>"

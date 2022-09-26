@@ -16,7 +16,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
-from nomenklatura.resolver.db import DatabaseResolver
+from nomenklatura.resolver.resolver import DatabaseResolver
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp

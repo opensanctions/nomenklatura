@@ -1,4 +1,3 @@
-import os
 import math
 import json
 import logging
@@ -35,8 +34,6 @@ def randomize_cache(days: int) -> timedelta:
 
 
 class Cache(object):
-    CACHE_PATH = os.environ.get("NOMENKLATURA_CACHE_PATH", ".nk_cache.db")
-
     def __init__(
         self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
     ) -> None:
@@ -45,14 +42,14 @@ class Cache(object):
         self._table = Table(
             "cache",
             metadata,
-            Column("key", Unicode(), index=True, nullable=False, unique=True),
+            Column("key", Unicode(), primary_key=True),
             Column("text", Unicode(), nullable=True),
             Column("dataset", Unicode(), nullable=False),
-            Column("timestamp", DateTime, index=True),
+            Column("timestamp", DateTime),
             extend_existing=True,
         )
         if create:
-            metadata.create_all(checkfirst=True)
+            metadata.create_all(bind=engine, checkfirst=True)
 
         self._preload: Dict[str, CacheValue] = {}
 
@@ -144,7 +141,8 @@ class Cache(object):
         return hash((self._engine, self._table.name))
 
     @classmethod
-    def make_default(cls, dataset: DS) -> "Cache":
-        engine = get_engine()
-        meta = get_metadata()
+    def make_default(cls, dataset: DS, engine: Optional[Engine] = None) -> "Cache":
+        if engine is None:
+            engine = get_engine()
+        meta = MetaData(bind=engine)
         return cls(engine, meta, dataset, create=True)

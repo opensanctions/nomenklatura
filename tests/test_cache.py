@@ -1,15 +1,10 @@
-from pathlib import Path
-from tempfile import mkdtemp
-
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 
-Cache.CACHE_PATH = Path(mkdtemp()) / "test.sqlite3"
 
-
-def test_cache():
+def test_cache(engine):
     ds = Dataset("test", "Test Case")
-    cache = Cache.make_default(ds)
+    cache = Cache.make_default(ds, engine=engine)
     res = cache.get("name")
     assert res is None, res
     assert not cache.has("name")
@@ -34,16 +29,16 @@ def test_cache():
     cache.close()
 
 
-def test_cache_utils():
+def test_cache_utils(engine):
     ds = Dataset("test", "Test Case")
-    cache = Cache.make_default(ds)
-    assert "test.sqlite" in repr(cache)
+    cache = Cache.make_default(ds, engine=engine)
+    assert "memory" in repr(cache)
     assert hash(cache) != 0
 
 
-def test_preload_cache():
+def test_preload_cache(engine):
     ds = Dataset("test", "Test Case")
-    cache = Cache.make_default(ds)
+    cache = Cache.make_default(ds, engine=engine)
     res = cache.get("name")
     cache.set("name", "TestCase")
     assert len(cache._preload) == 0, cache._preload
