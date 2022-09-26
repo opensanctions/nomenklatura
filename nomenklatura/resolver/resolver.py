@@ -6,7 +6,7 @@ from sqlalchemy import MetaData, or_, alias, func
 from sqlalchemy import Table, Column, Unicode, Float
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import select
-from sqlalchemy.sql.expression import delete
+from sqlalchemy.sql.expression import delete, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.entity import CE
@@ -25,24 +25,12 @@ class Resolver(Generic[CE]):
         self, engine: Engine, metadata: MetaData, create: bool = False
     ) -> None:
         self._connected_cache: Dict[Identifier, Set[Identifier]] = {}
-        self._engine = engine
+        self.bind = engine
         self._table = Table(
-            "resolverxxx",
+            "resolver",
             metadata,
-            Column(
-                "target",
-                Unicode(512),
-                index=True,
-                nullable=False,
-                primary_key=True,
-            ),
-            Column(
-                "source",
-                Unicode(512),
-                index=True,
-                nullable=False,
-                primary_key=True,
-            ),
+            Column("target", Unicode(512), index=True, primary_key=True),
+            Column("source", Unicode(512), index=True, primary_key=True),
             Column("judgement", Unicode(14), nullable=False),
             Column("score", Float, nullable=True),
             Column("user", Unicode(512), nullable=False),
@@ -50,7 +38,7 @@ class Resolver(Generic[CE]):
             extend_existing=True,
         )
         if create:
-            metadata.create_all(bind=engine, checkfirst=True)
+            metadata.create_all(bind=self.bind, checkfirst=True)
 
     def get_edge(
         self, left_id: StrIdent, right_id: StrIdent, conn_: Conn = None
@@ -59,7 +47,7 @@ class Resolver(Generic[CE]):
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.target == key[0].id)
         stmt = stmt.where(self._table.c.source == key[1].id)
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             res = conn.execute(stmt).fetchone()
             if res is None:
                 return None
@@ -68,21 +56,21 @@ class Resolver(Generic[CE]):
     def connected(self, node: Identifier, conn_: Conn = None) -> Set[Identifier]:
         """
         WITH RECURSIVE connected AS (
-            SELECT r.target_id AS node_id
+            SELECT r.target AS node_id
                 FROM resolver r
-                WHERE r.source_id = 'Q7747' AND r.judgement = 'positive'
+                WHERE r.source = 'Q7747' AND r.judgement = 'positive'
             UNION
-            SELECT r.source_id AS node_id
+            SELECT r.source AS node_id
                 FROM resolver r
-                WHERE r.target_id = 'Q7747' AND r.judgement = 'positive'
+                WHERE r.target = 'Q7747' AND r.judgement = 'positive'
             UNION
-            SELECT r.source_id AS node_id
+            SELECT r.source AS node_id
                 FROM connected c LEFT JOIN resolver r
-                WHERE r.target_id = c.node_id AND r.judgement = 'positive'
+                WHERE r.target = c.node_id AND r.judgement = 'positive'
             UNION
             SELECT r.target_id AS node_id
                 FROM connected c LEFT JOIN resolver r
-                WHERE r.source_id = c.node_id AND r.judgement = 'positive'
+                WHERE r.source = c.node_id AND r.judgement = 'positive'
         )
         SELECT node_id FROM connected;
         """
@@ -109,7 +97,7 @@ class Resolver(Generic[CE]):
 
         stmt = select(cte.c.node)
         connected = set([node])
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             for row in conn.execute(stmt).fetchall():
                 connected.add(Identifier(row.node))
         self._connected_cache[node] = connected
@@ -123,19 +111,20 @@ class Resolver(Generic[CE]):
             return best.id
         return node.id
 
-    def canonicals(self, _conn: Conn = None) -> Generator[Identifier, None, None]:
+    def canonicals(self, conn_: Conn = None) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
         col = func.distinct(self._table.c.target)
-        stmt = self._table.select(col.alias("node"))
+        # stmt = self._table.select(col.alias("node"))
+        stmt = select(col.label("node"))
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
-        with ensure_tx(_conn) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             rows = conn.execute(stmt).fetchall()
             seen: Set[Identifier] = set()
             for row in rows:
                 node = Identifier(row.node)
                 if not node.canonical or node in seen:
                     continue
-                connected = self.connected(node, _conn=conn)
+                connected = self.connected(node, conn_=conn)
                 for linked in connected:
                     if linked.canonical:
                         seen.add(linked)
@@ -214,7 +203,7 @@ class Resolver(Generic[CE]):
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
         stmt = stmt.where(self._table.c.score != None)
         stmt = stmt.order_by(self._table.c.score.desc())
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             cursor = conn.execute(stmt)
             while batch := cursor.fetchmany(25):
                 for row in batch:
@@ -242,19 +231,25 @@ class Resolver(Generic[CE]):
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
         should make a decision about whether they are the same or not."""
-        edge = self.get_edge(left_id, right_id, conn_=conn_)
-        if edge is not None:
-            if edge.judgement == Judgement.NO_JUDGEMENT:
-                edge.score = score
-            return edge.target
-        return self.decide(
-            left_id,
-            right_id,
-            Judgement.NO_JUDGEMENT,
-            score=score,
-            user=user,
-            conn_=conn_,
-        )
+        with ensure_tx(self.bind, conn_) as conn:
+            edge = self.get_edge(left_id, right_id, conn_=conn)
+            if edge is not None:
+                if edge.judgement == Judgement.NO_JUDGEMENT:
+                    stmt = update(self._table)
+                    stmt = stmt.where(self._table.c.target == edge.target.id)
+                    stmt = stmt.where(self._table.c.source == edge.source.id)
+                    stmt = stmt.values({"score": score})
+                    conn.execute(stmt)
+                    edge.score = score
+                return edge.target
+            return self.decide(
+                left_id,
+                right_id,
+                Judgement.NO_JUDGEMENT,
+                score=score,
+                user=user,
+                conn_=conn,
+            )
 
     def decide(
         self,
@@ -265,34 +260,43 @@ class Resolver(Generic[CE]):
         score: Optional[float] = None,
         conn_: Conn = None,
     ) -> Identifier:
-        edge = self.get_edge(left_id, right_id, conn_=conn_)
-        if edge is None:
-            edge = Edge(left_id, right_id, judgement=judgement)
+        with ensure_tx(self.bind, conn_) as conn:
+            edge = self.get_edge(left_id, right_id, conn_=conn)
+            if edge is None:
+                edge = Edge(left_id, right_id, judgement=judgement)
 
-        # Canonicalise positive matches, i.e. make both identifiers refer to a
-        # canonical identifier, instead of making a direct link.
-        if judgement == Judgement.POSITIVE:
-            connected = set(self.connected(edge.target, conn_=conn_))
-            connected.update(self.connected(edge.source, conn_=conn_))
-            target = max(connected)
-            if not target.canonical:
-                canonical = Identifier.make()
-                self._remove_edge(edge, conn_=conn_)
-                self.decide(
-                    edge.source, canonical, judgement=judgement, user=user, conn_=conn_
-                )
-                self.decide(
-                    edge.target, canonical, judgement=judgement, user=user, conn_=conn_
-                )
-                return canonical
+            # Canonicalise positive matches, i.e. make both identifiers refer to a
+            # canonical identifier, instead of making a direct link.
+            if judgement == Judgement.POSITIVE:
+                connected = set(self.connected(edge.target, conn_=conn))
+                connected.update(self.connected(edge.source, conn_=conn))
+                target = max(connected)
+                if not target.canonical:
+                    canonical = Identifier.make()
+                    self._remove_edge(edge, conn_=conn)
+                    self.decide(
+                        edge.source,
+                        canonical,
+                        judgement=judgement,
+                        user=user,
+                        conn_=conn,
+                    )
+                    self.decide(
+                        edge.target,
+                        canonical,
+                        judgement=judgement,
+                        user=user,
+                        conn_=conn,
+                    )
+                    return canonical
 
-        edge.judgement = judgement
-        edge.timestamp = datetime.utcnow().isoformat()[:16]
-        edge.user = user or getpass.getuser()
-        edge.score = score or edge.score
-        self._register(edge, conn_=conn_)
-        self._clear_cache()
-        return edge.target
+            edge.judgement = judgement
+            edge.timestamp = datetime.utcnow().isoformat()[:16]
+            edge.user = user or getpass.getuser()
+            edge.score = score or edge.score
+            self._register(edge, conn_=conn)
+            self._clear_cache()
+            return edge.target
 
     def _register(self, edge: Edge, conn_: Conn = None) -> None:
         if edge.judgement != Judgement.NO_JUDGEMENT:
@@ -305,9 +309,9 @@ class Resolver(Generic[CE]):
             timestamp=istmt.excluded.timestamp,
         )
         stmt = istmt.on_conflict_do_update(
-            index_elements=["source_id", "target_id"], set_=values
+            index_elements=["source", "target"], set_=values
         )
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             conn.execute(stmt)
 
     def _remove_edge(self, edge: Edge, conn_: Conn = None) -> None:
@@ -315,7 +319,7 @@ class Resolver(Generic[CE]):
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.source == edge.source.id)
         stmt = stmt.where(self._table.c.target == edge.target.id)
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             conn.execute(stmt)
 
     def _remove_node(self, node: Identifier, conn_: Conn = None) -> None:
@@ -326,7 +330,7 @@ class Resolver(Generic[CE]):
             self._table.c.target == node.id,
         )
         stmt = stmt.where(cond)
-        with ensure_tx(conn_) as conn:
+        with ensure_tx(self.bind, conn_) as conn:
             conn.execute(stmt)
 
     def _clear_cache(self) -> None:
@@ -356,7 +360,7 @@ class Resolver(Generic[CE]):
         established in the mean time and removes those candidates."""
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
-        with ensure_tx() as conn:
+        with ensure_tx(self.bind) as conn:
             conn.execute(stmt)
         self._clear_cache()
 
@@ -376,7 +380,7 @@ class Resolver(Generic[CE]):
         return proxy
 
     def save(self, path: PathLike) -> None:
-        with ensure_tx() as conn:
+        with ensure_tx(self.bind) as conn:
             with open(path, "w") as fh:
                 res = conn.execute(select(self._table))
                 while True:
@@ -386,10 +390,10 @@ class Resolver(Generic[CE]):
                     for row in rows:
                         edge = Edge.from_dict(row)
                         line = edge.to_line()
-                        fh.write(f"{line}\n")
+                        fh.write(line)
 
     def load(self, path: PathLike) -> None:
-        with ensure_tx() as conn:
+        with ensure_tx(self.bind) as conn:
             with open(path, "r") as fh:
                 while True:
                     line = fh.readline()

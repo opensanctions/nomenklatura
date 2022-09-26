@@ -39,5 +39,5 @@ def dindex(dloader):
 
 @pytest.fixture(scope="function")
 def engine():
-    # return create_engine("sqlite:///:memory:")
-    return create_engine("sqlite:///%s" % DB_PATH.resolve().as_posix())
+    return create_engine("sqlite:///:memory:")
+    # return create_engine("sqlite:///%s" % DB_PATH.resolve().as_posix())

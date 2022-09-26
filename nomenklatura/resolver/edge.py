@@ -33,8 +33,8 @@ class Edge(object):
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "target_id": self.target.id,
-            "source_id": self.source.id,
+            "target": self.target.id,
+            "source": self.source.id,
             "judgement": self.judgement.value,
             "score": self.score,
             "user": self.user,
@@ -82,8 +82,8 @@ class Edge(object):
     @classmethod
     def from_dict(cls, data: Union[Row, Dict[str, Any]]) -> "Edge":
         return cls(
-            left_id=data["target_id"],
-            right_id=data["source_id"],
+            left_id=data["target"],
+            right_id=data["source"],
             judgement=Judgement(data["judgement"]),
             score=data["score"],
             user=data["user"],

@@ -81,14 +81,12 @@ def test_resolver_store(engine):
         resolver.suggest("a1", "c1", 7.0)
         resolver.save(path)
 
-        other = resolver.load(path)
-        assert len(other.edges) == len(resolver.edges)
+        resolver.load(path)
         assert resolver.get_edge("a1", "c1").score == 7.0
 
 
 def test_resolver_candidates(engine):
     resolver = Resolver.make_default(engine=engine)
-    raise TypeError("%r" % resolver)
     resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
     resolver.suggest("a1", "b2", 7.0)

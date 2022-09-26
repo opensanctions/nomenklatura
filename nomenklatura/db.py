@@ -13,6 +13,7 @@ Conn = Optional[Connection]
 
 @cache
 def get_engine() -> Engine:
+    raise RuntimeError(" I DO NOT WANT TO BE CALLED ")
     return create_engine(DB_URL)
 
 
@@ -22,10 +23,9 @@ def get_metadata() -> MetaData:
 
 
 @contextmanager
-def ensure_tx(conn: Conn = None) -> Generator[Connection, None, None]:
+def ensure_tx(engine: Engine, conn: Conn = None) -> Generator[Connection, None, None]:
     if conn is not None:
         yield conn
         return
-    engine = get_engine()
     with engine.begin() as conn:
         yield conn
