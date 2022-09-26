@@ -2,28 +2,28 @@ import getpass
 from pathlib import Path
 from datetime import datetime
 from functools import lru_cache
-from collections import defaultdict
-from sqlite3 import connect
-from typing import Dict, Generator, Generic, List, Optional, Set, Tuple
+from typing import Generator, Optional, Set, Tuple
 from followthemoney.types import registry
-from sqlalchemy import MetaData, create_engine, or_, alias, func
-from sqlalchemy import Table, Column, DateTime, Unicode, Float
+from sqlalchemy import MetaData, or_, alias, func
+from sqlalchemy import Table, Column, Unicode, Float
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
 from sqlalchemy.dialects.postgresql import insert as upsert
 
-
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.db import get_engine, get_metadata, ensure_tx, Conn
-from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
+from nomenklatura.resolver.identifier import Identifier, StrIdent
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.resolver import Resolver
 from nomenklatura.util import PathLike, is_qid
 
 
 class DatabaseResolver(Resolver[CE]):
+    """A graph of entity identity judgements, used to compute connected components
+    to determine canonical IDs for entities."""
+
     def __init__(
         self, engine: Engine, metadata: MetaData, create: bool = False
     ) -> None:
@@ -98,7 +98,7 @@ class DatabaseResolver(Resolver[CE]):
         stmt_rt = select(target.label("node"))
         stmt_rt = stmt_rt.join(cte_alias, cte_alias.c.node == source)
         stmt_rt = stmt_rt.where(judgement == positive)
-        cte = cte.union(stmt_s, stmt_rs, stmt_rt)
+        cte = cte.union(stmt_s, stmt_rs, stmt_rt)  # type: ignore
 
         stmt = select(cte.c.node)
         connected = set([node])
@@ -322,23 +322,23 @@ class DatabaseResolver(Resolver[CE]):
         with ensure_tx(conn_) as conn:
             conn.execute(stmt)
 
-    # def remove(self, node_id: StrIdent) -> None:
-    #     """Remove all edges linking to the given node from the graph."""
-    #     node = Identifier.get(node_id)
-    #     self._remove_node(node)
-    #     self.connected.cache_clear()
+    def remove(self, node_id: StrIdent) -> None:
+        """Remove all edges linking to the given node from the graph."""
+        node = Identifier.get(node_id)
+        self._remove_node(node)
+        self.connected.cache_clear()
 
-    # def explode(self, node_id: StrIdent) -> Set[str]:
-    #     """Dissolve all edges linked to the cluster to which the node belongs.
-    #     This is the hard way to make sure we re-do context once we realise
-    #     there's been a mistake."""
-    #     node = Identifier.get(node_id)
-    #     affected: Set[str] = set()
-    #     for part in self.connected(node):
-    #         affected.add(str(part))
-    #         self._remove_node(part)
-    #     self.connected.cache_clear()
-    #     return affected
+    def explode(self, node_id: StrIdent) -> Set[str]:
+        """Dissolve all edges linked to the cluster to which the node belongs.
+        This is the hard way to make sure we re-do context once we realise
+        there's been a mistake."""
+        node = Identifier.get(node_id)
+        affected: Set[str] = set()
+        for part in self.connected(node):
+            affected.add(str(part))
+            self._remove_node(part)
+        self.connected.cache_clear()
+        return affected
 
     def prune(self) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
@@ -350,20 +350,20 @@ class DatabaseResolver(Resolver[CE]):
             conn.execute(stmt)
         self.connected.cache_clear()
 
-    # def apply(self, proxy: CE) -> CE:
-    #     """Replace all entity references in a given proxy with their canonical
-    #     identifiers. This is essentially the harmonisation post de-dupe."""
-    #     canonical_id = self.get_canonical(proxy.id)
-    #     if canonical_id != proxy.id:
-    #         proxy.referents = self.get_referents(canonical_id)
-    #         proxy.id = canonical_id
-    #     for prop in proxy.iterprops():
-    #         if prop.type != registry.entity:
-    #             continue
-    #         for value in proxy.pop(prop):
-    #             canonical = self.get_canonical(value)
-    #             proxy.unsafe_add(prop, canonical, cleaned=True)
-    #     return proxy
+    def apply(self, proxy: CE) -> CE:
+        """Replace all entity references in a given proxy with their canonical
+        identifiers. This is essentially the harmonisation post de-dupe."""
+        canonical_id = self.get_canonical(proxy.id)
+        if canonical_id != proxy.id:
+            proxy.referents = self.get_referents(canonical_id)
+            proxy.id = canonical_id
+        for prop in proxy.iterprops():
+            if prop.type != registry.entity:
+                continue
+            for value in proxy.pop(prop):
+                canonical = self.get_canonical(value)
+                proxy.unsafe_add(prop, canonical, cleaned=True)
+        return proxy
 
     def save(self) -> None:
         raise NotImplemented
