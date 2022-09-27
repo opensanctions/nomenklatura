@@ -59,13 +59,10 @@ class MemoryLoader(Loader[DS, CE]):
     """Load entities from the given iterable of entities."""
 
     def __init__(
-        self,
-        dataset: DS,
-        entities: Iterable[CE],
-        resolver: Optional[Resolver[CE]] = None,
+        self, dataset: DS, entities: Iterable[CE], resolver: Resolver[CE]
     ) -> None:
         super().__init__(dataset)
-        self.resolver = resolver or Resolver[CE]()
+        self.resolver = resolver
         self.entities: Dict[str, CE] = {}
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
@@ -107,9 +104,7 @@ class MemoryLoader(Loader[DS, CE]):
 class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
     """Read a given file path into an in-memory entity loader."""
 
-    def __init__(
-        self, path: Path, resolver: Optional[Resolver[CompositeEntity]] = None
-    ) -> None:
+    def __init__(self, path: Path, resolver: Resolver[CompositeEntity]) -> None:
         dataset = Dataset(path.stem, path.stem)
         entities = self.read_file(dataset, path)
         super().__init__(dataset, entities, resolver=resolver)

@@ -1,13 +1,11 @@
-import os
 import math
 import json
 import logging
-from pathlib import Path
 from random import randint
 from dataclasses import dataclass
 from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import select
@@ -15,6 +13,7 @@ from sqlalchemy.sql.expression import delete
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
+from nomenklatura.db import get_engine, get_metadata
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -35,8 +34,6 @@ def randomize_cache(days: int) -> timedelta:
 
 
 class Cache(object):
-    CACHE_PATH = os.environ.get("NOMENKLATURA_CACHE_PATH", ".nk_cache.db")
-
     def __init__(
         self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
     ) -> None:
@@ -45,14 +42,14 @@ class Cache(object):
         self._table = Table(
             "cache",
             metadata,
-            Column("key", Unicode(), index=True, nullable=False, unique=True),
+            Column("key", Unicode(), primary_key=True),
             Column("text", Unicode(), nullable=True),
             Column("dataset", Unicode(), nullable=False),
-            Column("timestamp", DateTime, index=True),
+            Column("timestamp", DateTime),
             extend_existing=True,
         )
         if create:
-            metadata.create_all(checkfirst=True)
+            metadata.create_all(bind=engine, checkfirst=True)
 
         self._preload: Dict[str, CacheValue] = {}
 
@@ -144,9 +141,8 @@ class Cache(object):
         return hash((self._engine, self._table.name))
 
     @classmethod
-    def make_default(cls, dataset: DS) -> "Cache":
-        path = Path(cls.CACHE_PATH).resolve()
-        db_uri = f"sqlite:///{path.as_posix()}"
-        engine = create_engine(db_uri)
-        metadata = MetaData(bind=engine)
-        return cls(engine, metadata, dataset, create=True)
+    def make_default(cls, dataset: DS, engine: Optional[Engine] = None) -> "Cache":
+        if engine is None:
+            engine = get_engine()
+        meta = MetaData(bind=engine)
+        return cls(engine, meta, dataset, create=True)
