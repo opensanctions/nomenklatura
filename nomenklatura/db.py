@@ -13,7 +13,6 @@ Conn = Optional[Connection]
 
 @cache
 def get_engine() -> Engine:
-    raise RuntimeError(" I DO NOT WANT TO BE CALLED ")
     return create_engine(DB_URL)
 
 

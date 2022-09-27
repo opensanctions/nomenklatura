@@ -148,15 +148,16 @@ class Resolver(Generic[CE]):
     def get_resolved_edge(
         self, left_id: StrIdent, right_id: StrIdent, conn_: Conn = None
     ) -> Optional[Edge]:
-        (left, right) = Identifier.pair(left_id, right_id)
-        left_connected = self.connected(left, conn_=conn_)
-        right_connected = self.connected(right, conn_=conn_)
-        for e in left_connected:
-            for o in right_connected:
-                edge = self.edges.get(Identifier.pair(e, o))
-                if edge is not None:
-                    return edge
-        return None
+        with ensure_tx(self.bind, conn_) as conn:
+            (left, right) = Identifier.pair(left_id, right_id)
+            left_connected = self.connected(left, conn_=conn)
+            right_connected = self.connected(right, conn_=conn)
+            for e in left_connected:
+                for o in right_connected:
+                    edge = self.get_edge(e, o, conn_=conn)
+                    if edge is not None:
+                        return edge
+            return None
 
     def _pair_judgement(
         self, left: Identifier, right: Identifier, conn_: Conn = None
