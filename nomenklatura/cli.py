@@ -93,8 +93,7 @@ def apply(path: Path, outpath: Path, resolver: Optional[Path]) -> None:
     resolver_ = _get_resolver(path, resolver)
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, Entity):
-            proxy = resolver_.apply(proxy)
-            write_entity(outfh, proxy)
+            write_entity(outfh, resolver_.apply(proxy))
 
 
 @cli.command("sorted-aggregate", help="Merge sort-order entities")
