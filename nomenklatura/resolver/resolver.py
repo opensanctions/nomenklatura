@@ -37,7 +37,7 @@ class Resolver(Generic[CE]):
                 connected.update(rec)
         return connected
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=500000)
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
