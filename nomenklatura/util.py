@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 import os
 from pathlib import Path
@@ -25,3 +26,8 @@ def normalize_url(url: str, params: ParamsType = None) -> str:
         query.extend(sorted(values))
     parsed = parsed._replace(query=urlencode(query))
     return urlunparse(parsed)
+
+
+def iso_datetime(value: str) -> datetime:
+    """Parse datetime from standardized date string"""
+    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
