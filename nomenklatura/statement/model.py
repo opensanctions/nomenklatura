@@ -1,6 +1,23 @@
 import hashlib
 from datetime import datetime
-from typing import Optional, TypedDict
+from typing import Generator, Optional, Type, TypeVar, TypedDict
+
+from nomenklatura.entity import CE
+
+S = TypeVar("S", bound="Statement")
+
+#
+# Candidates for columns:
+# * language/locale
+# * original_value
+# * transformer
+# * source_url
+# * confidence (wikidata rank)
+#
+# Get rid of:
+# * target
+# * last_seen/first_seen -> timestamp
+#
 
 
 class StatementDict(TypedDict):
@@ -106,7 +123,7 @@ class Statement(object):
         return hashlib.sha1(key.encode("utf-8")).hexdigest()
 
     @classmethod
-    def from_dict(cls, data: StatementDict) -> "Statement":
+    def from_dict(cls: Type[S], data: StatementDict) -> S:
         return cls(
             entity_id=data["entity_id"],
             prop=data["prop"],
@@ -121,3 +138,39 @@ class Statement(object):
             canonical_id=data.get("canonical_id", None),
             last_seen=data.get("last_seen", None),
         )
+
+    @classmethod
+    def from_entity(
+        cls: Type[S],
+        entity: CE,
+        dataset: str,
+        first_seen: Optional[datetime],
+        last_seen: Optional[datetime],
+        target: Optional[bool] = None,
+        external: Optional[bool] = None,
+    ) -> Generator[S, None, None]:
+        yield cls(
+            entity_id=entity.id,
+            prop=cls.BASE,
+            prop_type=cls.BASE,
+            schema=entity.schema.name,
+            value=entity.id,
+            dataset=dataset,
+            target=target,
+            external=external,
+            first_seen=first_seen,
+            last_seen=last_seen,
+        )
+        for prop, value in entity.itervalues():
+            yield cls(
+                entity_id=entity.id,
+                prop=prop.name,
+                prop_type=prop.type.name,
+                schema=entity.schema.name,
+                value=value,
+                dataset=dataset,
+                target=target,
+                external=external,
+                first_seen=first_seen,
+                last_seen=last_seen,
+            )
