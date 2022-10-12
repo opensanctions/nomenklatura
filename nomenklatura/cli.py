@@ -109,10 +109,10 @@ def apply(
 
 
 @cli.command("sorted-aggregate", help="Merge sort-order entities")
-@click.argument("path", type=InPath)
-@click.option("-o", "--outpath", type=OutPath, default="-")
-def sorted_aggregate_(path: Path, outpath: Path) -> None:
-    sorted_aggregate(path, outpath, Entity)
+@click.option("-i", "--infile", type=InPath, default="-")
+@click.option("-o", "--outfile", type=OutPath, default="-")
+def sorted_aggregate_(infile: Path, outfile: Path) -> None:
+    sorted_aggregate(infile, outfile, Entity)
 
 
 @cli.command("make-sortable", help="Convert entities into plain-text sortable form")
