@@ -249,7 +249,7 @@ class Resolver(Generic[CE]):
     def apply(self, proxy: CE) -> CE:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
-        canonical_id = str(self.get_canonical(proxy.id))
+        canonical_id = self.get_canonical(proxy.id)
         if canonical_id != proxy.id:
             proxy.referents = set(self.get_referents(canonical_id))
             proxy.id = canonical_id
@@ -257,7 +257,7 @@ class Resolver(Generic[CE]):
             if prop.type != registry.entity:
                 continue
             for value in proxy.pop(prop):
-                canonical = str(self.get_canonical(value))
+                canonical = self.get_canonical(value)
                 proxy.unsafe_add(prop, canonical, cleaned=True)
         return proxy
 

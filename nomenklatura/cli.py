@@ -85,15 +85,27 @@ def xref_prune(resolver: Path) -> None:
     resolver_.save()
 
 
-@cli.command("apply", help="Output merged entities")
+@cli.command("apply", help="Apply resolver to an entity stream")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option(
+    "-d",
+    "--dataset",
+    type=str,
+    default=None,
+    help="Add a dataset to the entity metadata",
+)
 @click.option("-r", "--resolver", required=True, type=ResPath)
-def apply(path: Path, outpath: Path, resolver: Optional[Path]) -> None:
+def apply(
+    path: Path, outpath: Path, resolver: Optional[Path], dataset: Optional[str] = None
+) -> None:
     resolver_ = _get_resolver(path, resolver)
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, Entity):
-            write_entity(outfh, resolver_.apply(proxy))
+            proxy = resolver_.apply(proxy)
+            if dataset is not None:
+                proxy.datasets.add(dataset)
+            write_entity(outfh, proxy)
 
 
 @cli.command("sorted-aggregate", help="Merge sort-order entities")
