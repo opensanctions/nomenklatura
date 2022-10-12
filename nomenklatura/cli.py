@@ -221,5 +221,19 @@ def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
             outfh.write(out)
 
 
+@cli.command("entity-statements", help="Export entities to statements")
+@click.argument("path", type=InPath)
+@click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-d", "--dataset", type=str, required=True)
+def entity_statements(path: Path, outpath: Path, dataset: str) -> None:
+    with path_writer(outpath) as outfh:
+        for entity in path_entities(path, Entity):
+            record = senzing_record(dataset, entity)
+            if record is None:
+                continue
+            out = orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
+            outfh.write(out)
+
+
 if __name__ == "__main__":
     cli()
