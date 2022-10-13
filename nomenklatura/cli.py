@@ -4,7 +4,7 @@ import click
 import logging
 import asyncio
 from pathlib import Path
-from typing import Iterable, Optional, Tuple
+from typing import Generator, Iterable, Optional, Tuple
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
@@ -226,13 +226,15 @@ def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-d", "--dataset", type=str, required=True)
 def entity_statements(path: Path, outpath: Path, dataset: str) -> None:
-    with path_writer(outpath) as outfh:
+    from nomenklatura.statements import Statement
+    from nomenklatura.statements.convert import write_json_statements
+
+    def make_statements() -> Generator[Statement, None, None]:
         for entity in path_entities(path, Entity):
-            record = senzing_record(dataset, entity)
-            if record is None:
-                continue
-            out = orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
-            outfh.write(out)
+            yield from Statement.from_entity(entity, dataset=dataset)
+
+    with path_writer(outpath) as outfh:
+        write_json_statements(outfh, make_statements())
 
 
 if __name__ == "__main__":
