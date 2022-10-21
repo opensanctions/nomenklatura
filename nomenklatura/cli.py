@@ -16,6 +16,8 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
+from nomenklatura.statement import Statement, CSV, FORMATS
+from nomenklatura.statement import read_statements, write_statements
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp
@@ -221,20 +223,18 @@ def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
             outfh.write(out)
 
 
-@cli.command("entity-statements", help="Export entities to statements")
+@cli.command("statements", help="Export entities to statements")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-d", "--dataset", type=str, required=True)
-def entity_statements(path: Path, outpath: Path, dataset: str) -> None:
-    from nomenklatura.statements import Statement
-    from nomenklatura.statements.convert import write_json_statements
-
+@click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
+def entity_statements(path: Path, outpath: Path, dataset: str, format: str) -> None:
     def make_statements() -> Generator[Statement, None, None]:
         for entity in path_entities(path, Entity):
             yield from Statement.from_entity(entity, dataset=dataset)
 
     with path_writer(outpath) as outfh:
-        write_json_statements(outfh, make_statements())
+        write_statements(outfh, format, make_statements())
 
 
 if __name__ == "__main__":

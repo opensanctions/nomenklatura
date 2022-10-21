@@ -1,9 +1,9 @@
 import hashlib
 from datetime import datetime
-from typing import Dict, Generator, Optional, Type, TypeVar, TypedDict
+from typing import cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
 from nomenklatura.entity import CE
-from nomenklatura.statements.util import (
+from nomenklatura.statement.util import (
     bool_text,
     datetime_iso,
     iso_datetime,
@@ -99,22 +99,6 @@ class Statement(object):
             id = self.make_key(dataset, entity_id, prop, value, external)
         self.id = id
 
-    def to_row(self) -> Dict[str, Optional[str]]:
-        return {
-            "canonical_id": self.canonical_id,
-            "entity_id": self.entity_id,
-            "prop": self.prop,
-            "prop_type": self.prop_type,
-            "schema": self.schema,
-            "value": self.value,
-            "dataset": self.dataset,
-            "first_seen": datetime_iso(self.first_seen),
-            "last_seen": datetime_iso(self.last_seen),
-            "target": bool_text(self.target),
-            "external": bool_text(self.external),
-            "id": self.id,
-        }
-
     def to_dict(self) -> StatementDict:
         return {
             "canonical_id": self.canonical_id,
@@ -130,6 +114,19 @@ class Statement(object):
             "external": self.external,
             "id": self.id,
         }
+
+    def to_row(self) -> Dict[str, Optional[str]]:
+        data = cast(Dict[str, str], self.to_dict())
+        return {
+            **data,
+            "first_seen": datetime_iso(self.first_seen),
+            "last_seen": datetime_iso(self.last_seen),
+            "target": bool_text(self.target),
+            "external": bool_text(self.external),
+        }
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
     @classmethod
     def make_key(

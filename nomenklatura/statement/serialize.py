@@ -1,10 +1,14 @@
 import csv
-from io import TextIOWrapper
 import orjson
+from io import TextIOWrapper
 from typing import BinaryIO, Generator, Iterable, Type
-from nomenklatura.statements.model import S
-
 from followthemoney.cli.util import MAX_LINE
+
+from nomenklatura.statement.model import S
+
+JSON = "json"
+CSV = "csv"
+FORMATS = [JSON, CSV]
 
 CSV_COLUMNS = [
     "canonical_id",
@@ -26,17 +30,6 @@ CSV_COLUMNS = [
 # nk migrate/validate
 
 
-def write_json_statement(fh: BinaryIO, statement: S) -> None:
-    data = statement.to_dict()
-    out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
-    fh.write(out)
-
-
-def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-    for stmt in statements:
-        write_json_statement(fh, stmt)
-
-
 def read_json_statements(
     fh: BinaryIO,
     statement_type: Type[S],
@@ -55,6 +48,26 @@ def read_csv_statements(
         yield statement_type.from_row(row)
 
 
+def read_statements(
+    fh: BinaryIO, format: str, statement_type: Type[S]
+) -> Generator[S, None, None]:
+    if format == CSV:
+        yield from read_csv_statements(fh, statement_type)
+    else:
+        yield from read_json_statements(fh, statement_type)
+
+
+def write_json_statement(fh: BinaryIO, statement: S) -> None:
+    data = statement.to_dict()
+    out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
+    fh.write(out)
+
+
+def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
+    for stmt in statements:
+        write_json_statement(fh, stmt)
+
+
 def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
     wrapped = TextIOWrapper(fh, encoding="utf-8")
     writer = csv.writer(wrapped, dialect=csv.unix_dialect)
@@ -62,3 +75,10 @@ def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
     for stmt in statements:
         row = stmt.to_row()
         writer.writerow([row.get(c) for c in CSV_COLUMNS])
+
+
+def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None:
+    if format == CSV:
+        write_csv_statements(fh, statements)
+    else:
+        write_json_statements(fh, statements)
