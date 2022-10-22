@@ -177,8 +177,17 @@ class Statement(object):
 
     @classmethod
     def from_row(cls: Type[S], data: Dict[str, str]) -> S:
-        return cls.from_dict(
-            **data,
+        return cls(
+            id=data.get("id", None),
+            canonical_id=data.get("canonical_id", None),
+            entity_id=data["entity_id"],
+            prop=data["prop"],
+            prop_type=data["prop_type"],
+            schema=data["schema"],
+            value=data["value"],
+            dataset=data["dataset"],
+            lang=data.get("lang", None),
+            dirty=data.get("dirty", None),
             first_seen=iso_datetime(data.get("first_seen", None)),
             target=text_bool(data.get("target")),
             external=text_bool(data.get("external")),

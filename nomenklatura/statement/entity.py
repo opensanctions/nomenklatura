@@ -4,6 +4,7 @@ from typing import (
     Any,
     Dict,
     Generator,
+    Iterable,
     List,
     Optional,
     Set,
@@ -203,12 +204,30 @@ class StatementProxy(CompositeEntity):
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data["first_seen"] = self.first_seen
-        data["last_seen"] = self.last_seen
-        data["referents"] = list(self.referents)
-        data["datasets"] = list(self.datasets)
+        data = {
+            "id": self.id,
+            "schema": self.schema.name,
+            "properties": self.properties,
+            "referents": list(self.referents),
+            "datasets": list(self.datasets),
+        }
+        if self.first_seen is not None:
+            data["first_seen"] = self.first_seen
+        if self.last_seen is not None:
+            data["last_seen"] = self.last_seen
         return data
 
     def __len__(self) -> int:
         raise NotImplemented
+
+    @classmethod
+    def from_statements(cls, statements: Iterable[Statement]) -> "StatementProxy":
+        obj: Optional[StatementProxy] = None
+        for stmt in statements:
+            if obj is None:
+                data = {"schema": stmt.schema, "id": stmt.canonical_id}
+                obj = StatementProxy(model, data, default_dataset=stmt.dataset)
+            obj.add_statement(stmt)
+        if obj is None:
+            raise ValueError("No statements given!")
+        return obj

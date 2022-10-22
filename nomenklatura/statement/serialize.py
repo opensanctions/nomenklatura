@@ -1,5 +1,7 @@
 import csv
+import click
 import orjson
+from pathlib import Path
 from io import TextIOWrapper
 from typing import BinaryIO, Generator, Iterable, Type
 from followthemoney.cli.util import MAX_LINE
@@ -57,6 +59,15 @@ def read_statements(
         yield from read_csv_statements(fh, statement_type)
     else:
         yield from read_json_statements(fh, statement_type)
+
+
+def read_path_statements(path: Path, format: str, statement_type: Type[S]):
+    if str(path) == "-":
+        fh = click.get_binary_stream("stdin")
+        yield from read_statements(fh, format=format, statement_type=statement_type)
+        return
+    with open(path, "rb") as fh:
+        yield from read_statements(fh, format=format, statement_type=statement_type)
 
 
 def write_json_statement(fh: BinaryIO, statement: S) -> None:
