@@ -218,7 +218,7 @@ class StatementProxy(CompositeEntity):
         return data
 
     def __len__(self) -> int:
-        raise NotImplemented
+        return len(list(self.statements))
 
     @classmethod
     def from_statements(cls, statements: Iterable[Statement]) -> "StatementProxy":
