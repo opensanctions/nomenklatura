@@ -61,7 +61,9 @@ def read_statements(
         yield from read_json_statements(fh, statement_type)
 
 
-def read_path_statements(path: Path, format: str, statement_type: Type[S]):
+def read_path_statements(
+    path: Path, format: str, statement_type: Type[S]
+) -> Generator[S, None, None]:
     if str(path) == "-":
         fh = click.get_binary_stream("stdin")
         yield from read_statements(fh, format=format, statement_type=statement_type)

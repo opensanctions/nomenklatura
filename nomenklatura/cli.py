@@ -241,7 +241,7 @@ def entity_statements(path: Path, outpath: Path, dataset: str, format: str) -> N
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
-def entity_statements(path: Path, outpath: Path, format: str) -> None:
+def statements_aggregate(path: Path, outpath: Path, format: str) -> None:
     with path_writer(outpath) as outfh:
         statements: List[Statement] = []
         for stmt in read_path_statements(path, format=format, statement_type=Statement):
