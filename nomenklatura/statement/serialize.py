@@ -18,6 +18,8 @@ CSV_COLUMNS = [
     "schema",
     "value",
     "dataset",
+    "lang",
+    "dirty",
     "target",
     "external",
     "first_seen",

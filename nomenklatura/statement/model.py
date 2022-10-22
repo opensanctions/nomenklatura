@@ -35,6 +35,8 @@ class StatementDict(TypedDict):
     schema: str
     value: str
     dataset: str
+    lang: Optional[str]
+    dirty: Optional[str]
     target: Optional[bool]
     external: Optional[bool]
     first_seen: Optional[datetime]
@@ -63,6 +65,8 @@ class Statement(object):
         "schema",
         "value",
         "dataset",
+        "lang",
+        "dirty",
         "target",
         "external",
         "first_seen",
@@ -77,6 +81,8 @@ class Statement(object):
         schema: str,
         value: str,
         dataset: str,
+        lang: Optional[str] = None,
+        dirty: Optional[str] = None,
         first_seen: Optional[datetime] = None,
         target: Optional[bool] = False,
         external: Optional[bool] = False,
@@ -91,6 +97,8 @@ class Statement(object):
         self.schema = schema
         self.value = value
         self.dataset = dataset
+        self.lang = lang
+        self.dirty = dirty
         self.first_seen = first_seen
         self.last_seen = last_seen or first_seen
         self.target = target
@@ -108,6 +116,8 @@ class Statement(object):
             "schema": self.schema,
             "value": self.value,
             "dataset": self.dataset,
+            "lang": self.lang,
+            "dirty": self.dirty,
             "first_seen": self.first_seen,
             "last_seen": self.last_seen,
             "target": self.target,
@@ -155,6 +165,8 @@ class Statement(object):
             schema=data["schema"],
             value=data["value"],
             dataset=data["dataset"],
+            lang=data.get("lang", None),
+            dirty=data.get("dirty", None),
             first_seen=data.get("first_seen", None),
             target=data.get("target"),
             external=data.get("external"),
@@ -165,18 +177,11 @@ class Statement(object):
 
     @classmethod
     def from_row(cls: Type[S], data: Dict[str, str]) -> S:
-        return cls(
-            entity_id=data["entity_id"],
-            prop=data["prop"],
-            prop_type=data["prop_type"],
-            schema=data["schema"],
-            value=data["value"],
-            dataset=data["dataset"],
+        return cls.from_dict(
+            **data,
             first_seen=iso_datetime(data.get("first_seen", None)),
             target=text_bool(data.get("target")),
             external=text_bool(data.get("external")),
-            id=data.get("id", None),
-            canonical_id=data.get("canonical_id", None),
             last_seen=iso_datetime(data.get("last_seen", None)),
         )
 

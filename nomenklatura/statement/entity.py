@@ -1,44 +1,28 @@
 from datetime import datetime
-import logging
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
     Generator,
-    Generic,
     List,
     Optional,
     Set,
     Tuple,
-    Union,
-    Type,
-    TypeVar,
-    cast,
 )
-import warnings
-from itertools import product
 from banal import ensure_dict
-
 from followthemoney import model
 from followthemoney.exc import InvalidData
-from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 from followthemoney.property import Property
-from followthemoney.rdf import SKOS, RDF, Literal, URIRef, Identifier
-from followthemoney.util import sanitize_text, gettext
-from followthemoney.util import merge_context, value_list, make_entity_id
+from followthemoney.util import gettext
 from followthemoney.proxy import P
+from followthemoney.model import Model
 
-if TYPE_CHECKING:
-    from followthemoney.model import Model
-
-from nomenklatura.entity import CompositeEntity, CE
-from nomenklatura.statement.model import S, Statement
-
-log = logging.getLogger(__name__)
+from nomenklatura.entity import CompositeEntity
+from nomenklatura.statement.model import Statement
 
 
-class StatementProxy(CompositeEntity, Generic[S]):
+class StatementProxy(CompositeEntity):
     __slots__ = [
         "schema",
         "id",
@@ -54,7 +38,6 @@ class StatementProxy(CompositeEntity, Generic[S]):
         data: Dict[str, Any],
         key_prefix: Optional[str] = None,
         cleaned: bool = True,
-        statement_type: Type[Statement] = Statement,
         default_dataset: str = "default",
     ):
         data = dict(data or {})
@@ -63,11 +46,12 @@ class StatementProxy(CompositeEntity, Generic[S]):
             raise InvalidData(gettext("No schema for entity."))
         self.schema = schema
         self.target: Optional[bool] = data.pop("target", None)
+        self.referents: Set[str] = set()
+        self.datasets: Set[str] = set()
         self.default_dataset = default_dataset
-        self.statement_type = statement_type
         self.key_prefix = key_prefix
         self.id = data.pop("id", None)
-        self._statements: Dict[str, Set[S]] = {}
+        self._statements: Dict[str, Set[Statement]] = {}
 
         properties = data.pop("properties", {})
         if properties is not None:
@@ -82,9 +66,19 @@ class StatementProxy(CompositeEntity, Generic[S]):
         return {p: [s.value for s in v] for p, v in self._statements.items()}
 
     @property
-    def statements(self) -> Generator[S, None, None]:
+    def statements(self) -> Generator[Statement, None, None]:
         for stmts in self._statements.values():
             yield from stmts
+
+    @property
+    def first_seen(self) -> Optional[datetime]:
+        seen = (s.first_seen for s in self.statements if s.first_seen is not None)
+        return min(seen, default=None)
+
+    @property
+    def last_seen(self) -> Optional[datetime]:
+        seen = (s.last_seen for s in self.statements if s.last_seen is not None)
+        return min(seen, default=None)
 
     def _make_statement(
         self,
@@ -96,8 +90,8 @@ class StatementProxy(CompositeEntity, Generic[S]):
         last_seen: Optional[datetime] = None,
         target: bool = False,
         external: bool = False,
-    ) -> S:
-        return self.statement_type(
+    ) -> Statement:
+        return Statement(
             entity_id=self.id,
             prop=prop,
             prop_type=self.schema.properties[prop].name,
@@ -111,13 +105,16 @@ class StatementProxy(CompositeEntity, Generic[S]):
             last_seen=last_seen,
         )
 
-    def add_statement(self, stmt: S) -> None:
+    def add_statement(self, stmt: Statement) -> None:
         # TODO: change target, schema etc. based on data
-        self.schema = model.common_schema(self.schema, stmt.schema)
+        if self.schema.name != stmt.schema:
+            self.schema = model.common_schema(self.schema, stmt.schema)
         if stmt.target is not None:
             self.target = self.target or stmt.target
-        self._statements.setdefault(stmt.prop, set())
-        self._statements[stmt.prop].add(stmt)
+        self.datasets.add(stmt.dataset)
+        if stmt.prop != Statement.BASE:
+            self._statements.setdefault(stmt.prop, set())
+            self._statements[stmt.prop].add(stmt)
 
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
@@ -190,29 +187,28 @@ class StatementProxy(CompositeEntity, Generic[S]):
 
     @property
     def properties(self) -> Dict[str, List[str]]:
-        """Return a mapping of the properties and set values of the entity."""
-        return {p: list(vs) for p, vs in self._properties.items()}
+        return {p: list({s.value for s in vs}) for p, vs in self._statements.items()}
 
-    def clone(self: CE) -> CE:
-        """Make a deep copy of the current entity proxy."""
-        return self.__class__.from_dict(self.schema.model, self.to_dict())
+    def clone(self) -> "StatementProxy":
+        data = {"schema": self.schema.name, "id": self.id}
+        cloned = self.__class__.from_dict(self.schema.model, data)
+        for stmt in self.statements:
+            cloned.add_statement(stmt)
+        return cloned
 
-    def merge(self: CE, other: CE) -> CE:
-        """Merge another entity proxy into this one. This will try and find
-        the common schema between both entities and then add all property
-        values from the other entity into this one."""
-        model = self.schema.model
-        self.id = self.id or other.id
-        try:
-            self.schema = model.common_schema(self.schema, other.schema)
-        except InvalidData as e:
-            msg = "Cannot merge entities with id %s: %s"
-            raise InvalidData(msg % (self.id, e))
-
-        self.context = merge_context(self.context, other.context)
-        for prop, values in other._properties.items():
-            self.add(prop, values, cleaned=True, quiet=True)
+    def merge(self, other: "StatementProxy") -> "StatementProxy":
+        for stmt in other.statements:
+            stmt.canonical_id = self.id
+            self.add_statement(stmt)
         return self
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data["first_seen"] = self.first_seen
+        data["last_seen"] = self.last_seen
+        data["referents"] = list(self.referents)
+        data["datasets"] = list(self.datasets)
+        return data
 
     def __len__(self) -> int:
         raise NotImplemented
