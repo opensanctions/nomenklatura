@@ -21,12 +21,12 @@ setup(
     package_data={"": ["nomenklatura/data/*", "nomenklatura/py.typed"]},
     zip_safe=False,
     install_requires=[
-        "followthemoney >= 3.0.3, < 4.0.0",
+        "followthemoney >= 3.0.6, < 4.0.0",
         "shortuuid >= 1.0.1, < 2.0.0",
         "rich >= 10.9.0, < 13.0.0",
-        "textual >= 0.1.10, < 1.0.0",
+        "textual >= 0.1.10, < 0.2.0",
         "scikit-learn == 1.1.2",
-        "click >= 8.0.0, < 8.1.0",
+        "click >= 8.0.0, < 9.0.0",
     ],
     tests_require=[],
     entry_points={

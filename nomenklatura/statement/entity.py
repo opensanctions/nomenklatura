@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Generator,
@@ -10,7 +9,7 @@ from typing import (
     Set,
     Tuple,
 )
-from banal import ensure_dict
+from collections.abc import Mapping
 from followthemoney import model
 from followthemoney.exc import InvalidData
 from followthemoney.types.common import PropertyType
@@ -18,6 +17,7 @@ from followthemoney.property import Property
 from followthemoney.util import gettext
 from followthemoney.proxy import P
 from followthemoney.model import Model
+from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement.model import Statement
@@ -54,13 +54,12 @@ class StatementProxy(CompositeEntity):
         self.id = data.pop("id", None)
         self._statements: Dict[str, Set[Statement]] = {}
 
-        properties = data.pop("properties", {})
-        if properties is not None:
-            properties = ensure_dict(properties)
+        properties = data.pop("properties", None)
+        if isinstance(properties, Mapping):
             for key, value in properties.items():
                 if key not in self.schema.properties:
                     continue
-                self.add(key, value, cleaned=cleaned, quiet=True)
+                self.add(key, value, cleaned=cleaned)
 
     @property
     def _properties(self) -> Dict[str, List[str]]:  # type: ignore
@@ -89,9 +88,13 @@ class StatementProxy(CompositeEntity):
         dataset: Optional[str] = None,
         first_seen: Optional[datetime] = None,
         last_seen: Optional[datetime] = None,
+        lang: Optional[str] = None,
+        dirty: Optional[str] = None,
         target: bool = False,
         external: bool = False,
     ) -> Statement:
+        if lang is not None:
+            lang = registry.language.clean_text(lang)
         return Statement(
             entity_id=self.id,
             prop=prop,
@@ -99,6 +102,8 @@ class StatementProxy(CompositeEntity):
             schema=schema or self.schema.name,
             value=value,
             dataset=dataset or self.default_dataset,
+            lang=lang,
+            dirty=dirty,
             first_seen=first_seen,
             target=target,
             external=external,
@@ -116,6 +121,8 @@ class StatementProxy(CompositeEntity):
         if stmt.prop != Statement.BASE:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
+        if stmt.entity_id != self.id:
+            self.referents.add(stmt.entity_id)
 
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
@@ -148,8 +155,9 @@ class StatementProxy(CompositeEntity):
         fuzzy: bool = False,
         format: Optional[str] = None,
     ) -> None:
-        if not cleaned and value is not None:
-            value = prop.type.clean_text(value, fuzzy=fuzzy, format=format, proxy=self)
+        value = self.clean_value(
+            prop, value, cleaned=cleaned, fuzzy=fuzzy, format=format
+        )
         if value is not None:
             stmt = self._make_statement(prop.name, value)
             self.add_statement(stmt)
