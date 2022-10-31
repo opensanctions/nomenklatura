@@ -12,19 +12,6 @@ from nomenklatura.statement.util import (
 
 S = TypeVar("S", bound="Statement")
 
-#
-# Candidates for columns:
-# * language/locale
-# * original_value
-# * transformer
-# * source_url
-# * confidence (wikidata rank)
-#
-# Get rid of:
-# * target
-# * last_seen/first_seen -> timestamp
-#
-
 
 class StatementDict(TypedDict):
     id: str
