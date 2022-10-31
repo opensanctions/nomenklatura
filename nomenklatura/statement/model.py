@@ -131,6 +131,9 @@ class Statement(object):
     def __eq__(self, other: Any) -> bool:
         return not self.id != other.id
 
+    def __lt__(self, other: Any) -> bool:
+        return (self.prop != self.BASE, self.id) < (other.prop != self.BASE, other.id)
+
     @classmethod
     def make_key(
         cls,

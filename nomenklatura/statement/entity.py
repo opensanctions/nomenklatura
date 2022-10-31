@@ -14,7 +14,7 @@ from followthemoney import model
 from followthemoney.exc import InvalidData
 from followthemoney.types.common import PropertyType
 from followthemoney.property import Property
-from followthemoney.util import gettext
+from followthemoney.util import gettext, value_list
 from followthemoney.proxy import P
 from followthemoney.model import Model
 from followthemoney.types import registry
@@ -68,7 +68,15 @@ class StatementProxy(CompositeEntity):
 
     @property
     def statements(self) -> Generator[Statement, None, None]:
-        yield self.get_base()
+        yield Statement(
+            canonical_id=self.id,
+            entity_id=self.id,
+            prop=Statement.BASE,
+            prop_type=Statement.BASE,
+            schema=self.schema.name,
+            value=self.id,
+            dataset=self.default_dataset,
+        )
         for stmts in self._statements.values():
             yield from stmts
 
@@ -99,6 +107,7 @@ class StatementProxy(CompositeEntity):
             lang = registry.language.clean_text(lang)
         return Statement(
             entity_id=self.id,
+            canonical_id=self.id,
             prop=prop,
             prop_type=self.schema.properties[prop].name,
             schema=schema or self.schema.name,
@@ -109,34 +118,16 @@ class StatementProxy(CompositeEntity):
             first_seen=first_seen,
             target=target,
             external=external,
-            canonical_id=self.id,
-            last_seen=last_seen,
-        )
-
-    def get_base(
-        self,
-        dataset: Optional[str] = None,
-        first_seen: Optional[datetime] = None,
-        last_seen: Optional[datetime] = None,
-    ) -> Statement:
-        return Statement(
-            entity_id=self.id,
-            prop=Statement.BASE,
-            prop_type=Statement.BASE,
-            schema=self.schema.name,
-            value=self.id,
-            dataset=dataset or self.default_dataset,
-            lang=None,
-            original_value=None,
-            first_seen=first_seen,
-            canonical_id=self.id,
             last_seen=last_seen,
         )
 
     def add_statement(self, stmt: Statement) -> None:
         # TODO: change target, schema etc. based on data
-        if self.schema.name != stmt.schema:
-            self.schema = model.common_schema(self.schema, stmt.schema)
+        if not self.schema.is_a(stmt.schema):
+            try:
+                self.schema = model.common_schema(self.schema, stmt.schema)
+            except InvalidData as exc:
+                raise InvalidData(f"{self.id}: {exc}") from exc
         if stmt.target is not None:
             self.target = self.target or stmt.target
         self.datasets.add(stmt.dataset)
@@ -145,6 +136,23 @@ class StatementProxy(CompositeEntity):
         if stmt.prop != Statement.BASE:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
+
+    def clean_value(
+        self,
+        prop: Property,
+        value: Optional[str],
+        cleaned: bool = False,
+        fuzzy: bool = False,
+        format: Optional[str] = None,
+    ) -> List[str]:
+        if value is None:
+            return []
+        if cleaned:
+            return [value]
+        value = prop.type.clean_text(value, fuzzy=fuzzy, format=format, proxy=self)
+        if value is None:
+            return []
+        return [value]
 
     def claim(
         self,
@@ -159,7 +167,7 @@ class StatementProxy(CompositeEntity):
         quiet: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
-    ) -> Optional[Statement]:
+    ) -> None:
         prop_name = self._prop_name(prop, quiet=quiet)
         if prop_name is None:
             return None
@@ -172,29 +180,26 @@ class StatementProxy(CompositeEntity):
             msg = gettext("Stub property (%s): %s")
             raise InvalidData(msg % (self.schema, prop))
 
-        clean_value = self.clean_value(
+        for clean in self.clean_value(
             prop,
             value,
             cleaned=cleaned,
             fuzzy=fuzzy,
             format=format,
-        )
-        if clean_value is None:
-            return None
-        if original_value is None and clean_value != value:
-            original_value = value
+        ):
+            if original_value is None and clean != value:
+                original_value = value
 
-        stmt = self._make_statement(
-            prop_name,
-            clean_value,
-            schema=schema,
-            dataset=dataset,
-            first_seen=seen,
-            lang=lang,
-            original_value=original_value,
-        )
-        self.add_statement(stmt)
-        return stmt
+            stmt = self._make_statement(
+                prop_name,
+                clean,
+                schema=schema,
+                dataset=dataset,
+                first_seen=seen,
+                lang=lang,
+                original_value=original_value,
+            )
+            self.add_statement(stmt)
 
     def claim_many(
         self,
@@ -231,6 +236,12 @@ class StatementProxy(CompositeEntity):
             return []
         return list({s.value for s in self._statements[prop_name]})
 
+    def get_statements(self, prop: P, quiet: bool = False) -> List[Statement]:
+        prop_name = self._prop_name(prop, quiet=quiet)
+        if prop_name is None or prop_name not in self._statements:
+            return []
+        return list(self._statements[prop_name])
+
     def set(
         self,
         prop: P,
@@ -247,6 +258,25 @@ class StatementProxy(CompositeEntity):
         return self.add(
             prop, values, cleaned=cleaned, quiet=quiet, fuzzy=fuzzy, format=format
         )
+
+    def add(
+        self,
+        prop: P,
+        values: Any,
+        cleaned: bool = False,
+        quiet: bool = False,
+        fuzzy: bool = False,
+        format: Optional[str] = None,
+    ) -> None:
+        prop_name = self._prop_name(prop, quiet=quiet)
+        if prop_name is None:
+            return None
+        prop = self.schema.properties[prop_name]
+        for value in value_list(values):
+            if not cleaned:
+                value = prop.type.clean(value, proxy=self, fuzzy=fuzzy, format=format)
+            self.claim(prop, value, cleaned=True)
+        return None
 
     def unsafe_add(
         self,
