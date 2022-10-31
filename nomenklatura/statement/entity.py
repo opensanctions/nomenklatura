@@ -119,11 +119,11 @@ class StatementProxy(CompositeEntity):
         if stmt.target is not None:
             self.target = self.target or stmt.target
         self.datasets.add(stmt.dataset)
+        if stmt.entity_id != self.id:
+            self.referents.add(stmt.entity_id)
         if stmt.prop != Statement.BASE:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
-        if stmt.entity_id != self.id:
-            self.referents.add(stmt.entity_id)
 
     def claim(
         self,

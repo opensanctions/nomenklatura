@@ -4,7 +4,7 @@ import Levenshtein
 from itertools import product
 from normality import slugify
 from normality.constants import WS
-from typing import Callable, Iterable, List, cast
+from typing import Callable, Iterable, List
 from typing import Optional, Set, Tuple, TypeVar
 from followthemoney.types.common import PropertyType
 
