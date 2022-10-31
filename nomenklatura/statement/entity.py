@@ -188,7 +188,7 @@ class StatementProxy(CompositeEntity):
         quiet: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
-    ):
+    ) -> None:
         for value in values:
             self.claim(
                 prop,

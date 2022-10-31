@@ -142,7 +142,7 @@ class Statement(object):
         return "<Statement(%r, %r, %r)>" % (self.entity_id, self.prop, self.value)
 
     def __eq__(self, other: Any) -> bool:
-        return self.id == other.id
+        return not self.id != other.id
 
     @classmethod
     def make_key(
