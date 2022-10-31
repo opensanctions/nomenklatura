@@ -32,3 +32,14 @@ def test_example_entity():
     assert data["id"] == sp.id, data
     so = sp.clone()
     assert so.id == sp.id
+
+    claim = sp.claim("notes", "Ich bin eine banane!", lang="deu")
+    assert claim.lang == "deu", claim
+
+    claim = sp.claim("country", "Germany")
+    assert claim.value == "de", claim
+    assert claim.original_value == "Germany", claim
+
+    pre_len = len(sp)
+    sp.claim_many("country", ["de", "it", "fr"])
+    assert pre_len + 2 == len(sp), sp._statements["country"]

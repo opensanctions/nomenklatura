@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime
-from typing import cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
+from typing import Any, cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
 from nomenklatura.entity import CE
 from nomenklatura.statement.util import (
@@ -137,6 +137,12 @@ class Statement(object):
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+    def __repr__(self) -> str:
+        return "<Statement(%r, %r, %r)>" % (self.entity_id, self.prop, self.value)
+
+    def __eq__(self, other: Any) -> bool:
+        return self.id == other.id
 
     @classmethod
     def make_key(
