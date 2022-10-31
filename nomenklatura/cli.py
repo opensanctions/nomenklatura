@@ -4,7 +4,7 @@ import click
 import logging
 import asyncio
 from pathlib import Path
-from typing import Iterable, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Tuple
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
@@ -16,6 +16,8 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
+from nomenklatura.statement import Statement, StatementProxy, CSV, FORMATS
+from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import DedupeApp
@@ -219,6 +221,38 @@ def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
                 continue
             out = orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
             outfh.write(out)
+
+
+@cli.command("statements", help="Export entities to statements")
+@click.argument("path", type=InPath)
+@click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-d", "--dataset", type=str, required=True)
+@click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
+def entity_statements(path: Path, outpath: Path, dataset: str, format: str) -> None:
+    def make_statements() -> Generator[Statement, None, None]:
+        for entity in path_entities(path, Entity):
+            yield from Statement.from_entity(entity, dataset=dataset)
+
+    with path_writer(outpath) as outfh:
+        write_statements(outfh, format, make_statements())
+
+
+@cli.command("statements-aggregate", help="Roll up statements into entities")
+@click.argument("path", type=InPath)
+@click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
+def statements_aggregate(path: Path, outpath: Path, format: str) -> None:
+    with path_writer(outpath) as outfh:
+        statements: List[Statement] = []
+        for stmt in read_path_statements(path, format=format, statement_type=Statement):
+            if len(statements) and statements[0].canonical_id != stmt.canonical_id:
+                entity = StatementProxy.from_statements(statements)
+                write_entity(outfh, entity)
+                statements = []
+            statements.append(stmt)
+        if len(statements):
+            entity = StatementProxy.from_statements(statements)
+            write_entity(outfh, entity)
 
 
 if __name__ == "__main__":

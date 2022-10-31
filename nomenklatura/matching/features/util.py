@@ -1,8 +1,8 @@
 from functools import lru_cache
 import re
-import Levenshtein  # type: ignore
+import Levenshtein
 from itertools import product
-from normality import normalize, slugify
+from normality import slugify
 from normality.constants import WS
 from typing import Callable, Iterable, List, cast
 from typing import Optional, Set, Tuple, TypeVar
@@ -55,7 +55,7 @@ def extract_numbers(values: List[str]) -> Set[str]:
 
 
 def compare_levenshtein(left: str, right: str) -> float:
-    distance = cast(int, Levenshtein.distance(left, right))
+    distance = Levenshtein.distance(left, right)
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
 

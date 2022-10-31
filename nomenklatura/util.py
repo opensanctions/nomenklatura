@@ -1,7 +1,6 @@
 import re
 import os
 from pathlib import Path
-from followthemoney.proxy import E
 from typing import Any, Mapping, Union, Iterable, Tuple
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
