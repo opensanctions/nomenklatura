@@ -68,6 +68,7 @@ class StatementProxy(CompositeEntity):
 
     @property
     def statements(self) -> Generator[Statement, None, None]:
+        yield self.get_base()
         for stmts in self._statements.values():
             yield from stmts
 
@@ -91,8 +92,8 @@ class StatementProxy(CompositeEntity):
         last_seen: Optional[datetime] = None,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
-        target: bool = False,
-        external: bool = False,
+        target: Optional[bool] = None,
+        external: Optional[bool] = None,
     ) -> Statement:
         if lang is not None:
             lang = registry.language.clean_text(lang)
@@ -108,6 +109,26 @@ class StatementProxy(CompositeEntity):
             first_seen=first_seen,
             target=target,
             external=external,
+            canonical_id=self.id,
+            last_seen=last_seen,
+        )
+
+    def get_base(
+        self,
+        dataset: Optional[str] = None,
+        first_seen: Optional[datetime] = None,
+        last_seen: Optional[datetime] = None,
+    ) -> Statement:
+        return Statement(
+            entity_id=self.id,
+            prop=Statement.BASE,
+            prop_type=Statement.BASE,
+            schema=self.schema.name,
+            value=self.id,
+            dataset=dataset or self.default_dataset,
+            lang=None,
+            original_value=None,
+            first_seen=first_seen,
             canonical_id=self.id,
             last_seen=last_seen,
         )
