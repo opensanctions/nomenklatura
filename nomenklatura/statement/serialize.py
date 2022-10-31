@@ -21,7 +21,7 @@ CSV_COLUMNS = [
     "value",
     "dataset",
     "lang",
-    "dirty",
+    "original_value",
     "target",
     "external",
     "first_seen",

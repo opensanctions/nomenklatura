@@ -47,6 +47,7 @@ class StatementProxy(CompositeEntity):
             raise InvalidData(gettext("No schema for entity."))
         self.schema = schema
         self.target: Optional[bool] = data.pop("target", None)
+        self.external: Optional[bool] = data.pop("external", None)
         self.referents: Set[str] = set()
         self.datasets: Set[str] = set()
         self.default_dataset = default_dataset
@@ -89,7 +90,7 @@ class StatementProxy(CompositeEntity):
         first_seen: Optional[datetime] = None,
         last_seen: Optional[datetime] = None,
         lang: Optional[str] = None,
-        dirty: Optional[str] = None,
+        original_value: Optional[str] = None,
         target: bool = False,
         external: bool = False,
     ) -> Statement:
@@ -103,7 +104,7 @@ class StatementProxy(CompositeEntity):
             value=value,
             dataset=dataset or self.default_dataset,
             lang=lang,
-            dirty=dirty,
+            original_value=original_value,
             first_seen=first_seen,
             target=target,
             external=external,
@@ -123,6 +124,85 @@ class StatementProxy(CompositeEntity):
             self._statements[stmt.prop].add(stmt)
         if stmt.entity_id != self.id:
             self.referents.add(stmt.entity_id)
+
+    def claim(
+        self,
+        prop: P,
+        value: Optional[str],
+        schema: Optional[str] = None,
+        dataset: Optional[str] = None,
+        seen: Optional[datetime] = None,
+        lang: Optional[str] = None,
+        original_value: Optional[str] = None,
+        cleaned: bool = False,
+        quiet: bool = False,
+        fuzzy: bool = False,
+        format: Optional[str] = None,
+    ) -> Optional[Statement]:
+        prop_name = self._prop_name(prop, quiet=quiet)
+        if prop_name is None:
+            return None
+        prop = self.schema.properties[prop_name]
+
+        # Don't allow setting the reverse properties:
+        if prop.stub:
+            if quiet:
+                return None
+            msg = gettext("Stub property (%s): %s")
+            raise InvalidData(msg % (self.schema, prop))
+
+        clean_value = self.clean_value(
+            prop,
+            value,
+            cleaned=cleaned,
+            fuzzy=fuzzy,
+            format=format,
+        )
+        if clean_value is None:
+            return None
+        if original_value is None and clean_value != value:
+            original_value = value
+
+        stmt = self._make_statement(
+            prop_name,
+            clean_value,
+            schema=schema,
+            dataset=dataset,
+            first_seen=seen,
+            lang=lang,
+            original_value=original_value,
+        )
+        self.add_statement(stmt)
+        return stmt
+
+    def claim_many(
+        self,
+        prop: P,
+        values: Iterable[Optional[str]],
+        schema: Optional[str] = None,
+        dataset: Optional[str] = None,
+        seen: Optional[datetime] = None,
+        lang: Optional[str] = None,
+        original_value: Optional[str] = None,
+        cleaned: bool = False,
+        quiet: bool = False,
+        fuzzy: bool = False,
+        format: Optional[str] = None,
+    ):
+        for value in values:
+            self.claim(
+                prop,
+                value,
+                schema=schema,
+                dataset=dataset,
+                seen=seen,
+                lang=lang,
+                original_value=original_value,
+                cleaned=cleaned,
+                quiet=quiet,
+                fuzzy=fuzzy,
+                format=format,
+            )
 
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
@@ -155,13 +235,7 @@ class StatementProxy(CompositeEntity):
         fuzzy: bool = False,
         format: Optional[str] = None,
     ) -> None:
-        value = self.clean_value(
-            prop, value, cleaned=cleaned, fuzzy=fuzzy, format=format
-        )
-        if value is not None:
-            stmt = self._make_statement(prop.name, value)
-            self.add_statement(stmt)
-        return None
+        self.claim(prop, value, cleaned=cleaned, fuzzy=fuzzy, format=format)
 
     def pop(self, prop: P, quiet: bool = True) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)

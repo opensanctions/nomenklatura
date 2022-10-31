@@ -36,7 +36,7 @@ class StatementDict(TypedDict):
     value: str
     dataset: str
     lang: Optional[str]
-    dirty: Optional[str]
+    original_value: Optional[str]
     target: Optional[bool]
     external: Optional[bool]
     first_seen: Optional[datetime]
@@ -66,7 +66,7 @@ class Statement(object):
         "value",
         "dataset",
         "lang",
-        "dirty",
+        "original_value",
         "target",
         "external",
         "first_seen",
@@ -82,7 +82,7 @@ class Statement(object):
         value: str,
         dataset: str,
         lang: Optional[str] = None,
-        dirty: Optional[str] = None,
+        original_value: Optional[str] = None,
         first_seen: Optional[datetime] = None,
         target: Optional[bool] = False,
         external: Optional[bool] = False,
@@ -98,7 +98,7 @@ class Statement(object):
         self.value = value
         self.dataset = dataset
         self.lang = lang
-        self.dirty = dirty
+        self.original_value = original_value
         self.first_seen = first_seen
         self.last_seen = last_seen or first_seen
         self.target = target
@@ -117,7 +117,7 @@ class Statement(object):
             "value": self.value,
             "dataset": self.dataset,
             "lang": self.lang,
-            "dirty": self.dirty,
+            "original_value": self.original_value,
             "first_seen": self.first_seen,
             "last_seen": self.last_seen,
             "target": self.target,
@@ -166,7 +166,7 @@ class Statement(object):
             value=data["value"],
             dataset=data["dataset"],
             lang=data.get("lang", None),
-            dirty=data.get("dirty", None),
+            original_value=data.get("original_value", None),
             first_seen=data.get("first_seen", None),
             target=data.get("target"),
             external=data.get("external"),
@@ -187,7 +187,7 @@ class Statement(object):
             value=data["value"],
             dataset=data["dataset"],
             lang=data.get("lang", None),
-            dirty=data.get("dirty", None),
+            original_value=data.get("original_value", None),
             first_seen=iso_datetime(data.get("first_seen", None)),
             target=text_bool(data.get("target")),
             external=text_bool(data.get("external")),
