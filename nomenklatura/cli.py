@@ -20,7 +20,7 @@ from nomenklatura.statement import Statement, StatementProxy, CSV, FORMATS
 from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
-from nomenklatura.tui import DedupeApp
+from nomenklatura.tui import dedupe_ui
 
 
 log = logging.getLogger(__name__)
@@ -136,15 +136,7 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
     if xref:
         run_xref(loader, resolver_)
 
-    async def run_app() -> None:
-        app = DedupeApp(
-            loader=loader,
-            resolver=resolver_,
-            title="nomenklatura de-duplication",
-        )
-        await app.process_messages()
-
-    asyncio.run(run_app())
+    dedupe_ui(resolver_, loader)
     resolver_.save()
 
 

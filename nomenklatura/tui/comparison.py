@@ -18,7 +18,7 @@ def render_column(entity: CE) -> Text:
     )
 
 
-async def render_values(
+def render_values(
     loader: Loader[DS, CE], prop: Property, entity: CE, other: CE, latinize: bool
 ) -> Text:
     values = entity.get(prop, quiet=True)
@@ -47,7 +47,7 @@ async def render_values(
     return text
 
 
-async def render_comparison(
+def render_comparison(
     loader: Loader[DS, CE],
     left: CE,
     right: CE,
@@ -66,10 +66,9 @@ async def render_comparison(
 
     for prop in comparison_props(left, right):
         label = Text(prop.label, "white bold")
-        left_text = await render_values(loader, prop, left, right, latinize)
-        right_text = await render_values(loader, prop, right, left, latinize)
+        left_text = render_values(loader, prop, left, right, latinize)
+        right_text = render_values(loader, prop, right, left, latinize)
         table.add_row(label, left_text, right_text)
-        await asyncio.sleep(0)
 
     ds_label = Text("Sources", "grey bold")
     ds_left = Text(", ".join(left.datasets))
