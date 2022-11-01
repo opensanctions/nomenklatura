@@ -58,9 +58,7 @@ class StatementProxy(CompositeEntity):
         properties = data.pop("properties", None)
         if isinstance(properties, Mapping):
             for key, value in properties.items():
-                if key not in self.schema.properties:
-                    continue
-                self.add(key, value, cleaned=cleaned)
+                self.add(key, value, cleaned=cleaned, quiet=True)
 
     @property
     def _properties(self) -> Dict[str, List[str]]:  # type: ignore
@@ -89,37 +87,6 @@ class StatementProxy(CompositeEntity):
     def last_seen(self) -> Optional[datetime]:
         seen = (s.last_seen for s in self.statements if s.last_seen is not None)
         return min(seen, default=None)
-
-    def _make_statement(
-        self,
-        prop: str,
-        value: str,
-        schema: Optional[str] = None,
-        dataset: Optional[str] = None,
-        first_seen: Optional[datetime] = None,
-        last_seen: Optional[datetime] = None,
-        lang: Optional[str] = None,
-        original_value: Optional[str] = None,
-        target: Optional[bool] = None,
-        external: Optional[bool] = None,
-    ) -> Statement:
-        if lang is not None:
-            lang = registry.language.clean_text(lang)
-        return Statement(
-            entity_id=self.id,
-            canonical_id=self.id,
-            prop=prop,
-            prop_type=self.schema.properties[prop].name,
-            schema=schema or self.schema.name,
-            value=value,
-            dataset=dataset or self.default_dataset,
-            lang=lang,
-            original_value=original_value,
-            first_seen=first_seen,
-            target=target,
-            external=external,
-            last_seen=last_seen,
-        )
 
     def add_statement(self, stmt: Statement) -> None:
         # TODO: change target, schema etc. based on data
@@ -180,6 +147,9 @@ class StatementProxy(CompositeEntity):
             msg = gettext("Stub property (%s): %s")
             raise InvalidData(msg % (self.schema, prop))
 
+        if lang is not None:
+            lang = registry.language.clean_text(lang)
+
         for clean in self.clean_value(
             prop,
             value,
@@ -190,14 +160,16 @@ class StatementProxy(CompositeEntity):
             if original_value is None and clean != value:
                 original_value = value
 
-            stmt = self._make_statement(
-                prop_name,
-                clean,
-                schema=schema,
-                dataset=dataset,
-                first_seen=seen,
+            stmt = Statement(
+                entity_id=self.id,
+                prop=prop.name,
+                prop_type=prop.type.name,
+                schema=schema or self.schema.name,
+                value=clean,
+                dataset=dataset or self.default_dataset,
                 lang=lang,
                 original_value=original_value,
+                first_seen=seen,
             )
             self.add_statement(stmt)
 
