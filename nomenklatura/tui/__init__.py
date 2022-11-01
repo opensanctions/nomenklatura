@@ -1,25 +1,18 @@
 import sys
+from typing import Optional
+from nomenklatura.dataset import DS
+from nomenklatura.entity import CE
+from nomenklatura.loader import Loader
+from nomenklatura.resolver import Resolver
 
-from nomenklatura.tui.app import DedupeApp
+from nomenklatura.tui.app import DedupeApp, DedupeState
 
-__all__ = ["DedupeApp"]
+__all__ = ["dedupe_ui"]
 
-# from textual import log
-# from textual.reactive import Reactive
 
-if __name__ == "__main__":
-    from pathlib import Path
-    from nomenklatura.loader import FileLoader
-    from nomenklatura.resolver import Resolver
-    from nomenklatura.entity import CompositeEntity
-    from nomenklatura.index import Index
-    from nomenklatura.xref import xref
-
-    resolver = Resolver[CompositeEntity](Path("resolve.ijson"))
-    loader = FileLoader(Path(sys.argv[1]))
-    index = Index(loader)
-    index.build()
-    xref(loader, resolver)
-    DedupeApp.run(
-        title="NK De-duplication", log="textual.log", loader=loader, resolver=resolver
-    )
+def dedupe_ui(
+    resolver: Resolver[CE], loader: Loader[DS, CE], url_base: Optional[str] = None
+) -> None:
+    app = DedupeApp()
+    app.dedupe = DedupeState(resolver, loader, url_base=url_base)
+    app.run()
