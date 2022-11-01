@@ -5,7 +5,7 @@ from rich.console import RenderableType
 from textual.app import App, ComposeResult
 from textual.widget import Widget
 from textual.widgets import Footer, Static
-from textual.reactive import reactive
+from textual.containers import Container
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.loader import Loader
@@ -64,9 +64,7 @@ class DedupeState(object):
 
 class DedupeWidget(Widget):
     def on_mount(self) -> None:
-        self.styles.height = "1fr"
-        self.styles.layout = "vertical"
-        self.styles.overflow_y = "auto"
+        self.styles.height = "auto"
 
     @property
     def dedupe(self):
@@ -147,5 +145,5 @@ class DedupeApp(App):
     def compose(self) -> ComposeResult:
         self.dedupe.load()
         self.widget = DedupeWidget()
-        yield self.widget
+        yield Container(self.widget)
         yield Footer()
