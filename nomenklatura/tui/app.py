@@ -1,11 +1,10 @@
 import asyncio
-from typing import Any, Optional, Set, Tuple, cast
+from typing import Optional, Set, Tuple, cast
 from rich.text import Text
 from rich.console import RenderableType
 from textual.app import App, ComposeResult
 from textual.widget import Widget
-from textual.widgets import Footer, Static
-from textual.containers import Container
+from textual.widgets import Footer
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.loader import Loader
@@ -145,5 +144,5 @@ class DedupeApp(App):
     def compose(self) -> ComposeResult:
         self.dedupe.load()
         self.widget = DedupeWidget()
-        yield Container(self.widget)
+        yield self.widget
         yield Footer()
