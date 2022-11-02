@@ -84,12 +84,12 @@ def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
 
 
 def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-    wrapped = TextIOWrapper(fh, encoding="utf-8")
-    writer = csv.writer(wrapped, dialect=csv.unix_dialect)
-    writer.writerow(CSV_COLUMNS)
-    for stmt in statements:
-        row = stmt.to_row()
-        writer.writerow([row.get(c) for c in CSV_COLUMNS])
+    with TextIOWrapper(fh, encoding="utf-8") as wrapped:
+        writer = csv.writer(wrapped, dialect=csv.unix_dialect)
+        writer.writerow(CSV_COLUMNS)
+        for stmt in statements:
+            row = stmt.to_row()
+            writer.writerow([row.get(c) for c in CSV_COLUMNS])
 
 
 def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None:
