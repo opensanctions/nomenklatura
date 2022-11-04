@@ -120,3 +120,11 @@ def test_other_entity():
             dataset="source",
         )
         sp.add_statement(smt2)
+
+    with pytest.raises(InvalidData):
+        sp.add("identification", "abc")
+    sp.add("identification", "abc", quiet=True)
+
+    sp.add("alias", "Harry", lang="deu")
+    aliases = sp.get_statements("alias")
+    assert aliases[0].lang == "deu", aliases

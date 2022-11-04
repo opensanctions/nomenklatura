@@ -239,6 +239,8 @@ class StatementProxy(CompositeEntity):
         quiet: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
+        lang: Optional[str] = None,
+        original_value: Optional[str] = None,
     ) -> None:
         prop_name = self._prop_name(prop, quiet=quiet)
         if prop_name is None:
@@ -247,7 +249,14 @@ class StatementProxy(CompositeEntity):
         for value in value_list(values):
             if not cleaned:
                 value = prop.type.clean(value, proxy=self, fuzzy=fuzzy, format=format)
-            self.claim(prop, value, cleaned=True)
+            self.claim(
+                prop,
+                value,
+                quiet=quiet,
+                lang=lang,
+                original_value=original_value,
+                cleaned=True,
+            )
         return None
 
     def unsafe_add(
@@ -257,8 +266,18 @@ class StatementProxy(CompositeEntity):
         cleaned: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
+        lang: Optional[str] = None,
+        original_value: Optional[str] = None,
     ) -> None:
-        self.claim(prop, value, cleaned=cleaned, fuzzy=fuzzy, format=format)
+        self.claim(
+            prop,
+            value,
+            cleaned=cleaned,
+            fuzzy=fuzzy,
+            format=format,
+            lang=lang,
+            original_value=original_value,
+        )
 
     def pop(self, prop: P, quiet: bool = True) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
