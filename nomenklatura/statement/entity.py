@@ -8,6 +8,8 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
+    TypeVar,
 )
 from collections.abc import Mapping
 from followthemoney import model
@@ -21,6 +23,8 @@ from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement.model import Statement
+
+SP = TypeVar("SP", bound="StatementProxy")
 
 
 class StatementProxy(CompositeEntity):
@@ -314,14 +318,14 @@ class StatementProxy(CompositeEntity):
     def properties(self) -> Dict[str, List[str]]:
         return {p: list({s.value for s in vs}) for p, vs in self._statements.items()}
 
-    def clone(self) -> "StatementProxy":
+    def clone(self: SP) -> SP:
         data = {"schema": self.schema.name, "id": self.id}
-        cloned = self.__class__.from_dict(self.schema.model, data)
+        cloned = type(self).from_dict(self.schema.model, data)
         for stmt in self.statements:
             cloned.add_statement(stmt)
         return cloned
 
-    def merge(self, other: "StatementProxy") -> "StatementProxy":
+    def merge(self, other: SP) -> SP:
         for stmt in other.statements:
             stmt.canonical_id = self.id
             self.add_statement(stmt)
@@ -345,12 +349,12 @@ class StatementProxy(CompositeEntity):
         return len(list(self.statements))
 
     @classmethod
-    def from_statements(cls, statements: Iterable[Statement]) -> "StatementProxy":
-        obj: Optional[StatementProxy] = None
+    def from_statements(cls: Type[SP], statements: Iterable[Statement]) -> SP:
+        obj: Optional[SP] = None
         for stmt in statements:
             if obj is None:
                 data = {"schema": stmt.schema, "id": stmt.canonical_id}
-                obj = StatementProxy(model, data, default_dataset=stmt.dataset)
+                obj = cls(model, data, default_dataset=stmt.dataset)
             obj.add_statement(stmt)
         if obj is None:
             raise ValueError("No statements given!")
