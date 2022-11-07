@@ -325,7 +325,7 @@ class StatementProxy(CompositeEntity):
             cloned.add_statement(stmt)
         return cloned
 
-    def merge(self, other: SP) -> SP:
+    def merge(self: SP, other: "StatementProxy") -> SP:
         for stmt in other.statements:
             stmt.canonical_id = self.id
             self.add_statement(stmt)
