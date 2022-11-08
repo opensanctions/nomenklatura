@@ -1,8 +1,8 @@
-from functools import lru_cache
 import re
 import Levenshtein
 from itertools import product
 from normality import slugify
+from functools import lru_cache
 from normality.constants import WS
 from typing import Callable, Iterable, List
 from typing import Optional, Set, Tuple, TypeVar

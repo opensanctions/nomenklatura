@@ -1,4 +1,3 @@
-import sys
 from typing import Optional
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE

@@ -1,6 +1,5 @@
 import json
 import logging
-from pprint import pprint
 from normality import collapse_spaces
 from typing import Any, Dict, Iterable, Generator
 from requests.exceptions import HTTPError

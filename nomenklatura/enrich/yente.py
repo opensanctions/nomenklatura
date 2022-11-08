@@ -1,6 +1,6 @@
 import logging
 from banal import ensure_list
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Generator, Optional
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
