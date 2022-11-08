@@ -134,6 +134,10 @@ class Statement(object):
     def __lt__(self, other: Any) -> bool:
         return (self.prop != self.BASE, self.id) < (other.prop != self.BASE, other.id)
 
+    def clone(self: S) -> S:
+        """Make a deep copy of the given statement."""
+        return type(self).from_dict(self.to_dict())
+
     @classmethod
     def make_key(
         cls,
