@@ -43,6 +43,7 @@ def xref(
     try:
         scores: List[float] = []
         suggested = 0
+        idx = 0
         for idx, ((left_id, right_id), score) in enumerate(index.pairs()):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
