@@ -1,7 +1,8 @@
 import re
 import os
 from pathlib import Path
-from typing import Any, Mapping, Union, Iterable, Tuple
+from datetime import datetime
+from typing import Any, Mapping, Union, Iterable, Tuple, Optional
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
@@ -24,3 +25,28 @@ def normalize_url(url: str, params: ParamsType = None) -> str:
         query.extend(sorted(values))
     parsed = parsed._replace(query=urlencode(query))
     return urlunparse(parsed)
+
+
+def iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    """Parse datetime from standardized date string"""
+    if value is None or len(value) == 0:
+        return None
+    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+
+
+def datetime_iso(dt: Optional[datetime]) -> Optional[str]:
+    if dt is None:
+        return None
+    return dt.isoformat(timespec="seconds")
+
+
+def bool_text(value: Optional[bool]) -> Optional[str]:
+    if value is None:
+        return None
+    return "true" if value else "false"
+
+
+def text_bool(text: Optional[str]) -> Optional[bool]:
+    if text is None or len(text) == 0:
+        return None
+    return text.lower().startswith("t")

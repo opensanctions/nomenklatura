@@ -29,10 +29,6 @@ CSV_COLUMNS = [
     "id",
 ]
 
-# nk entity-statements --format csv/json
-# nk statement-entities
-# nk migrate/validate
-
 
 def read_json_statements(
     fh: BinaryIO,

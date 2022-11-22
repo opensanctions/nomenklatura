@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
 from nomenklatura.entity import CE
-from nomenklatura.statement.util import (
+from nomenklatura.util import (
     bool_text,
     datetime_iso,
     iso_datetime,
