@@ -14,7 +14,7 @@ S = TypeVar("S", bound="Statement")
 
 
 class StatementDict(TypedDict):
-    id: str
+    id: Optional[str]
     entity_id: str
     canonical_id: str
     prop: str
@@ -97,8 +97,6 @@ class Statement(object):
     def to_dict(self) -> StatementDict:
         if self.entity_id is None:
             raise ValueError("Statement has no entity ID!")
-        if self.id is None:
-            raise ValueError("Statement has no ID!")
         return {
             "canonical_id": self.canonical_id or self.entity_id,
             "entity_id": self.entity_id,

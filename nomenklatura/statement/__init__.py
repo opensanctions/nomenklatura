@@ -1,4 +1,4 @@
-from nomenklatura.statement.model import Statement, StatementDict
+from nomenklatura.statement.statement import Statement, StatementDict
 from nomenklatura.statement.entity import StatementProxy
 from nomenklatura.statement.serialize import CSV, FORMATS
 from nomenklatura.statement.serialize import write_statements

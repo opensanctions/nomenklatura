@@ -22,7 +22,7 @@ from followthemoney.model import Model
 from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity
-from nomenklatura.statement.model import Statement
+from nomenklatura.statement.statement import Statement
 
 SP = TypeVar("SP", bound="StatementProxy")
 

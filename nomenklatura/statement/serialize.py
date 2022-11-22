@@ -6,7 +6,7 @@ from io import TextIOWrapper
 from typing import BinaryIO, Generator, Iterable, Type
 from followthemoney.cli.util import MAX_LINE
 
-from nomenklatura.statement.model import S
+from nomenklatura.statement.statement import S
 
 JSON = "json"
 CSV = "csv"
