@@ -1,4 +1,4 @@
-import shortuuid  # type: ignore
+import shortuuid
 from typing import Any, Optional, Tuple, Union
 
 from nomenklatura.util import is_qid
