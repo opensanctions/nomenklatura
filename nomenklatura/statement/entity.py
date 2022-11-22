@@ -68,6 +68,10 @@ class StatementProxy(CompositeEntity):
     def _properties(self) -> Dict[str, List[str]]:  # type: ignore
         return {p: [s.value for s in v] for p, v in self._statements.items()}
 
+    def _iter_stmt(self) -> Generator[Statement, None, None]:
+        for stmts in self._statements.values():
+            yield from stmts
+
     @property
     def statements(self) -> Generator[Statement, None, None]:
         yield Statement(
@@ -79,17 +83,16 @@ class StatementProxy(CompositeEntity):
             value=self.id,
             dataset=self.default_dataset,
         )
-        for stmts in self._statements.values():
-            yield from stmts
+        yield from self._iter_stmt()
 
     @property
     def first_seen(self) -> Optional[datetime]:
-        seen = (s.first_seen for s in self.statements if s.first_seen is not None)
+        seen = (s.first_seen for s in self._iter_stmt() if s.first_seen is not None)
         return min(seen, default=None)
 
     @property
     def last_seen(self) -> Optional[datetime]:
-        seen = (s.last_seen for s in self.statements if s.last_seen is not None)
+        seen = (s.last_seen for s in self._iter_stmt() if s.last_seen is not None)
         return max(seen, default=None)
 
     def add_statement(self, stmt: Statement) -> None:
@@ -324,12 +327,12 @@ class StatementProxy(CompositeEntity):
     def clone(self: SP) -> SP:
         data = {"schema": self.schema.name, "id": self.id}
         cloned = type(self).from_dict(self.schema.model, data)
-        for stmt in self.statements:
+        for stmt in self._iter_stmt():
             cloned.add_statement(stmt)
         return cloned
 
     def merge(self: SP, other: "StatementProxy") -> SP:
-        for stmt in other.statements:
+        for stmt in other._iter_stmt():
             stmt.canonical_id = self.id
             self.add_statement(stmt)
         return self
@@ -349,7 +352,7 @@ class StatementProxy(CompositeEntity):
         return data
 
     def __len__(self) -> int:
-        return len(list(self.statements))
+        return len(list(self._iter_stmt())) + 1
 
     @classmethod
     def from_statements(cls: Type[SP], statements: Iterable[Statement]) -> SP:
