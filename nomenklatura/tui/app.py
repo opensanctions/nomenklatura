@@ -57,7 +57,7 @@ class DedupeState(object):
             self.resolver.decide(self.left.id, self.right.id, judgement=judgement)
         self.load()
 
-    def save(self):
+    def save(self) -> None:
         self.resolver.save()
 
 
@@ -66,7 +66,7 @@ class DedupeWidget(Widget):
         self.styles.height = "auto"
 
     @property
-    def dedupe(self):
+    def dedupe(self) -> DedupeState:
         return cast(DedupeApp, self.app).dedupe
 
     def render(self) -> RenderableType:
@@ -84,7 +84,7 @@ class DedupeWidget(Widget):
         return Text("No candidates.", justify="center")
 
 
-class DedupeApp(App):
+class DedupeApp(App[int]):
     dedupe: DedupeState
 
     BINDINGS = [
@@ -136,10 +136,10 @@ class DedupeApp(App):
 
     async def action_exit_save(self) -> None:
         await self.save_resolver()
-        self.exit()
+        self.exit(0)
 
     async def action_exit_hard(self) -> None:
-        self.exit()
+        self.exit(0)
 
     def compose(self) -> ComposeResult:
         self.dedupe.load()

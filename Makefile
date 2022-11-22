@@ -4,7 +4,7 @@ test:
 	pytest --cov-report html --cov-report term --cov=nomenklatura tests/
 
 typecheck:
-	mypy --strict nomenklatura/ --exclude nomenklatura/tui/
+	mypy --strict nomenklatura/
 
 check: test typecheck
 

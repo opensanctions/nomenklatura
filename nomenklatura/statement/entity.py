@@ -74,15 +74,16 @@ class StatementProxy(CompositeEntity):
 
     @property
     def statements(self) -> Generator[Statement, None, None]:
-        yield Statement(
-            canonical_id=self.id,
-            entity_id=self.id,
-            prop=Statement.BASE,
-            prop_type=Statement.BASE,
-            schema=self.schema.name,
-            value=self.id,
-            dataset=self.default_dataset,
-        )
+        if self.id is not None:
+            yield Statement(
+                canonical_id=self.id,
+                entity_id=self.id,
+                prop=Statement.BASE,
+                prop_type=Statement.BASE,
+                schema=self.schema.name,
+                value=self.id,
+                dataset=self.default_dataset,
+            )
         yield from self._iter_stmt()
 
     @property
@@ -146,6 +147,9 @@ class StatementProxy(CompositeEntity):
         if prop_name is None:
             return None
         prop = self.schema.properties[prop_name]
+
+        if self.id is None:
+            raise InvalidData("Entity has no ID: %r" % self)
 
         # Don't allow setting the reverse properties:
         if prop.stub:
@@ -333,12 +337,13 @@ class StatementProxy(CompositeEntity):
 
     def merge(self: SP, other: "StatementProxy") -> SP:
         for stmt in other._iter_stmt():
-            stmt.canonical_id = self.id
+            if self.id is not None:
+                stmt.canonical_id = self.id
             self.add_statement(stmt)
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        data = {
+        data: Dict[str, Any] = {
             "id": self.id,
             "schema": self.schema.name,
             "properties": self.properties,
