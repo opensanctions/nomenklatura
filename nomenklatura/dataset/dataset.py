@@ -10,6 +10,9 @@ class Dataset(object):
         self.name = name
         self.title = title
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {"name": self.name, "title": self.title}
+
     def __eq__(self, other: Any) -> bool:
         try:
             return not not self.name == other.name
@@ -24,6 +27,10 @@ class Dataset(object):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}({self.name!r})>"
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Dataset":
+        return cls(name=data["name"], title=data["title"])
 
 
 DatasetIndex = Dict[str, Dataset]

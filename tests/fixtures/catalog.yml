@@ -1,0 +1,7 @@
+datasets:
+  - name: donations
+    title: "Political party donations"
+  - name: leak
+    title: Some data leak
+  - name: company_data
+    title: Company data
