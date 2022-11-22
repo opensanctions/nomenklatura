@@ -263,17 +263,17 @@ class Resolver(Generic[CE]):
         return proxy
 
     def apply_statement_proxy(self, proxy: SP) -> SP:
-        canonical_id = self.get_canonical(proxy.id)
-        if canonical_id != proxy.id:
-            proxy.referents = set(self.get_referents(canonical_id))
-            proxy.id = canonical_id
-        for stmt in proxy.statements:
-            stmt.canonical_id = canonical_id
+        if proxy.id is None:
+            return proxy
+        proxy.id = self.get_canonical(proxy.id)
+        for stmt in proxy._iter_stmt():
+            stmt.canonical_id = proxy.id
             if stmt.prop_type == registry.entity.name:
                 canon_value = self.get_canonical(stmt.value)
                 if canon_value != stmt.value:
                     if stmt.original_value is None:
                         stmt.original_value = stmt.value
+                    # NOTE: this means the key is out of whack here now
                     stmt.value = canon_value
         return proxy
 

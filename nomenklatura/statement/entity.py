@@ -56,7 +56,7 @@ class StatementProxy(CompositeEntity):
         self.datasets: Set[str] = set()
         self.default_dataset = default_dataset
         self.key_prefix = key_prefix
-        self.id = data.pop("id", None)
+        self.id: Optional[str] = data.pop("id", None)
         self._statements: Dict[str, Set[Statement]] = {}
 
         properties = data.pop("properties", None)
