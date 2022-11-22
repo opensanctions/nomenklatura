@@ -90,7 +90,7 @@ class StatementProxy(CompositeEntity):
     @property
     def last_seen(self) -> Optional[datetime]:
         seen = (s.last_seen for s in self.statements if s.last_seen is not None)
-        return min(seen, default=None)
+        return max(seen, default=None)
 
     def add_statement(self, stmt: Statement) -> None:
         # TODO: change target, schema etc. based on data
@@ -317,6 +317,9 @@ class StatementProxy(CompositeEntity):
     @property
     def properties(self) -> Dict[str, List[str]]:
         return {p: list({s.value for s in vs}) for p, vs in self._statements.items()}
+
+    def iterprops(self) -> List[Property]:
+        return [self.schema.properties[p] for p in self._statements.keys()]
 
     def clone(self: SP) -> SP:
         data = {"schema": self.schema.name, "id": self.id}
