@@ -6,7 +6,7 @@ from followthemoney.types import registry
 from followthemoney.exc import InvalidData
 
 from nomenklatura.statement.entity import StatementProxy
-from nomenklatura.statement.model import Statement
+from nomenklatura.statement.statement import Statement
 
 EXAMPLE = {
     "id": "bla",

@@ -6,7 +6,7 @@ from followthemoney import model
 from nomenklatura.statement import StatementProxy
 from nomenklatura.statement import write_statements, read_statements
 from nomenklatura.statement import read_path_statements
-from nomenklatura.statement.model import Statement
+from nomenklatura.statement.statement import Statement
 from nomenklatura.statement.serialize import CSV, JSON
 
 
