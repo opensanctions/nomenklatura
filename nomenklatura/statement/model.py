@@ -62,7 +62,7 @@ class Statement(object):
 
     def __init__(
         self,
-        entity_id: str,
+        entity_id: Optional[str],
         prop: str,
         prop_type: str,
         schema: str,
@@ -90,13 +90,17 @@ class Statement(object):
         self.last_seen = last_seen or first_seen
         self.target = target
         self.external = external
-        if id is None:
+        if id is None and entity_id is not None:
             id = self.make_key(dataset, entity_id, prop, value, external)
         self.id = id
 
     def to_dict(self) -> StatementDict:
+        if self.entity_id is None:
+            raise ValueError("Statement has no entity ID!")
+        if self.id is None:
+            raise ValueError("Statement has no ID!")
         return {
-            "canonical_id": self.canonical_id,
+            "canonical_id": self.canonical_id or self.entity_id,
             "entity_id": self.entity_id,
             "prop": self.prop,
             "prop_type": self.prop_type,

@@ -106,7 +106,7 @@ class StatementProxy(CompositeEntity):
         if stmt.target is not None:
             self.target = self.target or stmt.target
         self.datasets.add(stmt.dataset)
-        if stmt.entity_id != self.id:
+        if stmt.entity_id != self.id and stmt.entity_id is not None:
             self.referents.add(stmt.entity_id)
         if stmt.prop != Statement.BASE:
             self._statements.setdefault(stmt.prop, set())
@@ -147,9 +147,6 @@ class StatementProxy(CompositeEntity):
         if prop_name is None:
             return None
         prop = self.schema.properties[prop_name]
-
-        if self.id is None:
-            raise InvalidData("Entity has no ID: %r" % self)
 
         # Don't allow setting the reverse properties:
         if prop.stub:
