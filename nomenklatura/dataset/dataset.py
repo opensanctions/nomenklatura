@@ -1,36 +1,80 @@
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, TypeVar, Optional, List
+from followthemoney.types import registry
+
+from nomenklatura.dataset.resource import DataResource
+from nomenklatura.dataset.publisher import DataPublisher
+from nomenklatura.dataset.coverage import DataCoverage
+from nomenklatura.dataset.util import Named, cleanup
+from nomenklatura.dataset.util import type_check, type_require
 
 DS = TypeVar("DS", bound="Dataset")
 
 
-class Dataset(object):
+class Dataset(Named):
     """A unit of entities. A dataset is a set of data, sez W3C."""
 
-    def __init__(self, name: str, title: str) -> None:
-        self.name = name
+    def __init__(
+        self,
+        name: str,
+        title: str,
+        license: Optional[str] = None,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        url: Optional[str] = None,
+        version: Optional[str] = None,
+        updated_at: Optional[str] = None,
+        publisher: Optional[DataPublisher] = None,
+        coverage: Optional[DataCoverage] = None,
+        resources: List[DataResource] = [],
+    ) -> None:
+        super().__init__(name)
         self.title = title
+        self.license = license
+        self.summary = summary
+        self.description = description
+        self.url = url
+        self.version = version
+        self.updated_at = updated_at
+        self.publisher = publisher
+        self.coverage = coverage
+        self.resources = resources
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"name": self.name, "title": self.title}
-
-    def __eq__(self, other: Any) -> bool:
-        try:
-            return not not self.name == other.name
-        except AttributeError:
-            return False
-
-    def __lt__(self, other: "Dataset") -> bool:
-        return self.name.__lt__(other.name)
-
-    def __hash__(self) -> int:
-        return hash((self.__class__.__name__, self.name))
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}({self.name!r})>"
+        data = {
+            "name": self.name,
+            "title": self.title,
+            "license": self.license,
+            "summary": self.summary,
+            "description": self.description,
+            "url": self.url,
+            "version": self.version,
+            "updated_at": self.updated_at,
+            "publisher": self.publisher,
+            "coverage": self.coverage,
+            "resources": self.resources,
+        }
+        return cleanup(data)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Dataset":
-        return cls(name=data["name"], title=data["title"])
-
-
-DatasetIndex = Dict[str, Dataset]
+        pdata = data.get("publisher")
+        publisher = DataPublisher.from_dict(pdata) if pdata is not None else None
+        cdata = data.get("coverage")
+        coverage = DataCoverage.from_dict(cdata) if cdata is not None else None
+        resources: List[DataResource] = []
+        for rdata in data.get("resources", []):
+            if rdata is not None:
+                resources.append(DataResource.from_dict(rdata))
+        return cls(
+            name=type_require(registry.string, data["name"]),
+            title=type_require(registry.string, data["title"]),
+            license=type_check(registry.url, data.get("license")),
+            summary=type_check(registry.string, data.get("summary")),
+            description=type_check(registry.string, data.get("description")),
+            url=type_check(registry.url, data.get("url")),
+            version=type_check(registry.string, data.get("version")),
+            updated_at=type_check(registry.date, data.get("updated_at")),
+            publisher=publisher,
+            coverage=coverage,
+            resources=resources,
+        )
