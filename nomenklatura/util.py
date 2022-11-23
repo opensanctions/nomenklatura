@@ -31,13 +31,20 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     """Parse datetime from standardized date string"""
     if value is None or len(value) == 0:
         return None
-    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    return datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
 
 
 def datetime_iso(dt: Optional[datetime]) -> Optional[str]:
     if dt is None:
         return None
     return dt.isoformat(timespec="seconds")
+
+
+def iso_to_version(value: str) -> Optional[str]:
+    dt = iso_datetime(value)
+    if dt is not None:
+        return dt.strftime("%Y%m%d%H%M%S")
+    return None
 
 
 def bool_text(value: Optional[bool]) -> Optional[str]:

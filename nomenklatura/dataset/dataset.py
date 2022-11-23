@@ -1,3 +1,4 @@
+import yaml
 from typing import Any, Dict, TypeVar, Optional, List
 from followthemoney.types import registry
 
@@ -6,6 +7,7 @@ from nomenklatura.dataset.publisher import DataPublisher
 from nomenklatura.dataset.coverage import DataCoverage
 from nomenklatura.dataset.util import Named, cleanup
 from nomenklatura.dataset.util import type_check, type_require
+from nomenklatura.util import iso_to_version, PathLike
 
 DS = TypeVar("DS", bound="Dataset")
 
@@ -33,8 +35,10 @@ class Dataset(Named):
         self.summary = summary
         self.description = description
         self.url = url
-        self.version = version
         self.updated_at = updated_at
+        if version is None:
+            version = iso_to_version(updated_at)
+        self.version = version
         self.publisher = publisher
         self.coverage = coverage
         self.resources = resources
@@ -78,3 +82,8 @@ class Dataset(Named):
             coverage=coverage,
             resources=resources,
         )
+
+    @classmethod
+    def from_path(cls, path: PathLike) -> "Dataset":
+        with open(path, "r") as fh:
+            return cls.from_dict(yaml.safe_load(fh))

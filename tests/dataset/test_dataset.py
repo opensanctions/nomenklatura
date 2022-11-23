@@ -1,4 +1,5 @@
 from typing import Dict, Any
+from pathlib import Path
 
 from nomenklatura.dataset import DataCatalog, Dataset
 
@@ -37,3 +38,8 @@ def test_company_dataset(catalog_data: Dict[str, Any]):
 
     other = Dataset(name="company_data", title="Company data")
     assert other == ds, other
+
+
+def test_from_path(catalog_path: Path):
+    catalog = DataCatalog.from_path(catalog_path)
+    assert len(catalog.datasets) == 3, catalog.datasets
