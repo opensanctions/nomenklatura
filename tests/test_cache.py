@@ -8,7 +8,7 @@ Cache.CACHE_PATH = Path(mkdtemp()) / "test.sqlite3"
 
 
 def test_cache():
-    ds = Dataset("test", "Test Case")
+    ds = Dataset.make({"name": "test", "title": "Test Case"})
     cache = Cache.make_default(ds)
     res = cache.get("name")
     assert res is None, res
@@ -35,14 +35,14 @@ def test_cache():
 
 
 def test_cache_utils():
-    ds = Dataset("test", "Test Case")
+    ds = Dataset.make({"name": "test", "title": "Test Case"})
     cache = Cache.make_default(ds)
     assert "test.sqlite" in repr(cache)
     assert hash(cache) != 0
 
 
 def test_preload_cache():
-    ds = Dataset("test", "Test Case")
+    ds = Dataset.make({"name": "test", "title": "Test Case"})
     cache = Cache.make_default(ds)
     res = cache.get("name")
     cache.set("name", "TestCase")

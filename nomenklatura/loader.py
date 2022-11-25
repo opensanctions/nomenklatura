@@ -110,7 +110,7 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
     def __init__(
         self, path: Path, resolver: Optional[Resolver[CompositeEntity]] = None
     ) -> None:
-        dataset = Dataset(path.stem, path.stem)
+        dataset = Dataset.make({"name": path.stem, "title": path.stem})
         entities = self.read_file(dataset, path)
         super().__init__(dataset, entities, resolver=resolver)
         self.path = path

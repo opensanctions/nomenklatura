@@ -5,7 +5,7 @@ from nomenklatura.dataset import DataCatalog, Dataset
 
 
 def test_donations_base(catalog_data: Dict[str, Any]):
-    catalog = DataCatalog.from_dict(catalog_data)
+    catalog = DataCatalog(Dataset, catalog_data)
     assert len(catalog.datasets) == 3, catalog.datasets
     ds = catalog.get("donations")
     assert ds is not None, ds
@@ -20,7 +20,7 @@ def test_donations_base(catalog_data: Dict[str, Any]):
 
 
 def test_company_dataset(catalog_data: Dict[str, Any]):
-    catalog = DataCatalog.from_dict(catalog_data)
+    catalog = DataCatalog(Dataset, catalog_data)
     assert len(catalog.datasets) == 3, catalog.datasets
     ds = catalog.get("company_data")
     assert ds is not None, ds
@@ -36,10 +36,10 @@ def test_company_dataset(catalog_data: Dict[str, Any]):
 
     assert "company_data" in repr(ds)
 
-    other = Dataset(name="company_data", title="Company data")
+    other = Dataset.make({"name": "company_data", "title": "Company data"})
     assert other == ds, other
 
 
 def test_from_path(catalog_path: Path):
-    catalog = DataCatalog.from_path(catalog_path)
+    catalog = DataCatalog.from_path(Dataset, catalog_path)
     assert len(catalog.datasets) == 3, catalog.datasets

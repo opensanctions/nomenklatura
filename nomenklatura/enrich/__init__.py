@@ -8,7 +8,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.matching import compare_scored
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver, Identifier
+from nomenklatura.resolver import Resolver
 
 log = logging.getLogger(__name__)
 __all__ = ["Enricher", "make_enricher", "enrich", "match"]

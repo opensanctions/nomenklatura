@@ -6,7 +6,7 @@ from nomenklatura.enrich.common import Enricher
 from nomenklatura.entity import CompositeEntity
 
 PATH = "nomenklatura.enrich.wikidata:WikidataEnricher"
-dataset = Dataset("wikidata", "Wikidata")
+dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
 
 
 def load_enricher():

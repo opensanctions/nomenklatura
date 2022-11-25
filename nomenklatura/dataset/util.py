@@ -1,5 +1,6 @@
-from typing import Any, Optional, Dict
 from normality import stringify
+from typing import Any, Optional, Dict, List
+from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
 from nomenklatura.exceptions import MetadataException
@@ -23,6 +24,12 @@ def type_require(type_: PropertyType, value: Any) -> str:
     if cleaned is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
     return cleaned
+
+
+def string_list(value: Any) -> List[str]:
+    if value is None:
+        return []
+    return [type_require(registry.string, s) for s in value]
 
 
 def cleanup(data: Dict[str, Any]) -> Dict[str, Any]:

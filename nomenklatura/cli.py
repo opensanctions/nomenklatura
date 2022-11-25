@@ -35,7 +35,7 @@ def _path_sibling(path: Path, suffix: str) -> Path:
 def _load_enricher(path: Path) -> Tuple[Dataset, Enricher]:
     with open(path, "r") as fh:
         data = yaml.safe_load(fh)
-        dataset = Dataset(data.pop("name"), data.pop("title"))
+        dataset = Dataset.make(data)
         cache = Cache.make_default(dataset)
         enricher = make_enricher(dataset, cache, data)
         if enricher is None:

@@ -8,7 +8,7 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 
 PATH = "nomenklatura.enrich.nominatim:NominatimEnricher"
-dataset = Dataset("nominatim", "Nomimatim")
+dataset = Dataset.make({"name": "nominatim", "title": "Nomimatim"})
 
 
 def load_enricher():

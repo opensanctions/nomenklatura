@@ -9,19 +9,13 @@ from nomenklatura.dataset.util import type_check, type_require
 class DataPublisher(Named):
     """Publisher information, eg. the government authority."""
 
-    def __init__(
-        self,
-        name: str,
-        url: str,
-        description: Optional[str] = None,
-        country: Optional[str] = None,
-        official: bool = False,
-    ):
+    def __init__(self, data: Dict[str, Any]):
+        name = type_require(registry.string, data.get("name"))
         super().__init__(name)
-        self.url = url
-        self.description = description
-        self.country = country
-        self.official = official
+        self.url = type_require(registry.url, data.get("url"))
+        self.description = type_check(registry.string, data.get("description"))
+        self.country = type_check(registry.country, data.get("country"))
+        self.official = as_bool(data.get("official", False))
 
     @property
     def country_label(self) -> Optional[str]:
@@ -39,13 +33,3 @@ class DataPublisher(Named):
             "official": self.official,
         }
         return cleanup(data)
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DataPublisher":
-        return cls(
-            name=type_require(registry.string, data.get("name")),
-            url=type_require(registry.url, data.get("url")),
-            description=type_check(registry.string, data.get("description")),
-            country=type_check(registry.country, data.get("country")),
-            official=as_bool(data.get("official", False)),
-        )

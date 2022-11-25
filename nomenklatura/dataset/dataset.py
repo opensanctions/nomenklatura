@@ -1,13 +1,18 @@
 import yaml
-from typing import Any, Dict, TypeVar, Optional, List
+from functools import cached_property
+from typing import TYPE_CHECKING
+from typing import Any, Dict, TypeVar, Type, List, Optional, Set
 from followthemoney.types import registry
 
 from nomenklatura.dataset.resource import DataResource
 from nomenklatura.dataset.publisher import DataPublisher
 from nomenklatura.dataset.coverage import DataCoverage
-from nomenklatura.dataset.util import Named, cleanup
+from nomenklatura.dataset.util import Named, cleanup, string_list
 from nomenklatura.dataset.util import type_check, type_require
 from nomenklatura.util import iso_to_version, PathLike
+
+if TYPE_CHECKING:
+    from nomenklatura.dataset.catalog import DataCatalog
 
 DS = TypeVar("DS", bound="Dataset")
 
@@ -15,33 +20,56 @@ DS = TypeVar("DS", bound="Dataset")
 class Dataset(Named):
     """A unit of entities. A dataset is a set of data, sez W3C."""
 
-    def __init__(
-        self,
-        name: str,
-        title: str,
-        license: Optional[str] = None,
-        summary: Optional[str] = None,
-        description: Optional[str] = None,
-        url: Optional[str] = None,
-        version: Optional[str] = None,
-        updated_at: Optional[str] = None,
-        publisher: Optional[DataPublisher] = None,
-        coverage: Optional[DataCoverage] = None,
-        resources: List[DataResource] = [],
-    ) -> None:
+    def __init__(self, catalog: "DataCatalog[DS]", data: Dict[str, Any]) -> None:
+        self.catalog = catalog
+        name = type_require(registry.string, data["name"])
         super().__init__(name)
-        self.title = title
-        self.license = license
-        self.summary = summary
-        self.description = description
-        self.url = url
-        self.updated_at = updated_at
-        if version is None:
-            version = iso_to_version(updated_at)
-        self.version = version
-        self.publisher = publisher
-        self.coverage = coverage
-        self.resources = resources
+        self.title = type_require(registry.string, data["title"])
+        self.license = type_check(registry.url, data.get("license"))
+        self.summary = type_check(registry.string, data.get("summary"))
+        self.description = type_check(registry.string, data.get("description"))
+        self.url = type_check(registry.url, data.get("url"))
+        self.updated_at = type_check(registry.date, data.get("updated_at"))
+        self.version = type_check(registry.string, data.get("version"))
+        if self.version is None and self.updated_at is not None:
+            self.version = iso_to_version(self.updated_at)
+
+        pdata = data.get("publisher")
+        self.publisher = DataPublisher(pdata) if pdata is not None else None
+
+        cdata = data.get("coverage")
+        self.coverage = DataCoverage(cdata) if cdata is not None else None
+        self.resources: List[DataResource] = []
+        for rdata in data.get("resources", []):
+            if rdata is not None:
+                self.resources.append(DataResource(rdata))
+
+        self._parents = string_list(data.get("parents", []))
+        self._children = string_list(data.get("children", []))
+        # TODO: get rid of the legacy namings
+        self._parents.extend(string_list(data.get("collections", [])))
+        self._children.extend(string_list(data.get("datasets", [])))
+
+    @cached_property
+    def children(self) -> Set["Dataset"]:
+        children: Set["Dataset"] = set()
+        for child_name in self._children:
+            children.add(self.catalog.require(child_name))
+        for other in self.catalog.datasets:
+            if self.name in other._parents:
+                children.add(other)
+        return children
+
+    @cached_property
+    def datasets(self) -> Set["Dataset"]:
+        datasets: Set["Dataset"] = set([self])
+        for child in self.children:
+            datasets.update(child.datasets)
+        return datasets
+
+    @property
+    def dataset_names(self) -> List[str]:
+        return [d.name for d in self.datasets]
 
     def to_dict(self) -> Dict[str, Any]:
         data = {
@@ -56,34 +84,29 @@ class Dataset(Named):
             "publisher": self.publisher,
             "coverage": self.coverage,
             "resources": self.resources,
+            "children": [c.name for c in self.children],
         }
         return cleanup(data)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Dataset":
-        pdata = data.get("publisher")
-        publisher = DataPublisher.from_dict(pdata) if pdata is not None else None
-        cdata = data.get("coverage")
-        coverage = DataCoverage.from_dict(cdata) if cdata is not None else None
-        resources: List[DataResource] = []
-        for rdata in data.get("resources", []):
-            if rdata is not None:
-                resources.append(DataResource.from_dict(rdata))
-        return cls(
-            name=type_require(registry.string, data["name"]),
-            title=type_require(registry.string, data["title"]),
-            license=type_check(registry.url, data.get("license")),
-            summary=type_check(registry.string, data.get("summary")),
-            description=type_check(registry.string, data.get("description")),
-            url=type_check(registry.url, data.get("url")),
-            version=type_check(registry.string, data.get("version")),
-            updated_at=type_check(registry.date, data.get("updated_at")),
-            publisher=publisher,
-            coverage=coverage,
-            resources=resources,
-        )
+    def from_path(
+        cls: Type[DS], path: PathLike, catalog: Optional["DataCatalog[DS]"] = None
+    ) -> DS:
+        from nomenklatura.dataset import DataCatalog
+
+        with open(path, "r") as fh:
+            data = yaml.safe_load(fh)
+            if catalog is None:
+                catalog = DataCatalog(cls, {"datasets": []})
+            dataset = cls(catalog, data)
+            catalog.datasets.append(dataset)
+            return dataset
 
     @classmethod
-    def from_path(cls, path: PathLike) -> "Dataset":
-        with open(path, "r") as fh:
-            return cls.from_dict(yaml.safe_load(fh))
+    def make(cls: Type[DS], data: Dict[str, Any]) -> DS:
+        from nomenklatura.dataset import DataCatalog
+
+        catalog = DataCatalog(cls, {"datasets": []})
+        dataset = cls(catalog, data)
+        catalog.datasets.append(dataset)
+        return dataset

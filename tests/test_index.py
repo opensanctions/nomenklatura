@@ -2,7 +2,6 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from followthemoney import model
 from nomenklatura.index import Index
-from nomenklatura.index.tokenizer import Tokenizer
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 
