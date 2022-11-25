@@ -19,7 +19,7 @@ class DataCatalog(Generic[DS]):
     def add(self, dataset: DS) -> None:
         self.datasets.append(dataset)
 
-    def make_dataset(self, data: Dict[str, Any]):
+    def make_dataset(self, data: Dict[str, Any]) -> DS:
         dataset = self.dataset_type(self, data)  # type: ignore
         self.add(dataset)
         return dataset
