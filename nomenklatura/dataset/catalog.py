@@ -12,9 +12,17 @@ class DataCatalog(Generic[DS]):
     def __init__(self, dataset_type: Type[DS], data: Dict[str, Any]) -> None:
         self.dataset_type = dataset_type
         self.datasets: List[DS] = []
-        for ddata in data["datasets"]:
-            self.datasets.append(self.dataset_type(self, ddata))  # type: ignore
+        for ddata in data.get("datasets", []):
+            self.make_dataset(ddata)
         self.updated_at = type_check(registry.date, data.get("updated_at"))
+
+    def add(self, dataset: DS) -> None:
+        self.datasets.append(dataset)
+
+    def make_dataset(self, data: Dict[str, Any]):
+        dataset = self.dataset_type(self, data)  # type: ignore
+        self.add(dataset)
+        return dataset
 
     def get(self, name: str) -> Optional[DS]:
         for ds in self.datasets:

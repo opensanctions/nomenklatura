@@ -1,4 +1,4 @@
-from typing import Optional, List, Any, Dict
+from typing import List, Any, Dict
 from followthemoney.types import registry
 
 from nomenklatura.dataset.util import type_check, type_require, cleanup

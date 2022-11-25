@@ -44,15 +44,15 @@ class Dataset(Named):
             if rdata is not None:
                 self.resources.append(DataResource(rdata))
 
-        self._parents = string_list(data.get("parents", []))
-        self._children = string_list(data.get("children", []))
+        self._parents = set(string_list(data.get("parents", [])))
+        self._children = set(string_list(data.get("children", [])))
         # TODO: get rid of the legacy namings
-        self._parents.extend(string_list(data.get("collections", [])))
-        self._children.extend(string_list(data.get("datasets", [])))
+        self._parents.update(string_list(data.get("collections", [])))
+        self._children.update(string_list(data.get("datasets", [])))
 
-    @cached_property
-    def children(self) -> Set["Dataset"]:
-        children: Set["Dataset"] = set()
+    @property
+    def children(self: DS) -> Set[DS]:
+        children: Set[DS] = set()
         for child_name in self._children:
             children.add(self.catalog.require(child_name))
         for other in self.catalog.datasets:
@@ -61,11 +61,11 @@ class Dataset(Named):
         return children
 
     @cached_property
-    def datasets(self) -> Set["Dataset"]:
-        datasets: Set["Dataset"] = set([self])
+    def datasets(self: DS) -> Set[DS]:
+        current: Set[DS] = set([self])
         for child in self.children:
-            datasets.update(child.datasets)
-        return datasets
+            current.update(child.datasets)
+        return current
 
     @property
     def dataset_names(self) -> List[str]:
@@ -97,16 +97,12 @@ class Dataset(Named):
         with open(path, "r") as fh:
             data = yaml.safe_load(fh)
             if catalog is None:
-                catalog = DataCatalog(cls, {"datasets": []})
-            dataset = cls(catalog, data)
-            catalog.datasets.append(dataset)
-            return dataset
+                catalog = DataCatalog(cls, {})
+            return catalog.make_dataset(data)
 
     @classmethod
     def make(cls: Type[DS], data: Dict[str, Any]) -> DS:
         from nomenklatura.dataset import DataCatalog
 
-        catalog = DataCatalog(cls, {"datasets": []})
-        dataset = cls(catalog, data)
-        catalog.datasets.append(dataset)
-        return dataset
+        catalog = DataCatalog(cls, {})
+        return catalog.make_dataset(data)
