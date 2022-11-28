@@ -28,6 +28,8 @@ datasets:
       - leak
   - name: collection_a
     title: Collection of data
+    children:
+      - collection_a
     parents:
       - all_datasets
     children:

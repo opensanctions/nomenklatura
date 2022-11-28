@@ -58,6 +58,8 @@ class Dataset(Named):
         for other in self.catalog.datasets:
             if self.name in other._parents:
                 children.add(other)
+        if self in children:
+            children.remove(self)
         return children
 
     @cached_property
@@ -75,6 +77,8 @@ class Dataset(Named):
                 continue
             if self in other.datasets:
                 parents.add(self)
+        if self in parents:
+            parents.remove(self)
         return parents
 
     @property

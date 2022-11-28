@@ -46,6 +46,7 @@ def test_hierarchy(catalog_data: Dict[str, Any]):
     collection_a = catalog.require("collection_a")
     leak = catalog.require("leak")
     assert leak not in collection_a.datasets
+    assert collection_a not in collection_a.children
     assert leak in all_datasets.datasets
 
 
