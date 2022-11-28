@@ -73,8 +73,6 @@ class Dataset(Named):
     def parents(self: DS) -> Set[DS]:
         parents: Set[DS] = set()
         for other in self.catalog.datasets:
-            if other == self:
-                continue
             if self in other.datasets:
                 parents.add(self)
         if self in parents:
