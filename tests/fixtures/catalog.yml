@@ -22,3 +22,14 @@ datasets:
       end: 2010-01
       countries:
         - us
+  - name: all_datasets
+    title: All datasets
+    datasets:
+      - leak
+  - name: collection_a
+    title: Collection of data
+    parents:
+      - all_datasets
+    children:
+      - donations
+      - company_data

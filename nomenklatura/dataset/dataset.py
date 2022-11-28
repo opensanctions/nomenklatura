@@ -67,6 +67,14 @@ class Dataset(Named):
             current.update(child.datasets)
         return current
 
+    @cached_property
+    def parents(self: DS) -> Set[DS]:
+        parents: Set[DS] = set()
+        for other in self.catalog.datasets:
+            if self in other.datasets:
+                parents.add(self)
+        return parents
+
     @property
     def dataset_names(self) -> List[str]:
         return [d.name for d in self.datasets]

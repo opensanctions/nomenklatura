@@ -6,7 +6,7 @@ from nomenklatura.dataset import DataCatalog, Dataset
 
 def test_donations_base(catalog_data: Dict[str, Any]):
     catalog = DataCatalog(Dataset, catalog_data)
-    assert len(catalog.datasets) == 3, catalog.datasets
+    assert len(catalog.datasets) == 5, catalog.datasets
     ds = catalog.get("donations")
     assert ds is not None, ds
     assert ds.name == "donations"
@@ -21,7 +21,7 @@ def test_donations_base(catalog_data: Dict[str, Any]):
 
 def test_company_dataset(catalog_data: Dict[str, Any]):
     catalog = DataCatalog(Dataset, catalog_data)
-    assert len(catalog.datasets) == 3, catalog.datasets
+    assert len(catalog.datasets) == 5, catalog.datasets
     ds = catalog.get("company_data")
     assert ds is not None, ds
     assert ds.name == "company_data"
@@ -40,6 +40,15 @@ def test_company_dataset(catalog_data: Dict[str, Any]):
     assert other == ds, other
 
 
+def test_hierarchy(catalog_data: Dict[str, Any]):
+    catalog = DataCatalog(Dataset, catalog_data)
+    all_datasets = catalog.require("all_datasets")
+    collection_a = catalog.require("collection_a")
+    leak = catalog.require("leak")
+    assert leak not in collection_a.datasets
+    assert leak in all_datasets.datasets
+
+
 def test_from_path(catalog_path: Path):
     catalog = DataCatalog.from_path(Dataset, catalog_path)
-    assert len(catalog.datasets) == 3, catalog.datasets
+    assert len(catalog.datasets) == 5, catalog.datasets
