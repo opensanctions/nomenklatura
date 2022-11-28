@@ -44,10 +44,10 @@ class Dataset(Named):
             if rdata is not None:
                 self.resources.append(DataResource(rdata))
 
-        self._parents = set(string_list(data.get("parents", [])))
-        self._children = set(string_list(data.get("children", [])))
         # TODO: get rid of the legacy namings
+        self._parents = set(string_list(data.get("parents", [])))
         self._parents.update(string_list(data.get("collections", [])))
+        self._children = set(string_list(data.get("children", [])))
         self._children.update(string_list(data.get("datasets", [])))
 
     @property
@@ -69,15 +69,15 @@ class Dataset(Named):
             current.update(child.datasets)
         return current
 
-    @cached_property
+    @property
     def parents(self: DS) -> Set[DS]:
-        parents: Set[DS] = set()
+        current: Set[DS] = set()
         for other in self.catalog.datasets:
             if self in other.datasets:
-                parents.add(self)
-        if self in parents:
-            parents.remove(self)
-        return parents
+                current.add(other)
+        if self in current:
+            current.remove(self)
+        return current
 
     @property
     def dataset_names(self) -> List[str]:
