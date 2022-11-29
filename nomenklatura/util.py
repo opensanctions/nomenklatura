@@ -31,7 +31,8 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     """Parse datetime from standardized date string"""
     if value is None or len(value) == 0:
         return None
-    return datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
+    value = value[:19].replace("T", " ")
+    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
 
 
 def datetime_iso(dt: Optional[datetime]) -> Optional[str]:
