@@ -18,7 +18,6 @@ from followthemoney import model
 from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset, DS
 from nomenklatura.entity import CompositeEntity, CE
-from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
 

@@ -308,15 +308,23 @@ class StatementProxy(CompositeEntity):
     def get_type_values(
         self, type_: PropertyType, matchable: bool = False
     ) -> List[str]:
-        combined = set()
+        combined: Set[str] = set()
+        for stmt in self.get_type_statements(type_, matchable=matchable):
+            combined.add(stmt.value)
+        return list(combined)
+
+    def get_type_statements(
+        self, type_: PropertyType, matchable: bool = False
+    ) -> List[Statement]:
+        combined = []
         for prop_name, statements in self._statements.items():
             prop = self.schema.properties[prop_name]
             if matchable and not prop.matchable:
                 continue
             if prop.type == type_:
                 for statement in statements:
-                    combined.add(statement.value)
-        return list(combined)
+                    combined.append(statement)
+        return combined
 
     @property
     def properties(self) -> Dict[str, List[str]]:
