@@ -84,7 +84,7 @@ class Dataset(Named):
         return [d.name for d in self.datasets]
 
     def to_dict(self) -> Dict[str, Any]:
-        data = {
+        data: Dict[str, Any] = {
             "name": self.name,
             "title": self.title,
             "license": self.license,
@@ -93,11 +93,13 @@ class Dataset(Named):
             "url": self.url,
             "version": self.version,
             "updated_at": self.updated_at,
-            "publisher": self.publisher,
-            "coverage": self.coverage,
             "resources": [r.to_dict() for r in self.resources],
             "children": [c.name for c in self.children],
         }
+        if self.coverage is not None:
+            data["coverage"] = self.coverage.to_dict()
+        if self.publisher is not None:
+            data["publisher"] = self.publisher.to_dict()
         return cleanup(data)
 
     def get_resource(self, name: str) -> DataResource:
