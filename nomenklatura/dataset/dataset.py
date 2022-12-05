@@ -95,10 +95,16 @@ class Dataset(Named):
             "updated_at": self.updated_at,
             "publisher": self.publisher,
             "coverage": self.coverage,
-            "resources": self.resources,
+            "resources": [r.to_dict() for r in self.resources],
             "children": [c.name for c in self.children],
         }
         return cleanup(data)
+
+    def get_resource(self, name: str) -> DataResource:
+        for res in self.resources:
+            if res.name == name:
+                return res
+        raise ValueError("No resource named %r!" % name)
 
     @classmethod
     def from_path(
