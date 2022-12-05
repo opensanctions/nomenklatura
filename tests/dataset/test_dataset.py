@@ -1,3 +1,4 @@
+import pytest
 from typing import Dict, Any
 from pathlib import Path
 
@@ -17,6 +18,10 @@ def test_donations_base(catalog_data: Dict[str, Any]):
         assert res.name is not None
         if res.mime_type is None:
             assert res.mime_type_label is None
+
+    assert ds.get_resource("donations.csv") is not None
+    with pytest.raises(ValueError):
+        ds.get_resource("donations.dbf")
 
 
 def test_company_dataset(catalog_data: Dict[str, Any]):
@@ -53,3 +58,7 @@ def test_hierarchy(catalog_data: Dict[str, Any]):
 def test_from_path(catalog_path: Path):
     catalog = DataCatalog.from_path(Dataset, catalog_path)
     assert len(catalog.datasets) == 5, catalog.datasets
+
+    data = catalog.to_dict()
+    assert isinstance(data, dict)
+    assert "datasets" in data
