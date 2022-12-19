@@ -1,7 +1,7 @@
 import os
 import logging
 from banal import ensure_list
-from typing import Any, Generator, Optional
+from typing import Any, Generator, Optional, Dict, List
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
@@ -48,11 +48,17 @@ class YenteEnricher(Enricher):
         cache_key = f"{url}:{entity.id}"
         response = self.cache.get_json(cache_key, max_age=self.cache_days)
         if response is None:
+            props: Dict[str, List[str]] = {}
+            for prop in entity.iterprops():
+                if prop.type == registry.entity:
+                    continue
+                if prop.matchable:
+                    props[prop.name] = entity.get(prop)
             data = {
                 "queries": {
                     "entity": {
                         "schema": entity.schema.name,
-                        "properties": entity.properties,
+                        "properties": props,
                     }
                 }
             }
