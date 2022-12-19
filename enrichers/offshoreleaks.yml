@@ -1,8 +1,8 @@
 name: offshoreleaks
 title: ICIJ OffshoreLeaks
 type: nomenklatura.enrich.yente:YenteEnricher
-api: https://api.opensanctions.org/
-dataset: offshoreleaks
-token: nk-default
+api: https://api.graph.opensanctions.org/
+dataset: icij_offshoreleaks
+api_key: ${GRAPH_API_KEY}
 strip_namespace: true
 cache_days: 90

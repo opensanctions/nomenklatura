@@ -1,3 +1,4 @@
+import os
 import logging
 from banal import ensure_list
 from typing import Any, Generator, Optional
@@ -21,12 +22,18 @@ class YenteEnricher(Enricher):
         super().__init__(dataset, cache, config)
         self._api: str = config.pop("api")
         self._dataset: str = config.pop("dataset", "default")
-        self._token: str = config.pop("token", "nomenklatura")
         self._threshold: Optional[float] = config.pop("threshold", None)
         self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
-        self.session.headers["Authorization"] = f"Bearer {self._token}"
+
+        api_key: Optional[str] = os.path.expandvars(config.pop("api_key", "")).strip()
+        if api_key is None or not len(api_key):
+            api_key = os.environ.get("YENTE_API_KEY")
+        self._api_key: Optional[str] = api_key
+        if self._api_key is not None:
+            self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
+
         self.cache.preload(f"{self._api}%")
 
     def make_url(self, entity: CE) -> str:
@@ -50,6 +57,7 @@ class YenteEnricher(Enricher):
                 }
             }
             resp = self.session.post(url, json=data)
+            resp.raise_for_status()
             response = resp.json().get("responses", {}).get("entity", {})
             self.cache.set_json(cache_key, response)
         for result in response.get("results", []):
