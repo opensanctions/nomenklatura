@@ -2,7 +2,6 @@ import orjson
 import yaml
 import click
 import logging
-import asyncio
 from pathlib import Path
 from typing import Generator, Iterable, List, Optional, Tuple
 from followthemoney.cli.util import path_writer, InPath, OutPath
