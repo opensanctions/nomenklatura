@@ -1,23 +1,15 @@
 import json
 import logging
 from pathlib import Path
-from typing import (
-    Dict,
-    Generator,
-    Generic,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-)
-from followthemoney.types import registry
-from followthemoney.property import Property
-from followthemoney import model
+from typing import Dict, Generator, Generic, Iterable, Iterator, List, Optional, Tuple
 
+from followthemoney import model
+from followthemoney.property import Property
+from followthemoney.types import registry
+
+from nomenklatura.dataset import DS, Dataset
+from nomenklatura.entity import CE, CompositeEntity
 from nomenklatura.resolver import Resolver
-from nomenklatura.dataset import Dataset, DS
-from nomenklatura.entity import CompositeEntity, CE
 
 log = logging.getLogger(__name__)
 
@@ -124,7 +116,8 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
                     break
                 data = json.loads(line)
                 proxy = CompositeEntity.from_dict(model, data)
-                proxy.datasets.add(dataset.name)
+                if not proxy.datasets:
+                    proxy.datasets.add(dataset.name)
                 yield proxy
 
     def __repr__(self) -> str:
