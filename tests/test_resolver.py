@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
+from nomenklatura.statement import Statement
 
 
 def test_identifier():
@@ -101,3 +102,19 @@ def test_resolver_candidates():
     resolver.prune()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
+
+
+def test_resolver_statements():
+    resolver = Resolver()
+    canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide("a2", "b2", Judgement.NEGATIVE)
+
+    stmt = Statement("a1", "holder", "entity", "Passport", "b2", "test")
+    stmt = resolver.apply_statement(stmt)
+    assert stmt.canonical_id == str(canon)
+    assert stmt.value == "b2"
+
+    resolver = Resolver()
+    stmt = resolver.apply_statement(stmt)
+    assert stmt.canonical_id == "a1"
+    assert stmt.value == "b2"

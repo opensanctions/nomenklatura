@@ -228,7 +228,25 @@ def entity_statements(path: Path, outpath: Path, dataset: str, format: str) -> N
         write_statements(outfh, format, make_statements())
 
 
-@cli.command("statements-aggregate", help="Roll up statements into entities")
+@cli.command("apply-statements", help="Apply a resolver file to a set of statements")
+@click.option("-i", "--infile", type=InPath, default="-")
+@click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
+@click.option("-r", "--resolver", required=True, type=ResPath)
+def statements_apply(infile: Path, outpath: Path, format: str, resolver: Path) -> None:
+    resolver_ = _get_resolver(infile, resolver)
+
+    def _generate() -> Generator[Statement, None, None]:
+        for stmt in read_path_statements(
+            infile, format=format, statement_type=Statement
+        ):
+            yield resolver_.apply_statement(stmt)
+
+    with path_writer(outpath) as outfh:
+        write_statements(outfh, format, _generate())
+
+
+@cli.command("aggregate-statements", help="Roll up statements into entities")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)

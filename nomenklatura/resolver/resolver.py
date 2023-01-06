@@ -11,6 +11,7 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.statement.entity import SP
+from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike, is_qid
 
 
@@ -276,6 +277,18 @@ class Resolver(Generic[CE]):
                     # NOTE: this means the key is out of whack here now
                     stmt.value = canon_value
         return proxy
+
+    def apply_statement(self, stmt: Statement) -> Statement:
+        if stmt.entity_id is not None:
+            stmt.canonical_id = self.get_canonical(stmt.entity_id)
+        if stmt.prop_type == registry.entity.name:
+            canon_value = self.get_canonical(stmt.value)
+            if canon_value != stmt.value:
+                if stmt.original_value is None:
+                    stmt.original_value = stmt.value
+                # NOTE: this means the key is out of whack here now
+                stmt.value = canon_value
+        return stmt
 
     def save(self) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
