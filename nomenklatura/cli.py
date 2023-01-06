@@ -246,14 +246,31 @@ def statements_apply(infile: Path, outpath: Path, format: str, resolver: Path) -
         write_statements(outfh, format, _generate())
 
 
+@cli.command("format-statements", help="Convert entity data formats")
+@click.option("-i", "--infile", type=InPath, default="-")
+@click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-f", "--in-format", type=click.Choice(FORMATS), default=CSV)
+@click.option("-x", "--out-format", type=click.Choice(FORMATS), default=CSV)
+def format_statements(
+    infile: Path, outpath: Path, in_format: str, out_format: str
+) -> None:
+    statements = read_path_statements(
+        infile, format=in_format, statement_type=Statement
+    )
+    with path_writer(outpath) as outfh:
+        write_statements(outfh, out_format, statements)
+
+
 @cli.command("aggregate-statements", help="Roll up statements into entities")
-@click.argument("path", type=InPath)
+@click.option("-i", "--infile", type=InPath, default="-")
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
-def statements_aggregate(path: Path, outpath: Path, format: str) -> None:
+def statements_aggregate(infile: Path, outpath: Path, format: str) -> None:
     with path_writer(outpath) as outfh:
         statements: List[Statement] = []
-        for stmt in read_path_statements(path, format=format, statement_type=Statement):
+        for stmt in read_path_statements(
+            infile, format=format, statement_type=Statement
+        ):
             if len(statements) and statements[0].canonical_id != stmt.canonical_id:
                 entity = StatementProxy.from_statements(statements)
                 write_entity(outfh, entity)
