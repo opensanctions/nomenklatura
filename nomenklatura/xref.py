@@ -59,7 +59,7 @@ def xref(
                 continue
 
             if dataset is not None:
-                if dataset not in left.datasets & right.datasets:
+                if dataset not in left.datasets | right.datasets:
                     continue
 
             if not left.schema.can_match(right.schema):
