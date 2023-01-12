@@ -1,26 +1,37 @@
-import orjson
-import yaml
-import click
 import logging
 from pathlib import Path
 from typing import Generator, Iterable, List, Optional, Tuple
-from followthemoney.cli.util import path_writer, InPath, OutPath
-from followthemoney.cli.util import path_entities, write_entity
+
+import click
+import orjson
+import yaml
 from followthemoney.cli.aggregate import sorted_aggregate
+from followthemoney.cli.util import (
+    InPath,
+    OutPath,
+    path_entities,
+    path_writer,
+    write_entity,
+)
 
 from nomenklatura.cache import Cache
-from nomenklatura.matching.train import train_matcher
-from nomenklatura.loader import FileLoader
-from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
+from nomenklatura.enrich import Enricher, enrich, make_enricher, match
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.enrich import Enricher, make_enricher, match, enrich
-from nomenklatura.statement import Statement, StatementProxy, CSV, FORMATS
-from nomenklatura.statement import write_statements, read_path_statements
+from nomenklatura.loader import FileLoader
+from nomenklatura.matching.train import train_matcher
+from nomenklatura.resolver import Resolver
 from nomenklatura.senzing import senzing_record
-from nomenklatura.xref import xref as run_xref
+from nomenklatura.statement import (
+    CSV,
+    FORMATS,
+    Statement,
+    StatementProxy,
+    read_path_statements,
+    write_statements,
+)
 from nomenklatura.tui import dedupe_ui
-
+from nomenklatura.xref import xref as run_xref
 
 log = logging.getLogger(__name__)
 
@@ -57,12 +68,20 @@ def cli() -> None:
 @click.option("-r", "--resolver", type=ResPath)
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
 @click.option("-l", "--limit", type=click.INT, default=5000)
+@click.option(
+    "-d",
+    "--dataset",
+    type=str,
+    default=None,
+    help="Xref matches must include this dataset",
+)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
 def xref_file(
     path: Path,
     resolver: Optional[Path] = None,
     auto_threshold: Optional[float] = None,
     limit: int = 5000,
+    dataset: Optional[str] = None,
     scored: bool = True,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
@@ -73,6 +92,7 @@ def xref_file(
         auto_threshold=auto_threshold,
         scored=scored,
         limit=limit,
+        dataset=dataset,
     )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
@@ -129,11 +149,23 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.argument("path", type=InPath)
 @click.option("-x", "--xref", is_flag=True, default=False)
 @click.option("-r", "--resolver", type=ResPath)
-def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> None:
+@click.option(
+    "-d",
+    "--dataset",
+    type=str,
+    default=None,
+    help="Xref matches must include this dataset",
+)
+def dedupe(
+    path: Path,
+    xref: bool = False,
+    resolver: Optional[Path] = None,
+    dataset: Optional[str] = None,
+) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
     if xref:
-        run_xref(loader, resolver_)
+        run_xref(loader, resolver_, dataset=dataset)
 
     dedupe_ui(resolver_, loader)
     resolver_.save()

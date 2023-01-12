@@ -1,14 +1,15 @@
 import logging
 from typing import List, Optional
+
 from followthemoney.schema import Schema
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.loader import Loader
-from nomenklatura.resolver import Resolver
-from nomenklatura.judgement import Judgement
 from nomenklatura.index import Index
+from nomenklatura.judgement import Judgement
+from nomenklatura.loader import Loader
 from nomenklatura.matching import compare_scored
+from nomenklatura.resolver import Resolver
 
 log = logging.getLogger(__name__)
 
@@ -31,11 +32,14 @@ def xref(
     limit: int = 5000,
     scored: bool = True,
     adjacent: bool = False,
+    dataset: Optional[str] = None,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", loader, resolver)
+    if dataset is not None:
+        log.info("Xref dataset `%s` against others (and itself)", dataset)
     index = Index(loader)
     index.build(adjacent=adjacent)
     try:
@@ -53,6 +57,10 @@ def xref(
             right = loader.get_entity(right_id.id)
             if left is None or right is None:
                 continue
+
+            if dataset is not None:
+                if dataset not in left.datasets & right.datasets:
+                    continue
 
             if not left.schema.can_match(right.schema):
                 continue
