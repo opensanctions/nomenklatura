@@ -33,13 +33,16 @@ def xref(
     scored: bool = True,
     adjacent: bool = False,
     dataset: Optional[str] = None,
+    force_other: Optional[bool] = False,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", loader, resolver)
     if dataset is not None:
-        log.info("Xref dataset `%s` against others (and itself)", dataset)
+        log.info("xref option: dataset `%s` against others (and itself)", dataset)
+    if force_other:
+        log.info("xref option: force pairs with another dataset")
     index = Index(loader)
     index.build(adjacent=adjacent)
     try:
@@ -58,9 +61,11 @@ def xref(
             if left is None or right is None:
                 continue
 
-            if dataset is not None:
-                if dataset not in left.datasets | right.datasets:
-                    continue
+            datasets = left.datasets | right.datasets
+            if dataset is not None and dataset not in datasets:
+                continue
+            if force_other and len(datasets) == 1:
+                continue
 
             if not left.schema.can_match(right.schema):
                 continue

@@ -75,6 +75,13 @@ def cli() -> None:
     default=None,
     help="Xref matches must include this dataset",
 )
+@click.option(
+    "--force-other/--allow-self",
+    is_flag=True,
+    type=click.BOOL,
+    default=False,
+    help="Only get pairs from different datasets",
+)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
 def xref_file(
     path: Path,
@@ -82,6 +89,7 @@ def xref_file(
     auto_threshold: Optional[float] = None,
     limit: int = 5000,
     dataset: Optional[str] = None,
+    force_other: Optional[bool] = False,
     scored: bool = True,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
@@ -93,6 +101,7 @@ def xref_file(
         scored=scored,
         limit=limit,
         dataset=dataset,
+        force_other=force_other,
     )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
@@ -156,16 +165,24 @@ def make_sortable(path: Path, outpath: Path) -> None:
     default=None,
     help="Xref matches must include this dataset",
 )
+@click.option(
+    "--force-other/--allow-self",
+    is_flag=True,
+    type=click.BOOL,
+    default=False,
+    help="Only get pairs from different datasets",
+)
 def dedupe(
     path: Path,
     xref: bool = False,
     resolver: Optional[Path] = None,
     dataset: Optional[str] = None,
+    force_other: Optional[bool] = False,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
     if xref:
-        run_xref(loader, resolver_, dataset=dataset)
+        run_xref(loader, resolver_, dataset=dataset, force_other=force_other)
 
     dedupe_ui(resolver_, loader)
     resolver_.save()
