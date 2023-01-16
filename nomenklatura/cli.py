@@ -158,6 +158,8 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.argument("path", type=InPath)
 @click.option("-x", "--xref", is_flag=True, default=False)
 @click.option("-r", "--resolver", type=ResPath)
+@click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
+@click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option(
     "-d",
     "--dataset",
@@ -176,13 +178,22 @@ def dedupe(
     path: Path,
     xref: bool = False,
     resolver: Optional[Path] = None,
+    auto_threshold: Optional[float] = None,
+    limit: int = 5000,
     dataset: Optional[str] = None,
     force_other: Optional[bool] = False,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
     if xref:
-        run_xref(loader, resolver_, dataset=dataset, force_other=force_other)
+        run_xref(
+            loader,
+            resolver_,
+            auto_threshold=auto_threshold,
+            limit=limit,
+            dataset=dataset,
+            force_other=force_other,
+        )
 
     dedupe_ui(resolver_, loader)
     resolver_.save()
