@@ -62,8 +62,12 @@ def xref(
                 continue
 
             datasets = left.datasets | right.datasets
-            if dataset is not None and dataset not in datasets:
-                continue
+            if dataset is not None:
+                if dataset not in datasets:
+                    continue
+                # reoder pairs
+                if dataset in right.datasets:
+                    left, right = right, left
             if force_other and len(datasets) == 1:
                 continue
 
