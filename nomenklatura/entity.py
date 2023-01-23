@@ -1,5 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
-from typing import Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, TypeVar
+
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
