@@ -48,8 +48,7 @@ def name_match(left: Entity, right: Entity) -> float:
     max_common = max(common, default=0)
     if max_common == 0:
         return 0.0
-    return math.log(float(max_common))
-    # return has_intersection(lvn, rvn)
+    return float(max_common)
 
 
 def name_token_overlap(left: Entity, right: Entity) -> float:
