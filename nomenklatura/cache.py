@@ -52,7 +52,7 @@ class Cache(object):
             extend_existing=True,
         )
         if create:
-            metadata.create_all(checkfirst=True)
+            metadata.create_all(bind=engine, checkfirst=True)
 
         self._preload: Dict[str, CacheValue] = {}
 
@@ -148,5 +148,5 @@ class Cache(object):
         path = Path(cls.CACHE_PATH).resolve()
         db_uri = f"sqlite:///{path.as_posix()}"
         engine = create_engine(db_uri)
-        metadata = MetaData(bind=engine)
+        metadata = MetaData()
         return cls(engine, metadata, dataset, create=True)
