@@ -1,11 +1,10 @@
-import re
 import string
 import logging
 import Levenshtein
 from itertools import combinations
 from collections import defaultdict
 from normality import normalize
-from typing import IO, Any, Dict, Optional, Iterable, List, Tuple
+from typing import Dict, Optional, List, Tuple
 
 log = logging.getLogger(__name__)
 ASCII = set(string.ascii_letters + string.digits + string.whitespace)

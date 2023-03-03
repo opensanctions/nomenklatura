@@ -32,6 +32,7 @@ class StatementProxy(CompositeEntity):
         "schema",
         "id",
         "key_prefix",
+        "_caption",
         "context",
         "statement_type",
         "_statements",
@@ -50,6 +51,7 @@ class StatementProxy(CompositeEntity):
         if schema is None:
             raise InvalidData(gettext("No schema for entity."))
         self.schema = schema
+        self._caption: Optional[str] = None
         self.target: Optional[bool] = data.pop("target", None)
         self.external: Optional[bool] = data.pop("external", None)
         self.referents: Set[str] = set()

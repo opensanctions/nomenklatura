@@ -23,22 +23,20 @@ def test_pick_putin():
 
 
 def test_pick_latin():
-    name = pick_name(
-        [
-            "Vladimir Vladimirovich Putin",
-            "Владимир Владимирович Путин",
-            "Владимир Владимирович Путин",
-        ]
-    )
-    assert "Putin" in name
+    names = [
+        "Vladimir Vladimirovich Putin",
+        "Владимир Владимирович Путин",
+        "Владимир Владимирович Путин",
+    ]
+    name = pick_name(names)
+    assert "Putin" in name, name
 
 
 def test_pick_titlecase():
-    name = pick_name(
-        [
-            "Vladimir Vladimirovich Putin",
-            "Vladimir Vladimirovich PUTIN",
-            "Vladimir Vladimirovich PUTIN",
-        ]
-    )
-    assert "Putin" in name
+    names = [
+        "Vladimir Vladimirovich Putin",
+        "Vladimir Vladimirovich PUTIN",
+        "Vladimir Vladimirovich PUTIN",
+    ]
+    name = pick_name(names)
+    assert "Putin" in name, names

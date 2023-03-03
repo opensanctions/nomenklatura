@@ -4,6 +4,7 @@ from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
 
 from nomenklatura.dataset import DS
+from nomenklatura.publish.names import pick_name
 
 if TYPE_CHECKING:
     from nomenklatura.loader import Loader
@@ -21,12 +22,36 @@ class CompositeEntity(EntityProxy):
         key_prefix: Optional[str] = None,
         cleaned: bool = True,
     ) -> None:
+        self._caption: Optional[str] = data.get("caption", None)
+        """A pre-computed label for this entity."""
+
         self.datasets: Set[str] = set()
         """The set of datasets from which information in this entity is derived."""
 
         self.referents: Set[str] = set()
         """The IDs of all entities which are included in this canonical entity."""
         super().__init__(model, data, key_prefix=key_prefix, cleaned=cleaned)
+
+    def _pick_caption(self) -> str:
+        is_thing = self.schema.is_a("Thing")
+        for prop in self.schema.caption:
+            values = self.get(prop)
+            if is_thing and len(values) > 1:
+                name = pick_name(values)
+                if name is not None:
+                    return name
+            for value in values:
+                return value
+        return self.schema.label
+
+    @property
+    def caption(self) -> str:
+        """The user-facing label to be used for this entity. This checks a list
+        of properties defined by the schema (caption) and returns the first
+        available value. If no caption is available, return the schema label."""
+        if self._caption is None:
+            self._caption = self._pick_caption()
+        return self._caption
 
     def merge(self: CE, other: CE) -> CE:
         """Merge another entity proxy into this one. For composite entities, this
