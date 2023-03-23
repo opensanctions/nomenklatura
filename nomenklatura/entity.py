@@ -63,6 +63,7 @@ class CompositeEntity(EntityProxy):
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
+        data["caption"] = self.caption
         data["referents"] = list(self.referents)
         data["datasets"] = list(self.datasets)
         return data
