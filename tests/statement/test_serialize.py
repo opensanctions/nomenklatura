@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from followthemoney import model
 
-from nomenklatura.statement import StatementProxy
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement import write_statements, read_statements
 from nomenklatura.statement import read_path_statements
 from nomenklatura.statement.statement import Statement
@@ -19,7 +19,7 @@ EXAMPLE = {
 
 def test_json_statements():
     buffer = BytesIO()
-    entity = StatementProxy.from_dict(model, EXAMPLE)
+    entity = CompositeEntity.from_dict(model, EXAMPLE)
 
     write_statements(buffer, JSON, entity.statements)
     buffer.seek(0)
@@ -33,7 +33,7 @@ def test_json_statements():
 
 def test_csv_statements():
     with TemporaryDirectory() as tmpdir:
-        entity = StatementProxy.from_dict(model, EXAMPLE)
+        entity = CompositeEntity.from_dict(model, EXAMPLE)
         path = Path(tmpdir) / "statement.csv"
         with open(path, "wb") as fh:
             write_statements(fh, CSV, entity.statements)

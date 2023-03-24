@@ -1,15 +1,18 @@
 import hashlib
 from datetime import datetime
 from sqlalchemy.engine import Row
-from typing import Any, cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
+from typing import cast, TYPE_CHECKING
+from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
-from nomenklatura.entity import CE
 from nomenklatura.util import (
     bool_text,
     datetime_iso,
     iso_datetime,
     text_bool,
 )
+
+if TYPE_CHECKING:
+    from nomenklatura.entity import CE
 
 S = TypeVar("S", bound="Statement")
 
@@ -219,7 +222,7 @@ class Statement(object):
     @classmethod
     def from_entity(
         cls: Type[S],
-        entity: CE,
+        entity: "CE",
         dataset: str,
         first_seen: Optional[datetime] = None,
         last_seen: Optional[datetime] = None,

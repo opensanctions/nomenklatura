@@ -10,7 +10,6 @@ from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
-from nomenklatura.statement.entity import SP
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike, is_qid
 
@@ -263,7 +262,7 @@ class Resolver(Generic[CE]):
                 proxy.unsafe_add(prop, canonical, cleaned=True)
         return proxy
 
-    def apply_statement_proxy(self, proxy: SP) -> SP:
+    def apply_statement_proxy(self, proxy: CE) -> CE:
         if proxy.id is None:
             return proxy
         proxy.id = self.get_canonical(proxy.id)

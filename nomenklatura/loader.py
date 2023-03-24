@@ -115,7 +115,7 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
                 if not line:
                     break
                 data = json.loads(line)
-                proxy = CompositeEntity.from_dict(model, data)
+                proxy = CompositeEntity(model, data, default_dataset=dataset.name)
                 if not proxy.datasets:
                     proxy.datasets.add(dataset.name)
                 yield proxy
