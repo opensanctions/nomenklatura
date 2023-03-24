@@ -229,18 +229,19 @@ class Statement(object):
         target: Optional[bool] = None,
         external: Optional[bool] = None,
     ) -> Generator[S, None, None]:
-        yield cls(
-            entity_id=entity.id,
-            prop=cls.BASE,
-            prop_type=cls.BASE,
-            schema=entity.schema.name,
-            value=entity.id,
-            dataset=dataset,
-            target=target,
-            external=external,
-            first_seen=first_seen,
-            last_seen=last_seen,
-        )
+        if entity.id is not None:
+            yield cls(
+                entity_id=entity.id,
+                prop=cls.BASE,
+                prop_type=cls.BASE,
+                schema=entity.schema.name,
+                value=entity.id,
+                dataset=dataset,
+                target=target,
+                external=external,
+                first_seen=first_seen,
+                last_seen=last_seen,
+            )
         for prop, value in entity.itervalues():
             yield cls(
                 entity_id=entity.id,

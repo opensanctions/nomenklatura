@@ -66,6 +66,8 @@ def senzing_record(
 ) -> Optional[SenzingRecord]:
     if not entity.schema.matchable or entity.schema.name == "Address":
         return None
+    if entity.id is None:
+        return None
     record: SenzingRecord = {
         "DATA_SOURCE": data_source,
         "RECORD_ID": entity.id,

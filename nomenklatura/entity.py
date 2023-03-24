@@ -407,7 +407,9 @@ class CompositeEntity(EntityProxy):
         self: CE, loader: "Loader[DS, CE]", depth: int, path: List[str]
     ) -> Dict[str, Any]:
         next_depth = depth if self.schema.edge else depth - 1
-        next_path = path + [self.id]
+        next_path = list(path)
+        if self.id is not None:
+            next_path.append(self.id)
         data = self.to_dict()
         if next_depth < 0:
             return data

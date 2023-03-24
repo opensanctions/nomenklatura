@@ -61,6 +61,8 @@ class MemoryLoader(Loader[DS, CE]):
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
         for entity in entities:
+            if entity.id is None:
+                continue
             self.resolver.apply(entity)
             if entity.id in self.entities:
                 self.entities[entity.id].merge(entity)
