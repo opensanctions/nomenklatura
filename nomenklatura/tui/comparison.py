@@ -1,5 +1,4 @@
-import asyncio
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text

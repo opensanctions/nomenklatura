@@ -29,7 +29,7 @@ class OpenCorporatesEnricher(Enricher):
             self.api_token = None
         if self.api_token is None:
             log.warning("OpenCorporates has no API token (%s)" % token_var)
-        self.cache.preload(f"%{self.API_PART}%")
+        self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:

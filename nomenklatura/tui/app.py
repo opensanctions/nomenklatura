@@ -47,6 +47,8 @@ class DedupeState(object):
             self.right = self.loader.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
+                if self.left.schema == self.right.schema:
+                    return True
                 if self.left.schema.can_match(self.right.schema):
                     return True
             self.ignore.add((left_id, right_id))
