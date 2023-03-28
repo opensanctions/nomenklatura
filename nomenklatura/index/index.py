@@ -54,7 +54,7 @@ class Index(Generic[DS, CE]):
     def index(self, entity: CE, adjacent: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
-        if not entity.schema.matchable:
+        if not entity.schema.matchable or entity.id is None:
             return
         loader = self.loader if adjacent else None
         for field, token in self.tokenizer.entity(entity, loader=loader):

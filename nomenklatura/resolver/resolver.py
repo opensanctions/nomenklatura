@@ -253,6 +253,9 @@ class Resolver(Generic[CE]):
         if proxy.id is None:
             return proxy
         proxy.id = self.get_canonical(proxy.id)
+        return self.apply_properties(proxy)
+
+    def apply_properties(self, proxy: CE) -> CE:
         for stmt in proxy._iter_stmt():
             stmt.canonical_id = proxy.id
             if stmt.prop_type == registry.entity.name:
