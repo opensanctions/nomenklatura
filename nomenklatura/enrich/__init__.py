@@ -32,6 +32,8 @@ def match(
     for entity in entities:
         yield entity
         for match in enricher.match_wrapped(entity):
+            if entity.id is None or match.id is None:
+                continue
             if not resolver.check_candidate(entity.id, match.id):
                 continue
             if not entity.schema.can_match(match.schema):
@@ -51,6 +53,8 @@ def enrich(
 ) -> Generator[CE, None, None]:
     for entity in entities:
         for match in enricher.match_wrapped(entity):
+            if entity.id is None or match.id is None:
+                continue
             judgement = resolver.get_judgement(match.id, entity.id)
             if judgement != Judgement.POSITIVE:
                 continue

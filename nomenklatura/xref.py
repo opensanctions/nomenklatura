@@ -51,7 +51,7 @@ def xref(
 
             left = loader.get_entity(left_id.id)
             right = loader.get_entity(right_id.id)
-            if left is None or right is None:
+            if left is None or left.id is None or right is None or right.id is None:
                 continue
 
             if not left.schema.can_match(right.schema):

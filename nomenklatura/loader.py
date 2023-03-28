@@ -41,7 +41,7 @@ class Loader(Generic[DS, CE]):
                 if child is not None:
                     yield prop, child
 
-        if inverted:
+        if inverted and entity.id is not None:
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 

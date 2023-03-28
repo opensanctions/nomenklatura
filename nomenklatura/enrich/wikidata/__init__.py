@@ -140,6 +140,8 @@ class WikidataEnricher(Enricher):
         other = self.item_proxy(proxy, item, schema=other_schema)
         if other is None or not self.keep_entity(other):
             return
+        if proxy.id is None or other.id is None:
+            return None
         # Hacky: if an entity is a PEP, then by definition their relatives and
         # associates are RCA (relatives and close associates).
         if "role.pep" in proxy.get("topics", quiet=True):
