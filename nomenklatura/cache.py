@@ -1,13 +1,11 @@
-import os
 import math
 import json
 import logging
-from pathlib import Path
 from random import randint
 from dataclasses import dataclass
 from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import select
@@ -15,6 +13,8 @@ from sqlalchemy.sql.expression import delete
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
+from nomenklatura.db import get_engine, get_metadata
+from nomenklatura.db import Connish, Conn, ensure_tx
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -35,17 +35,14 @@ def randomize_cache(days: int) -> timedelta:
 
 
 class Cache(object):
-    CACHE_PATH = os.environ.get("NOMENKLATURA_CACHE_PATH", ".nk_cache.db")
-
     def __init__(
         self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
     ) -> None:
         self.dataset = dataset
-        self._engine = engine
         self._table = Table(
             "cache",
             metadata,
-            Column("key", Unicode(), index=True, nullable=False, unique=True),
+            Column("key", Unicode(), primary_key=True),
             Column("text", Unicode(), nullable=True),
             Column("dataset", Unicode(), nullable=False),
             Column("timestamp", DateTime, index=True),
@@ -56,7 +53,7 @@ class Cache(object):
 
         self._preload: Dict[str, CacheValue] = {}
 
-    def set(self, key: str, value: Value) -> None:
+    def set(self, key: str, value: Value, conn: Connish = None) -> None:
         cache = {
             "timestamp": datetime.utcnow(),
             "key": key,
@@ -66,13 +63,15 @@ class Cache(object):
         istmt = upsert(self._table).values([cache])
         values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
         stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
-        with self._engine.begin() as conn:
+        with ensure_tx(conn) as conn:
             conn.execute(stmt)
 
-    def set_json(self, key: str, value: Any) -> None:
-        return self.set(key, json.dumps(value))
+    def set_json(self, key: str, value: Any, conn: Connish = None) -> None:
+        return self.set(key, json.dumps(value), conn=conn)
 
-    def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
+    def get(
+        self, key: str, max_age: Optional[int] = None, conn: Connish = None
+    ) -> Optional[Value]:
         cache_cutoff = None
         if max_age is not None:
             cache_cutoff = datetime.utcnow() - randomize_cache(max_age)
@@ -89,63 +88,117 @@ class Cache(object):
             q = q.filter(self._table.c.timestamp > cache_cutoff)
         q = q.order_by(self._table.c.timestamp.desc())
         q = q.limit(1)
-        with self._engine.connect() as conn:
+        with ensure_tx(conn) as conn:
             result = conn.execute(q)
             row = result.fetchone()
             if row is not None:
                 return cast(Optional[str], row.text)
         return None
 
-    def get_json(self, key: str, max_age: Optional[int] = None) -> Optional[Any]:
-        text = self.get(key, max_age=max_age)
+    def get_json(
+        self, key: str, max_age: Optional[int] = None, conn: Connish = None
+    ) -> Optional[Any]:
+        text = self.get(key, max_age=max_age, conn=conn)
         if text is None:
             return None
         return json.loads(text)
 
-    def has(self, key: str) -> bool:
-        return self.get(key) is not None
+    def has(self, key: str, conn: Connish = None) -> bool:
+        return self.get(key, conn=conn) is not None
 
-    def delete(self, key: str) -> None:
+    def delete(self, key: str, conn: Connish = None) -> None:
         self._preload.pop(key, None)
-        with self._engine.begin() as conn:
+        with ensure_tx(conn) as conn:
             pq = delete(self._table)
             pq = pq.where(self._table.c.key == key)
             conn.execute(pq)
 
-    def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
+    def all(
+        self, like: Optional[str], conn: Connish = None
+    ) -> Generator[CacheValue, None, None]:
         q = select(self._table)
         if like is not None:
             q = q.filter(self._table.c.key.like(like))
 
-        with self._engine.connect() as conn:
+        with ensure_tx(conn) as conn:
             result = conn.execute(q)
             for row in result.yield_per(10000):
                 yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
-    def preload(self, like: Optional[str] = None) -> None:
+    def preload(self, like: Optional[str] = None, conn: Connish = None) -> None:
         log.info("Pre-loading cache: %r", like)
-        for cache in self.all(like=like):
+        for cache in self.all(like=like, conn=conn):
             self._preload[cache.key] = cache
 
-    def clear(self) -> None:
-        with self._engine.begin() as conn:
-            pq = delete(self._table)
-            pq = pq.where(self._table.c.dataset == self.dataset.name)
+    def clear(self, conn: Connish = None) -> None:
+        pq = delete(self._table)
+        pq = pq.where(self._table.c.dataset == self.dataset.name)
+        with ensure_tx(conn) as conn:
             conn.execute(pq)
 
     def close(self) -> None:
-        self._engine.dispose()
+        pass
 
     def __repr__(self) -> str:
-        return f"<Cache({self._engine.url!r})>"
+        return f"<Cache({self._table!r})>"
 
     def __hash__(self) -> int:
-        return hash((self._engine, self._table.name))
+        return hash((self.dataset.name, self._table.name))
 
     @classmethod
     def make_default(cls, dataset: DS) -> "Cache":
-        path = Path(cls.CACHE_PATH).resolve()
-        db_uri = f"sqlite:///{path.as_posix()}"
-        engine = create_engine(db_uri)
-        metadata = MetaData()
+        engine = get_engine()
+        metadata = get_metadata()
         return cls(engine, metadata, dataset, create=True)
+
+
+class ConnCache(Cache):
+    def __init__(self, cache: Cache, conn: Conn) -> None:
+        self.cache = cache
+        self.conn = conn
+
+    def set(self, key: str, value: Value, conn: Connish = None) -> None:
+        return self.cache.set(key, value, conn=conn or self.conn)
+
+    def set_json(self, key: str, value: Any, conn: Connish = None) -> None:
+        return self.set_json(key, value, conn=conn or self.conn)
+
+    def get(
+        self, key: str, max_age: Optional[int] = None, conn: Connish = None
+    ) -> Optional[Value]:
+        return self.cache.get(key, max_age=max_age, conn=conn or self.conn)
+
+    def get_json(
+        self, key: str, max_age: Optional[int] = None, conn: Connish = None
+    ) -> Optional[Any]:
+        return self.cache.get_json(key, max_age=max_age, conn=conn or self.conn)
+
+    def has(self, key: str, conn: Connish = None) -> bool:
+        return self.cache.has(key, conn=conn or self.conn)
+
+    def delete(self, key: str, conn: Connish = None) -> None:
+        self.cache.delete(key, conn=conn or self.conn)
+
+    def all(
+        self, like: Optional[str], conn: Connish = None
+    ) -> Generator[CacheValue, None, None]:
+        yield from self.cache.all(like, conn=conn or self.conn)
+
+    def preload(self, like: Optional[str] = None, conn: Connish = None) -> None:
+        self.cache.preload(like, conn=conn or self.conn)
+
+    def clear(self, conn: Connish = None) -> None:
+        self.cache.clear(conn=conn or self.conn)
+
+    def close(self) -> None:
+        pass
+
+    def __repr__(self) -> str:
+        return f"<ConnCache({self.conn!r}, {self.cache._table!r})>"
+
+    def __hash__(self) -> int:
+        return hash(self.cache)
+
+    @classmethod
+    def make_default(cls, dataset: DS) -> "Cache":
+        raise NotImplemented
