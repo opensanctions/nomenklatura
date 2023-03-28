@@ -55,8 +55,9 @@ class DedupeState(object):
         return False
 
     def decide(self, judgement: Judgement) -> None:
-        if self.left is not None and self.right is not None:
-            self.resolver.decide(self.left.id, self.right.id, judgement=judgement)
+        if self.left is not None and self.left.id is not None:
+            if self.right is not None and self.right.id is not None:
+                self.resolver.decide(self.left.id, self.right.id, judgement=judgement)
         self.load()
 
     def save(self) -> None:

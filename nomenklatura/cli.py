@@ -15,7 +15,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
-from nomenklatura.statement import Statement, StatementProxy, CSV, FORMATS
+from nomenklatura.statement import Statement, CSV, FORMATS
 from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
@@ -272,12 +272,12 @@ def statements_aggregate(infile: Path, outpath: Path, format: str) -> None:
             infile, format=format, statement_type=Statement
         ):
             if len(statements) and statements[0].canonical_id != stmt.canonical_id:
-                entity = StatementProxy.from_statements(statements)
+                entity = Entity.from_statements(statements)
                 write_entity(outfh, entity)
                 statements = []
             statements.append(stmt)
         if len(statements):
-            entity = StatementProxy.from_statements(statements)
+            entity = Entity.from_statements(statements)
             write_entity(outfh, entity)
 
 

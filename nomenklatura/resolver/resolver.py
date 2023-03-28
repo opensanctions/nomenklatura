@@ -10,7 +10,6 @@ from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
-from nomenklatura.statement.entity import SP
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike, is_qid
 
@@ -251,22 +250,12 @@ class Resolver(Generic[CE]):
     def apply(self, proxy: CE) -> CE:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
-        canonical_id = self.get_canonical(proxy.id)
-        if canonical_id != proxy.id:
-            proxy.referents = set(self.get_referents(canonical_id))
-            proxy.id = canonical_id
-        for prop in proxy.iterprops():
-            if prop.type != registry.entity:
-                continue
-            for value in proxy.pop(prop):
-                canonical = self.get_canonical(value)
-                proxy.unsafe_add(prop, canonical, cleaned=True)
-        return proxy
-
-    def apply_statement_proxy(self, proxy: SP) -> SP:
         if proxy.id is None:
             return proxy
         proxy.id = self.get_canonical(proxy.id)
+        return self.apply_properties(proxy)
+
+    def apply_properties(self, proxy: CE) -> CE:
         for stmt in proxy._iter_stmt():
             stmt.canonical_id = proxy.id
             if stmt.prop_type == registry.entity.name:

@@ -1,14 +1,18 @@
 import hashlib
 from datetime import datetime
-from typing import Any, cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
+from sqlalchemy.engine import Row
+from typing import cast, TYPE_CHECKING
+from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
-from nomenklatura.entity import CE
 from nomenklatura.util import (
     bool_text,
     datetime_iso,
     iso_datetime,
     text_bool,
 )
+
+if TYPE_CHECKING:
+    from nomenklatura.entity import CE
 
 S = TypeVar("S", bound="Statement")
 
@@ -197,27 +201,47 @@ class Statement(object):
         )
 
     @classmethod
+    def from_db_row(cls: Type[S], row: Row) -> S:
+        return cls(
+            id=row.id,
+            canonical_id=row.canonical_id,
+            entity_id=row.entity_id,
+            prop=row.prop,
+            prop_type=row.prop_type,
+            schema=row.schema,
+            value=row.value,
+            dataset=row.dataset,
+            lang=row.lang,
+            original_value=row.original_value,
+            first_seen=row.first_seen,
+            target=row.target,
+            external=row.external,
+            last_seen=row.last_seen,
+        )
+
+    @classmethod
     def from_entity(
         cls: Type[S],
-        entity: CE,
+        entity: "CE",
         dataset: str,
         first_seen: Optional[datetime] = None,
         last_seen: Optional[datetime] = None,
         target: Optional[bool] = None,
         external: Optional[bool] = None,
     ) -> Generator[S, None, None]:
-        yield cls(
-            entity_id=entity.id,
-            prop=cls.BASE,
-            prop_type=cls.BASE,
-            schema=entity.schema.name,
-            value=entity.id,
-            dataset=dataset,
-            target=target,
-            external=external,
-            first_seen=first_seen,
-            last_seen=last_seen,
-        )
+        if entity.id is not None:
+            yield cls(
+                entity_id=entity.id,
+                prop=cls.BASE,
+                prop_type=cls.BASE,
+                schema=entity.schema.name,
+                value=entity.id,
+                dataset=dataset,
+                target=target,
+                external=external,
+                first_seen=first_seen,
+                last_seen=last_seen,
+            )
         for prop, value in entity.itervalues():
             yield cls(
                 entity_id=entity.id,

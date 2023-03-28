@@ -11,8 +11,10 @@ PathLike = Union[str, os.PathLike[str]]
 ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
 
 
-def is_qid(text: str) -> bool:
+def is_qid(text: Optional[str]) -> bool:
     """Determine if the given string is a valid wikidata QID."""
+    if text is None:
+        return False
     return QID.match(text) is not None
 
 

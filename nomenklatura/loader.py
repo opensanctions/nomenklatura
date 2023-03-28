@@ -41,7 +41,7 @@ class Loader(Generic[DS, CE]):
                 if child is not None:
                     yield prop, child
 
-        if inverted:
+        if inverted and entity.id is not None:
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
@@ -61,6 +61,8 @@ class MemoryLoader(Loader[DS, CE]):
         self.inverted: Dict[str, List[Tuple[Property, str]]] = {}
         log.info("Loading %r to memory...", dataset)
         for entity in entities:
+            if entity.id is None:
+                continue
             self.resolver.apply(entity)
             if entity.id in self.entities:
                 self.entities[entity.id].merge(entity)
@@ -115,7 +117,7 @@ class FileLoader(MemoryLoader[Dataset, CompositeEntity]):
                 if not line:
                     break
                 data = json.loads(line)
-                proxy = CompositeEntity.from_dict(model, data)
+                proxy = CompositeEntity(model, data, default_dataset=dataset.name)
                 if not proxy.datasets:
                     proxy.datasets.add(dataset.name)
                 yield proxy

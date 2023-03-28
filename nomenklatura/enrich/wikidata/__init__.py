@@ -20,6 +20,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.util import is_qid
 
 WD_API = "https://www.wikidata.org/w/api.php"
+LABEL_PREFIX = "wd:label"
 log = logging.getLogger(__name__)
 
 
@@ -28,7 +29,7 @@ class WikidataEnricher(Enricher):
         super().__init__(dataset, cache, config)
         self.depth = self.get_config_int("depth", 1)
         self.label_cache_days = self.get_config_int("label_cache_days", 100)
-        self.cache.preload(f"{WD_API}%")
+        self.cache.preload(f"{LABEL_PREFIX}%")
 
     def keep_entity(self, entity: CE) -> bool:
         if check_person_cutoff(entity):
@@ -36,6 +37,9 @@ class WikidataEnricher(Enricher):
         return True
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
+        if not entity.schema.is_a("Person"):
+            return
+
         wikidata_id = self.get_wikidata_id(entity)
 
         # Already has an ID associated with it:
@@ -45,9 +49,6 @@ class WikidataEnricher(Enricher):
                 proxy = self.item_proxy(entity, item, schema=entity.schema.name)
                 if proxy is not None and self.keep_entity(proxy):
                     yield proxy
-            return
-
-        if not entity.schema.is_a("Person"):
             return
 
         for name in entity.get("name", quiet=True):
@@ -111,14 +112,21 @@ class WikidataEnricher(Enricher):
 
     @cache
     def get_label(self, qid: str) -> Optional[str]:
+        cache_key = f"{LABEL_PREFIX}:{qid}"
+        cached = self.cache.get(cache_key, max_age=self.label_cache_days)
+        if cached is not None:
+            return cached
         data = self.wikibase_getentities(
             qid,
-            cache_days=self.label_cache_days,
+            cache_days=self.cache_days,
             props="labels",
         )
         entity = data.get("entities", {}).get(qid)
         label = pick_obj_lang(entity.get("labels", {}))
-        return label
+        if label is not None:
+            self.cache.set(cache_key, label.text)
+            return label.text
+        return None
 
     def make_link(
         self,
@@ -139,7 +147,9 @@ class WikidataEnricher(Enricher):
 
         other = self.item_proxy(proxy, item, schema=other_schema)
         if other is None or not self.keep_entity(other):
-            return
+            return None
+        if proxy.id is None or other.id is None:
+            return None
         # Hacky: if an entity is a PEP, then by definition their relatives and
         # associates are RCA (relatives and close associates).
         if "role.pep" in proxy.get("topics", quiet=True):
