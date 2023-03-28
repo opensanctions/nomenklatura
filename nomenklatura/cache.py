@@ -161,7 +161,7 @@ class ConnCache(Cache):
         return self.cache.set(key, value, conn=conn or self.conn)
 
     def set_json(self, key: str, value: Any, conn: Connish = None) -> None:
-        return self.set_json(key, value, conn=conn or self.conn)
+        return self.cache.set_json(key, value, conn=conn or self.conn)
 
     def get(
         self, key: str, max_age: Optional[int] = None, conn: Connish = None
