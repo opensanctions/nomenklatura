@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime
+from sqlalchemy.engine import Row
 from typing import Any, cast, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
 from nomenklatura.entity import CE
@@ -194,6 +195,25 @@ class Statement(object):
             target=text_bool(data.get("target")),
             external=text_bool(data.get("external")),
             last_seen=iso_datetime(data.get("last_seen", None)),
+        )
+
+    @classmethod
+    def from_db_row(cls: Type[S], row: Row) -> S:
+        return cls(
+            id=row.id,
+            canonical_id=row.canonical_id,
+            entity_id=row.entity_id,
+            prop=row.prop,
+            prop_type=row.prop_type,
+            schema=row.schema,
+            value=row.value,
+            dataset=row.dataset,
+            lang=row.lang,
+            original_value=row.original_value,
+            first_seen=row.first_seen,
+            target=row.target,
+            external=row.external,
+            last_seen=row.last_seen,
         )
 
     @classmethod

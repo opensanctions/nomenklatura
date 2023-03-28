@@ -63,7 +63,6 @@ class Cache(object):
             "dataset": self.dataset.name,
             "text": value,
         }
-
         istmt = upsert(self._table).values([cache])
         values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
         stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
@@ -119,8 +118,8 @@ class Cache(object):
             q = q.filter(self._table.c.key.like(like))
 
         with self._engine.connect() as conn:
-            result = conn.execution_options(stream_results=True).execute(q)
-            for row in result:
+            result = conn.execute(q)
+            for row in result.yield_per(10000):
                 yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
     def preload(self, like: Optional[str] = None) -> None:
