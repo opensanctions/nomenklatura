@@ -44,16 +44,19 @@ def test_donations_entities(donations_json: List[Dict[str, Any]]):
 def test_example_entity():
     sp = CompositeEntity.from_dict(model, EXAMPLE)
     assert len(sp) == 3
+    assert sp.checksum() == "18633e25875bdcb9cd13075564243d1a25b62095"
     assert sp.caption == "John Doe"
     assert "John Doe", sp.get_type_values(registry.name)
     sp.add("country", "us")
     assert len(sp) == 4
+    assert sp.checksum() == "3c6ad3c3f5a348d34ca59cca1610cd122555635f"
     sp.set("country", "gb")
     assert len(sp) == 4
     data = sp.to_dict()
     assert data["id"] == sp.id, data
     so = sp.clone()
     assert so.id == sp.id
+    assert so.checksum() == sp.checksum()
 
     sx = CompositeEntity.from_statements(sp.statements)
     assert sx.id == sp.id

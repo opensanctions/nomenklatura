@@ -1,3 +1,5 @@
+from hashlib import sha1
+from banal import hash_data
 from datetime import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
@@ -79,6 +81,13 @@ class CompositeEntity(EntityProxy):
         for stmts in self._statements.values():
             yield from stmts
 
+    def checksum(self) -> str:
+        hash = sha1(self.schema.name.encode("utf-8"))
+        for stmt in sorted(self._iter_stmt()):
+            if stmt.id is not None:
+                hash.update(stmt.id.encode("utf-8"))
+        return hash.hexdigest()
+
     @property
     def statements(self) -> Generator[Statement, None, None]:
         if self.id is not None:
@@ -88,7 +97,7 @@ class CompositeEntity(EntityProxy):
                 prop=Statement.BASE,
                 prop_type=Statement.BASE,
                 schema=self.schema.name,
-                value=self.id,
+                value=self.checksum(),
                 dataset=self.default_dataset,
             )
         yield from self._iter_stmt()
