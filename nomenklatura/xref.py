@@ -84,6 +84,12 @@ def xref(
             if len(left.datasets.intersection(right.datasets)) > 0:
                 score = score * 0.7
 
+            # promote = "us_cia_world_leaders"
+            # if promote in left.datasets and promote not in right.datasets:
+            #     score = (score + 1.0) / 2.0
+            # if promote not in left.datasets and promote in right.datasets:
+            #     score = (score + 1.0) / 2.0
+
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
                 resolver.decide(left_id, right_id, Judgement.POSITIVE, user=user)
