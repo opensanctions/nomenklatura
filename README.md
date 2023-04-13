@@ -20,16 +20,16 @@ With the file in place, you will cross-reference the entities to generate de-dup
 
 ```bash
 # generate merge candidates using an in-memory index:
-$ nomenklatura xref entities.ijson
-# note there is now a new file, `entities.rslv.ijson` that contains de-duplication info.
-$ nomenklatura dedupe entiites.ijson
+$ nomenklatura xref -r resolver.json entities.ijson
+# note there is now a new file, `resolver.json` that contains de-duplication info.
+$ nomenklatura dedupe -r resolver.json entites.ijson
 # will pop up a user interface.
-$ nomenklatura apply entities.ijson -o merged.ijson
+$ nomenklatura apply entities.ijson -o merged.ijson -r resolver.json
 # de-duplicated data goes into `merged.ijson`:
 $ cat entities.ijson | wc -l 
-474 entities.ijson
-$ cat entities.ijson | wc -l 
-468 merged.ijson
+474
+$ cat merged.ijson | wc -l 
+468 
 ```
 
 ### Programmatic usage
