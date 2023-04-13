@@ -49,6 +49,9 @@ def xref(
             if not resolver.check_candidate(left_id, right_id):
                 continue
 
+            if is_qid(left_id.id) and is_qid(right_id.id):
+                continue
+
             left = loader.get_entity(left_id.id)
             right = loader.get_entity(right_id.id)
             if left is None or left.id is None or right is None or right.id is None:
