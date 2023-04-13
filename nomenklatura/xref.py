@@ -9,6 +9,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.index import Index
 from nomenklatura.matching import compare_scored
+from nomenklatura.util import is_qid
 
 log = logging.getLogger(__name__)
 
