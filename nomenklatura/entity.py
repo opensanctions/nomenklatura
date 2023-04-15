@@ -79,7 +79,10 @@ class CompositeEntity(EntityProxy):
 
     def _iter_stmt(self) -> Generator[Statement, None, None]:
         for stmts in self._statements.values():
-            yield from stmts
+            for stmt in stmts:
+                if stmt.id is None and stmt.entity_id is not None:
+                    stmt.id = stmt.generate_key()
+                yield stmt
 
     def checksum(self) -> str:
         hash = sha1(self.schema.name.encode("utf-8"))

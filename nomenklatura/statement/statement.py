@@ -94,8 +94,8 @@ class Statement(object):
         self.last_seen = last_seen or first_seen
         self.target = target
         self.external = external
-        if id is None and entity_id is not None:
-            id = self.make_key(dataset, entity_id, prop, value, external)
+        if id is None:
+            id = self.generate_key()
         self.id = id
 
     def to_dict(self) -> StatementDict:
@@ -138,22 +138,35 @@ class Statement(object):
         return not self.id != other.id
 
     def __lt__(self, other: Any) -> bool:
-        return (self.prop != self.BASE, self.id) < (other.prop != self.BASE, other.id)
+        self_key = (self.prop != self.BASE, self.id or "")
+        other_key = (other.prop != self.BASE, other.id or "")
+        return self_key < other_key
 
     def clone(self: S) -> S:
         """Make a deep copy of the given statement."""
         return type(self).from_dict(self.to_dict())
 
+    def generate_key(self) -> Optional[str]:
+        return self.make_key(
+            self.dataset,
+            self.entity_id,
+            self.prop,
+            self.value,
+            self.external,
+        )
+
     @classmethod
     def make_key(
         cls,
         dataset: str,
-        entity_id: str,
+        entity_id: Optional[str],
         prop: str,
         value: str,
         external: Optional[bool],
-    ) -> str:
+    ) -> Optional[str]:
         """Hash the key properties of a statement record to make a unique ID."""
+        if entity_id is None:
+            return None
         key = f"{dataset}.{entity_id}.{prop}.{value}"
         if external:
             # We consider the external flag in key composition to avoid race conditions where
