@@ -21,7 +21,7 @@ def ascii_share(text: str) -> float:
 
 def pick_name(names: List[str]) -> Optional[str]:
     forms: List[Tuple[str, str, float]] = []
-    for name in names:
+    for name in sorted(names):
         norm = normalize(name, ascii=True, lowercase=False)
         if norm is not None:
             weight = 2 - ascii_share(name)
