@@ -24,7 +24,7 @@ setup(
         "followthemoney >= 3.3.0, < 4.0.0",
         "shortuuid >= 1.0.11, < 2.0.0",
         "rich >= 10.9.0, < 14.0.0",
-        "textual >= 0.19.0, < 0.20.0",
+        "textual >= 0.19.0, < 0.21.0",
         "scikit-learn == 1.2.1",
         "click >= 8.0.0, < 9.0.0",
     ],
