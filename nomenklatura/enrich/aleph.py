@@ -118,12 +118,7 @@ class AlephEnricher(Enricher):
         }
         cache_id = entity.id or hash_data(query)
         cache_key = f"{url}:{cache_id}"
-        response = self.cache.get_json(cache_key, max_age=self.cache_days)
-        if response is None:
-            resp = self.session.post(url, json=query)
-            resp.raise_for_status()
-            response = resp.json()
-            self.cache.set_json(cache_key, response)
+        response = self.http_post_json_cached(url, cache_key, query)
         for result in response.get("results", []):
             proxy = self.load_aleph_entity(entity, result)
             if proxy is not None:

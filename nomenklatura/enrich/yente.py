@@ -23,6 +23,7 @@ class YenteEnricher(Enricher):
         self._api: str = config.pop("api")
         self._dataset: str = config.pop("dataset", "default")
         self._threshold: Optional[float] = config.pop("threshold", None)
+        self._nested: bool = config.pop("expand_nested", True)
         self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
@@ -47,27 +48,23 @@ class YenteEnricher(Enricher):
         if self._threshold is not None:
             url = normalize_url(url, {"threshold": self._threshold})
         cache_key = f"{url}:{entity.id}"
-        response = self.cache.get_json(cache_key, max_age=self.cache_days)
-        if response is None:
-            props: Dict[str, List[str]] = {}
-            for prop in entity.iterprops():
-                if prop.type == registry.entity:
-                    continue
-                if prop.matchable:
-                    props[prop.name] = entity.get(prop)
-            data = {
-                "queries": {
-                    "entity": {
-                        "schema": entity.schema.name,
-                        "properties": props,
-                    }
+        props: Dict[str, List[str]] = {}
+        for prop in entity.iterprops():
+            if prop.type == registry.entity:
+                continue
+            if prop.matchable:
+                props[prop.name] = entity.get(prop)
+        query = {
+            "queries": {
+                "entity": {
+                    "schema": entity.schema.name,
+                    "properties": props,
                 }
             }
-            resp = self.session.post(url, json=data)
-            resp.raise_for_status()
-            response = resp.json().get("responses", {}).get("entity", {})
-            self.cache.set_json(cache_key, response)
-        for result in response.get("results", []):
+        }
+        response = self.http_post_json_cached(url, cache_key, query)
+        inner_resp = response.get("responses", {}).get("entity", {})
+        for result in inner_resp.get("results", []):
             proxy = self.load_entity(entity, result)
             proxy.add("sourceUrl", self.make_url(proxy))
             if self._ns is not None:
@@ -97,6 +94,6 @@ class YenteEnricher(Enricher):
         for source_url in match.get("sourceUrl", quiet=True):
             if source_url.startswith(self._api):
                 url = source_url
-        url = normalize_url(url, {"nested": True})
+        url = normalize_url(url, {"nested": self._nested})
         response = self.http_get_json_cached(url)
         yield from self._traverse_nested(match, response)

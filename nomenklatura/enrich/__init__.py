@@ -39,20 +39,23 @@ def match(
 ) -> Generator[CE, None, None]:
     for entity in entities:
         yield entity
-        for match in enricher.match_wrapped(entity):
-            if entity.id is None or match.id is None:
-                continue
-            if not resolver.check_candidate(entity.id, match.id):
-                continue
-            if not entity.schema.can_match(match.schema):
-                continue
-            result = compare_scored(entity, match)
-            score = result["score"]
-            log.info("Match [%s]: %.2f -> %s", entity, score, match)
-            resolver.suggest(entity.id, match.id, score)
-            match.datasets.add(enricher.dataset.name)
-            match = resolver.apply(match)
-            yield match
+        try:
+            for match in enricher.match_wrapped(entity):
+                if entity.id is None or match.id is None:
+                    continue
+                if not resolver.check_candidate(entity.id, match.id):
+                    continue
+                if not entity.schema.can_match(match.schema):
+                    continue
+                result = compare_scored(entity, match)
+                score = result["score"]
+                log.info("Match [%s]: %.2f -> %s", entity, score, match)
+                resolver.suggest(entity.id, match.id, score)
+                match.datasets.add(enricher.dataset.name)
+                match = resolver.apply(match)
+                yield match
+        except EnrichmentException:
+            log.exception("Failed to match: %r" % entity)
 
 
 # nk enrich -i entities.json -r resolver.json -o combined.json
@@ -60,18 +63,21 @@ def enrich(
     enricher: Enricher, resolver: Resolver[CE], entities: Iterable[CE]
 ) -> Generator[CE, None, None]:
     for entity in entities:
-        for match in enricher.match_wrapped(entity):
-            if entity.id is None or match.id is None:
-                continue
-            judgement = resolver.get_judgement(match.id, entity.id)
-            if judgement != Judgement.POSITIVE:
-                continue
+        try:
+            for match in enricher.match_wrapped(entity):
+                if entity.id is None or match.id is None:
+                    continue
+                judgement = resolver.get_judgement(match.id, entity.id)
+                if judgement != Judgement.POSITIVE:
+                    continue
 
-            log.info("Enrich [%s]: %r", entity, match)
-            for adjacent in enricher.expand_wrapped(entity, match):
-                adjacent.datasets.add(enricher.dataset.name)
-                adjacent = resolver.apply(adjacent)
-                yield adjacent
+                log.info("Enrich [%s]: %r", entity, match)
+                for adjacent in enricher.expand_wrapped(entity, match):
+                    adjacent.datasets.add(enricher.dataset.name)
+                    adjacent = resolver.apply(adjacent)
+                    yield adjacent
+        except EnrichmentException:
+            log.exception("Failed to enrich: %r" % entity)
 
 
 def get_enricher(import_path: str) -> Optional[Type[Enricher]]:

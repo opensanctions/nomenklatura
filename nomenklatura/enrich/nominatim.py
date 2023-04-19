@@ -1,8 +1,6 @@
-import json
 import logging
 from normality import collapse_spaces
 from typing import Any, Dict, Iterable, Generator
-from requests.exceptions import HTTPError
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -29,12 +27,7 @@ class NominatimEnricher(Enricher):
                 "accept-language": "en",
                 "addressdetails": 1,
             }
-            try:
-                response = self.http_get_cached(NOMINATIM, params)
-            except HTTPError as exc:
-                log.error("Failed to geocode [%s]: %s", exc.response.status_code, full)
-                continue
-            results = json.loads(response)
+            results = self.http_get_json_cached(NOMINATIM, params)
             log.info("OpenStreetMap geocoded [%s]: %d results", full, len(results))
             for result in results:
                 yield result

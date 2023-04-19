@@ -4,6 +4,7 @@ from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
+from requests.exceptions import RequestException, HTTPError
 from followthemoney import model
 
 from nomenklatura import __version__
@@ -65,8 +66,14 @@ class Enricher(ABC):
         response = self.cache.get(url, max_age=cache_days_)
         if response is None:
             hidden_url = normalize_url(url, params=hidden)
-            resp = self.session.get(hidden_url)
-            resp.raise_for_status()
+            try:
+                resp = self.session.get(hidden_url)
+                resp.raise_for_status()
+            except RequestException as rex:
+                if rex.response is not None and rex.response.status_code in (401, 403):
+                    raise EnrichmentAbort("Authorization failure: %s" % url) from rex
+                msg = "HTTP fetch failed [%s]: %s" % (url, rex)
+                raise EnrichmentException(msg) from rex
             response = resp.text
             self.cache.set(url, response)
         return response
@@ -84,6 +91,28 @@ class Enricher(ABC):
     ) -> Any:
         res = self.http_get_cached(url, params, hidden=hidden, cache_days=cache_days)
         return json.loads(res)
+
+    def http_post_json_cached(
+        self,
+        url: str,
+        cache_key: str,
+        json: Any,
+        cache_days: Optional[int] = None,
+    ) -> Any:
+        cache_days_ = cache_days or self.cache_days
+        resp_data = self.cache.get_json(cache_key, max_age=cache_days_)
+        if resp_data is None:
+            try:
+                resp = self.session.post(url, json=json)
+                resp.raise_for_status()
+            except RequestException as rex:
+                if rex.response is not None and rex.response.status_code in (401, 403):
+                    raise EnrichmentAbort("Authorization failure: %s" % url) from rex
+                msg = "HTTP POST failed [%s]: %s" % (url, rex)
+                raise EnrichmentException(msg) from rex
+            resp_data = resp.json()
+            self.cache.set_json(cache_key, resp_data)
+        return resp_data
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
         proxy = type(entity).from_dict(model, data, cleaned=False)

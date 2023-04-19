@@ -131,17 +131,12 @@ class OpenCorporatesEnricher(Enricher):
         params = {"q": q, "sparse": True, "country_codes": countries}
         for page in range(1, 9):
             params["page"] = page
-            try:
-                results = self.http_get_json_cached(
-                    self.COMPANY_SEARCH_API,
-                    params=params,
-                    hidden={"api_token": self.api_token},
-                )
-            except HTTPError as exc:
-                if exc.response.status_code in (403, 401):
-                    raise EnrichmentAbort("OpenCorporates access denied.") from exc
-                log.error("Failed to search [%s]: %s", exc.response.status_code, q)
-                break
+            results = self.http_get_json_cached(
+                self.COMPANY_SEARCH_API,
+                params=params,
+                hidden={"api_token": self.api_token},
+            )
+
             # print(results)
             for company in results.get("results", {}).get("companies", []):
                 proxy = self.company_entity(entity, company)
