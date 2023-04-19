@@ -7,11 +7,19 @@ from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.matching import compare_scored
 from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 
 log = logging.getLogger(__name__)
-__all__ = ["Enricher", "make_enricher", "enrich", "match"]
+__all__ = [
+    "Enricher",
+    "EnrichmentAbort",
+    "EnrichmentException",
+    "make_enricher",
+    "enrich",
+    "match",
+]
 
 
 def make_enricher(

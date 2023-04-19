@@ -10,6 +10,7 @@ from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import EnrichmentAbort
 
 
 log = logging.getLogger(__name__)
@@ -137,6 +138,8 @@ class OpenCorporatesEnricher(Enricher):
                     hidden={"api_token": self.api_token},
                 )
             except HTTPError as exc:
+                if exc.response.status_code in (403, 401):
+                    raise EnrichmentAbort("OpenCorporates access denied.") from exc
                 log.error("Failed to search [%s]: %s", exc.response.status_code, q)
                 break
             # print(results)

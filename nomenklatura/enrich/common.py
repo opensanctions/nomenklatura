@@ -15,6 +15,14 @@ from nomenklatura.util import ParamsType, normalize_url
 EnricherConfig = Dict[str, Any]
 
 
+class EnrichmentException(Exception):
+    pass
+
+
+class EnrichmentAbort(Exception):
+    pass
+
+
 class Enricher(ABC):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         self.dataset = dataset
