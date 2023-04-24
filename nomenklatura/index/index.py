@@ -49,7 +49,7 @@ class Index(Generic[DS, CE]):
         self.loader = loader
         self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
-        self.entities: Set[str] = set()
+        self.entities: Set[Identifier] = set()
 
     def index(self, entity: CE, adjacent: bool = True) -> None:
         """Index one entity. This is not idempotent, you need to remove the
@@ -57,11 +57,12 @@ class Index(Generic[DS, CE]):
         if not entity.schema.matchable or entity.id is None:
             return
         loader = self.loader if adjacent else None
+        ident = Identifier.get(entity.id)
         for field, token in self.tokenizer.entity(entity, loader=loader):
             if field not in self.fields:
                 self.fields[field] = Field()
-            self.fields[field].add(entity.id, token)
-        self.entities.add(entity.id)
+            self.fields[field].add(ident, token)
+        self.entities.add(ident)
 
     def build(self, adjacent: bool = True) -> None:
         """Index all entities in the dataset."""
@@ -110,7 +111,7 @@ class Index(Generic[DS, CE]):
                 continue
             for entity_id, tf in entry.frequencies(field):
                 score = (tf * entry.idf) * self.BOOSTS.get(field_, 1.0)
-                matches[entity_id] += score
+                matches[entity_id.id] += score
 
         results = sorted(matches.items(), key=lambda x: x[1], reverse=True)
         log.debug("Match entity: %r (%d results)", query, len(results))
@@ -166,7 +167,7 @@ class Index(Generic[DS, CE]):
                 for (left, lw), (right, rw) in combinations(entities, 2):
                     if lw == 0.0 or rw == 0.0:
                         continue
-                    pair = Identifier.pair(left, right)
+                    pair = (max(left, right), min(left, right))
                     if pair not in pairs:
                         pairs[pair] = 0
                     score = (lw + rw) * boost
@@ -198,14 +199,15 @@ class Index(Generic[DS, CE]):
         """Prepare an index for pickling."""
         return {
             "fields": {n: f.to_dict() for n, f in self.fields.items()},
-            "entities": self.entities,
+            "entities": [e.id for e in self.entities],
         }
 
     def from_dict(self, state: Dict[str, Any]) -> None:
         """Restore a pickled index."""
         fields = state["fields"].items()
         self.fields = {t: Field.from_dict(i) for t, i in fields}
-        self.entities = set(cast(Set[str], state.get("entities")))
+        entities: List[str] = state.get("entities", [])
+        self.entities = set((Identifier.get(e) for e in entities))
 
     def __len__(self) -> int:
         return len(self.entities)

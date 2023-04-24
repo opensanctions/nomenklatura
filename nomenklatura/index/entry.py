@@ -1,6 +1,8 @@
 import math
 from typing import Any, Dict, Generator, Tuple, cast
 
+from nomenklatura.resolver import Identifier
+
 
 class Entry(object):
     """A set of entities and a weight associated with a given term in the index."""
@@ -9,9 +11,9 @@ class Entry(object):
 
     def __init__(self) -> None:
         self.idf: float = 0.0
-        self.entities: Dict[str, int] = dict()
+        self.entities: Dict[Identifier, int] = dict()
 
-    def add(self, entity_id: str) -> None:
+    def add(self, entity_id: Identifier) -> None:
         """Mark the given entity as relevant to the entry's token."""
         # This is insane and meant to trade perf for memory:
         try:
@@ -23,7 +25,9 @@ class Entry(object):
         """Compute weighted term frequency for scoring."""
         self.idf = math.log(field.len / len(self.entities))
 
-    def frequencies(self, field: "Field") -> Generator[Tuple[str, float], None, None]:
+    def frequencies(
+        self, field: "Field"
+    ) -> Generator[Tuple[Identifier, float], None, None]:
         for entity_id, mentions in self.entities.items():
             field_len = max(1, field.entities[entity_id])
             yield entity_id, (mentions / field_len)
@@ -50,9 +54,9 @@ class Field(object):
         self.len = 0
         self.avg_len = 0.0
         self.tokens: Dict[str, Entry] = {}
-        self.entities: Dict[str, int] = {}
+        self.entities: Dict[Identifier, int] = {}
 
-    def add(self, entity_id: str, token: str) -> None:
+    def add(self, entity_id: Identifier, token: str) -> None:
         if token not in self.tokens:
             self.tokens[token] = Entry()
         self.tokens[token].add(entity_id)
@@ -71,7 +75,7 @@ class Field(object):
     def to_dict(self) -> Dict[str, Any]:
         return {
             "tokens": {t: e.to_dict() for t, e in self.tokens.items()},
-            "entities": self.entities,
+            "entities": {i.id: c for i, c in self.entities.items()},
         }
 
     @classmethod
@@ -79,7 +83,9 @@ class Field(object):
         obj = cls()
         inverted = data["tokens"].items()
         obj.tokens = {t: Entry.from_dict(i) for t, i in inverted}
-        obj.entities = cast(Dict[str, int], data.get("entities"))
+        # obj.entities = cast(Dict[str, int], data.get("entities"))
+        entities: Dict[str, int] = data.get("entities", {})
+        obj.entities = {Identifier.get(e): c for e, c in entities.items()}
         return obj
 
     def __repr__(self) -> str:
