@@ -1,4 +1,5 @@
 import re
+import math
 import Levenshtein
 from itertools import product
 from normality import slugify
@@ -58,6 +59,7 @@ def compare_levenshtein(left: str, right: str) -> float:
     distance = Levenshtein.distance(left, right)
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
+    # return math.sqrt(distance)
 
 
 def props_pair(
