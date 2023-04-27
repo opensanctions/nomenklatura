@@ -2,6 +2,9 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
+from functools import lru_cache
+from fingerprints.fingerprint import fingerprint
+from fingerprints.cleanup import clean_strict
 from typing import Any, Mapping, Union, Iterable, Tuple, Optional
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
@@ -60,3 +63,15 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     if text is None or len(text) == 0:
         return None
     return text.lower().startswith("t")
+
+
+@lru_cache(maxsize=10000)
+def fingerprint_name(original: str) -> Optional[str]:
+    """Fingerprint a legal entity name."""
+    return fingerprint(original)
+
+
+@lru_cache(maxsize=10000)
+def normalize_name(original: str) -> Optional[str]:
+    """Normalize a legal entity name."""
+    return clean_strict(original)

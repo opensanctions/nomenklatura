@@ -1,7 +1,7 @@
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import normalize_text, tokenize_pair
+from nomenklatura.matching.features.util import normalize_text, tokenize
 from nomenklatura.matching.features.util import has_disjoint, has_overlap, has_schema
 from nomenklatura.matching.features.util import compare_levenshtein, compare_sets
 from nomenklatura.matching.features.util import props_pair, type_pair, extract_numbers
@@ -9,9 +9,11 @@ from nomenklatura.matching.features.util import props_pair, type_pair, extract_n
 
 def birth_place(left: Entity, right: Entity) -> float:
     """Same place of birth."""
-    lv, rv = tokenize_pair(props_pair(left, right, ["birthPlace"]))
-    tokens = min(len(lv), len(rv))
-    return float(len(lv.intersection(rv))) / float(max(2.0, tokens))
+    lv, rv = props_pair(left, right, ["birthPlace"])
+    lvt = tokenize(lv)
+    rvt = tokenize(rv)
+    tokens = min(len(lvt), len(rvt))
+    return float(len(lvt.intersection(rvt))) / float(max(2.0, tokens))
 
 
 def address_match(left: Entity, right: Entity) -> float:

@@ -59,7 +59,6 @@ def compare_levenshtein(left: str, right: str) -> float:
     distance = Levenshtein.distance(left, right)
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
-    # return math.sqrt(distance)
 
 
 def props_pair(
@@ -114,9 +113,3 @@ def tokenize(texts: Iterable[str]) -> Set[str]:
             if len(token) > 2:
                 tokens.add(token)
     return tokens
-
-
-def tokenize_pair(
-    pair: Tuple[Iterable[str], Iterable[str]]
-) -> Tuple[Set[str], Set[str]]:
-    return tokenize(pair[0]), tokenize(pair[1])
