@@ -59,11 +59,12 @@ def name_match(left: Entity, right: Entity) -> float:
     """Check for exact name matches between the two entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = fingerprint_names(lv), fingerprint_names(rv)
-    common = [len(n) for n in lvn.intersection(rvn)]
-    max_common = max(common, default=0)
-    if max_common == 0:
-        return 0.0
-    return float(max_common)
+    # common = [len(n) for n in lvn.intersection(rvn)]
+    # max_common = max(common, default=0)
+    # if max_common == 0:
+    #     return 0.0
+    # return float(max_common)
+    return has_overlap(lvn, rvn)
 
 
 def name_token_overlap(left: Entity, right: Entity) -> float:

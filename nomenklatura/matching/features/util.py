@@ -75,8 +75,8 @@ def props_pair(
 def type_pair(
     left: Entity, right: Entity, type_: PropertyType
 ) -> Tuple[List[str], List[str]]:
-    left_values = left.get_type_values(type_)
-    right_values = right.get_type_values(type_)
+    left_values = left.get_type_values(type_, matchable=True)
+    right_values = right.get_type_values(type_, matchable=True)
     return left_values, right_values
 
 
@@ -97,7 +97,6 @@ def compare_sets(
     return select_func(results)
 
 
-@lru_cache(maxsize=1000)
 def normalize_text(text: str) -> Optional[str]:
     return slugify(text, sep=WS)
 

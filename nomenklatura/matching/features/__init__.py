@@ -19,7 +19,7 @@ Encoded = List[float]
 
 FEATURES = [
     name_match,
-    name_token_overlap,
+    # name_token_overlap,
     name_numbers,
     name_levenshtein,
     phone_match,

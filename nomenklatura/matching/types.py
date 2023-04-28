@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple, TypedDict, cast
+from typing import Dict, Optional, TypedDict
 
 
 class FeatureDoc(TypedDict):
