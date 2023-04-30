@@ -1,19 +1,49 @@
 import pickle
 import numpy as np
 from pathlib import Path
-from typing import Dict, Tuple, cast
+from typing import List, Dict, Tuple, cast
 from functools import cache
 from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 
 from nomenklatura import __version__
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.features import FEATURES, encode_pair
 from nomenklatura.matching.types import FeatureDocs, MatchingResult
+from nomenklatura.matching.v1.dates import dob_matches, dob_year_matches
+from nomenklatura.matching.v1.names import first_name_match, family_name_match
+from nomenklatura.matching.v1.names import name_levenshtein, name_match
+from nomenklatura.matching.v1.names import name_token_overlap, name_numbers
+from nomenklatura.matching.v1.misc import phone_match, email_match
+from nomenklatura.matching.v1.misc import address_match, address_numbers
+from nomenklatura.matching.v1.misc import identifier_match, birth_place
+from nomenklatura.matching.v1.misc import gender_mismatch, country_mismatch
+from nomenklatura.matching.v1.misc import org_identifier_match
+from nomenklatura.matching.types import FeatureItem
 
+Encoded = List[float]
+NAME = "regression-v1"
 BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
-MODEL_PATH = DATA_PATH.joinpath("match-regression.pkl")
+MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
+FEATURES: List[FeatureItem] = [
+    name_match,
+    name_token_overlap,
+    name_numbers,
+    name_levenshtein,
+    phone_match,
+    email_match,
+    identifier_match,
+    dob_matches,
+    dob_year_matches,
+    first_name_match,
+    family_name_match,
+    birth_place,
+    gender_mismatch,
+    country_mismatch,
+    org_identifier_match,
+    address_match,
+    address_numbers,
+]
 
 
 def save_matcher(pipe: Pipeline, coefficients: Dict[str, float]) -> None:
@@ -65,3 +95,8 @@ def compare_scored(left: Entity, right: Entity) -> MatchingResult:
     score = cast(float, pred[0][1])
     features = {f.__name__: float(c) for f, c in zip(FEATURES, encoded)}
     return {"score": score, "features": features}
+
+
+def encode_pair(left: Entity, right: Entity) -> Encoded:
+    """Encode the comparison between two entities as a set of feature values."""
+    return [f(left, right) for f in FEATURES]

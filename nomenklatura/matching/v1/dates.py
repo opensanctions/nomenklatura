@@ -2,7 +2,7 @@ from typing import Iterable, Set
 from prefixdate import Precision
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.features.util import props_pair, has_overlap
+from nomenklatura.matching.v1.util import props_pair, has_overlap
 
 
 def with_precision(values: Iterable[str], precision: Precision) -> Set[str]:

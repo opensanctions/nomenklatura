@@ -9,7 +9,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.matching.train import train_matcher
+from nomenklatura.matching.v1 import train_matcher
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset

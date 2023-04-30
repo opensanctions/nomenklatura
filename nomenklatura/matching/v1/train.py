@@ -13,8 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
-from nomenklatura.matching.features import FEATURES, encode_pair
-from nomenklatura.matching.model import save_matcher
+from nomenklatura.matching.v1.model import save_matcher, FEATURES, encode_pair
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)

@@ -1,18 +1,14 @@
-import re
-import math
 import Levenshtein
 from itertools import product
-from normality import slugify
-from functools import lru_cache
 from normality.constants import WS
 from typing import Callable, Iterable, List
 from typing import Optional, Set, Tuple, TypeVar
 from followthemoney.types.common import PropertyType
 
 from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.util import normalize_name
 
 V = TypeVar("V")
-FIND_NUM = re.compile("\d{2,}")
 
 
 def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
@@ -48,17 +44,11 @@ def has_schema(left: Entity, right: Entity, schema: str) -> bool:
     return False
 
 
-def extract_numbers(values: List[str]) -> Set[str]:
-    numbers: Set[str] = set()
-    for value in values:
-        numbers.update(FIND_NUM.findall(value))
-    return numbers
-
-
 def compare_levenshtein(left: str, right: str) -> float:
     distance = Levenshtein.distance(left, right)
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
+    # return math.sqrt(distance)
 
 
 def props_pair(
@@ -75,8 +65,8 @@ def props_pair(
 def type_pair(
     left: Entity, right: Entity, type_: PropertyType
 ) -> Tuple[List[str], List[str]]:
-    left_values = left.get_type_values(type_, matchable=True)
-    right_values = right.get_type_values(type_, matchable=True)
+    left_values = left.get_type_values(type_)
+    right_values = right.get_type_values(type_)
     return left_values, right_values
 
 
@@ -97,14 +87,10 @@ def compare_sets(
     return select_func(results)
 
 
-def normalize_text(text: str) -> Optional[str]:
-    return slugify(text, sep=WS)
-
-
 def tokenize(texts: Iterable[str]) -> Set[str]:
     tokens: Set[str] = set()
     for text in texts:
-        cleaned = normalize_text(text)
+        cleaned = normalize_name(text)
         if cleaned is None:
             continue
         for token in cleaned.split(WS):
@@ -112,3 +98,9 @@ def tokenize(texts: Iterable[str]) -> Set[str]:
             if len(token) > 2:
                 tokens.add(token)
     return tokens
+
+
+def tokenize_pair(
+    pair: Tuple[Iterable[str], Iterable[str]]
+) -> Tuple[Set[str], Set[str]]:
+    return tokenize(pair[0]), tokenize(pair[1])
