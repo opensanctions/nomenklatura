@@ -1,7 +1,7 @@
 from followthemoney import model
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching import compare_scored, explain_matcher
+from nomenklatura.matching.v1 import compare_scored, explain_matcher
 
 candidate = {
     "id": "left-putin",
