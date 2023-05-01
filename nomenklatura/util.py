@@ -68,7 +68,7 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
 @lru_cache(maxsize=10000)
 def fingerprint_name(original: str) -> Optional[str]:
     """Fingerprint a legal entity name."""
-    return fingerprint(original)
+    return fingerprint(original, keep_order=True)
 
 
 @lru_cache(maxsize=10000)
