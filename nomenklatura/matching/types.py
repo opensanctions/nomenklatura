@@ -1,8 +1,9 @@
-from typing import Dict, Optional, TypedDict, Callable
-from nomenklatura.entity import CompositeEntity as Entity
+from typing import List, Dict, Optional, TypedDict, Callable
+from nomenklatura.entity import CE
 
+Encoded = List[float]
 
-FeatureItem = Callable[[Entity, Entity], float]
+FeatureItem = Callable[[CE, CE], float]
 
 
 class FeatureDoc(TypedDict):
@@ -21,3 +22,19 @@ class MatchingResult(TypedDict):
 
     score: float
     features: Dict[str, float]
+
+
+class ScoringAlgorithm(object):
+    """An implementation of a scoring system that compares two entities."""
+
+    NAME = "algorithm_name"
+
+    @classmethod
+    def compare(cls, left: CE, right: CE) -> MatchingResult:
+        """Compare the two entities and return a score and feature comparison."""
+        raise NotImplementedError
+
+    @classmethod
+    def explain(cls) -> FeatureDocs:
+        """Return an explanation of the features and their coefficients."""
+        raise NotImplementedError

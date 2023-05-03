@@ -1,12 +1,17 @@
 import re
+from pathlib import Path
 from itertools import product
 from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable
 from followthemoney.types.common import PropertyType
 
+from nomenklatura import __version__
 from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.util import DATA_PATH
 
 V = TypeVar("V")
 FIND_NUM = re.compile("\d{2,}")
+BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
+CODE_PATH = DATA_PATH.joinpath("..").resolve()
 
 
 def extract_numbers(values: List[str]) -> Set[str]:
@@ -59,3 +64,10 @@ def compare_sets(
     if not len(results):
         return 0.0
     return select_func(results)
+
+
+def make_github_url(func: Callable) -> str:
+    """Make a URL to the source code of a matching function."""
+    code_path = Path(func.__code__.co_filename).relative_to(CODE_PATH)
+    line_no = func.__code__.co_firstlineno
+    return BASE_URL % (__version__, code_path, line_no)

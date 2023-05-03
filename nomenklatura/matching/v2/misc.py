@@ -4,8 +4,8 @@ from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v2.util import has_disjoint, has_overlap
 from nomenklatura.matching.v2.util import compare_levenshtein
 from nomenklatura.matching.v2.util import tokenize
-from nomenklatura.matching.common import extract_numbers, props_pair, type_pair
-from nomenklatura.matching.common import compare_sets, has_schema
+from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.util import compare_sets, has_schema
 from nomenklatura.util import normalize_name
 
 

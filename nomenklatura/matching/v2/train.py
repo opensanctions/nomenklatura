@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
-from nomenklatura.matching.v2.model import save_matcher, FEATURES, encode_pair
+from nomenklatura.matching.v2.model import MatcherV2
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 def pair_convert(pair: JudgedPair) -> Tuple[List[float], int]:
     """Encode a pair of training data into features and target."""
     judgement = 1 if pair.judgement == Judgement.POSITIVE else 0
-    features = encode_pair(pair.left, pair.right)
+    features = MatcherV2.encode_pair(pair.left, pair.right)
     return features, judgement
 
 
@@ -58,15 +58,14 @@ def train_matcher(pairs_file: PathLike) -> None:
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
     X, y = pairs_to_arrays(pairs)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
     # logreg = LogisticRegression(penalty="l1", solver="liblinear")
     logreg = LogisticRegression(penalty="l2")
     log.info("Training model...")
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
-    coefficients = {n.__name__: c for n, c in zip(FEATURES, coef)}
-    save_matcher(pipe, coefficients)
+    coefficients = {n.__name__: c for n, c in zip(MatcherV2.FEATURES, coef)}
+    MatcherV2.save(pipe, coefficients)
     print("Coefficients:")
     pprint(coefficients)
     y_pred = pipe.predict(X_test)

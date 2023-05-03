@@ -8,7 +8,7 @@ from nomenklatura.loader import Loader
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.index import Index
-from nomenklatura.matching import compare_v2_scored
+from nomenklatura.matching import MatcherV2
 from nomenklatura.util import is_qid
 
 log = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ def xref(
                     continue
 
             if scored:
-                result = compare_v2_scored(left, right)
+                result = MatcherV2.compare(left, right)
                 score = result["score"]
             scores.append(score)
 

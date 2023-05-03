@@ -3,7 +3,7 @@ from prefixdate import Precision
 
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v1.util import has_overlap
-from nomenklatura.matching.common import props_pair
+from nomenklatura.matching.util import props_pair
 
 
 def with_precision(values: Iterable[str], precision: Precision) -> Set[str]:

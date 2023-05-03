@@ -4,8 +4,8 @@ from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v1.util import has_disjoint, has_overlap
 from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.common import extract_numbers, props_pair, type_pair
-from nomenklatura.matching.common import compare_sets
+from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.util import compare_sets
 from nomenklatura.util import fingerprint_name
 
 
