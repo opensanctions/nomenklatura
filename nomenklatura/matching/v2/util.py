@@ -98,9 +98,3 @@ def tokenize(texts: Iterable[str]) -> Set[str]:
             if len(token) > 2:
                 tokens.add(token)
     return tokens
-
-
-def tokenize_pair(
-    pair: Tuple[Iterable[str], Iterable[str]]
-) -> Tuple[Set[str], Set[str]]:
-    return tokenize(pair[0]), tokenize(pair[1])

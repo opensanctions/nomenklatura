@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
-from nomenklatura.matching.v1.model import save_matcher, FEATURES, encode_pair
+from nomenklatura.matching.v2.model import save_matcher, FEATURES, encode_pair
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
@@ -48,13 +48,8 @@ def pairs_to_arrays(
 def train_matcher(pairs_file: PathLike) -> None:
     pairs = []
     for pair in read_pairs(pairs_file):
-        # HACK: support more eventually:
-        # if not pair.left.schema.is_a("LegalEntity"):
-        #     continue
         if pair.judgement == Judgement.UNSURE:
             pair.judgement = Judgement.NEGATIVE
-        # randomize_entity(pair.left)
-        # randomize_entity(pair.right)
         pairs.append(pair)
     # random.shuffle(pairs)
     # pairs = pairs[:30000]

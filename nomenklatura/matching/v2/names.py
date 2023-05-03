@@ -1,96 +1,97 @@
-from typing import Iterable, Set
+import statistics
+import Levenshtein
+from typing import Iterable, Set, List
 from normality import WS
 from itertools import combinations
 from jellyfish import jaro_winkler_similarity, soundex
 from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.v1.util import has_disjoint, has_overlap
-from nomenklatura.matching.v1.util import compare_sets
-from nomenklatura.matching.v1.util import tokenize_pair, props_pair
-from nomenklatura.matching.v1.util import type_pair, compare_levenshtein
+from nomenklatura.matching.v2.util import has_disjoint, has_overlap
+from nomenklatura.matching.v2.util import compare_sets, props_pair
+from nomenklatura.matching.v2.util import type_pair, tokenize  #  , compare_levenshtein
 from nomenklatura.matching.common import extract_numbers
 from nomenklatura.util import fingerprint_name
 
 
-def _normalize_names(raws: Iterable[str]) -> Set[str]:
-    names = set()
-    for raw in raws:
-        name = fingerprint_name(raw)
-        if name is not None:
-            names.add(name[:128])
-    return names
-
-
-def _name_parts(names: Iterable[str]) -> Set[str]:
-    parts: Set[str] = set()
+def _name_parts(names: Iterable[str], min_length: int = 1) -> List[List[str]]:
+    parts: List[List[str]] = []
     for name in names:
         fp = fingerprint_name(name)
         if fp is not None:
-            parts.update(fp.split(WS))
+            tokens = [p for p in fp.split(WS) if len(p) >= min_length]
+            if len(tokens):
+                parts.append(sorted(tokens))
     return parts
 
 
+def _name_parts_soundex(names: Iterable[str]) -> List[Set[str]]:
+    outs: List[Set[str]] = []
+    for parts in _name_parts(names):
+        outs.append(set([soundex(part) for part in parts]))
+    return outs
+
+
+def _name_norms(names: Iterable[str]) -> List[str]:
+    outs: List[str] = []
+    for parts in _name_parts(names):
+        outs.append(" ".join(parts))
+    return outs
+
+
+# def _jaro_parts(lefts: List[str], rights: List[str]) -> float:
+#     pass
+
+
+def _compare_levenshtein(left: str, right: str) -> float:
+    distance = Levenshtein.distance(left, right)
+    base = max((15, len(left), len(right)))
+    return 1.0 - (distance / float(base))
+    # return math.sqrt(distance)
+
+
 def name_levenshtein(left: Entity, right: Entity) -> float:
-    """Consider the edit distance (as a fraction of name length) between the two most
-    similar names linked to both entities."""
     lv, rv = type_pair(left, right, registry.name)
-    lvn, rvn = _normalize_names(lv), _normalize_names(rv)
-    return compare_sets(lvn, rvn, compare_levenshtein)
+    lvp = _name_norms(lv)
+    rvp = _name_norms(rv)
+    # print("NORMS", lvp, rvp)
+    # return compare_sets(lvp, rvp, jaro_winkler_similarity, select_func=statistics.mean)
+    return compare_sets(lvp, rvp, _compare_levenshtein)
 
 
 def first_name_match(left: Entity, right: Entity) -> float:
     """Matching first/given name between the two entities."""
-    lv, rv = tokenize_pair(props_pair(left, right, ["firstName"]))
-    return has_overlap(lv, rv)
+    lv, rv = props_pair(left, right, ["firstName", "secondName", "middleName"])
+    lvt = tokenize(lv)
+    rvt = tokenize(rv)
+    return has_overlap(lvt, rvt)
 
 
 def family_name_match(left: Entity, right: Entity) -> float:
     """Matching family name between the two entities."""
-    lv, rv = tokenize_pair(props_pair(left, right, ["lastName"]))
-    return has_overlap(lv, rv)
-
-
-# def name_part_jaro_winkler(left: Entity, right: Entity) -> float:
-#     """Check for exact name matches between the two entities."""
-#     lv, rv = type_pair(left, right, registry.name)
-#     lvn = [_name_parts(n) for n in lv]
-#     rvn = [_name_parts(n) for n in rv]
-#     best_score = 0.0
-#     for lns, rns in combinations(lvn, rvn):
-#         pass
-#     # lvn, rvn = _name(lv), normalize_names(rv)
-#     # common = [len(n) for n in lvn.intersection(rvn)]
-#     # max_common = max(common, default=0)
-#     # if max_common == 0:
-#     #     return 0.0
-#     # return float(max_common)
-#     return best_score
+    lv, rv = props_pair(left, right, ["lastName"])
+    lvt = tokenize(lv)
+    rvt = tokenize(rv)
+    return has_overlap(lvt, rvt)
 
 
 def name_part_soundex(left: Entity, right: Entity) -> float:
-    """Check for exact name matches between the two entities."""
+    """Check for overlap of phonetic forms of the names."""
     lv, rv = type_pair(left, right, registry.name)
-    lvn = [_name_parts(n) for n in lv]
-    rvn = [_name_parts(n) for n in rv]
+    rvn = _name_parts_soundex(rv)
     best_score = 0.0
-    for lns, rns in combinations(lvn, rvn):
-        pass
-    # lvn, rvn = _name(lv), normalize_names(rv)
-    # common = [len(n) for n in lvn.intersection(rvn)]
-    # max_common = max(common, default=0)
-    # if max_common == 0:
-    #     return 0.0
-    # return float(max_common)
+    for lns in _name_parts_soundex(lv):
+        if not len(lns):
+            continue
+        for rns in rvn:
+            if not len(rns):
+                continue
+            overlap = len(lns.intersection(rns))
+            score = float(overlap) / float(min(len(lns), len(rns)))
+            best_score = max(best_score, score)
+        if best_score == 1.0:
+            return best_score
     return best_score
-
-
-# def name_token_overlap(left: Entity, right: Entity) -> float:
-#     """Evaluate the proportion of identical words in each name."""
-#     lv, rv = tokenize_pair(type_pair(left, right, registry.name))
-#     common = lv.intersection(rv)
-#     tokens = min(len(lv), len(rv))
-#     return float(len(common)) / float(max(2.0, tokens))
 
 
 def name_numbers(left: Entity, right: Entity) -> float:

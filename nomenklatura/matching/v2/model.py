@@ -9,14 +9,14 @@ from sklearn.pipeline import Pipeline  # type: ignore
 from nomenklatura import __version__
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.types import FeatureDocs, MatchingResult
-from nomenklatura.matching.v1.dates import dob_matches, dob_year_matches
-from nomenklatura.matching.v1.names import first_name_match, family_name_match
-from nomenklatura.matching.v1.names import name_levenshtein, name_match
-from nomenklatura.matching.v1.names import name_token_overlap, name_numbers
-from nomenklatura.matching.v1.misc import address_match, address_numbers
-from nomenklatura.matching.v1.misc import identifier_match, birth_place
-from nomenklatura.matching.v1.misc import gender_mismatch, country_mismatch
-from nomenklatura.matching.v1.misc import org_identifier_match
+from nomenklatura.matching.v2.dates import dob_matches, dob_year_matches
+from nomenklatura.matching.v2.names import first_name_match, family_name_match
+from nomenklatura.matching.v2.names import name_levenshtein
+from nomenklatura.matching.v2.names import name_part_soundex, name_numbers
+from nomenklatura.matching.v2.misc import address_match, address_numbers
+from nomenklatura.matching.v2.misc import identifier_match, birth_place
+from nomenklatura.matching.v2.misc import gender_mismatch, country_mismatch
+from nomenklatura.matching.v2.misc import org_identifier_match
 from nomenklatura.matching.types import FeatureItem
 
 Encoded = List[float]
@@ -25,8 +25,7 @@ BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%
 MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
 FEATURES: List[FeatureItem] = [
-    name_match,
-    name_token_overlap,
+    name_part_soundex,
     name_numbers,
     name_levenshtein,
     identifier_match,
