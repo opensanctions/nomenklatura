@@ -21,39 +21,6 @@ if TYPE_CHECKING:
 
 DS = TypeVar("DS", bound="Dataset")
 
-# aleph
-CATEGORIES = (
-    "news",
-    "leak",
-    "land",
-    "gazette",
-    "court",
-    "company",
-    "sanctions",
-    "procurement",
-    "finance",
-    "grey",
-    "library",
-    "license",
-    "regulatory",
-    "poi",
-    "customs",
-    "census",
-    "transport",
-    "casefile",
-    "other",
-)
-
-# aleph
-FREQUENCIES = (
-    "unknown",
-    "never",
-    "daily",
-    "weekly",
-    "monthly",
-    "annual",
-)
-
 
 class Dataset(Named):
     """A unit of entities. A dataset is a set of data, sez W3C."""
@@ -69,6 +36,7 @@ class Dataset(Named):
         self.url = type_check(registry.url, data.get("url"))
         self.updated_at = type_check(registry.date, data.get("updated_at"))
         self.version = type_check(registry.string, data.get("version"))
+        self.category = type_check(registry.string, data.get("category"))
         if self.version is None and self.updated_at is not None:
             self.version = iso_to_version(self.updated_at)
 
@@ -81,9 +49,6 @@ class Dataset(Named):
         for rdata in data.get("resources", []):
             if rdata is not None:
                 self.resources.append(DataResource(rdata))
-
-        self.frequency = type_check(registry.string, data.get("frequency"), FREQUENCIES)
-        self.category = type_check(registry.string, data.get("category"), CATEGORIES)
 
         # TODO: get rid of the legacy namings
         self._parents = set(string_list(data.get("parents", [])))
@@ -134,7 +99,6 @@ class Dataset(Named):
             "url": self.url,
             "version": self.version,
             "updated_at": self.updated_at,
-            "frequency": self.frequency,
             "category": self.category,
             "resources": [r.to_dict() for r in self.resources],
             "children": [c.name for c in self.children],

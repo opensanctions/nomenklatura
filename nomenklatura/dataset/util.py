@@ -8,7 +8,7 @@ from nomenklatura.exceptions import MetadataException
 
 
 def type_check(
-    type_: PropertyType, value: Any, literal: Iterable[Any] = []
+    type_: PropertyType, value: Any, options: Iterable[str] = []
 ) -> Optional[str]:
     text = stringify(value)
     if text is None:
@@ -16,9 +16,9 @@ def type_check(
     cleaned = type_.clean_text(text)
     if cleaned is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
-    if literal and cleaned not in literal:
+    if options and cleaned not in options:
         raise MetadataException(
-            "Invalid %s: %r not in %s" % (type_.name, value, ",".join(literal))
+            "Invalid %s: %r not in %s" % (type_.name, value, ",".join(options))
         )
     return cleaned
 

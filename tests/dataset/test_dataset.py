@@ -69,10 +69,14 @@ def test_dataset_aleph_metadata(catalog_data: Dict[str, Any]):
     catalog = DataCatalog(Dataset, catalog_data)
     ds = catalog.require("leak")
     assert ds.category == "leak"
-    assert ds.frequency == "unknown"
+    assert ds.coverage is not None
+    assert ds.coverage.frequency == "never"
 
     # invalid metadata
     with pytest.raises(MetadataException):
-        ds = Dataset(
-            catalog, {"name": "invalid", "title": "Invalid metadata", "category": "foo"}
-        )
+        meta = {
+            "name": "invalid",
+            "title": "Invalid metadata",
+            "coverage": {"frequency": "foo"},
+        }
+        ds = Dataset(catalog, meta)

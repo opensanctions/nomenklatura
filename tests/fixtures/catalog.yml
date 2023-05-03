@@ -12,7 +12,8 @@ datasets:
   - name: leak
     title: Some data leak
     category: leak
-    frequency: unknown
+    coverage:
+      frequency: never
   - name: company_data
     title: Company data
     publisher:
@@ -22,6 +23,7 @@ datasets:
     coverage:
       start: 2005
       end: 2010-01
+      frequency: monthly
       countries:
         - us
   - name: all_datasets
