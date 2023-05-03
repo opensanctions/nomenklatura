@@ -1,29 +1,20 @@
-import fingerprints
-from functools import lru_cache
-from typing import Iterable, Set, Optional
+from typing import Iterable, Set
 from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity as Entity
-from nomenklatura.matching.features.util import has_disjoint, has_overlap
-from nomenklatura.matching.features.util import extract_numbers, compare_sets
-from nomenklatura.matching.features.util import tokenize_pair, props_pair
-from nomenklatura.matching.features.util import type_pair, compare_levenshtein
-
-
-@lru_cache(maxsize=10000)
-def normalize_name(original: str) -> Optional[str]:
-    name = fingerprints.generate(original)
-    if name is None:
-        return None
-    return name[:128]
+from nomenklatura.matching.v1.util import has_disjoint, has_overlap
+from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
+from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.util import compare_sets
+from nomenklatura.util import fingerprint_name
 
 
 def normalize_names(raws: Iterable[str]) -> Set[str]:
     names = set()
     for raw in raws:
-        name = normalize_name(raw)
+        name = fingerprint_name(raw)
         if name is not None:
-            names.add(name)
+            names.add(name[:128])
     return names
 
 

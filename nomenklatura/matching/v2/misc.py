@@ -1,24 +1,28 @@
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.features.util import normalize_text, tokenize_pair
-from nomenklatura.matching.features.util import has_disjoint, has_overlap, has_schema
-from nomenklatura.matching.features.util import compare_levenshtein, compare_sets
-from nomenklatura.matching.features.util import props_pair, type_pair, extract_numbers
+from nomenklatura.matching.v2.util import has_disjoint, has_overlap
+from nomenklatura.matching.v2.util import compare_levenshtein
+from nomenklatura.matching.v2.util import tokenize
+from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.util import compare_sets, has_schema
+from nomenklatura.util import normalize_name
 
 
 def birth_place(left: Entity, right: Entity) -> float:
     """Same place of birth."""
-    lv, rv = tokenize_pair(props_pair(left, right, ["birthPlace"]))
-    tokens = min(len(lv), len(rv))
-    return float(len(lv.intersection(rv))) / float(max(2.0, tokens))
+    lv, rv = props_pair(left, right, ["birthPlace"])
+    lvt = tokenize(lv)
+    rvt = tokenize(rv)
+    tokens = min(len(lvt), len(rvt))
+    return float(len(lvt.intersection(rvt))) / float(max(2.0, tokens))
 
 
 def address_match(left: Entity, right: Entity) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(left, right, registry.address)
-    lvn = [normalize_text(v) for v in lv]
-    rvn = [normalize_text(v) for v in rv]
+    lvn = [normalize_name(v) for v in lv]
+    rvn = [normalize_name(v) for v in rv]
     return compare_sets(lvn, rvn, compare_levenshtein)
 
 
@@ -36,18 +40,6 @@ def gender_mismatch(left: Entity, right: Entity) -> float:
     """Both entities have a different gender associated with them."""
     lv, rv = props_pair(left, right, ["gender"])
     return has_disjoint(lv, rv)
-
-
-def phone_match(left: Entity, right: Entity) -> float:
-    """Matching phone numbers between the two entities."""
-    lv, rv = type_pair(left, right, registry.phone)
-    return has_overlap(set(lv), set(rv))
-
-
-def email_match(left: Entity, right: Entity) -> float:
-    """Matching email addresses between the two entities."""
-    lv, rv = type_pair(left, right, registry.email)
-    return has_overlap(set(lv), set(rv))
 
 
 def identifier_match(left: Entity, right: Entity) -> float:

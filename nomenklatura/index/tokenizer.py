@@ -7,6 +7,7 @@ from followthemoney.types.common import PropertyType
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.loader import Loader
+from nomenklatura.util import name_words
 
 SCHEMA_FIELD = "schema"
 NGRAM_FIELD = "ngram"
@@ -41,6 +42,7 @@ class Tokenizer(Generic[DS, CE]):
         if type == registry.date and len(value) > 4:
             yield type.name, value[:4]
         if type in TEXT_TYPES:
+            # TODO: adopt functions from `nomenklatura.util` here
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
                 return

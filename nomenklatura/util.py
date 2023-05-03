@@ -2,7 +2,11 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Mapping, Union, Iterable, Tuple, Optional
+from functools import lru_cache
+from normality.constants import WS
+from fingerprints.fingerprint import fingerprint
+from fingerprints.cleanup import clean_strict
+from typing import Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
@@ -60,3 +64,25 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     if text is None or len(text) == 0:
         return None
     return text.lower().startswith("t")
+
+
+@lru_cache(maxsize=10000)
+def fingerprint_name(original: str, keep_order: bool = True) -> Optional[str]:
+    """Fingerprint a legal entity name."""
+    return fingerprint(original, keep_order=keep_order)
+
+
+def name_words(names: List[str]) -> Set[str]:
+    """Get a unique set of tokens present in the given set of names."""
+    words: Set[str] = set()
+    for name in names:
+        normalized = fingerprint_name(name)
+        if normalized is not None:
+            words.update(normalized.split(WS))
+    return words
+
+
+@lru_cache(maxsize=10000)
+def normalize_name(original: str) -> Optional[str]:
+    """Normalize a legal entity name."""
+    return clean_strict(original)

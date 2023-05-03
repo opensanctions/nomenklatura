@@ -5,7 +5,7 @@ from typing import Iterable, Generator, Optional, Type, cast
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.matching import compare_scored
+from nomenklatura.matching import MatcherV2
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
 from nomenklatura.judgement import Judgement
@@ -47,7 +47,7 @@ def match(
                     continue
                 if not entity.schema.can_match(match.schema):
                     continue
-                result = compare_scored(entity, match)
+                result = MatcherV2.compare(entity, match)
                 score = result["score"]
                 log.info("Match [%s]: %.2f -> %s", entity, score, match)
                 resolver.suggest(entity.id, match.id, score)
