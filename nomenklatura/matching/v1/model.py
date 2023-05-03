@@ -83,10 +83,10 @@ class MatcherV1(ScoringAlgorithm):
         return features
 
     @classmethod
-    def compare(cls, left: Entity, right: Entity) -> MatchingResult:
+    def compare(cls, query: Entity, match: Entity) -> MatchingResult:
         """Use a regression model to compare two entities."""
         pipe, _ = cls.load()
-        encoded = cls.encode_pair(left, right)
+        encoded = cls.encode_pair(query, match)
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
         score = cast(float, pred[0][1])

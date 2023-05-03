@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 from itertools import product
+from prefixdate import Precision
 from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
 from followthemoney.types.common import PropertyType
 
@@ -9,7 +10,7 @@ from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.util import DATA_PATH
 
 V = TypeVar("V")
-FIND_NUM = re.compile("\d{2,}")
+FIND_NUM = re.compile(r"\d{2,}")
 BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
 
@@ -19,6 +20,14 @@ def extract_numbers(values: List[str]) -> Set[str]:
     for value in values:
         numbers.update(FIND_NUM.findall(value))
     return numbers
+
+
+def dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
+    dates = set()
+    for value in values:
+        if len(value) >= precision.value:
+            dates.add(value[: precision.value])
+    return dates
 
 
 def has_schema(left: Entity, right: Entity, schema: str) -> bool:
