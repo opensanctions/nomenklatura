@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from itertools import product
-from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable
+from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
 from followthemoney.types.common import PropertyType
 
 from nomenklatura import __version__
@@ -66,7 +66,7 @@ def compare_sets(
     return select_func(results)
 
 
-def make_github_url(func: Callable) -> str:
+def make_github_url(func: Callable[..., Any]) -> str:
     """Make a URL to the source code of a matching function."""
     code_path = Path(func.__code__.co_filename).relative_to(CODE_PATH)
     line_no = func.__code__.co_firstlineno

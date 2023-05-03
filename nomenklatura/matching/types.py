@@ -1,9 +1,8 @@
 from typing import List, Dict, Optional, TypedDict, Callable
-from nomenklatura.entity import CE
+from nomenklatura.entity import CE, CompositeEntity
 
 Encoded = List[float]
-
-FeatureItem = Callable[[CE, CE], float]
+FeatureItem = Callable[[CompositeEntity, CompositeEntity], float]
 
 
 class FeatureDoc(TypedDict):

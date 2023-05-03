@@ -5,7 +5,6 @@ from functools import cache
 from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 
-from nomenklatura import __version__
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.types import FeatureDocs, MatchingResult
 from nomenklatura.matching.v2.dates import dob_matches, dob_year_matches
