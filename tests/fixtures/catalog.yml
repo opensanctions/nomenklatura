@@ -11,6 +11,8 @@ datasets:
         timestamp: 2021
   - name: leak
     title: Some data leak
+    category: leak
+    frequency: unknown
   - name: company_data
     title: Company data
     publisher:

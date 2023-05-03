@@ -1,20 +1,58 @@
-import yaml
 from functools import cached_property
-from typing import TYPE_CHECKING
-from typing import Any, Dict, TypeVar, Type, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, TypeVar
+
+import yaml
 from followthemoney.types import registry
 
-from nomenklatura.dataset.resource import DataResource
-from nomenklatura.dataset.publisher import DataPublisher
 from nomenklatura.dataset.coverage import DataCoverage
-from nomenklatura.dataset.util import Named, cleanup, string_list
-from nomenklatura.dataset.util import type_check, type_require
-from nomenklatura.util import iso_to_version, PathLike
+from nomenklatura.dataset.publisher import DataPublisher
+from nomenklatura.dataset.resource import DataResource
+from nomenklatura.dataset.util import (
+    Named,
+    cleanup,
+    string_list,
+    type_check,
+    type_require,
+)
+from nomenklatura.util import PathLike, iso_to_version
 
 if TYPE_CHECKING:
     from nomenklatura.dataset.catalog import DataCatalog
 
 DS = TypeVar("DS", bound="Dataset")
+
+# aleph
+CATEGORIES = (
+    "news",
+    "leak",
+    "land",
+    "gazette",
+    "court",
+    "company",
+    "sanctions",
+    "procurement",
+    "finance",
+    "grey",
+    "library",
+    "license",
+    "regulatory",
+    "poi",
+    "customs",
+    "census",
+    "transport",
+    "casefile",
+    "other",
+)
+
+# aleph
+FREQUENCIES = (
+    "unknown",
+    "never",
+    "daily",
+    "weekly",
+    "monthly",
+    "annual",
+)
 
 
 class Dataset(Named):
@@ -43,6 +81,9 @@ class Dataset(Named):
         for rdata in data.get("resources", []):
             if rdata is not None:
                 self.resources.append(DataResource(rdata))
+
+        self.frequency = type_check(registry.string, data.get("frequency"), FREQUENCIES)
+        self.category = type_check(registry.string, data.get("category"), CATEGORIES)
 
         # TODO: get rid of the legacy namings
         self._parents = set(string_list(data.get("parents", [])))
@@ -93,6 +134,8 @@ class Dataset(Named):
             "url": self.url,
             "version": self.version,
             "updated_at": self.updated_at,
+            "frequency": self.frequency,
+            "category": self.category,
             "resources": [r.to_dict() for r in self.resources],
             "children": [c.name for c in self.children],
         }

@@ -1,8 +1,9 @@
-import pytest
-from typing import Dict, Any
 from pathlib import Path
+from typing import Any, Dict
 
+import pytest
 from nomenklatura.dataset import DataCatalog, Dataset
+from nomenklatura.exceptions import MetadataException
 
 
 def test_donations_base(catalog_data: Dict[str, Any]):
@@ -62,3 +63,16 @@ def test_from_path(catalog_path: Path):
     data = catalog.to_dict()
     assert isinstance(data, dict)
     assert "datasets" in data
+
+
+def test_dataset_aleph_metadata(catalog_data: Dict[str, Any]):
+    catalog = DataCatalog(Dataset, catalog_data)
+    ds = catalog.require("leak")
+    assert ds.category == "leak"
+    assert ds.frequency == "unknown"
+
+    # invalid metadata
+    with pytest.raises(MetadataException):
+        ds = Dataset(
+            catalog, {"name": "invalid", "title": "Invalid metadata", "category": "foo"}
+        )
