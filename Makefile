@@ -8,12 +8,19 @@ typecheck:
 
 check: test typecheck
 
-data/pairs.json:
+data/pairs-v2.json:
 	mkdir -p data/
-	curl -o data/pairs.json https://data.opensanctions.org/contrib/training/pairs.json?_xxx=$(TS)
+	curl -o data/pairs-v2.json https://data.opensanctions.org/contrib/training/pairs-v2.json
 
-train: data/pairs.json
-	nomenklatura train-matcher data/pairs.json
+data/pairs-v1.json:
+	mkdir -p data/
+	curl -o data/pairs-v1.json https://data.opensanctions.org/contrib/training/pairs-v1.json
+
+train-v2: data/pairs-v2.json
+	nomenklatura train-v2-matcher data/pairs-v2.json
+
+train-v1: data/pairs-v1.json
+	nomenklatura train-v1-matcher data/pairs-v1.json
 
 fixtures:
 	ftm map-csv -i tests/fixtures/donations.csv -o tests/fixtures/donations.frag.ijson tests/fixtures/donations.yml

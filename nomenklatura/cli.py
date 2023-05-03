@@ -9,7 +9,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.matching import train_v2_matcher
+from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.loader import FileLoader
 from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
@@ -149,9 +149,15 @@ def merge_resolver(outpath: Path, inputs: Iterable[Path]) -> None:
     resolver.save()
 
 
-@cli.command("train-matcher", help="Train a matching model from judgement pairs")
+@cli.command("train-v1-matcher", help="Train a matching model from judgement pairs")
 @click.argument("pairs_file", type=InPath)
-def train_matcher_(pairs_file: Path) -> None:
+def train_v1_matcher_(pairs_file: Path) -> None:
+    train_v1_matcher(pairs_file)
+
+
+@cli.command("train-v2-matcher", help="Train a matching model from judgement pairs")
+@click.argument("pairs_file", type=InPath)
+def train_v2_matcher_(pairs_file: Path) -> None:
     train_v2_matcher(pairs_file)
 
 
