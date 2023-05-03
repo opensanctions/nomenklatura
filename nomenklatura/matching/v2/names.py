@@ -1,15 +1,12 @@
-import statistics
-import Levenshtein
 from typing import Iterable, Set, List
 from normality import WS
-from itertools import combinations
-from jellyfish import jaro_winkler_similarity, soundex
+from jellyfish import soundex
 from followthemoney.types import registry
 
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v2.util import has_disjoint, has_overlap
-from nomenklatura.matching.v2.util import compare_sets, props_pair
-from nomenklatura.matching.v2.util import type_pair, tokenize  #  , compare_levenshtein
+from nomenklatura.matching.v2.util import compare_levenshtein, tokenize
+from nomenklatura.matching.common import compare_sets, props_pair, type_pair
 from nomenklatura.matching.common import extract_numbers
 from nomenklatura.util import fingerprint_name
 
@@ -39,24 +36,12 @@ def _name_norms(names: Iterable[str]) -> List[str]:
     return outs
 
 
-# def _jaro_parts(lefts: List[str], rights: List[str]) -> float:
-#     pass
-
-
-def _compare_levenshtein(left: str, right: str) -> float:
-    distance = Levenshtein.distance(left, right)
-    base = max((15, len(left), len(right)))
-    return 1.0 - (distance / float(base))
-    # return math.sqrt(distance)
-
-
 def name_levenshtein(left: Entity, right: Entity) -> float:
+    """Levenshtein similiarity between the two entities' names."""
     lv, rv = type_pair(left, right, registry.name)
     lvp = _name_norms(lv)
     rvp = _name_norms(rv)
-    # print("NORMS", lvp, rvp)
-    # return compare_sets(lvp, rvp, jaro_winkler_similarity, select_func=statistics.mean)
-    return compare_sets(lvp, rvp, _compare_levenshtein)
+    return compare_sets(lvp, rvp, compare_levenshtein)
 
 
 def first_name_match(left: Entity, right: Entity) -> float:

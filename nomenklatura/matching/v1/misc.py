@@ -1,11 +1,10 @@
 from followthemoney.types import registry
 from nomenklatura.entity import CompositeEntity as Entity
 
-from nomenklatura.matching.v1.util import tokenize_pair
-from nomenklatura.matching.v1.util import has_disjoint, has_overlap, has_schema
-from nomenklatura.matching.v1.util import compare_levenshtein, compare_sets
-from nomenklatura.matching.v1.util import props_pair, type_pair
-from nomenklatura.matching.common import extract_numbers
+from nomenklatura.matching.v1.util import has_disjoint, has_overlap
+from nomenklatura.matching.v1.util import compare_levenshtein, tokenize_pair
+from nomenklatura.matching.common import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.common import compare_sets, has_schema
 from nomenklatura.util import normalize_name
 
 
