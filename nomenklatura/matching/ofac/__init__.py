@@ -52,12 +52,14 @@ class OFAC249Matcher(ScoringAlgorithm):
 
 class OFAC249QualifiedMatcher(ScoringAlgorithm):
     """Same as the US OFAC (FAQ 249) algorithm, but scores will be reduced if a mis-match
-    of birth dates and nationalities is found."""
+    of birth dates and nationalities is found for persons, or different tax/registration
+    identifiers are included for organizations and companies."""
 
     NAME = "ofac-249-qualified"
     COUNTRIES_DISJOINT = "countries_disjoint"
     DOB_DAY_DISJOINT = "dob_day_disjoint"
     DOB_YEAR_DISJOINT = "dob_year_disjoint"
+    ID_DISJOINT = "identifier_disjoint"
 
     @classmethod
     def explain(cls) -> FeatureDocs:
@@ -69,12 +71,17 @@ class OFAC249QualifiedMatcher(ScoringAlgorithm):
         }
         features[cls.DOB_DAY_DISJOINT] = {
             "description": "Both persons have different birthdays.",
-            "coefficient": -0.1,
+            "coefficient": -0.15,
             "url": make_github_url(OFAC249QualifiedMatcher.compare),
         }
         features[cls.DOB_YEAR_DISJOINT] = {
             "description": "Both persons are born in different years.",
             "coefficient": -0.1,
+            "url": make_github_url(OFAC249QualifiedMatcher.compare),
+        }
+        features[cls.ID_DISJOINT] = {
+            "description": "Two companies or organizations have different tax identifiers or registration numbers.",
+            "coefficient": -0.2,
             "url": make_github_url(OFAC249QualifiedMatcher.compare),
         }
         return features
@@ -107,5 +114,13 @@ class OFAC249QualifiedMatcher(ScoringAlgorithm):
             weight = features[cls.DOB_YEAR_DISJOINT]["coefficient"]
             result["features"][cls.DOB_YEAR_DISJOINT] = weight
             result["score"] += weight
+
+        result["features"][cls.ID_DISJOINT] = 0.0
+        if query.schema.is_a("Organization") or match.schema.is_a("Organization"):
+            query_ids, match_ids = type_pair(query, match, registry.identifier)
+            if is_disjoint(query_ids, match_ids):
+                weight = features[cls.ID_DISJOINT]["coefficient"]
+                result["features"][cls.ID_DISJOINT] = weight
+                result["score"] += weight
 
         return result

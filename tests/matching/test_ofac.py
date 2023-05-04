@@ -32,7 +32,17 @@ def test_ofac_qualified_dob():
     assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 1.0
     a.set("birthDate", "1952-02-10")
     b.set("birthDate", "1952-05-01")
-    assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 0.9
+    assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 0.85
     a.set("birthDate", "1952-02-10")
     b.set("birthDate", "1962-05-01")
+    assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 0.75
+
+
+def test_ofac_qualified_corp():
+    data = {"id": "test", "schema": "Company", "properties": {"name": "CRYSTALORD LTD"}}
+    a = Entity.from_dict(model, data)
+    b = Entity.from_dict(model, data)
+    assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 1.0
+    a.set("registrationNumber", "137332")
+    b.set("registrationNumber", "748745")
     assert OFAC249QualifiedMatcher.compare(a, b)["score"] == 0.8
