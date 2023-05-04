@@ -34,7 +34,7 @@ class OFAC249Matcher(ScoringAlgorithm):
         }
 
     @classmethod
-    def compare(cls, query: CE, match: CE, rounded: bool = True) -> MatchingResult:
+    def compare(cls, query: CE, match: CE) -> MatchingResult:
         query_names, match_names = type_pair(query, match, registry.name)
         query_names = [n.lower() for n in query_names]
         match_names = [n.lower() for n in match_names]
@@ -46,8 +46,7 @@ class OFAC249Matcher(ScoringAlgorithm):
             "soundex_jaro_name_parts": soundex_jaro,
         }
         score = max(names_jaro, soundex_jaro)
-        if rounded:
-            score = ofac_round_score(score)
+        score = ofac_round_score(score)
         return MatchingResult(score=score, features=features)
 
 
@@ -82,7 +81,7 @@ class OFAC249QualifiedMatcher(ScoringAlgorithm):
 
     @classmethod
     def compare(cls, query: CE, match: CE) -> MatchingResult:
-        result = OFAC249Matcher.compare(query, match, rounded=False)
+        result = OFAC249Matcher.compare(query, match)
         features = cls.explain()
 
         result["features"][cls.COUNTRIES_DISJOINT] = 0.0

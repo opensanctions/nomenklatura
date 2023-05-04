@@ -27,6 +27,7 @@ def soundex_jaro_name_parts(query: List[str], result: List[str]) -> float:
 
 
 def name_jaro_winkler(query: List[str], result: List[str]) -> float:
+    """Compute Jaro-Winkler string similarity on whole names."""
     return compare_sets(query, result, jaro_winkler_similarity)
 
 
