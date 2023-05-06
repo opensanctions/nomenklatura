@@ -29,6 +29,7 @@ __all__ = [
     "MatcherV2",
     "train_v2_matcher",
     "DefaultAlgorithm",
+    "ScoringAlgorithm",
     "OFAC249Matcher",
     "OFAC249QualifiedMatcher",
 ]
