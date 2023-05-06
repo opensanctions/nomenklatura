@@ -4,9 +4,9 @@ from followthemoney.types import registry
 from nomenklatura.entity import CE
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
 from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
-from nomenklatura.matching.heuristic.logic import is_disjoint
+from nomenklatura.matching.heuristic.logic import is_disjoint, compare_identifiers
 from nomenklatura.matching.util import make_github_url, dates_precision
-from nomenklatura.matching.util import props_pair, type_pair
+from nomenklatura.matching.util import props_pair, type_pair, compare_sets
 
 
 class NameMatcher(ScoringAlgorithm):
@@ -32,20 +32,26 @@ class NameMatcher(ScoringAlgorithm):
                 "coefficient": 0.5,
                 "url": make_github_url(soundex_name_parts),
             },
+            # "full_name_match": {
+            #     "description": full_name_match.__doc__,
+            #     "coefficient": 0.3,
+            #     "url": make_github_url(full_name_match),
+            # },
         }
 
     @classmethod
     def compare(cls, query: CE, match: CE) -> MatchingResult:
         query_names, match_names = type_pair(query, match, registry.name)
-        # query_names = [n.lower() for n in query_names]
-        # match_names = [n.lower() for n in match_names]
 
         jaro_score = jaro_name_parts(query_names, match_names)
         soundex_score = soundex_name_parts(query_names, match_names)
+        # full_name_score = full_name_match(query_names, match_names)
         features: Dict[str, float] = {
             "jaro_name_parts": jaro_score,
             "soundex_name_parts": soundex_score,
+            # "full_name_score": full_name_score,
         }
+        # score = (jaro_score + soundex_score + full_name_score) / 3.0
         score = (jaro_score + soundex_score) / 2.0
         return MatchingResult(score=score, features=features)
 
@@ -118,10 +124,10 @@ class NameQualifiedMatcher(ScoringAlgorithm):
         result["features"][cls.ID_DISJOINT] = 0.0
         if query.schema.is_a("Organization") or match.schema.is_a("Organization"):
             query_ids, match_ids = type_pair(query, match, registry.identifier)
-            # TODO: implement a fuzzy method here!
-            if is_disjoint(query_ids, match_ids):
-                weight = features[cls.ID_DISJOINT]["coefficient"]
+            if len(query_ids) and len(match_ids):
+                base_weight = features[cls.ID_DISJOINT]["coefficient"]
+                score = compare_sets(query_ids, match_ids, compare_identifiers)
+                weight = (1 - score) * base_weight
                 result["features"][cls.ID_DISJOINT] = weight
                 result["score"] += weight
-
         return result

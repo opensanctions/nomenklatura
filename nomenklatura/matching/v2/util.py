@@ -1,6 +1,6 @@
-import Levenshtein
 from normality.constants import WS
 from typing import Iterable, Set
+from jellyfish import levenshtein_distance
 
 from nomenklatura.util import normalize_name
 
@@ -30,10 +30,11 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
 
 
 def compare_levenshtein(left: str, right: str) -> float:
-    distance = Levenshtein.distance(left, right)
+    distance = levenshtein_distance(left, right)
     # FIXME: random baseline number
     base = max((15, len(left), len(right)))
     return 1.0 - (distance / float(base))
+    # return ratio if ratio > 0.5 else 0.0
     # return math.sqrt(distance)
 
 
