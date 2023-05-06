@@ -3,11 +3,8 @@ from prefixdate import Precision
 from followthemoney.types import registry
 from nomenklatura.entity import CE
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
-from nomenklatura.matching.heuristic.logic import (
-    name_jaro_winkler,
-    soundex_jaro_name_parts,
-)
-from nomenklatura.matching.heuristic.logic import ofac_round_score, is_disjoint
+from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
+from nomenklatura.matching.heuristic.logic import is_disjoint
 from nomenklatura.matching.util import make_github_url, dates_precision
 from nomenklatura.matching.util import props_pair, type_pair
 
@@ -25,32 +22,31 @@ class NameMatcher(ScoringAlgorithm):
     @classmethod
     def explain(cls) -> FeatureDocs:
         return {
-            "name_jaro_winkler": {
-                "description": name_jaro_winkler.__doc__,
+            "jaro_name_parts": {
+                "description": jaro_name_parts.__doc__,
                 "coefficient": 0.5,
-                "url": make_github_url(name_jaro_winkler),
+                "url": make_github_url(jaro_name_parts),
             },
-            "soundex_jaro_name_parts": {
-                "description": soundex_jaro_name_parts.__doc__,
+            "soundex_name_parts": {
+                "description": soundex_name_parts.__doc__,
                 "coefficient": 0.5,
-                "url": make_github_url(soundex_jaro_name_parts),
+                "url": make_github_url(soundex_name_parts),
             },
         }
 
     @classmethod
     def compare(cls, query: CE, match: CE) -> MatchingResult:
         query_names, match_names = type_pair(query, match, registry.name)
-        query_names = [n.lower() for n in query_names]
-        match_names = [n.lower() for n in match_names]
+        # query_names = [n.lower() for n in query_names]
+        # match_names = [n.lower() for n in match_names]
 
-        names_jaro = name_jaro_winkler(query_names, match_names)
-        soundex_jaro = soundex_jaro_name_parts(query_names, match_names)
+        jaro_score = jaro_name_parts(query_names, match_names)
+        soundex_score = soundex_name_parts(query_names, match_names)
         features: Dict[str, float] = {
-            "name_jaro_winkler": names_jaro,
-            "soundex_jaro_name_parts": soundex_jaro,
+            "jaro_name_parts": jaro_score,
+            "soundex_name_parts": soundex_score,
         }
-        score = max(names_jaro, soundex_jaro)
-        score = ofac_round_score(score)
+        score = (jaro_score + soundex_score) / 2.0
         return MatchingResult(score=score, features=features)
 
 
