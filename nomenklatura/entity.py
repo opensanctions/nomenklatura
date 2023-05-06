@@ -120,8 +120,8 @@ class CompositeEntity(EntityProxy):
         return self.default_dataset
 
     @key_prefix.setter
-    def key_prefix(self, dataset: Optional[str]) -> None:
-        return self.default_dataset
+    def key_prefix(self, dataset: str) -> None:
+        self.default_dataset = dataset
 
     def _pick_caption(self) -> str:
         is_thing = self.schema.is_a("Thing")
