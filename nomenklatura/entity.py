@@ -121,7 +121,7 @@ class CompositeEntity(EntityProxy):
 
     @key_prefix.setter
     def key_prefix(self, dataset: Optional[str]) -> None:
-        raise NotImplemented
+        return self.default_dataset
 
     def _pick_caption(self) -> str:
         is_thing = self.schema.is_a("Thing")
