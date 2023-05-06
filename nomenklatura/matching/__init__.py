@@ -17,6 +17,7 @@ DefaultAlgorithm = MatcherV2
 
 
 def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
+    """Return the scoring algorithm class with the given name."""
     for algorithm in ALGORITHMS:
         if algorithm.NAME == name:
             return algorithm
