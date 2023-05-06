@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Type
 from followthemoney.schema import Schema
 
 from nomenklatura.dataset import DS
@@ -8,7 +8,7 @@ from nomenklatura.loader import Loader
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.index import Index
-from nomenklatura.matching import DefaultMatcher
+from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 from nomenklatura.util import is_qid
 
 log = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ def xref(
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
+    algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", loader, resolver)
@@ -67,19 +68,9 @@ def xref(
                     continue
 
             if scored:
-                result = DefaultMatcher.compare(left, right)
+                result = algorithm.compare(left, right)
                 score = result["score"]
             scores.append(score)
-
-            # if score > 0.985:
-            #     if is_qid(left.id) and right.id.startswith("acf-"):
-            #         print("LEFT", left, right)
-            #         resolver.decide(left_id, right_id, Judgement.POSITIVE)
-            #         continue
-            #     if is_qid(right.id) and left.id.startswith("acf-"):
-            #         print("RIGHT", left, right)
-            #         resolver.decide(left_id, right_id, Judgement.POSITIVE)
-            #         continue
 
             # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:

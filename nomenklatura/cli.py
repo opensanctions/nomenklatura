@@ -16,6 +16,7 @@ from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.statement import Statement, CSV, FORMATS
+from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
@@ -57,20 +58,26 @@ def cli() -> None:
 @click.option("-r", "--resolver", type=ResPath)
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
 @click.option("-l", "--limit", type=click.INT, default=5000)
+@click.option("--algorithm", default=DefaultAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
 def xref_file(
     path: Path,
     resolver: Optional[Path] = None,
     auto_threshold: Optional[float] = None,
+    algorithm: str = DefaultAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     loader = FileLoader(path, resolver=resolver_)
+    algorithm_type = get_algorithm(algorithm)
+    if algorithm_type is None:
+        raise click.Abort(f"Unknown algorithm: {algorithm}")
     run_xref(
         loader,
         resolver_,
         auto_threshold=auto_threshold,
+        algorithm=algorithm_type,
         scored=scored,
         limit=limit,
     )

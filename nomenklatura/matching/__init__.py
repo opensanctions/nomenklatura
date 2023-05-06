@@ -1,12 +1,10 @@
-from typing import List, Type, TypeVar
+from typing import List, Type, Optional
 from nomenklatura.matching.v1.model import MatcherV1
 from nomenklatura.matching.v1.train import train_matcher as train_v1_matcher
 from nomenklatura.matching.v2.model import MatcherV2
 from nomenklatura.matching.v2.train import train_matcher as train_v2_matcher
 from nomenklatura.matching.heuristic import NameMatcher, NameQualifiedMatcher
 from nomenklatura.matching.types import ScoringAlgorithm
-
-# SA = TypeVar("SA", bound="Sco")
 
 ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     MatcherV1,
@@ -15,14 +13,22 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     NameQualifiedMatcher,
 ]
 
-DefaultMatcher = MatcherV2
+DefaultAlgorithm = MatcherV2
+
+
+def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
+    for algorithm in ALGORITHMS:
+        if algorithm.NAME == name:
+            return algorithm
+    return None
+
 
 __all__ = [
     "MatcherV1",
     "train_v1_matcher",
     "MatcherV2",
     "train_v2_matcher",
-    "DefaultMatcher",
+    "DefaultAlgorithm",
     "OFAC249Matcher",
     "OFAC249QualifiedMatcher",
 ]
