@@ -4,7 +4,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.loader import Loader, FileLoader, MemoryLoader
 from nomenklatura.index import Index
 
-__version__ = "2.10.1"
+__version__ = "2.11.0"
 __all__ = [
     "Dataset",
     "CompositeEntity",
