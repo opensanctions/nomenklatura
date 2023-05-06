@@ -3,20 +3,24 @@ from prefixdate import Precision
 from followthemoney.types import registry
 from nomenklatura.entity import CE
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
-from nomenklatura.matching.ofac.logic import name_jaro_winkler, soundex_jaro_name_parts
-from nomenklatura.matching.ofac.logic import ofac_round_score, is_disjoint
+from nomenklatura.matching.heuristic.logic import (
+    name_jaro_winkler,
+    soundex_jaro_name_parts,
+)
+from nomenklatura.matching.heuristic.logic import ofac_round_score, is_disjoint
 from nomenklatura.matching.util import make_github_url, dates_precision
 from nomenklatura.matching.util import props_pair, type_pair
 
 
-class OFAC249Matcher(ScoringAlgorithm):
-    """An algorithm that attempts to emulate the behaviour proposed by the
-    US OFAC (FAQ 249) and implemented in their web-based Sanctions Search."""
+class NameMatcher(ScoringAlgorithm):
+    """An algorithm that matches on entity name, using phonetic comparisons and edit distance
+    to generate potential matches. This implementation is vaguely based on the behaviour
+    proposed by the US OFAC documentation (FAQ #249)."""
 
     # Try to re-produce results from: https://sanctionssearch.ofac.treas.gov/
     # cf. https://ofac.treasury.gov/faqs/topic/1636
 
-    NAME = "ofac-249"
+    NAME = "name-based"
 
     @classmethod
     def explain(cls) -> FeatureDocs:
@@ -50,12 +54,12 @@ class OFAC249Matcher(ScoringAlgorithm):
         return MatchingResult(score=score, features=features)
 
 
-class OFAC249QualifiedMatcher(ScoringAlgorithm):
-    """Same as the US OFAC (FAQ 249) algorithm, but scores will be reduced if a mis-match
-    of birth dates and nationalities is found for persons, or different tax/registration
-    identifiers are included for organizations and companies."""
+class NameQualifiedMatcher(ScoringAlgorithm):
+    """Same as the name-based algorithm, but scores will be reduced if a mis-match of birth
+    dates and nationalities is found for persons, or different tax/registration identifiers
+    are included for organizations and companies."""
 
-    NAME = "ofac-249-qualified"
+    NAME = "name-qualified"
     COUNTRIES_DISJOINT = "countries_disjoint"
     DOB_DAY_DISJOINT = "dob_day_disjoint"
     DOB_YEAR_DISJOINT = "dob_year_disjoint"
@@ -63,32 +67,32 @@ class OFAC249QualifiedMatcher(ScoringAlgorithm):
 
     @classmethod
     def explain(cls) -> FeatureDocs:
-        features = OFAC249Matcher.explain()
+        features = NameMatcher.explain()
         features[cls.COUNTRIES_DISJOINT] = {
             "description": "Both entities are linked to different countries.",
             "coefficient": -0.1,
-            "url": make_github_url(OFAC249QualifiedMatcher.compare),
+            "url": make_github_url(NameQualifiedMatcher.compare),
         }
         features[cls.DOB_DAY_DISJOINT] = {
             "description": "Both persons have different birthdays.",
             "coefficient": -0.15,
-            "url": make_github_url(OFAC249QualifiedMatcher.compare),
+            "url": make_github_url(NameQualifiedMatcher.compare),
         }
         features[cls.DOB_YEAR_DISJOINT] = {
             "description": "Both persons are born in different years.",
             "coefficient": -0.1,
-            "url": make_github_url(OFAC249QualifiedMatcher.compare),
+            "url": make_github_url(NameQualifiedMatcher.compare),
         }
         features[cls.ID_DISJOINT] = {
             "description": "Two companies or organizations have different tax identifiers or registration numbers.",
             "coefficient": -0.2,
-            "url": make_github_url(OFAC249QualifiedMatcher.compare),
+            "url": make_github_url(NameQualifiedMatcher.compare),
         }
         return features
 
     @classmethod
     def compare(cls, query: CE, match: CE) -> MatchingResult:
-        result = OFAC249Matcher.compare(query, match)
+        result = NameMatcher.compare(query, match)
         features = cls.explain()
 
         result["features"][cls.COUNTRIES_DISJOINT] = 0.0
@@ -118,6 +122,7 @@ class OFAC249QualifiedMatcher(ScoringAlgorithm):
         result["features"][cls.ID_DISJOINT] = 0.0
         if query.schema.is_a("Organization") or match.schema.is_a("Organization"):
             query_ids, match_ids = type_pair(query, match, registry.identifier)
+            # TODO: implement a fuzzy method here!
             if is_disjoint(query_ids, match_ids):
                 weight = features[cls.ID_DISJOINT]["coefficient"]
                 result["features"][cls.ID_DISJOINT] = weight

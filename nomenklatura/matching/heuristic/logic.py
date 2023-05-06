@@ -23,6 +23,8 @@ def soundex_jaro_name_parts(query: List[str], result: List[str]) -> float:
         part_score = (best + soundex_score) / 2
 
         similiarities.append(part_score)
+    if not len(similiarities):
+        return 0.0
     return sum(similiarities) / float(len(similiarities))
 
 
