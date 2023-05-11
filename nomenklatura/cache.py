@@ -72,6 +72,9 @@ class Cache(object):
     def get(
         self, key: str, max_age: Optional[int] = None, conn: Connish = None
     ) -> Optional[Value]:
+        if max_age == 0:
+            return None
+
         cache_cutoff = None
         if max_age is not None:
             cache_cutoff = datetime.utcnow() - randomize_cache(max_age)
