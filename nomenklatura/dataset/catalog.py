@@ -44,7 +44,7 @@ class DataCatalog(Generic[DS]):
         return {d.name for d in self.datasets}
 
     def __repr__(self) -> str:
-        return f"<DataCatalog[{self.dataset_type.__name__}]({self.names!r})>"
+        return f"<DataCatalog[{self.dataset_type.__name__}]({self.names!r})>"  # pragma: no cover
 
     def to_dict(self) -> Dict[str, Any]:
         return {

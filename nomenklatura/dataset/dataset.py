@@ -89,7 +89,7 @@ class Dataset(Named):
     def dataset_names(self) -> List[str]:
         return [d.name for d in self.datasets]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Dataset({self.name})>"  # pragma: no cover
 
     def to_dict(self) -> Dict[str, Any]:
