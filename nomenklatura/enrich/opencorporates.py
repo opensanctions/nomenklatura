@@ -81,7 +81,9 @@ class OpenCorporatesEnricher(Enricher):
         entity.add("address", data.get("registered_address_in_full"))
         entity.add("sourceUrl", data.get("registry_url"))
         entity.add("legalForm", data.get("company_type"))
-        entity.add("incorporationDate", data.get("incorporation_date"))
+        inc_date = data.get("incorporation_date")
+        if inc_date is not None and not inc_date.startswith("00"):
+            entity.add("incorporationDate", inc_date)
         entity.add("dissolutionDate", data.get("dissolution_date"))
         entity.add("status", data.get("current_status"))
         entity.add("registrationNumber", data.get("company_number"))

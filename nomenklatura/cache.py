@@ -54,6 +54,7 @@ class Cache(object):
         self._preload: Dict[str, CacheValue] = {}
 
     def set(self, key: str, value: Value, conn: Connish = None) -> None:
+        self._preload.pop(key, None)
         cache = {
             "timestamp": datetime.utcnow(),
             "key": key,
