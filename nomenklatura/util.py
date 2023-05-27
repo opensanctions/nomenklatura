@@ -38,15 +38,15 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     """Parse datetime from standardized date string"""
     if value is None or len(value) == 0:
         return None
-    value = value[:19].replace("T", " ")
-    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    value = value[:19].replace(" ", "T")
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
 
 
 def datetime_iso(dt: Optional[Union[str, datetime]]) -> Optional[str]:
     if dt is None:
         return dt
     try:
-        return dt.isoformat(timespec="seconds")  # type: ignore
+        return dt.isoformat(sep="T", timespec="seconds")  # type: ignore
     except AttributeError:
         return cast(str, dt)
 
