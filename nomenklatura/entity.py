@@ -1,6 +1,4 @@
 from hashlib import sha1
-from banal import hash_data
-from datetime import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from typing import Generator, Iterable, Tuple, Type, TypeVar
@@ -106,12 +104,12 @@ class CompositeEntity(EntityProxy):
         yield from self._iter_stmt()
 
     @property
-    def first_seen(self) -> Optional[datetime]:
+    def first_seen(self) -> Optional[str]:
         seen = (s.first_seen for s in self._iter_stmt() if s.first_seen is not None)
         return min(seen, default=None)
 
     @property
-    def last_seen(self) -> Optional[datetime]:
+    def last_seen(self) -> Optional[str]:
         seen = (s.last_seen for s in self._iter_stmt() if s.last_seen is not None)
         return max(seen, default=None)
 
@@ -183,7 +181,7 @@ class CompositeEntity(EntityProxy):
         value: Optional[str],
         schema: Optional[str] = None,
         dataset: Optional[str] = None,
-        seen: Optional[datetime] = None,
+        seen: Optional[str] = None,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
         cleaned: bool = False,
@@ -235,7 +233,7 @@ class CompositeEntity(EntityProxy):
         values: Iterable[Optional[str]],
         schema: Optional[str] = None,
         dataset: Optional[str] = None,
-        seen: Optional[datetime] = None,
+        seen: Optional[str] = None,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
         cleaned: bool = False,

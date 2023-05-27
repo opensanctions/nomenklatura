@@ -1,15 +1,9 @@
 import hashlib
-from datetime import datetime
 from sqlalchemy.engine import Row
 from typing import cast, TYPE_CHECKING
 from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
-from nomenklatura.util import (
-    bool_text,
-    datetime_iso,
-    iso_datetime,
-    text_bool,
-)
+from nomenklatura.util import bool_text, datetime_iso, text_bool
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CE
@@ -30,8 +24,8 @@ class StatementDict(TypedDict):
     original_value: Optional[str]
     target: Optional[bool]
     external: Optional[bool]
-    first_seen: Optional[datetime]
-    last_seen: Optional[datetime]
+    first_seen: Optional[str]
+    last_seen: Optional[str]
 
 
 class Statement(object):
@@ -74,12 +68,12 @@ class Statement(object):
         dataset: str,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
-        first_seen: Optional[datetime] = None,
+        first_seen: Optional[str] = None,
         target: Optional[bool] = False,
         external: Optional[bool] = False,
         id: Optional[str] = None,
         canonical_id: Optional[str] = None,
-        last_seen: Optional[datetime] = None,
+        last_seen: Optional[str] = None,
     ):
         self.entity_id = entity_id
         self.canonical_id = canonical_id or entity_id
@@ -122,8 +116,8 @@ class Statement(object):
         data = cast(Dict[str, str], self.to_dict())
         return {
             **data,
-            "first_seen": datetime_iso(self.first_seen),
-            "last_seen": datetime_iso(self.last_seen),
+            "first_seen": self.first_seen,
+            "last_seen": self.last_seen,
             "target": bool_text(self.target),
             "external": bool_text(self.external),
         }
@@ -196,22 +190,10 @@ class Statement(object):
 
     @classmethod
     def from_row(cls: Type[S], data: Dict[str, str]) -> S:
-        return cls(
-            id=data.get("id", None),
-            canonical_id=data.get("canonical_id", None),
-            entity_id=data["entity_id"],
-            prop=data["prop"],
-            prop_type=data["prop_type"],
-            schema=data["schema"],
-            value=data["value"],
-            dataset=data["dataset"],
-            lang=data.get("lang", None),
-            original_value=data.get("original_value", None),
-            first_seen=iso_datetime(data.get("first_seen", None)),
-            target=text_bool(data.get("target")),
-            external=text_bool(data.get("external")),
-            last_seen=iso_datetime(data.get("last_seen", None)),
-        )
+        typed_data = cast(StatementDict, data)
+        typed_data["target"] = text_bool(data.get("target"))
+        typed_data["external"] = text_bool(data.get("external"))
+        return cls.from_dict(typed_data)
 
     @classmethod
     def from_db_row(cls: Type[S], row: Row) -> S:
@@ -226,10 +208,10 @@ class Statement(object):
             dataset=row.dataset,
             lang=row.lang,
             original_value=row.original_value,
-            first_seen=row.first_seen,
+            first_seen=datetime_iso(row.first_seen),
             target=row.target,
             external=row.external,
-            last_seen=row.last_seen,
+            last_seen=datetime_iso(row.last_seen),
         )
 
     @classmethod
@@ -237,8 +219,8 @@ class Statement(object):
         cls: Type[S],
         entity: "CE",
         dataset: str,
-        first_seen: Optional[datetime] = None,
-        last_seen: Optional[datetime] = None,
+        first_seen: Optional[str] = None,
+        last_seen: Optional[str] = None,
         target: Optional[bool] = None,
         external: Optional[bool] = None,
     ) -> Generator[S, None, None]:

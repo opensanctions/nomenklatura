@@ -6,7 +6,7 @@ from functools import lru_cache
 from normality.constants import WS
 from fingerprints.fingerprint import fingerprint
 from fingerprints.cleanup import clean_strict
-from typing import Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
+from typing import cast, Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
@@ -33,6 +33,7 @@ def normalize_url(url: str, params: ParamsType = None) -> str:
     return urlunparse(parsed)
 
 
+@lru_cache(maxsize=10000)
 def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     """Parse datetime from standardized date string"""
     if value is None or len(value) == 0:
@@ -41,10 +42,13 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
 
 
-def datetime_iso(dt: Optional[datetime]) -> Optional[str]:
+def datetime_iso(dt: Optional[Union[str, datetime]]) -> Optional[str]:
     if dt is None:
-        return None
-    return dt.isoformat(timespec="seconds")
+        return dt
+    try:
+        return dt.isoformat(timespec="seconds")  # type: ignore
+    except AttributeError:
+        return cast(str, dt)
 
 
 def iso_to_version(value: str) -> Optional[str]:
