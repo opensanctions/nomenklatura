@@ -1,4 +1,4 @@
-from typing import Counter, Dict, Optional, Tuple
+from typing import Counter, Dict, Optional
 
 
 DEFAULT_LANG = "en"
@@ -8,9 +8,20 @@ ALT_LANG_ORDER = ["es", "fr", "de", "ru"]
 class LangText(object):
     __slots__ = ["text", "lang"]
 
-    def __init__(self, text: str, lang: str):
+    def __init__(self, text: str, lang: Optional[str]):
         self.text = text
         self.lang = lang
+
+    def pack(self) -> str:
+        lang = self.lang or ""
+        return f"{lang}:{self.text}"
+
+    @classmethod
+    def parse(self, packed):
+        lang, text = packed.split(":", 1)
+        if not len(lang):
+            lang = None
+        return LangText(text, lang)
 
 
 def pick_lang_text(values: Dict[str, str]) -> Optional[LangText]:

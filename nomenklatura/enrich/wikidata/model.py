@@ -2,7 +2,7 @@ from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from nomenklatura.enrich.wikidata.value import snak_value_to_string
-from nomenklatura.enrich.wikidata.lang import pick_obj_lang
+from nomenklatura.enrich.wikidata.lang import pick_obj_lang, LangText
 
 if TYPE_CHECKING:
     from nomenklatura.enrich.wikidata import WikidataEnricher
@@ -30,7 +30,7 @@ class Snak(object):
             return stringify(self._value.get("id"))
         return None
 
-    def text(self, enricher: "WikidataEnricher") -> Optional[str]:
+    def text(self, enricher: "WikidataEnricher") -> Optional[LangText]:
         return snak_value_to_string(enricher, self.value_type, self._value)
 
 
@@ -68,10 +68,7 @@ class Item(object):
         self.modified: Optional[str] = data.pop("modified", None)
 
         labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
-        self.label: Optional[str] = None
-        label = pick_obj_lang(labels)
-        if label is not None:
-            self.label = label.text
+        self.label: Optional[LangText] = pick_obj_lang(labels)
         self.aliases: Set[str] = set()
         for obj in labels.values():
             self.aliases.add(obj["value"])

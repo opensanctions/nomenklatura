@@ -6,7 +6,7 @@ from followthemoney.helpers import check_person_cutoff
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.wikidata.lang import pick_obj_lang
+from nomenklatura.enrich.wikidata.lang import LangText, pick_obj_lang
 from nomenklatura.enrich.wikidata.qualified import qualify_value
 from nomenklatura.enrich.wikidata.props import (
     PROPS_ASSOCIATION,
@@ -20,7 +20,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.util import is_qid
 
 WD_API = "https://www.wikidata.org/w/api.php"
-LABEL_PREFIX = "wd:label"
+LABEL_PREFIX = "wd:lt"
 log = logging.getLogger(__name__)
 
 
@@ -111,11 +111,11 @@ class WikidataEnricher(Enricher):
         return Item(entity)
 
     @cache
-    def get_label(self, qid: str) -> Optional[str]:
+    def get_label(self, qid: str) -> Optional[LangText]:
         cache_key = f"{LABEL_PREFIX}:{qid}"
         cached = self.cache.get(cache_key, max_age=self.label_cache_days)
         if cached is not None:
-            return cached
+            return LangText.parse(cached)
         data = self.wikibase_getentities(
             qid,
             cache_days=self.cache_days,
@@ -124,8 +124,8 @@ class WikidataEnricher(Enricher):
         entity = data.get("entities", {}).get(qid)
         label = pick_obj_lang(entity.get("labels", {}))
         if label is not None:
-            self.cache.set(cache_key, label.text)
-            return label.text
+            self.cache.set(cache_key, label.pack())
+            return label
         return None
 
     def make_link(
@@ -259,6 +259,9 @@ class WikidataEnricher(Enricher):
             if ftm_prop in PROPS_QUALIFIED and value is not None:
                 value = qualify_value(self, value, claim)
             if ftm_prop == "topics" and claim.qid is not None:
-                value = PROPS_TOPICS.get(claim.qid)
-            proxy.add(ftm_prop, value)
+                topic = PROPS_TOPICS.get(claim.qid)
+                if topic is not None:
+                    value = LangText(topic, None)
+            if value is not None:
+                proxy.add(ftm_prop, value.text, lang=value.lang)
         return proxy
