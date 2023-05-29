@@ -20,7 +20,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.util import is_qid
 
 WD_API = "https://www.wikidata.org/w/api.php"
-LABEL_PREFIX = "wd:lt"
+LABEL_PREFIX = "wd:lt:"
 log = logging.getLogger(__name__)
 
 
@@ -112,7 +112,7 @@ class WikidataEnricher(Enricher):
 
     @cache
     def get_label(self, qid: str) -> Optional[LangText]:
-        cache_key = f"{LABEL_PREFIX}:{qid}"
+        cache_key = f"{LABEL_PREFIX}{qid}"
         cached = self.cache.get(cache_key, max_age=self.label_cache_days)
         if cached is not None:
             return LangText.parse(cached)
@@ -164,7 +164,8 @@ class WikidataEnricher(Enricher):
         link.add(source_prop, proxy.id)
         link.add(target_prop, item.id)
         rel = claim.property_label(self)
-        link.add("relationship", rel)
+        if rel is not None:
+            link.add("relationship", rel.text, lang=rel.lang)
 
         for qual in claim.get_qualifier("P580"):
             text = qual.text(self)
@@ -189,7 +190,8 @@ class WikidataEnricher(Enricher):
         for ref in claim.references:
             for snak in ref.get("P854"):
                 text = snak.text(self)
-                link.add("sourceUrl", text)
+                if text is not None:
+                    link.add("sourceUrl", text)
         yield link
 
     def item_graph(

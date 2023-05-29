@@ -21,7 +21,7 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, enricher: "WikidataEnricher") -> Optional[str]:
+    def property_label(self, enricher: "WikidataEnricher") -> Optional[LangText]:
         return enricher.get_label(self.property)
 
     @property
@@ -69,23 +69,20 @@ class Item(object):
 
         labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
         self.label: Optional[LangText] = pick_obj_lang(labels)
-        self.aliases: Set[str] = set()
+        self.aliases: Set[LangText] = set()
         for obj in labels.values():
-            self.aliases.add(obj["value"])
+            self.aliases.add(LangText(obj["value"], obj["language"]))
 
         aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases", {})
         for lang in aliases.values():
             for obj in lang:
-                self.aliases.add(obj["value"])
+                self.aliases.add(LangText(obj["value"], obj["language"]))
 
         if self.label is not None:
             self.aliases.discard(self.label)
 
         descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions", {})
-        self.description: Optional[str] = None
-        description = pick_obj_lang(descriptions)
-        if description is not None:
-            self.description = description.text
+        self.description = pick_obj_lang(descriptions)
 
         self.claims: List[Claim] = []
         claims: Dict[str, List[Dict[str, Any]]] = data.pop("claims", {})

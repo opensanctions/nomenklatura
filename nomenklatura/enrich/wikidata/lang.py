@@ -1,4 +1,5 @@
 from typing import Counter, Dict, Optional
+from followthemoney.types import registry
 
 
 DEFAULT_LANG = "en"
@@ -10,7 +11,16 @@ class LangText(object):
 
     def __init__(self, text: str, lang: Optional[str]):
         self.text = text
-        self.lang = lang
+        self.lang = registry.language.clean(lang)
+
+    def __hash__(self):
+        return hash((self.text, self.lang))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __repr__(self):
+        return f"{self.text!r}@{self.lang or '???'}"
 
     def pack(self) -> str:
         lang = self.lang or ""
