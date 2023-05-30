@@ -1,5 +1,4 @@
-import json
-from typing import Counter, Dict, Optional
+from typing import Counter, Dict, Optional, Any
 from followthemoney.types import registry
 
 from nomenklatura.entity import CE
@@ -17,34 +16,33 @@ class LangText(object):
         text: Optional[str],
         lang: Optional[str] = None,
         original: Optional[str] = None,
-    ):
+    ) -> None:
         if text is None or len(text.strip()) == 0:
             text = None
         self.text = text
         self.lang = registry.language.clean(lang)
         self.original = original
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.text, self.lang))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return hash(self) == hash(other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.text is None:
             return "<empty>"
         return f"{self.text!r}@{self.lang or '???'}"
 
-    def apply(self, entity: CE, prop: str):
+    def apply(self, entity: CE, prop: str) -> None:
         if self.text is not None:
             entity.add(prop, self.text, lang=self.lang, original_value=self.original)
 
-    def pack(self) -> str:
-        return json.dumps({"t": self.text, "l": self.lang, "o": self.original})
+    def pack(self) -> Dict[str, Optional[str]]:
+        return {"t": self.text, "l": self.lang, "o": self.original}
 
     @classmethod
-    def parse(self, packed):
-        data = json.loads(packed)
+    def parse(self, data: Dict[str, Optional[str]]) -> "LangText":
         return LangText(data["t"], data["l"], original=data["o"])
 
 

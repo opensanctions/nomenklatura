@@ -113,7 +113,7 @@ class WikidataEnricher(Enricher):
     @cache
     def get_label(self, qid: str) -> LangText:
         cache_key = f"{LABEL_PREFIX}{qid}"
-        cached = self.cache.get(cache_key, max_age=self.label_cache_days)
+        cached = self.cache.get_json(cache_key, max_age=self.label_cache_days)
         if cached is not None:
             return LangText.parse(cached)
         data = self.wikibase_getentities(
@@ -126,7 +126,7 @@ class WikidataEnricher(Enricher):
         if label.text is None:
             label.text = qid
         label.original = qid
-        self.cache.set(cache_key, label.pack())
+        self.cache.set_json(cache_key, label.pack())
         return label
 
     def make_link(
