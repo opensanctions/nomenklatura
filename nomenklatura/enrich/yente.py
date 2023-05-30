@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 from banal import ensure_list
 from typing import Any, Generator, Optional, Dict, List
@@ -10,6 +11,7 @@ from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import EnrichmentException
 from nomenklatura.util import normalize_url
 
 log = logging.getLogger(__name__)
@@ -62,7 +64,15 @@ class YenteEnricher(Enricher):
                 }
             }
         }
-        response = self.http_post_json_cached(url, cache_key, query)
+        for retry in range(4):
+            try:
+                response = self.http_post_json_cached(url, cache_key, query)
+            except EnrichmentException as exc:
+                log.info("Error matching %r: %s", entity, exc)
+                if retry == 3:
+                    raise
+                time.sleep((retry + 1) ** 2)
+
         inner_resp = response.get("responses", {}).get("entity", {})
         for result in inner_resp.get("results", []):
             proxy = self.load_entity(entity, result)
