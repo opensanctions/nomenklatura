@@ -10,9 +10,9 @@ from requests.exceptions import RequestException
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig, ParamsType
+from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
-from nomenklatura.util import normalize_url
+from nomenklatura.util import normalize_url, ParamsType
 
 
 log = logging.getLogger(__name__)
