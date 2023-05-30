@@ -6,7 +6,7 @@ from followthemoney.helpers import check_person_cutoff
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.wikidata.lang import pick_obj_lang
+from nomenklatura.enrich.wikidata.lang import LangText, pick_obj_lang
 from nomenklatura.enrich.wikidata.qualified import qualify_value
 from nomenklatura.enrich.wikidata.props import (
     PROPS_ASSOCIATION,
@@ -20,7 +20,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.util import is_qid
 
 WD_API = "https://www.wikidata.org/w/api.php"
-LABEL_PREFIX = "wd:label"
+LABEL_PREFIX = "wd:lb:"
 log = logging.getLogger(__name__)
 
 
@@ -111,11 +111,11 @@ class WikidataEnricher(Enricher):
         return Item(entity)
 
     @cache
-    def get_label(self, qid: str) -> Optional[str]:
-        cache_key = f"{LABEL_PREFIX}:{qid}"
-        cached = self.cache.get(cache_key, max_age=self.label_cache_days)
+    def get_label(self, qid: str) -> LangText:
+        cache_key = f"{LABEL_PREFIX}{qid}"
+        cached = self.cache.get_json(cache_key, max_age=self.label_cache_days)
         if cached is not None:
-            return cached
+            return LangText.parse(cached)
         data = self.wikibase_getentities(
             qid,
             cache_days=self.cache_days,
@@ -123,10 +123,11 @@ class WikidataEnricher(Enricher):
         )
         entity = data.get("entities", {}).get(qid)
         label = pick_obj_lang(entity.get("labels", {}))
-        if label is not None:
-            self.cache.set(cache_key, label.text)
-            return label.text
-        return None
+        if label.text is None:
+            label.text = qid
+        label.original = qid
+        self.cache.set_json(cache_key, label.pack())
+        return label
 
     def make_link(
         self,
@@ -159,37 +160,38 @@ class WikidataEnricher(Enricher):
         yield from self.item_graph(other, item, depth=depth - 1, seen=seen)
         link = self.make_entity(proxy, schema)
         min_id, max_id = sorted((proxy.id, other.id))
+        # FIXME: doesn't lead to collisions because claim.property has an inverse:
         link.id = f"wd-{claim.property}-{min_id}-{max_id}"
         link.id = link.id.lower()
         link.add(source_prop, proxy.id)
         link.add(target_prop, item.id)
         rel = claim.property_label(self)
-        link.add("relationship", rel)
+        rel.apply(link, "relationship")
 
         for qual in claim.get_qualifier("P580"):
             text = qual.text(self)
-            link.add("startDate", text)
+            text.apply(link, "startDate")
 
         for qual in claim.get_qualifier("P582"):
             text = qual.text(self)
-            link.add("endDate", text)
+            text.apply(link, "endDate")
 
         for qual in claim.get_qualifier("P585"):
             text = qual.text(self)
-            link.add("date", text)
+            text.apply(link, "date")
 
         for qual in claim.get_qualifier("P1039"):
             text = qual.text(self)
-            link.set("relationship", text)
+            text.apply(link, "relationship")
 
         for qual in claim.get_qualifier("P2868"):
             text = qual.text(self)
-            link.set("relationship", text)
+            text.apply(link, "relationship")
 
         for ref in claim.references:
             for snak in ref.get("P854"):
                 text = snak.text(self)
-                link.add("sourceUrl", text)
+                text.apply(link, "sourceUrl")
         yield link
 
     def item_graph(
@@ -238,9 +240,10 @@ class WikidataEnricher(Enricher):
             return None
         proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
-        proxy.add("name", item.label)
-        proxy.add("notes", item.description)
-        proxy.add("alias", item.aliases)
+        item.label.apply(proxy, "name")
+        item.description.apply(proxy, "notes")
+        for alias in item.aliases:
+            alias.apply(proxy, "alias")
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
             log.debug("Person is not a Q5 [%s]: %s", item.id, item.label)
@@ -256,9 +259,11 @@ class WikidataEnricher(Enricher):
                 log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
                 continue
             value = claim.text(self)
-            if ftm_prop in PROPS_QUALIFIED and value is not None:
+            if ftm_prop in PROPS_QUALIFIED:
                 value = qualify_value(self, value, claim)
             if ftm_prop == "topics" and claim.qid is not None:
-                value = PROPS_TOPICS.get(claim.qid)
-            proxy.add(ftm_prop, value)
+                topic = PROPS_TOPICS.get(claim.qid)
+                if topic is not None:
+                    value = LangText(topic, original=claim.qid)
+            value.apply(proxy, ftm_prop)
         return proxy

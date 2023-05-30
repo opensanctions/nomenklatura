@@ -1,19 +1,25 @@
+import json
 import logging
 from normality import slugify
 from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
 from followthemoney.types import registry
-from requests.exceptions import HTTPError
+from requests.exceptions import RequestException
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentAbort
+from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
+from nomenklatura.util import normalize_url, ParamsType
 
 
 log = logging.getLogger(__name__)
+
+
+def parse_date(raw: Any) -> Optional[str]:
+    return registry.date.clean(raw)
 
 
 class OpenCorporatesEnricher(Enricher):
@@ -26,11 +32,38 @@ class OpenCorporatesEnricher(Enricher):
         super().__init__(dataset, cache, config)
         token_var = "${OPENCORPORATES_API_TOKEN}"
         self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
+        self.quota_exceeded = False
         if self.api_token == token_var:
             self.api_token = None
         if self.api_token is None:
             log.warning("OpenCorporates has no API token (%s)" % token_var)
         self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
+
+    def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
+        url = normalize_url(url, params=params)
+        response = self.cache.get(url, max_age=self.cache_days)
+        if response is None:
+            if self.quota_exceeded:
+                return None
+            hidden_url = normalize_url(url, params={"api_token": self.api_token})
+            try:
+                resp = self.session.get(hidden_url)
+                resp.raise_for_status()
+            except RequestException as rex:
+                if rex.response is not None:
+                    if rex.response.status_code == 403:
+                        log.info("OpenCorporates quota exceeded; using only cache now.")
+                        self.quota_exceeded = True
+                        return None
+                    elif rex.response.status_code == 401:
+                        raise EnrichmentAbort(
+                            "Authorization failure: %s" % url
+                        ) from rex
+                msg = "HTTP fetch failed [%s]: %s" % (url, rex)
+                raise EnrichmentException(msg) from rex
+            response = resp.text
+            self.cache.set(url, response)
+        return json.loads(response)
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
@@ -82,16 +115,16 @@ class OpenCorporatesEnricher(Enricher):
         entity.add("sourceUrl", data.get("registry_url"))
         entity.add("legalForm", data.get("company_type"))
         inc_date = data.get("incorporation_date")
-        if inc_date is not None and not inc_date.startswith("00"):
-            entity.add("incorporationDate", inc_date)
-        entity.add("dissolutionDate", data.get("dissolution_date"))
+        entity.add("incorporationDate", parse_date(inc_date))
+        dis_date = data.get("dissolution_date")
+        entity.add("dissolutionDate", parse_date(dis_date))
         entity.add("status", data.get("current_status"))
         entity.add("registrationNumber", data.get("company_number"))
         entity.add("opencorporatesUrl", oc_url)
         source = data.get("source", {})
         entity.add("publisher", source.get("publisher"))
         entity.add("publisherUrl", source.get("url"))
-        entity.add("retrievedAt", source.get("retrieved_at"))
+        entity.add("retrievedAt", parse_date(source.get("retrieved_at")))
         for code in data.get("industry_codes", []):
             code = code.get("industry_code", code)
             entity.add("sector", code.get("description"))
@@ -121,23 +154,14 @@ class OpenCorporatesEnricher(Enricher):
     #     entity.add("retrievedAt", source.get("retrieved_at"))
     #     return entity
 
-    def names_query(self, entity: CE) -> str:
-        # names = entity.get_type_values(registry.name)
-        # names = set([n.lower() for n in names])
-        # print(names)
-        return entity.caption
-
     def search_companies(self, entity: CE) -> Generator[CE, None, None]:
         countries = entity.get_type_values(registry.country)
-        q = self.names_query(entity)
-        params = {"q": q, "sparse": True, "country_codes": countries}
+        params = {"q": entity.caption, "sparse": True, "country_codes": countries}
         for page in range(1, 9):
             params["page"] = page
-            results = self.http_get_json_cached(
-                self.COMPANY_SEARCH_API,
-                params=params,
-                hidden={"api_token": self.api_token},
-            )
+            results = self.oc_get_cached(self.COMPANY_SEARCH_API, params=params)
+            if results is None:
+                break
 
             # print(results)
             for company in results.get("results", {}).get("companies", []):

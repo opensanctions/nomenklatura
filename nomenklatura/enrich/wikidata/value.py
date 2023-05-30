@@ -3,6 +3,7 @@ from prefixdate import Precision
 from typing import TYPE_CHECKING, cast, Any, Dict, Optional
 
 from nomenklatura.util import is_qid
+from nomenklatura.enrich.wikidata.lang import LangText
 
 if TYPE_CHECKING:
     from nomenklatura.enrich.wikidata import WikidataEnricher
@@ -18,9 +19,9 @@ PRECISION = {
 
 def snak_value_to_string(
     enricher: "WikidataEnricher", value_type: Optional[str], value: Dict[str, Any]
-) -> Optional[str]:
+) -> LangText:
     if value_type is None:
-        return None
+        return LangText(None)
     elif value_type == "time":
         time = cast(Optional[str], value.get("time"))
         if time is not None:
@@ -30,11 +31,15 @@ def snak_value_to_string(
             time = time[: prec.value]
             # Date limit in FtM. These will be removed by the death filter:
             time = max("1001", time)
-        return time
+        if time is None:
+            return LangText(None)
+        return LangText(time, None, original=value.get("time"))
     elif value_type == "wikibase-entityid":
         return enricher.get_label(value.get("id"))
     elif value_type == "monolingualtext":
-        return value.get("text")
+        text = value.get("text")
+        if isinstance(text, str):
+            return LangText(text)
     elif value_type == "quantity":
         # Resolve unit name and make into string:
         amount = cast(str, value.get("amount", ""))
@@ -44,9 +49,9 @@ def snak_value_to_string(
         if is_qid(unit):
             unit = enricher.get_label(unit)
             amount = f"{amount} {unit}"
-        return amount
+        return LangText(amount)
     elif isinstance(value, str):
-        return value
+        return LangText(value)
     else:
         log.warning("Unhandled value [%s]: %s", value_type, value)
-    return None
+    return LangText(None)
