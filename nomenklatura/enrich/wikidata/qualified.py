@@ -27,28 +27,31 @@ def post_summary(
     label = position.text
     if date_range:
         label = f"{label} ({date_range})"
-    return LangText(label, position.lang)
+    original = position.text or position.original
+    return LangText(label, position.lang, original=original)
 
 
 def qualify_value(
     enricher: "WikidataEnricher", value: LangText, claim: Claim
 ) -> LangText:
+    if value.text is None:
+        return value
     starts: Set[str] = set()
     for qual in claim.get_qualifier("P580"):
         label = qual.text(enricher)
-        if label is not None:
+        if label.text is not None:
             starts.add(label.text)
 
     ends: Set[str] = set()
     for qual in claim.get_qualifier("P582"):
         label = qual.text(enricher)
-        if label is not None:
+        if label.text is not None:
             ends.add(label.text)
 
     dates: Set[str] = set()
     for qual in claim.get_qualifier("P585"):
         label = qual.text(enricher)
-        if label is not None:
+        if label.text is not None:
             dates.add(label.text)
 
     return post_summary(value, starts, ends, dates)
