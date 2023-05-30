@@ -261,9 +261,10 @@ class WikidataEnricher(Enricher):
             value = claim.text(self)
             if ftm_prop in PROPS_QUALIFIED:
                 value = qualify_value(self, value, claim)
-            if ftm_prop == "topics" and claim.qid is not None:
+            if ftm_prop == "topics":
                 topic = PROPS_TOPICS.get(claim.qid)
-                if topic is not None:
-                    value = LangText(topic, original=claim.qid)
+                if topic is None:
+                    continue
+                value = LangText(topic, original=claim.qid)
             value.apply(proxy, ftm_prop)
         return proxy
