@@ -1,10 +1,9 @@
 import string
 import logging
-import Levenshtein
 from itertools import combinations
 from collections import defaultdict
-from normality import normalize
 from typing import Dict, Optional, List, Tuple
+from nomenklatura.util import normalize_name, levenshtein
 
 log = logging.getLogger(__name__)
 ASCII = set(string.ascii_letters + string.digits + string.whitespace)
@@ -22,20 +21,17 @@ def ascii_share(text: str) -> float:
 def pick_name(names: List[str]) -> Optional[str]:
     forms: List[Tuple[str, str, float]] = []
     for name in sorted(names):
-        norm = normalize(name, ascii=True, lowercase=False)
+        norm = normalize_name(name)
         if norm is not None:
             weight = 2 - ascii_share(name)
             forms.append((norm, name, weight))
             forms.append((norm.title(), name, weight))
 
     edits: Dict[str, float] = defaultdict(float)
-    cache: Dict[Tuple[str, str], int] = {}
     for ((l_norm, left, l_weight), (r_norm, right, r_weight)) in combinations(forms, 2):
-        pair = (l_norm[:128], r_norm[:128])
-        if pair not in cache:
-            cache[pair] = Levenshtein.distance(*pair)
-        edits[left] += cache[pair] * l_weight
-        edits[right] += cache[pair] * r_weight
+        distance = levenshtein(l_norm, r_norm)
+        edits[left] += distance * l_weight
+        edits[right] += distance * r_weight
 
     for cand, _ in sorted(edits.items(), key=lambda x: x[1]):
         return cand

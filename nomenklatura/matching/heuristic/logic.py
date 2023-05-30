@@ -1,6 +1,6 @@
 from typing import List, Set, Union
-from jellyfish import soundex, jaro_winkler_similarity, levenshtein_distance
-from nomenklatura.util import name_words, fingerprint_name
+from jellyfish import soundex, jaro_winkler_similarity
+from nomenklatura.util import name_words, levenshtein
 
 
 def soundex_name_parts(query: List[str], result: List[str]) -> float:
@@ -64,6 +64,6 @@ def compare_identifiers(left: str, right: str) -> float:
         return 0.0
     if left in right or right in left:
         return 1.0
-    distance = levenshtein_distance(left, right)
+    distance = levenshtein(left, right)
     ratio = 1.0 - (distance / float(max(len(left), len(right))))
     return ratio if ratio > 0.7 else 0.0

@@ -1,8 +1,7 @@
 from normality.constants import WS
 from typing import Iterable, Set
-from jellyfish import levenshtein_distance
 
-from nomenklatura.util import normalize_name
+from nomenklatura.util import normalize_name, levenshtein
 
 
 def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
@@ -30,7 +29,7 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
 
 
 def compare_levenshtein(left: str, right: str) -> float:
-    distance = levenshtein_distance(left, right)
+    distance = levenshtein(left, right)
     # FIXME: random baseline number
     base = max((15, len(left), len(right)))
     return 1.0 - (distance / float(base))

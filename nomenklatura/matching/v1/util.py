@@ -1,8 +1,7 @@
-import Levenshtein
 from normality.constants import WS
 from typing import Iterable, Set, Tuple
 
-from nomenklatura.util import normalize_name
+from nomenklatura.util import normalize_name, levenshtein
 
 
 def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
@@ -30,7 +29,7 @@ def has_overlap(left: Set[str], right: Set[str]) -> float:
 
 
 def compare_levenshtein(left: str, right: str) -> float:
-    distance = Levenshtein.distance(left, right)
+    distance = levenshtein(left, right)
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
     # return math.sqrt(distance)

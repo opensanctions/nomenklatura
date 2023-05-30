@@ -1,5 +1,6 @@
 import re
 import os
+import Levenshtein
 from pathlib import Path
 from datetime import datetime
 from functools import lru_cache
@@ -90,3 +91,9 @@ def name_words(names: List[str]) -> Set[str]:
 def normalize_name(original: str) -> Optional[str]:
     """Normalize a legal entity name."""
     return clean_strict(original)
+
+
+@lru_cache(maxsize=5000)
+def levenshtein(left: str, right: str) -> int:
+    """Compute the Levenshtein distance between two strings."""
+    return Levenshtein.distance(left[:128], right[:128])
