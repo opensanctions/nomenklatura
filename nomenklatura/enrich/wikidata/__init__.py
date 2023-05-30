@@ -262,7 +262,7 @@ class WikidataEnricher(Enricher):
             if ftm_prop in PROPS_QUALIFIED:
                 value = qualify_value(self, value, claim)
             if ftm_prop == "topics":
-                topic = PROPS_TOPICS.get(claim.qid)
+                topic = PROPS_TOPICS.get(claim.qid or "")
                 if topic is None:
                     continue
                 value = LangText(topic, original=claim.qid)
