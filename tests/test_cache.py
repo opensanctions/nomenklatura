@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 from nomenklatura import db
-from nomenklatura.cache import Cache, ConnCache
+from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 
 DB_PATH = Path(mkdtemp()) / "test.sqlite3"
@@ -20,6 +20,7 @@ def test_cache():
     res = cache.get("name")
     assert res is not None, res
     assert res == "TestCase", res
+    cache.flush()
     assert cache.has("name")
 
     res = cache.get("name", max_age=5)
@@ -32,37 +33,6 @@ def test_cache():
     cache.set("banana", "TestCase")
     cache.delete("banana")
     assert not cache.has("banana")
-
-    cache.close()
-
-
-def test_conn_cache():
-    ds = Dataset.make({"name": "test", "title": "Test Case"})
-    cache = Cache.make_default(ds)
-
-    engine = db.get_engine()
-    with engine.begin() as conn:
-        ccache = ConnCache(cache, conn)
-        res = ccache.get("name")
-        assert res is None, res
-        assert not ccache.has("name")
-
-        ccache.set("name", "TestCase")
-        res = ccache.get("name")
-        assert res is not None, res
-        assert res == "TestCase", res
-        assert ccache.has("name")
-
-        res = ccache.get("name", max_age=5)
-        assert res == "TestCase", res
-
-        ccache.clear()
-        res = ccache.get("name")
-        assert res is None, res
-
-        ccache.set("banana", "TestCase")
-        ccache.delete("banana")
-        assert not ccache.has("banana")
 
     cache.close()
 

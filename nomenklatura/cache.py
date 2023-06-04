@@ -7,14 +7,14 @@ from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
 from nomenklatura.db import get_engine, get_metadata
-from nomenklatura.db import Connish, Conn, ensure_tx
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -39,6 +39,8 @@ class Cache(object):
         self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
     ) -> None:
         self.dataset = dataset
+        self._engine = engine
+        self._conn: Optional[Connection] = None
         self._table = Table(
             "cache",
             metadata,
@@ -53,7 +55,13 @@ class Cache(object):
 
         self._preload: Dict[str, CacheValue] = {}
 
-    def set(self, key: str, value: Value, conn: Connish = None) -> None:
+    @property
+    def conn(self) -> Connection:
+        if self._conn is None:
+            self._conn = self._engine.connect()
+        return self._conn
+
+    def set(self, key: str, value: Value) -> None:
         self._preload.pop(key, None)
         cache = {
             "timestamp": datetime.utcnow(),
@@ -61,18 +69,18 @@ class Cache(object):
             "dataset": self.dataset.name,
             "text": value,
         }
-        istmt = upsert(self._table).values([cache])
-        values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
-        stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
-        with ensure_tx(conn) as conn:
-            conn.execute(stmt)
+        try:
+            istmt = upsert(self._table).values([cache])
+            values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
+            stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
+            self.conn.execute(stmt)
+        except OperationalError as exc:
+            log.info("Error while saving to cache: %s" % exc)
 
-    def set_json(self, key: str, value: Any, conn: Connish = None) -> None:
-        return self.set(key, json.dumps(value), conn=conn)
+    def set_json(self, key: str, value: Any) -> None:
+        return self.set(key, json.dumps(value))
 
-    def get(
-        self, key: str, max_age: Optional[int] = None, conn: Connish = None
-    ) -> Optional[Value]:
+    def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
         if max_age == 0:
             return None
 
@@ -92,56 +100,54 @@ class Cache(object):
             q = q.filter(self._table.c.timestamp > cache_cutoff)
         q = q.order_by(self._table.c.timestamp.desc())
         q = q.limit(1)
-        with ensure_tx(conn) as conn:
-            result = conn.execute(q)
-            row = result.fetchone()
-            if row is not None:
-                return cast(Optional[str], row.text)
+        result = self.conn.execute(q)
+        row = result.fetchone()
+        if row is not None:
+            return cast(Optional[str], row.text)
         return None
 
-    def get_json(
-        self, key: str, max_age: Optional[int] = None, conn: Connish = None
-    ) -> Optional[Any]:
-        text = self.get(key, max_age=max_age, conn=conn)
+    def get_json(self, key: str, max_age: Optional[int] = None) -> Optional[Any]:
+        text = self.get(key, max_age=max_age)
         if text is None:
             return None
         return json.loads(text)
 
-    def has(self, key: str, conn: Connish = None) -> bool:
-        return self.get(key, conn=conn) is not None
+    def has(self, key: str) -> bool:
+        return self.get(key) is not None
 
-    def delete(self, key: str, conn: Connish = None) -> None:
+    def delete(self, key: str) -> None:
         self._preload.pop(key, None)
-        with ensure_tx(conn) as conn:
-            pq = delete(self._table)
-            pq = pq.where(self._table.c.key == key)
-            conn.execute(pq)
+        pq = delete(self._table)
+        pq = pq.where(self._table.c.key == key)
+        self.conn.execute(pq)
 
-    def all(
-        self, like: Optional[str], conn: Connish = None
-    ) -> Generator[CacheValue, None, None]:
+    def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
         q = select(self._table)
         if like is not None:
             q = q.filter(self._table.c.key.like(like))
 
-        with ensure_tx(conn) as conn:
-            result = conn.execute(q)
-            for row in result.yield_per(10000):
-                yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
+        result = self.conn.execute(q)
+        for row in result.yield_per(10000):
+            yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
-    def preload(self, like: Optional[str] = None, conn: Connish = None) -> None:
+    def preload(self, like: Optional[str] = None) -> None:
         log.info("Pre-loading cache: %r", like)
-        for cache in self.all(like=like, conn=conn):
+        for cache in self.all(like=like):
             self._preload[cache.key] = cache
 
-    def clear(self, conn: Connish = None) -> None:
+    def clear(self) -> None:
         pq = delete(self._table)
         pq = pq.where(self._table.c.dataset == self.dataset.name)
-        with ensure_tx(conn) as conn:
-            conn.execute(pq)
+        self.conn.execute(pq)
+
+    def flush(self) -> None:
+        if self._conn is not None:
+            self._conn.commit()  # type: ignore
+            self._conn.close()
+        self._conn = None
 
     def close(self) -> None:
-        pass
+        self.flush()
 
     def __repr__(self) -> str:
         return f"<Cache({self._table!r})>"
@@ -154,55 +160,3 @@ class Cache(object):
         engine = get_engine()
         metadata = get_metadata()
         return cls(engine, metadata, dataset, create=True)
-
-
-class ConnCache(Cache):
-    def __init__(self, cache: Cache, conn: Conn) -> None:
-        self.cache = cache
-        self.conn = conn
-
-    def set(self, key: str, value: Value, conn: Connish = None) -> None:
-        return self.cache.set(key, value, conn=conn or self.conn)
-
-    def set_json(self, key: str, value: Any, conn: Connish = None) -> None:
-        return self.cache.set_json(key, value, conn=conn or self.conn)
-
-    def get(
-        self, key: str, max_age: Optional[int] = None, conn: Connish = None
-    ) -> Optional[Value]:
-        return self.cache.get(key, max_age=max_age, conn=conn or self.conn)
-
-    def get_json(
-        self, key: str, max_age: Optional[int] = None, conn: Connish = None
-    ) -> Optional[Any]:
-        return self.cache.get_json(key, max_age=max_age, conn=conn or self.conn)
-
-    def has(self, key: str, conn: Connish = None) -> bool:
-        return self.cache.has(key, conn=conn or self.conn)
-
-    def delete(self, key: str, conn: Connish = None) -> None:
-        self.cache.delete(key, conn=conn or self.conn)
-
-    def all(
-        self, like: Optional[str], conn: Connish = None
-    ) -> Generator[CacheValue, None, None]:
-        yield from self.cache.all(like, conn=conn or self.conn)
-
-    def preload(self, like: Optional[str] = None, conn: Connish = None) -> None:
-        self.cache.preload(like, conn=conn or self.conn)
-
-    def clear(self, conn: Connish = None) -> None:
-        self.cache.clear(conn=conn or self.conn)
-
-    def close(self) -> None:
-        pass
-
-    def __repr__(self) -> str:
-        return f"<ConnCache({self.conn!r}, {self.cache._table!r})>"
-
-    def __hash__(self) -> int:
-        return hash(self.cache)
-
-    @classmethod
-    def make_default(cls, dataset: DS) -> "Cache":
-        raise NotImplemented
