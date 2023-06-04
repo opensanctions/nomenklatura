@@ -10,7 +10,7 @@ from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.dialects.postgresql import insert as upsert
 
 from nomenklatura.dataset import DS
@@ -141,8 +141,12 @@ class Cache(object):
         self.conn.execute(pq)
 
     def flush(self) -> None:
+        # log.info("Flushing cache.")
         if self._conn is not None:
-            self._conn.commit()  # type: ignore
+            try:
+                self._conn.commit()  # type: ignore
+            except PendingRollbackError:
+                log.info("Transaction was failed, cannot store cache state.")
             self._conn.close()
         self._conn = None
 
