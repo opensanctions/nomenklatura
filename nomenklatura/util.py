@@ -3,8 +3,9 @@ import os
 import Levenshtein
 from pathlib import Path
 from datetime import datetime
-from functools import lru_cache
+from functools import lru_cache, cache
 from normality.constants import WS
+from followthemoney import model
 from fingerprints.fingerprint import fingerprint
 from fingerprints.cleanup import clean_strict
 from typing import cast, Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
@@ -34,7 +35,7 @@ def normalize_url(url: str, params: ParamsType = None) -> str:
     return urlunparse(parsed)
 
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=1000)
 def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     """Parse datetime from standardized date string"""
     if value is None or len(value) == 0:
@@ -71,7 +72,18 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     return text.lower().startswith("t")
 
 
-@lru_cache(maxsize=10000)
+@cache
+def get_prop_type(schema: str, prop: str) -> str:
+    schema_obj = model.get(schema)
+    if schema_obj is None:
+        raise ValueError(f"Invalid schema: {schema}")
+    prop_obj = schema_obj.get(prop)
+    if prop_obj is None:
+        raise ValueError(f"Invalid property ({schema}): {prop}")
+    return prop_obj.type.name
+
+
+@lru_cache(maxsize=1024)
 def fingerprint_name(original: str, keep_order: bool = True) -> Optional[str]:
     """Fingerprint a legal entity name."""
     return fingerprint(original, keep_order=keep_order, keep_brackets=True)
@@ -87,13 +99,13 @@ def name_words(names: List[str]) -> Set[str]:
     return words
 
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=1024)
 def normalize_name(original: str) -> Optional[str]:
     """Normalize a legal entity name."""
     return clean_strict(original)
 
 
-@lru_cache(maxsize=5000)
+@lru_cache(maxsize=512)
 def levenshtein(left: str, right: str) -> int:
     """Compute the Levenshtein distance between two strings."""
     return Levenshtein.distance(left[:128], right[:128])
