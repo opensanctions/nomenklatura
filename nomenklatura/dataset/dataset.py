@@ -89,6 +89,14 @@ class Dataset(Named):
     def dataset_names(self) -> List[str]:
         return [d.name for d in self.datasets]
 
+    @cached_property
+    def scope_names(self) -> Set[str]:
+        """This is based on the premise that collections (ie. datasets which have children)
+        never contain entities themselves that need to be queried."""
+        if len(self.children):
+            return {d.name for d in self.children}
+        return {self.name}
+
     def __repr__(self) -> str:
         return f"<Dataset({self.name})>"  # pragma: no cover
 

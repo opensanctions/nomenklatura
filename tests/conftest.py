@@ -4,6 +4,7 @@ import pytest
 from pathlib import Path
 
 from nomenklatura.loader import FileLoader
+from nomenklatura.dataset import Dataset
 from nomenklatura.index import Index
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
@@ -37,6 +38,11 @@ def donations_json(donations_path):
 @pytest.fixture(scope="module")
 def dloader(donations_path):
     return FileLoader(donations_path)
+
+
+@pytest.fixture(scope="module")
+def test_dataset():
+    return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
 
 
 @pytest.fixture(scope="module")

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from nomenklatura.loader import Loader
 
 CE = TypeVar("CE", bound="CompositeEntity")
+DEFAULT_DATASET = "default"
 
 
 class CompositeEntity(EntityProxy):
@@ -43,7 +44,7 @@ class CompositeEntity(EntityProxy):
         model: "Model",
         data: Dict[str, Any],
         cleaned: bool = True,
-        default_dataset: str = "default",
+        default_dataset: str = DEFAULT_DATASET,
     ):
         data = dict(data or {})
         schema = model.get(data.pop("schema", None))
@@ -441,9 +442,13 @@ class CompositeEntity(EntityProxy):
 
     @classmethod
     def from_dict(
-        cls: Type[CE], model: Model, data: Dict[str, Any], cleaned: bool = True
+        cls: Type[CE],
+        model: Model,
+        data: Dict[str, Any],
+        cleaned: bool = True,
+        default_dataset: str = DEFAULT_DATASET,
     ) -> CE:
-        return super().from_dict(model, data, cleaned=cleaned)
+        return cls(model, data, cleaned=cleaned, default_dataset=default_dataset)
 
     @classmethod
     def from_statements(cls: Type[CE], statements: Iterable[Statement]) -> CE:
