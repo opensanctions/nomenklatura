@@ -75,6 +75,8 @@ class MemoryView(View[DS, CE]):
         for stmt in self.store.stmts[id]:
             if self.external is False and stmt.external:
                 continue
+            if stmt.prop_type == registry.entity.name:
+                stmt.value = self.store.resolver.get_canonical(stmt.value)
             stmts.append(stmt)
         return self.store.assemble(stmts)
 
@@ -91,7 +93,6 @@ class MemoryView(View[DS, CE]):
         entity_ids: Set[str] = set()
         for scope in self.scope_names:
             entity_ids.update(self.store.entities.get(scope, []))
-        print("SCOPE", self.scope_names, entity_ids)
         for entity_id in entity_ids:
             entity = self.get_entity(entity_id)
             if entity is not None:

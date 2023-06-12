@@ -66,6 +66,7 @@ def bool_text(value: Optional[bool]) -> Optional[str]:
     return "true" if value else "false"
 
 
+@cache
 def text_bool(text: Optional[str]) -> Optional[bool]:
     if text is None or len(text) == 0:
         return None

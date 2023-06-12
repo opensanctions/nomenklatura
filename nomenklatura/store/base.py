@@ -8,6 +8,9 @@ from nomenklatura.entity import CE, CompositeEntity
 
 
 class Store(Generic[DS, CE]):
+    """A data storage and retrieval mechanism for statement-based entity data. Essentially,
+    this is a triple store which can be implemented using various backends."""
+
     def __init__(
         self,
         dataset: DS,
@@ -36,6 +39,8 @@ class Store(Generic[DS, CE]):
 
 
 class Writer(Generic[DS, CE]):
+    """Bulk writing operations."""
+
     def __init__(self, store: Store[DS, CE]):
         self.store = store
 
@@ -51,6 +56,8 @@ class Writer(Generic[DS, CE]):
 
     def flush(self) -> None:
         pass
+
+    # def __enter__(self)
 
 
 class View(Generic[DS, CE]):

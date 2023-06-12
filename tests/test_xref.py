@@ -11,6 +11,9 @@ def test_xref_candidates(dloader: FileLoader):
     for left_id, right_id, score in candidates:
         left = dloader.get_entity(left_id)
         right = dloader.get_entity(right_id)
+        assert left is not None
+        assert right is not None
+        assert score is not None
         if left.caption == "Johanna Quandt":
             assert right.caption == "Frau Johanna Quandt"
-        assert score > 0
+        assert score > 0.0

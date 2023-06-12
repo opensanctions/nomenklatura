@@ -38,9 +38,11 @@ def test_basic_store(test_dataset: Dataset):
     assert len(list(store.view(test_dataset).entities())) == 2
 
     merged_id = resolver.decide(
-        "john-doe", "john-doe-2", judgement=Judgement.POSITIVE, user="test"
+        "john-doe",
+        "john-doe-2",
+        judgement=Judgement.POSITIVE,
+        user="test",
     )
-    print("XXXX", merged_id)
     store.update(merged_id)
     assert len(store.stmts) == 1
     assert len(list(store.view(test_dataset).entities())) == 1
