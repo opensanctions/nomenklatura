@@ -1,4 +1,4 @@
-import plyvel
+import plyvel  # type: ignore
 from typing import Generator, Optional, Tuple, Any, List, Set
 from pathlib import Path
 from followthemoney.types import registry
