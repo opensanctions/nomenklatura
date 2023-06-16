@@ -30,10 +30,7 @@ class CompositeEntity(EntityProxy):
         "schema",
         "id",
         "_caption",
-        "target",
-        "external",
-        "referents",
-        "datasets",
+        "extra_referents",
         "default_dataset",
         "statement_type",
         "_statements",
@@ -55,13 +52,8 @@ class CompositeEntity(EntityProxy):
         self._caption: Optional[str] = None
         """A pre-computed label for this entity."""
 
-        self.target: Optional[bool] = data.pop("target", None)
-        self.external: Optional[bool] = data.pop("external", None)
-        self.referents: Set[str] = set(data.pop("referents", []))
+        self.extra_referents: Set[str] = set(data.pop("referents", []))
         """The IDs of all entities which are included in this canonical entity."""
-
-        self.datasets: Set[str] = set(data.pop("datasets", []))
-        """The set of datasets from which information in this entity is derived."""
 
         self.default_dataset = default_dataset
         self.id: Optional[str] = data.pop("id", None)
@@ -115,6 +107,29 @@ class CompositeEntity(EntityProxy):
         return max(seen, default=None)
 
     @property
+    def target(self) -> Optional[bool]:
+        target: Optional[bool] = None
+        for stmt in self._iter_stmt():
+            if stmt.target is not None:
+                target = target or stmt.target
+        return target
+
+    @property
+    def datasets(self) -> Set[str]:
+        datasets: Set[str] = set()
+        for stmt in self._iter_stmt():
+            datasets.add(stmt.dataset)
+        return datasets
+
+    @property
+    def referents(self) -> Set[str]:
+        referents: Set[str] = set(self.extra_referents)
+        for stmt in self._iter_stmt():
+            if stmt.entity_id is not None and stmt.entity_id != self.id:
+                referents.add(stmt.entity_id)
+        return referents
+
+    @property
     def key_prefix(self) -> Optional[str]:
         return self.default_dataset
 
@@ -150,11 +165,6 @@ class CompositeEntity(EntityProxy):
                 self.schema = model.common_schema(self.schema, stmt.schema)
             except InvalidData as exc:
                 raise InvalidData(f"{self.id}: {exc}") from exc
-        if stmt.target is not None:
-            self.target = self.target or stmt.target
-        self.datasets.add(stmt.dataset)
-        if stmt.entity_id != self.id and stmt.entity_id is not None:
-            self.referents.add(stmt.entity_id)
         if stmt.prop != Statement.BASE:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)

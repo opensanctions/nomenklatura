@@ -1,7 +1,9 @@
-from typing import Optional, Generator, List, Tuple, TypeVar, Generic
+from types import TracebackType
+from typing import Optional, Generator, List, Tuple, Generic, Type
 from followthemoney.property import Property
+from followthemoney.types import registry
 
-from nomenklatura.dataset import DS, Dataset
+from nomenklatura.dataset import DS
 from nomenklatura.resolver import Resolver, StrIdent
 from nomenklatura.statement import Statement
 from nomenklatura.entity import CE, CompositeEntity
@@ -25,17 +27,24 @@ class Store(Generic[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> "View[DS, CE]":
         raise NotImplementedError()
 
-    def assemble(self, statements: List[Statement]) -> CE:
-        return CompositeEntity.from_statements(statements)  # type: ignore
+    def assemble(self, statements: List[Statement]) -> Optional[CE]:
+        if not len(statements):
+            return None
+        for stmt in statements:
+            if stmt.prop_type == registry.entity.name:
+                stmt.value = self.resolver.get_canonical(stmt.value)
+        entity = CompositeEntity.from_statements(statements)
+        if entity.id is not None:
+            entity.extra_referents.update(self.resolver.get_referents(entity.id))
+        return entity  # type: ignore
 
     def update(self, id: StrIdent) -> None:
         canonical_id = self.resolver.get_canonical(id)
-        writer = self.writer()
-        for referent in self.resolver.get_referents(canonical_id):
-            for stmt in writer.pop(referent):
-                stmt.canonical_id = canonical_id
-                writer.add_statement(stmt)
-        writer.flush()
+        with self.writer() as writer:
+            for referent in self.resolver.get_referents(canonical_id):
+                for stmt in writer.pop(referent):
+                    stmt.canonical_id = canonical_id
+                    writer.add_statement(stmt)
 
 
 class Writer(Generic[DS, CE]):
@@ -57,7 +66,16 @@ class Writer(Generic[DS, CE]):
     def flush(self) -> None:
         pass
 
-    # def __enter__(self)
+    def __enter__(self) -> "Writer[DS, CE]":
+        return self
+
+    def __exit__(
+        self,
+        type: Optional[Type[BaseException]],
+        value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        self.flush()
 
 
 class View(Generic[DS, CE]):

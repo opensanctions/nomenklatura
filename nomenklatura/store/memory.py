@@ -4,7 +4,7 @@ from followthemoney.property import Property
 
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.statement import Statement
-from nomenklatura.dataset import DS, Dataset
+from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
 
@@ -75,8 +75,6 @@ class MemoryView(View[DS, CE]):
         for stmt in self.store.stmts[id]:
             if self.external is False and stmt.external:
                 continue
-            if stmt.prop_type == registry.entity.name:
-                stmt.value = self.store.resolver.get_canonical(stmt.value)
             stmts.append(stmt)
         return self.store.assemble(stmts)
 
