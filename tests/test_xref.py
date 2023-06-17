@@ -1,16 +1,15 @@
-from nomenklatura.resolver import Resolver
 from nomenklatura.xref import xref
-from nomenklatura.loader import FileLoader
+from nomenklatura.store import SimpleMemoryStore
 
 
-def test_xref_candidates(dloader: FileLoader):
-    resolver = Resolver()
-    xref(dloader, resolver)
-    candidates = list(resolver.get_candidates(limit=20))
+def test_xref_candidates(dstore: SimpleMemoryStore):
+    xref(dstore)
+    view = dstore.default_view(external=True)
+    candidates = list(dstore.resolver.get_candidates(limit=20))
     assert len(candidates) == 20
     for left_id, right_id, score in candidates:
-        left = dloader.get_entity(left_id)
-        right = dloader.get_entity(right_id)
+        left = view.get_entity(left_id)
+        right = view.get_entity(right_id)
         assert left is not None
         assert right is not None
         assert score is not None

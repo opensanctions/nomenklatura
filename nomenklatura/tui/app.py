@@ -7,7 +7,7 @@ from textual.widget import Widget
 from textual.widgets import Footer
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.loader import Loader
+from nomenklatura.store import Store
 from nomenklatura.resolver import Resolver
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -17,12 +17,12 @@ from nomenklatura.tui.comparison import render_comparison
 class DedupeState(object):
     def __init__(
         self,
-        resolver: Resolver[CE],
-        loader: Loader[DS, CE],
+        store: Store[DS, CE],
         url_base: Optional[str] = None,
     ):
-        self.resolver = resolver
-        self.loader = loader
+        self.store = store
+        self.resolver = store.resolver
+        self.view = store.default_view()
         self.url_base = url_base
         self.latinize = False
         self.message: Optional[str] = None
@@ -43,8 +43,8 @@ class DedupeState(object):
             if not self.resolver.check_candidate(left_id, right_id):
                 self.ignore.add((left_id, right_id))
                 continue
-            self.left = self.loader.get_entity(left_id)
-            self.right = self.loader.get_entity(right_id)
+            self.left = self.view.get_entity(left_id)
+            self.right = self.view.get_entity(right_id)
             self.score = score
             if self.left is not None and self.right is not None:
                 if self.left.schema == self.right.schema:

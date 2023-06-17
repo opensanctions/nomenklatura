@@ -1,29 +1,32 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from followthemoney import model
+
 from nomenklatura.index import Index
+from nomenklatura.store import SimpleMemoryStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 
 
-def test_index_build(dloader):
-    index = Index(dloader)
-    assert len(index) == 0, index.terms
+def test_index_build(dstore: SimpleMemoryStore):
+    index = Index(dstore.default_view())
+    assert len(index) == 0, index.fields
     assert len(index.fields) == 0, index.fields
     index.build()
     assert len(index) == 184, len(index)
 
 
-def test_index_persist(dloader, dindex):
+def test_index_persist(dstore: SimpleMemoryStore, dindex):
+    view = dstore.default_view()
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
         dindex.save(path)
-        loaded = Index.load(dloader, path)
+        loaded = Index.load(dstore.default_view(), path)
     assert len(dindex.entities) == len(loaded.entities), (dindex, loaded)
     assert len(dindex) == len(loaded), (dindex, loaded)
 
     path.unlink(missing_ok=True)
-    empty = Index.load(dloader, path)
+    empty = Index.load(view, path)
     assert len(empty) == len(loaded), (empty, loaded)
 
 
@@ -55,14 +58,15 @@ def test_index_search(dindex):
         assert entity.schema.name == "Address"
 
 
-def test_index_pairs(dloader, dindex: Index):
+def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
+    view = dstore.default_view()
     pairs = dindex.pairs()
     assert len(pairs) > 0, pairs
     tokenizer = dindex.tokenizer
     pair, score = pairs[0]
-    entity0 = dloader.get_entity(str(pair[0]))
+    entity0 = view.get_entity(str(pair[0]))
     tokens0 = set(tokenizer.entity(entity0))
-    entity1 = dloader.get_entity(str(pair[1]))
+    entity1 = view.get_entity(str(pair[1]))
     tokens1 = set(tokenizer.entity(entity1))
     overlap = tokens0.intersection(tokens1)
     assert len(overlap) > 0, overlap
@@ -72,8 +76,9 @@ def test_index_pairs(dloader, dindex: Index):
     # assert False
 
 
-def test_index_filter(dloader, dindex):
-    query = dloader.get_entity(DAIMLER)
+def test_index_filter(dstore: SimpleMemoryStore, dindex):
+    view = dstore.default_view()
+    query = view.get_entity(DAIMLER)
     query.id = None
     query.schema = model.get("Person")
 

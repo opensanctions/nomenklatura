@@ -27,6 +27,9 @@ class Store(Generic[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> "View[DS, CE]":
         raise NotImplementedError()
 
+    def default_view(self, external: bool = False) -> "View[DS, CE]":
+        return self.view(self.dataset, external=external)
+
     def assemble(self, statements: List[Statement]) -> Optional[CE]:
         if not len(statements):
             return None
@@ -90,6 +93,19 @@ class View(Generic[DS, CE]):
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         raise NotImplementedError()
+
+    def get_adjacent(
+        self, entity: CE, inverted: bool = True
+    ) -> Generator[Tuple[Property, CE], None, None]:
+        for prop, value in entity.itervalues():
+            if prop.type == registry.entity:
+                child = self.get_entity(value)
+                if child is not None:
+                    yield prop, child
+
+        if inverted and entity.id is not None:
+            for prop, adjacent in self.get_inverted(entity.id):
+                yield prop, adjacent
 
     def entities(self) -> Generator[CE, None, None]:
         raise NotImplementedError()

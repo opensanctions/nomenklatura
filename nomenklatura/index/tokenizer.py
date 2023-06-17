@@ -6,8 +6,7 @@ from followthemoney.types.common import PropertyType
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.loader import Loader
-from nomenklatura.util import name_words
+from nomenklatura.store import View
 
 SCHEMA_FIELD = "schema"
 NGRAM_FIELD = "ngram"
@@ -58,16 +57,16 @@ class Tokenizer(Generic[DS, CE]):
     def entity(
         self,
         entity: CE,
-        loader: Optional[Loader[DS, CE]] = None,
+        view: Optional[View[DS, CE]] = None,
     ) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         yield SCHEMA_FIELD, self.schema_token(entity.schema)
         for prop, value in entity.itervalues():
             for field, token in self.value(prop.type, value):
                 yield field, token
-        if loader is not None:
+        if view is not None:
             # Index Address, Identification, Sanction, etc.:
-            for prop, other in loader.get_adjacent(entity):
+            for prop, other in view.get_adjacent(entity):
                 for prop, value in other.itervalues():
                     if prop.hidden or not prop.matchable:
                         continue

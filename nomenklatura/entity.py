@@ -17,7 +17,7 @@ from nomenklatura.publish.names import pick_name
 from nomenklatura.statement.statement import Statement
 
 if TYPE_CHECKING:
-    from nomenklatura.loader import Loader
+    from nomenklatura.store import View
 
 CE = TypeVar("CE", bound="CompositeEntity")
 DEFAULT_DATASET = "default"
@@ -425,7 +425,7 @@ class CompositeEntity(EntityProxy):
         return len(list(self._iter_stmt())) + 1
 
     def _to_nested_dict(
-        self: CE, loader: "Loader[DS, CE]", depth: int, path: List[str]
+        self: CE, view: "View[DS, CE]", depth: int, path: List[str]
     ) -> Dict[str, Any]:
         next_depth = depth if self.schema.edge else depth - 1
         next_path = list(path)
@@ -434,11 +434,11 @@ class CompositeEntity(EntityProxy):
         data = self.to_dict()
         if next_depth < 0:
             return data
-        nested: Dict[str, Any] = {}
-        for prop, adjacent in loader.get_adjacent(self):
+        nested: Dict[str, List[Any]] = {}
+        for prop, adjacent in view.get_adjacent(self):
             if adjacent.id in next_path:
                 continue
-            value = adjacent._to_nested_dict(loader, next_depth, next_path)
+            value = adjacent._to_nested_dict(view, next_depth, next_path)
             if prop.name not in nested:
                 nested[prop.name] = []
             nested[prop.name].append(value)
@@ -446,9 +446,9 @@ class CompositeEntity(EntityProxy):
         return data
 
     def to_nested_dict(
-        self: CE, loader: "Loader[DS, CE]", depth: int = 1
+        self: CE, view: "View[DS, CE]", depth: int = 1
     ) -> Dict[str, Any]:
-        return self._to_nested_dict(loader, depth=depth, path=[])
+        return self._to_nested_dict(view, depth=depth, path=[])
 
     @classmethod
     def from_dict(

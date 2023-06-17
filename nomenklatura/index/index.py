@@ -11,7 +11,7 @@ from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.loader import Loader
+from nomenklatura.store import View
 from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import (
     NGRAM_FIELD,
@@ -43,10 +43,10 @@ class Index(Generic[DS, CE]):
         registry.identifier.name: 3.0,
     }
 
-    __slots__ = "loader", "fields", "tokenizer", "entities"
+    __slots__ = "view", "fields", "tokenizer", "entities"
 
-    def __init__(self, loader: Loader[DS, CE]):
-        self.loader = loader
+    def __init__(self, view: View[DS, CE]):
+        self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
         self.entities: Set[Identifier] = set()
@@ -56,9 +56,9 @@ class Index(Generic[DS, CE]):
         entity before re-indexing it."""
         if not entity.schema.matchable or entity.id is None:
             return
-        loader = self.loader if adjacent else None
+        view = self.view if adjacent else None
         ident = Identifier.get(entity.id)
-        for field, token in self.tokenizer.entity(entity, loader=loader):
+        for field, token in self.tokenizer.entity(entity, view=view):
             if field not in self.fields:
                 self.fields[field] = Field()
             self.fields[field].add(ident, token)
@@ -66,10 +66,10 @@ class Index(Generic[DS, CE]):
 
     def build(self, adjacent: bool = True) -> None:
         """Index all entities in the dataset."""
-        log.info("Building index from: %r...", self.loader)
+        log.info("Building index from: %r...", self.view)
         self.fields = {}
         self.entities = set()
-        for entity in self.loader:
+        for entity in self.view.entities():
             self.index(entity, adjacent=adjacent)
         self.commit()
         log.info("Built index: %r", self)
@@ -135,7 +135,7 @@ class Index(Generic[DS, CE]):
         """Find entities similar to the given input entity, return entity."""
         returned = 0
         for entity_id, score in self.match(query, limit=None):
-            entity = self.loader.get_entity(entity_id)
+            entity = self.view.get_entity(entity_id)
             if entity is not None:
                 yield entity, score
                 returned += 1
@@ -180,8 +180,8 @@ class Index(Generic[DS, CE]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, loader: Loader[DS, CE], path: Path) -> "Index[DS, CE]":
-        index = Index(loader)
+    def load(cls, view: View[DS, CE], path: Path) -> "Index[DS, CE]":
+        index = Index(view)
         if not path.exists():
             log.debug("Cannot load: %r", index)
             index.build()
@@ -214,7 +214,7 @@ class Index(Generic[DS, CE]):
 
     def __repr__(self) -> str:
         return "<Index(%r, %d, %d)>" % (
-            self.loader.dataset.name,
+            self.view.scope.name,
             len(self.fields),
             len(self.entities),
         )

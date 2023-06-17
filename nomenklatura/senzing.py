@@ -8,7 +8,7 @@ import logging
 from typing import Dict, Generator, List, Optional, TypedDict, Union
 from followthemoney.types import registry
 
-from nomenklatura.loader import Loader
+from nomenklatura.store import View
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.util import is_qid
@@ -31,9 +31,9 @@ def map_feature(entity: CE, features: List[Feature], prop: str, attr: str) -> No
 
 
 def senzing_adjacent_features(
-    entity: CE, loader: Loader[DS, CE]
+    entity: CE, view: View[DS, CE]
 ) -> Generator[Feature, None, None]:
-    for _, adj in loader.get_adjacent(entity):
+    for _, adj in view.get_adjacent(entity):
         adj_data: Optional[Dict[str, Optional[str]]] = None
         if adj.schema.name == "Address":
             adj_data = {
@@ -62,7 +62,7 @@ def senzing_adjacent_features(
 
 
 def senzing_record(
-    data_source: str, entity: CE, loader: Optional[Loader[DS, CE]] = None
+    data_source: str, entity: CE, view: Optional[View[DS, CE]] = None
 ) -> Optional[SenzingRecord]:
     if not entity.schema.matchable or entity.schema.name == "Address":
         return None
@@ -109,8 +109,8 @@ def senzing_record(
     map_feature(entity, features, "leiCode", "LEI_NUMBER")
     map_feature(entity, features, "dunsCode", "DUNS_NUMBER")
 
-    if loader is not None:
-        for adj_feature in senzing_adjacent_features(entity, loader):
+    if view is not None:
+        for adj_feature in senzing_adjacent_features(entity, view):
             features.append(adj_feature)
 
     for wd_id in (entity.id, entity.first("wikidataId")):
