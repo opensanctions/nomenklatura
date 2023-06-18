@@ -20,6 +20,7 @@ datasets:
       name: Registrar's office
       url: https://reg.gov.us/
       country: us
+      logo_url: https://placekitten.com/200/300
     coverage:
       start: 2005
       end: 2010-01
