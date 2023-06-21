@@ -57,7 +57,12 @@ class DedupeState(object):
     def decide(self, judgement: Judgement) -> None:
         if self.left is not None and self.left.id is not None:
             if self.right is not None and self.right.id is not None:
-                self.resolver.decide(self.left.id, self.right.id, judgement=judgement)
+                canonical_id = self.resolver.decide(
+                    self.left.id,
+                    self.right.id,
+                    judgement=judgement,
+                )
+                self.store.update(canonical_id)
         self.load()
 
     def save(self) -> None:
@@ -77,7 +82,7 @@ class DedupeWidget(Widget):
             return Text(self.dedupe.message, justify="center")
         if self.dedupe.left and self.dedupe.right:
             return render_comparison(
-                self.dedupe.loader,
+                self.dedupe.view,
                 self.dedupe.left,
                 self.dedupe.right,
                 self.dedupe.score,

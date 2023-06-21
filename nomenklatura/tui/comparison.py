@@ -7,7 +7,7 @@ from followthemoney.property import Property
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.loader import Loader
+from nomenklatura.store import View
 from nomenklatura.tui.util import comparison_props
 
 
@@ -18,7 +18,7 @@ def render_column(entity: CE) -> Text:
 
 
 def render_values(
-    loader: Loader[DS, CE], prop: Property, entity: CE, other: CE, latinize: bool
+    view: View[DS, CE], prop: Property, entity: CE, other: CE, latinize: bool
 ) -> Text:
     values = entity.get(prop, quiet=True)
     other_values = other.get_type_values(prop.type)
@@ -26,7 +26,7 @@ def render_values(
     for i, value in enumerate(sorted(values)):
         caption = prop.type.caption(value)
         if prop.type == registry.entity:
-            sub = loader.get_entity(value)
+            sub = view.get_entity(value)
             if sub is not None:
                 caption = sub.caption
         score = prop.type.compare_sets([value], other_values)
@@ -47,7 +47,7 @@ def render_values(
 
 
 def render_comparison(
-    loader: Loader[DS, CE],
+    view: View[DS, CE],
     left: CE,
     right: CE,
     score: float,
@@ -65,8 +65,8 @@ def render_comparison(
 
     for prop in comparison_props(left, right):
         label = Text(prop.label, "white bold")
-        left_text = render_values(loader, prop, left, right, latinize)
-        right_text = render_values(loader, prop, right, left, latinize)
+        left_text = render_values(view, prop, left, right, latinize)
+        right_text = render_values(view, prop, right, left, latinize)
         table.add_row(label, left_text, right_text)
 
     ds_label = Text("Sources", "grey bold")
