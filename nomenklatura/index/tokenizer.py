@@ -1,16 +1,14 @@
 from normality import normalize, WS
-from typing import Generic, Optional, Generator, Generic, Tuple
-from followthemoney.schema import Schema
+from typing import Generic, Generator, Generic, Tuple
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.store import View
+from nomenklatura.util import fingerprint_name
 
-SCHEMA_FIELD = "schema"
-NGRAM_FIELD = "ngram"
 WORD_FIELD = "word"
+NAME_PART_FIELD = "namepart"
 SKIP_FULL = (
     registry.name,
     registry.address,
@@ -19,16 +17,10 @@ SKIP_FULL = (
     registry.number,
     registry.json,
 )
-TEXT_TYPES = (
-    *SKIP_FULL,
-    registry.identifier,
-)
+TEXT_TYPES = (registry.text, registry.string, registry.address)
 
 
 class Tokenizer(Generic[DS, CE]):
-    def schema_token(self, schema: Schema) -> str:
-        return schema.name
-
     def value(
         self, type: PropertyType, value: str
     ) -> Generator[Tuple[str, str], None, None]:
@@ -38,40 +30,34 @@ class Tokenizer(Generic[DS, CE]):
         if type not in SKIP_FULL:
             token_value = value[:100].lower()
             yield type.name, token_value
-        if type == registry.date and len(value) > 4:
-            yield type.name, value[:4]
-        if type in TEXT_TYPES:
-            # TODO: adopt functions from `nomenklatura.util` here
+        if type == registry.date:
+            if len(value) > 4:
+                yield type.name, value[:4]
+            yield type.name, value[:10]
+            return
+        if type == registry.name:
+            norm = fingerprint_name(value)
+            if norm is not None:
+                yield type.name, norm
+                for token in norm.split(WS):
+                    if len(token) > 2 and len(token) < 30:
+                        yield NAME_PART_FIELD, token
+            return
+        if type in (*TEXT_TYPES, registry.identifier):
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
                 return
-            tokens = norm.split(WS)
-            if type == registry.name:
+            tokens = [t for t in norm.split(WS) if len(t) > 2]
+            if type == registry.identifier:
                 yield type.name, norm
-                yield type.name, " ".join(sorted(tokens))
-            for token in tokens:
-                yield WORD_FIELD, token
-                if type == registry.name:
+                for token in tokens:
                     yield type.name, token
+            field = type.name if type == registry.address else WORD_FIELD
+            for token in tokens:
+                yield field, token
 
-    def entity(
-        self,
-        entity: CE,
-        view: Optional[View[DS, CE]] = None,
-    ) -> Generator[Tuple[str, str], None, None]:
+    def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
-        yield SCHEMA_FIELD, self.schema_token(entity.schema)
         for prop, value in entity.itervalues():
             for field, token in self.value(prop.type, value):
                 yield field, token
-        if view is not None:
-            # Index Address, Identification, Sanction, etc.:
-            for prop, other in view.get_adjacent(entity):
-                for prop, value in other.itervalues():
-                    if prop.hidden or not prop.matchable:
-                        continue
-                    # Skip interval dates (not to be mixed up with other dates)
-                    if prop.type in (registry.date, registry.name):
-                        continue
-                    for field, token in self.value(prop.type, value):
-                        yield field, token

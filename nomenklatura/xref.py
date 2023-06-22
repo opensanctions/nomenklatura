@@ -31,7 +31,6 @@ def xref(
     limit: int = 5000,
     scored: bool = True,
     external: bool = True,
-    adjacent: bool = False,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
@@ -41,7 +40,7 @@ def xref(
     log.info("Begin xref: %r, resolver: %s", store, store.resolver)
     view = store.default_view(external=external)
     index = Index(view)
-    index.build(adjacent=adjacent)
+    index.build()
     try:
         scores: List[float] = []
         suggested = 0
