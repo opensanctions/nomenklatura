@@ -5,11 +5,9 @@ from followthemoney.schema import Schema
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
-from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.index import Index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
-from nomenklatura.util import is_qid
 
 log = logging.getLogger(__name__)
 
@@ -52,9 +50,6 @@ def xref(
             if not store.resolver.check_candidate(left_id, right_id):
                 continue
 
-            if is_qid(left_id.id) and is_qid(right_id.id):
-                continue
-
             left = view.get_entity(left_id.id)
             right = view.get_entity(right_id.id)
             if left is None or left.id is None or right is None or right.id is None:
@@ -90,7 +85,7 @@ def xref(
                 score = (score + 1.0) / 2.0
 
             store.resolver.suggest(left.id, right.id, score, user=user)
-            if suggested > limit:
+            if suggested >= limit:
                 break
             suggested += 1
         _print_stats(idx, suggested, scores)
