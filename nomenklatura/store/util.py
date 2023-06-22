@@ -9,7 +9,6 @@ from nomenklatura.statement import Statement
 QNAME_PREFIX = 5
 
 
-@cache
 def pack_prop(schema: str, prop: str) -> str:
     return f"{schema}:{prop}"
 
