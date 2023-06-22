@@ -73,17 +73,6 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     return text.lower().startswith("t")
 
 
-@cache
-def get_prop_type(schema: str, prop: str) -> str:
-    schema_obj = model.get(schema)
-    if schema_obj is None:
-        raise ValueError(f"Invalid schema: {schema}")
-    prop_obj = schema_obj.get(prop)
-    if prop_obj is None:
-        raise ValueError(f"Invalid property ({schema}): {prop}")
-    return prop_obj.type.name
-
-
 @lru_cache(maxsize=1024)
 def fingerprint_name(original: str, keep_order: bool = True) -> Optional[str]:
     """Fingerprint a legal entity name."""

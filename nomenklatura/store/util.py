@@ -11,27 +11,21 @@ QNAME_PREFIX = 5
 
 @cache
 def pack_prop(schema: str, prop: str) -> str:
+    return f"{schema}:{prop}"
+
+
+@cache
+def unpack_prop(id: str) -> Tuple[str, str, str]:
+    schema, prop = id.split(":", 1)
     if prop == Statement.BASE:
-        return f":{schema}"
+        return schema, Statement.BASE, Statement.BASE
     schema_obj = model.get(schema)
     if schema_obj is None:
         raise TypeError("Schema not found: %s" % schema)
     prop_obj = schema_obj.get(prop)
     if prop_obj is None:
         raise TypeError("Property not found: %s" % prop)
-    qname = prop_obj.qname
-    return sha1(qname.encode("utf-8")).hexdigest()[:QNAME_PREFIX]
-
-
-@cache
-def unpack_prop(id: str) -> Tuple[str, str, str]:
-    if id.startswith(":"):
-        _, schema = id.split(":", 1)
-        return schema, Statement.BASE, Statement.BASE
-    for prop in model.qnames.values():
-        if pack_prop(prop.schema.name, prop.name) == id:
-            return prop.schema.name, prop.type.name, prop.name
-    raise TypeError("ID not found: %s" % id)
+    return schema, prop_obj.type.name, prop
 
 
 def pack_statement(stmt: Statement) -> bytes:
