@@ -36,7 +36,7 @@ class Store(Generic[DS, CE]):
         entity = self.entity_class.from_statements(statements)
         if entity.id is not None:
             entity.extra_referents.update(self.resolver.get_referents(entity.id))
-        return entity  # type: ignore
+        return entity
 
     def update(self, id: StrIdent) -> None:
         canonical_id = self.resolver.get_canonical(id)
