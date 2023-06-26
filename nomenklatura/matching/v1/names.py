@@ -1,7 +1,7 @@
 from typing import Iterable, Set
+from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v1.util import has_disjoint, has_overlap
 from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
@@ -18,7 +18,7 @@ def normalize_names(raws: Iterable[str]) -> Set[str]:
     return names
 
 
-def name_levenshtein(left: Entity, right: Entity) -> float:
+def name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
     lv, rv = type_pair(left, right, registry.name)
@@ -26,19 +26,19 @@ def name_levenshtein(left: Entity, right: Entity) -> float:
     return compare_sets(lvn, rvn, compare_levenshtein)
 
 
-def first_name_match(left: Entity, right: Entity) -> float:
+def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["firstName"]))
     return has_overlap(lv, rv)
 
 
-def family_name_match(left: Entity, right: Entity) -> float:
+def family_name_match(left: E, right: E) -> float:
     """Matching family name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["lastName"]))
     return has_overlap(lv, rv)
 
 
-def name_match(left: Entity, right: Entity) -> float:
+def name_match(left: E, right: E) -> float:
     """Check for exact name matches between the two entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
@@ -49,7 +49,7 @@ def name_match(left: Entity, right: Entity) -> float:
     return float(max_common)
 
 
-def name_token_overlap(left: Entity, right: Entity) -> float:
+def name_token_overlap(left: E, right: E) -> float:
     """Evaluate the proportion of identical words in each name."""
     lv, rv = tokenize_pair(type_pair(left, right, registry.name))
     common = lv.intersection(rv)
@@ -57,7 +57,7 @@ def name_token_overlap(left: Entity, right: Entity) -> float:
     return float(len(common)) / float(max(2.0, tokens))
 
 
-def name_numbers(left: Entity, right: Entity) -> float:
+def name_numbers(left: E, right: E) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
     return has_disjoint(extract_numbers(lv), extract_numbers(rv))

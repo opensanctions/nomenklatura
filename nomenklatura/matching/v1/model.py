@@ -3,8 +3,8 @@ import numpy as np
 from typing import List, Dict, Tuple, cast
 from functools import cache
 from sklearn.pipeline import Pipeline  # type: ignore
+from followthemoney.proxy import E
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.types import FeatureDocs, MatchingResult
 from nomenklatura.matching.v1.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.v1.names import first_name_match, family_name_match
@@ -83,7 +83,7 @@ class MatcherV1(ScoringAlgorithm):
         return features
 
     @classmethod
-    def compare(cls, query: Entity, match: Entity) -> MatchingResult:
+    def compare(cls, query: E, match: E) -> MatchingResult:
         """Use a regression model to compare two entities."""
         pipe, _ = cls.load()
         encoded = cls.encode_pair(query, match)
@@ -94,6 +94,6 @@ class MatcherV1(ScoringAlgorithm):
         return {"score": score, "features": features}
 
     @classmethod
-    def encode_pair(cls, left: Entity, right: Entity) -> Encoded:
+    def encode_pair(cls, left: E, right: E) -> Encoded:
         """Encode the comparison between two entities as a set of feature values."""
         return [f(left, right) for f in cls.FEATURES]

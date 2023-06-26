@@ -3,10 +3,10 @@ from pathlib import Path
 from itertools import product
 from prefixdate import Precision
 from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
+from followthemoney.proxy import E
 from followthemoney.types.common import PropertyType
 
 from nomenklatura import __version__
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.util import DATA_PATH
 
 V = TypeVar("V")
@@ -30,7 +30,7 @@ def dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
     return dates
 
 
-def has_schema(left: Entity, right: Entity, schema: str) -> bool:
+def has_schema(left: E, right: E, schema: str) -> bool:
     """Check if one of the entities has the required schema."""
     if left.schema.is_a(schema) or right.schema.is_a(schema):
         if not left.schema.can_match(right.schema):
@@ -39,9 +39,7 @@ def has_schema(left: Entity, right: Entity, schema: str) -> bool:
     return False
 
 
-def props_pair(
-    left: Entity, right: Entity, props: List[str]
-) -> Tuple[Set[str], Set[str]]:
+def props_pair(left: E, right: E, props: List[str]) -> Tuple[Set[str], Set[str]]:
     left_values: Set[str] = set()
     right_values: Set[str] = set()
     for prop in props:
@@ -50,9 +48,7 @@ def props_pair(
     return left_values, right_values
 
 
-def type_pair(
-    left: Entity, right: Entity, type_: PropertyType
-) -> Tuple[List[str], List[str]]:
+def type_pair(left: E, right: E, type_: PropertyType) -> Tuple[List[str], List[str]]:
     left_values = left.get_type_values(type_, matchable=True)
     right_values = right.get_type_values(type_, matchable=True)
     return left_values, right_values

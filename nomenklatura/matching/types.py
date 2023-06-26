@@ -1,8 +1,8 @@
 from typing import List, Dict, Optional, TypedDict, Callable
-from nomenklatura.entity import CE, CompositeEntity
+from followthemoney.proxy import E, EntityProxy
 
 Encoded = List[float]
-FeatureItem = Callable[[CompositeEntity, CompositeEntity], float]
+FeatureItem = Callable[[EntityProxy, EntityProxy], float]
 
 
 class FeatureDoc(TypedDict):
@@ -29,7 +29,7 @@ class ScoringAlgorithm(object):
     NAME = "algorithm_name"
 
     @classmethod
-    def compare(cls, query: CE, match: CE) -> MatchingResult:
+    def compare(cls, query: E, match: E) -> MatchingResult:
         """Compare the two entities and return a score and feature comparison."""
         raise NotImplementedError
 
