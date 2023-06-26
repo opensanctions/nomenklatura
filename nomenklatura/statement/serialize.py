@@ -3,14 +3,16 @@ import click
 import orjson
 from pathlib import Path
 from io import TextIOWrapper
-from typing import BinaryIO, Generator, Iterable, Type
+from typing import BinaryIO, Generator, Iterable, Type, Dict, Any
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
+from nomenklatura.util import pack_prop, unpack_prop, bool_text
 
 JSON = "json"
 CSV = "csv"
-FORMATS = [JSON, CSV]
+PACK = "pack"
+FORMATS = [JSON, CSV, PACK]
 
 CSV_COLUMNS = [
     "canonical_id",
@@ -18,6 +20,20 @@ CSV_COLUMNS = [
     "prop",
     "prop_type",
     "schema",
+    "value",
+    "dataset",
+    "lang",
+    "original_value",
+    "target",
+    "external",
+    "first_seen",
+    "last_seen",
+    "id",
+]
+
+PACK_COLUMNS = [
+    "entity_id",
+    "prop",
     "value",
     "dataset",
     "lang",
@@ -48,11 +64,26 @@ def read_csv_statements(
         yield statement_type.from_row(row)
 
 
+def read_pack_statements(
+    fh: BinaryIO, statement_type: Type[S]
+) -> Generator[S, None, None]:
+    wrapped = TextIOWrapper(fh, encoding="utf-8")
+    for row in csv.DictReader(wrapped, dialect=csv.unix_dialect):
+        row["canonical_id"] = row["entity_id"]
+        schema, prop_type, prop = unpack_prop(row["prop"])
+        row["schema"] = schema
+        row["prop"] = prop
+        row["prop_type"] = prop_type
+        yield statement_type.from_row(row)
+
+
 def read_statements(
     fh: BinaryIO, format: str, statement_type: Type[S]
 ) -> Generator[S, None, None]:
     if format == CSV:
         yield from read_csv_statements(fh, statement_type)
+    elif format == PACK:
+        yield from read_pack_statements(fh, statement_type)
     else:
         yield from read_json_statements(fh, statement_type)
 
@@ -88,8 +119,35 @@ def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
             writer.writerow([row.get(c) for c in CSV_COLUMNS])
 
 
+def pack_statement(stmt: S) -> Dict[str, Any]:
+    row = stmt.to_row()
+    row.pop("canonical_id", None)
+    row.pop("prop_type", None)
+    prop = row.pop("prop")
+    schema = row.pop("schema")
+    if prop is None or schema is None:
+        raise ValueError("Cannot pack statement without prop and schema")
+    row["prop"] = pack_prop(prop, schema)
+    return row
+
+
+def write_pack_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
+    with TextIOWrapper(fh, encoding="utf-8") as wrapped:
+        writer = csv.writer(
+            wrapped,
+            dialect=csv.unix_dialect,
+            quoting=csv.QUOTE_MINIMAL,
+        )
+        writer.writerow(PACK_COLUMNS)
+        for stmt in statements:
+            row = pack_statement(stmt)
+            writer.writerow([row.get(c) for c in PACK_COLUMNS])
+
+
 def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None:
     if format == CSV:
         write_csv_statements(fh, statements)
+    elif format == PACK:
+        write_pack_statements(fh, statements)
     else:
         write_json_statements(fh, statements)

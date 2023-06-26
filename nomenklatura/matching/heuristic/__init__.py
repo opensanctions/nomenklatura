@@ -1,7 +1,7 @@
 from typing import Dict
 from prefixdate import Precision
+from followthemoney.proxy import E
 from followthemoney.types import registry
-from nomenklatura.entity import CE
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
 from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.heuristic.logic import is_disjoint, compare_identifiers
@@ -40,7 +40,7 @@ class NameMatcher(ScoringAlgorithm):
         }
 
     @classmethod
-    def compare(cls, query: CE, match: CE) -> MatchingResult:
+    def compare(cls, query: E, match: E) -> MatchingResult:
         query_names, match_names = type_pair(query, match, registry.name)
 
         jaro_score = jaro_name_parts(query_names, match_names)
@@ -93,7 +93,7 @@ class NameQualifiedMatcher(ScoringAlgorithm):
         return features
 
     @classmethod
-    def compare(cls, query: CE, match: CE) -> MatchingResult:
+    def compare(cls, query: E, match: E) -> MatchingResult:
         result = NameMatcher.compare(query, match)
         features = cls.explain()
 

@@ -2,23 +2,16 @@ from pathlib import Path
 import pickle
 import logging
 from itertools import combinations
-from collections import defaultdict
-from typing import Any, Dict, Generator, Generic, List, Optional, Set, Tuple, cast
-from followthemoney.schema import Schema
+from typing import Any, Dict, Generic, List, Set, Tuple
 from followthemoney.types import registry
 
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.loader import Loader
+from nomenklatura.store import View
 from nomenklatura.index.entry import Field
-from nomenklatura.index.tokenizer import (
-    NGRAM_FIELD,
-    SCHEMA_FIELD,
-    WORD_FIELD,
-    Tokenizer,
-)
+from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +20,7 @@ class Index(Generic[DS, CE]):
     """An in-memory search index to match entities against a given dataset."""
 
     BOOSTS = {
-        SCHEMA_FIELD: 0.0,
-        NGRAM_FIELD: 0.2,
+        NAME_PART_FIELD: 2.0,
         WORD_FIELD: 0.5,
         registry.name.name: 10.0,
         # registry.country.name: 1.5,
@@ -39,109 +31,43 @@ class Index(Generic[DS, CE]):
         registry.email.name: 3.0,
         # registry.entity: 0.0,
         # registry.topic: 2.1,
-        # registry.address.name: 2.5,
+        registry.address.name: 2.5,
         registry.identifier.name: 3.0,
     }
 
-    __slots__ = "loader", "fields", "tokenizer", "entities"
+    __slots__ = "view", "fields", "tokenizer", "entities"
 
-    def __init__(self, loader: Loader[DS, CE]):
-        self.loader = loader
+    def __init__(self, view: View[DS, CE]):
+        self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
         self.entities: Set[Identifier] = set()
 
-    def index(self, entity: CE, adjacent: bool = True) -> None:
+    def index(self, entity: CE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable or entity.id is None:
             return
-        loader = self.loader if adjacent else None
         ident = Identifier.get(entity.id)
-        for field, token in self.tokenizer.entity(entity, loader=loader):
+        for field, token in self.tokenizer.entity(entity):
             if field not in self.fields:
                 self.fields[field] = Field()
             self.fields[field].add(ident, token)
         self.entities.add(ident)
 
-    def build(self, adjacent: bool = True) -> None:
+    def build(self) -> None:
         """Index all entities in the dataset."""
-        log.info("Building index from: %r...", self.loader)
+        log.info("Building index from: %r...", self.view)
         self.fields = {}
         self.entities = set()
-        for entity in self.loader:
-            self.index(entity, adjacent=adjacent)
+        for entity in self.view.entities():
+            self.index(entity)
         self.commit()
         log.info("Built index: %r", self)
 
     def commit(self) -> None:
         for field in self.fields.values():
             field.compute()
-
-    def _match_schema(self, entity_id: str, schema: Schema) -> bool:
-        tokens: Set[str] = set()
-        for matchable in schema.matchable_schemata:
-            tokens.add(self.tokenizer.schema_token(matchable))
-        for parent in schema.descendants:
-            tokens.add(self.tokenizer.schema_token(parent))
-        field = self.fields.get(SCHEMA_FIELD)
-        if field is None:
-            return False
-        for token in tokens:
-            entry = field.tokens.get(token)
-            if entry is None:
-                continue
-            if entity_id in entry.entities:
-                return True
-        return False
-
-    def match(
-        self, query: CE, limit: Optional[int] = 30
-    ) -> Generator[Tuple[str, float], None, None]:
-        """Find entities similar to the given input entity, return ID."""
-
-        matches: Dict[str, float] = defaultdict(float)
-        for field_, token in self.tokenizer.entity(query):
-            try:
-                field = self.fields[field_]
-            except KeyError:
-                continue
-            entry = field.tokens.get(token)
-            if entry is None or entry.idf is None:
-                continue
-            for entity_id, tf in entry.frequencies(field):
-                score = (tf * entry.idf) * self.BOOSTS.get(field_, 1.0)
-                matches[entity_id.id] += score
-
-        results = sorted(matches.items(), key=lambda x: x[1], reverse=True)
-        log.debug("Match entity: %r (%d results)", query, len(results))
-        returned = 0
-        for result_id, score in results:
-            if score <= 0.0:
-                break
-            if result_id == query.id:
-                continue
-            if not self._match_schema(result_id, query.schema):
-                continue
-
-            yield result_id, score
-            returned += 1
-            if limit is not None and returned >= limit:
-                break
-
-    def match_entities(
-        self, query: CE, limit: int = 30
-    ) -> Generator[Tuple[CE, float], None, None]:
-        """Find entities similar to the given input entity, return entity."""
-        returned = 0
-        for entity_id, score in self.match(query, limit=None):
-            entity = self.loader.get_entity(entity_id)
-            if entity is not None:
-                yield entity, score
-                returned += 1
-
-            if returned >= limit:
-                break
 
     def pairs(self) -> List[Tuple[Pair, float]]:
         """A second method of doing xref: summing up the pairwise match value
@@ -150,10 +76,6 @@ class Index(Generic[DS, CE]):
         pairs: Dict[Pair, float] = {}
         log.info("Building index blocking pairs...")
         for field_name, field in self.fields.items():
-            # if field_name in (SCHEMA_FIELD, NGRAM_FIELD, WORD_FIELD):
-            # if field_name in (SCHEMA_FIELD, NGRAM_FIELD):
-            if field_name == SCHEMA_FIELD:
-                continue
             boost = self.BOOSTS.get(field_name, 1.0)
             for idx, entry in enumerate(field.tokens.values()):
                 if idx % 10000 == 0:
@@ -180,8 +102,8 @@ class Index(Generic[DS, CE]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, loader: Loader[DS, CE], path: Path) -> "Index[DS, CE]":
-        index = Index(loader)
+    def load(cls, view: View[DS, CE], path: Path) -> "Index[DS, CE]":
+        index = Index(view)
         if not path.exists():
             log.debug("Cannot load: %r", index)
             index.build()
@@ -214,7 +136,7 @@ class Index(Generic[DS, CE]):
 
     def __repr__(self) -> str:
         return "<Index(%r, %d, %d)>" % (
-            self.loader.dataset.name,
+            self.view.scope.name,
             len(self.fields),
             len(self.entities),
         )

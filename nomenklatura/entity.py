@@ -15,11 +15,13 @@ from followthemoney.proxy import EntityProxy
 from nomenklatura.dataset import DS
 from nomenklatura.publish.names import pick_name
 from nomenklatura.statement.statement import Statement
+from nomenklatura.util import BASE_ID
 
 if TYPE_CHECKING:
-    from nomenklatura.loader import Loader
+    from nomenklatura.store import View
 
 CE = TypeVar("CE", bound="CompositeEntity")
+DEFAULT_DATASET = "default"
 
 
 class CompositeEntity(EntityProxy):
@@ -29,10 +31,7 @@ class CompositeEntity(EntityProxy):
         "schema",
         "id",
         "_caption",
-        "target",
-        "external",
-        "referents",
-        "datasets",
+        "extra_referents",
         "default_dataset",
         "statement_type",
         "_statements",
@@ -43,7 +42,7 @@ class CompositeEntity(EntityProxy):
         model: "Model",
         data: Dict[str, Any],
         cleaned: bool = True,
-        default_dataset: str = "default",
+        default_dataset: str = DEFAULT_DATASET,
     ):
         data = dict(data or {})
         schema = model.get(data.pop("schema", None))
@@ -54,19 +53,15 @@ class CompositeEntity(EntityProxy):
         self._caption: Optional[str] = None
         """A pre-computed label for this entity."""
 
-        self.target: Optional[bool] = data.pop("target", None)
-        self.external: Optional[bool] = data.pop("external", None)
-        self.referents: Set[str] = set(data.pop("referents", []))
+        self.extra_referents: Set[str] = set(data.pop("referents", []))
         """The IDs of all entities which are included in this canonical entity."""
-
-        self.datasets: Set[str] = set(data.pop("datasets", []))
-        """The set of datasets from which information in this entity is derived."""
 
         self.default_dataset = default_dataset
         self.id: Optional[str] = data.pop("id", None)
         self._statements: Dict[str, Set[Statement]] = {}
 
         properties = data.pop("properties", None)
+        # external = data.pop("external", None)
         if isinstance(properties, Mapping):
             for key, value in properties.items():
                 self.add(key, value, cleaned=cleaned, quiet=True)
@@ -95,8 +90,8 @@ class CompositeEntity(EntityProxy):
             yield Statement(
                 canonical_id=self.id,
                 entity_id=self.id,
-                prop=Statement.BASE,
-                prop_type=Statement.BASE,
+                prop=BASE_ID,
+                prop_type=BASE_ID,
                 schema=self.schema.name,
                 value=self.checksum(),
                 dataset=self.default_dataset,
@@ -112,6 +107,29 @@ class CompositeEntity(EntityProxy):
     def last_seen(self) -> Optional[str]:
         seen = (s.last_seen for s in self._iter_stmt() if s.last_seen is not None)
         return max(seen, default=None)
+
+    @property
+    def target(self) -> Optional[bool]:
+        target: Optional[bool] = None
+        for stmt in self._iter_stmt():
+            if stmt.target is not None:
+                target = target or stmt.target
+        return target
+
+    @property
+    def datasets(self) -> Set[str]:
+        datasets: Set[str] = set()
+        for stmt in self._iter_stmt():
+            datasets.add(stmt.dataset)
+        return datasets
+
+    @property
+    def referents(self) -> Set[str]:
+        referents: Set[str] = set(self.extra_referents)
+        for stmt in self._iter_stmt():
+            if stmt.entity_id is not None and stmt.entity_id != self.id:
+                referents.add(stmt.entity_id)
+        return referents
 
     @property
     def key_prefix(self) -> Optional[str]:
@@ -149,12 +167,7 @@ class CompositeEntity(EntityProxy):
                 self.schema = model.common_schema(self.schema, stmt.schema)
             except InvalidData as exc:
                 raise InvalidData(f"{self.id}: {exc}") from exc
-        if stmt.target is not None:
-            self.target = self.target or stmt.target
-        self.datasets.add(stmt.dataset)
-        if stmt.entity_id != self.id and stmt.entity_id is not None:
-            self.referents.add(stmt.entity_id)
-        if stmt.prop != Statement.BASE:
+        if stmt.prop != BASE_ID:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
 
@@ -414,7 +427,7 @@ class CompositeEntity(EntityProxy):
         return len(list(self._iter_stmt())) + 1
 
     def _to_nested_dict(
-        self: CE, loader: "Loader[DS, CE]", depth: int, path: List[str]
+        self: CE, view: "View[DS, CE]", depth: int, path: List[str]
     ) -> Dict[str, Any]:
         next_depth = depth if self.schema.edge else depth - 1
         next_path = list(path)
@@ -423,11 +436,11 @@ class CompositeEntity(EntityProxy):
         data = self.to_dict()
         if next_depth < 0:
             return data
-        nested: Dict[str, Any] = {}
-        for prop, adjacent in loader.get_adjacent(self):
+        nested: Dict[str, List[Any]] = {}
+        for prop, adjacent in view.get_adjacent(self):
             if adjacent.id in next_path:
                 continue
-            value = adjacent._to_nested_dict(loader, next_depth, next_path)
+            value = adjacent._to_nested_dict(view, next_depth, next_path)
             if prop.name not in nested:
                 nested[prop.name] = []
             nested[prop.name].append(value)
@@ -435,15 +448,19 @@ class CompositeEntity(EntityProxy):
         return data
 
     def to_nested_dict(
-        self: CE, loader: "Loader[DS, CE]", depth: int = 1
+        self: CE, view: "View[DS, CE]", depth: int = 1
     ) -> Dict[str, Any]:
-        return self._to_nested_dict(loader, depth=depth, path=[])
+        return self._to_nested_dict(view, depth=depth, path=[])
 
     @classmethod
     def from_dict(
-        cls: Type[CE], model: Model, data: Dict[str, Any], cleaned: bool = True
+        cls: Type[CE],
+        model: Model,
+        data: Dict[str, Any],
+        cleaned: bool = True,
+        default_dataset: str = DEFAULT_DATASET,
     ) -> CE:
-        return super().from_dict(model, data, cleaned=cleaned)
+        return cls(model, data, cleaned=cleaned, default_dataset=default_dataset)
 
     @classmethod
     def from_statements(cls: Type[CE], statements: Iterable[Statement]) -> CE:

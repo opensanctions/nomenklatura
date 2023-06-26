@@ -10,7 +10,7 @@ from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
-from nomenklatura.loader import FileLoader
+from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
@@ -69,13 +69,12 @@ def xref_file(
     scored: bool = True,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
-    loader = FileLoader(path, resolver=resolver_)
+    store = load_entity_file_store(path, resolver=resolver_)
     algorithm_type = get_algorithm(algorithm)
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
     run_xref(
-        loader,
-        resolver_,
+        store,
         auto_threshold=auto_threshold,
         algorithm=algorithm_type,
         scored=scored,
@@ -138,11 +137,11 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.option("-r", "--resolver", type=ResPath)
 def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> None:
     resolver_ = _get_resolver(path, resolver)
-    loader = FileLoader(path, resolver=resolver_)
+    store = load_entity_file_store(path, resolver=resolver_)
     if xref:
-        run_xref(loader, resolver_)
+        run_xref(store)
 
-    dedupe_ui(resolver_, loader)
+    dedupe_ui(store)
     resolver_.save()
 
 

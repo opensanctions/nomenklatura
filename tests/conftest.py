@@ -3,7 +3,8 @@ import yaml
 import pytest
 from pathlib import Path
 
-from nomenklatura.loader import FileLoader
+from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
+from nomenklatura.dataset import Dataset
 from nomenklatura.index import Index
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
@@ -21,7 +22,7 @@ def catalog_data(catalog_path):
 
 
 @pytest.fixture(scope="module")
-def donations_path():
+def donations_path() -> Path:
     return FIXTURES_PATH.joinpath("donations.ijson")
 
 
@@ -35,12 +36,17 @@ def donations_json(donations_path):
 
 
 @pytest.fixture(scope="module")
-def dloader(donations_path):
-    return FileLoader(donations_path)
+def dstore(donations_path) -> SimpleMemoryStore:
+    return load_entity_file_store(donations_path)
 
 
 @pytest.fixture(scope="module")
-def dindex(dloader):
-    index = Index(dloader)
+def test_dataset() -> Dataset:
+    return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
+
+
+@pytest.fixture(scope="module")
+def dindex(dstore: SimpleMemoryStore):
+    index = Index(dstore.default_view())
     index.build()
     return index

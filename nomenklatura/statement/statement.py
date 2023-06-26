@@ -3,7 +3,7 @@ from sqlalchemy.engine import Row
 from typing import cast, TYPE_CHECKING
 from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
-from nomenklatura.util import bool_text, datetime_iso, text_bool
+from nomenklatura.util import bool_text, datetime_iso, text_bool, BASE_ID
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CE
@@ -39,7 +39,7 @@ class Statement(object):
     want to support making property-less entities.
     """
 
-    BASE = "id"
+    BASE = BASE_ID
 
     __slots__ = [
         "id",
@@ -132,8 +132,8 @@ class Statement(object):
         return not self.id != other.id
 
     def __lt__(self, other: Any) -> bool:
-        self_key = (self.prop != self.BASE, self.id or "")
-        other_key = (other.prop != self.BASE, other.id or "")
+        self_key = (self.prop != BASE_ID, self.id or "")
+        other_key = (other.prop != BASE_ID, other.id or "")
         return self_key < other_key
 
     def clone(self: S) -> S:
@@ -227,8 +227,8 @@ class Statement(object):
         if entity.id is not None:
             yield cls(
                 entity_id=entity.id,
-                prop=cls.BASE,
-                prop_type=cls.BASE,
+                prop=BASE_ID,
+                prop_type=BASE_ID,
                 schema=entity.schema.name,
                 value=entity.id,
                 dataset=dataset,

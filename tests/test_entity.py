@@ -5,7 +5,7 @@ from followthemoney import model
 from followthemoney.types import registry
 from followthemoney.exc import InvalidData
 
-from nomenklatura.loader import FileLoader
+from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement.statement import Statement
 
@@ -17,10 +17,11 @@ EXAMPLE = {
 }
 
 
-def test_nested_entity(dloader: FileLoader):
-    entity = dloader.get_entity(DAIMLER)
+def test_nested_entity(dstore: SimpleMemoryStore):
+    view = dstore.default_view()
+    entity = view.get_entity(DAIMLER)
     assert entity is not None, entity
-    data = entity.to_nested_dict(dloader)
+    data = entity.to_nested_dict(view)
     properties = data["properties"]
     addresses = properties["addressEntity"]
     assert len(addresses) == 2, addresses

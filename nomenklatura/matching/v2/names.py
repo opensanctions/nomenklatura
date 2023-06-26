@@ -1,9 +1,9 @@
 from typing import Iterable, Set, List
 from normality import WS
 from jellyfish import soundex
+from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v2.util import has_disjoint, has_overlap
 from nomenklatura.matching.v2.util import compare_levenshtein, tokenize
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
@@ -36,7 +36,7 @@ def _name_norms(names: Iterable[str]) -> List[str]:
     return outs
 
 
-def name_levenshtein(left: Entity, right: Entity) -> float:
+def name_levenshtein(left: E, right: E) -> float:
     """Levenshtein similiarity between the two entities' names."""
     lv, rv = type_pair(left, right, registry.name)
     lvp = _name_norms(lv)
@@ -44,7 +44,7 @@ def name_levenshtein(left: Entity, right: Entity) -> float:
     return compare_sets(lvp, rvp, compare_levenshtein)
 
 
-def first_name_match(left: Entity, right: Entity) -> float:
+def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = props_pair(left, right, ["firstName", "secondName", "middleName"])
     lvt = tokenize(lv)
@@ -52,7 +52,7 @@ def first_name_match(left: Entity, right: Entity) -> float:
     return has_overlap(lvt, rvt)
 
 
-def family_name_match(left: Entity, right: Entity) -> float:
+def family_name_match(left: E, right: E) -> float:
     """Matching family name between the two entities."""
     lv, rv = props_pair(left, right, ["lastName"])
     lvt = tokenize(lv)
@@ -60,7 +60,7 @@ def family_name_match(left: Entity, right: Entity) -> float:
     return has_overlap(lvt, rvt)
 
 
-def name_part_soundex(left: Entity, right: Entity) -> float:
+def name_part_soundex(left: E, right: E) -> float:
     """Check for overlap of phonetic forms of the names."""
     lv, rv = type_pair(left, right, registry.name)
     rvn = _name_parts_soundex(rv)
@@ -79,7 +79,7 @@ def name_part_soundex(left: Entity, right: Entity) -> float:
     return best_score
 
 
-def name_numbers(left: Entity, right: Entity) -> float:
+def name_numbers(left: E, right: E) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
     return has_disjoint(extract_numbers(lv), extract_numbers(rv))

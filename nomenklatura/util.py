@@ -13,6 +13,7 @@ from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
 QID = re.compile(r"^Q(\d+)$")
+BASE_ID = "id"
 PathLike = Union[str, os.PathLike[str]]
 ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
 
@@ -63,24 +64,14 @@ def iso_to_version(value: str) -> Optional[str]:
 def bool_text(value: Optional[bool]) -> Optional[str]:
     if value is None:
         return None
-    return "true" if value else "false"
+    return "t" if value else "f"
 
 
+@cache
 def text_bool(text: Optional[str]) -> Optional[bool]:
     if text is None or len(text) == 0:
         return None
     return text.lower().startswith("t")
-
-
-@cache
-def get_prop_type(schema: str, prop: str) -> str:
-    schema_obj = model.get(schema)
-    if schema_obj is None:
-        raise ValueError(f"Invalid schema: {schema}")
-    prop_obj = schema_obj.get(prop)
-    if prop_obj is None:
-        raise ValueError(f"Invalid property ({schema}): {prop}")
-    return prop_obj.type.name
 
 
 @lru_cache(maxsize=1024)
@@ -109,3 +100,21 @@ def normalize_name(original: str) -> Optional[str]:
 def levenshtein(left: str, right: str) -> int:
     """Compute the Levenshtein distance between two strings."""
     return Levenshtein.distance(left[:128], right[:128])
+
+
+def pack_prop(schema: str, prop: str) -> str:
+    return f"{schema}:{prop}"
+
+
+@cache
+def unpack_prop(id: str) -> Tuple[str, str, str]:
+    schema, prop = id.split(":", 1)
+    if prop == BASE_ID:
+        return schema, BASE_ID, BASE_ID
+    schema_obj = model.get(schema)
+    if schema_obj is None:
+        raise TypeError("Schema not found: %s" % schema)
+    prop_obj = schema_obj.get(prop)
+    if prop_obj is None:
+        raise TypeError("Property not found: %s" % prop)
+    return schema, prop_obj.type.name, prop

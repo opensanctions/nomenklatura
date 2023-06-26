@@ -1,6 +1,6 @@
 from prefixdate import Precision
+from followthemoney.proxy import E
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching.v2.util import has_overlap
 from nomenklatura.matching.util import props_pair, dates_precision
 
@@ -11,7 +11,7 @@ def flip_day_month(value: str) -> str:
     return f"{year}-{day}-{month}"
 
 
-def dob_matches(left: Entity, right: Entity) -> float:
+def dob_matches(left: E, right: E) -> float:
     """The birth date or incorporation date of the two entities is the same."""
     left_dates, right_dates = props_pair(left, right, ["birthDate"])
     left_days = dates_precision(left_dates, Precision.DAY)
@@ -20,7 +20,7 @@ def dob_matches(left: Entity, right: Entity) -> float:
     return has_overlap(left_days, right_days)
 
 
-def dob_year_matches(left: Entity, right: Entity) -> float:
+def dob_year_matches(left: E, right: E) -> float:
     """The birth date or incorporation year of the two entities is the same."""
     left_dates, right_dates = props_pair(left, right, ["birthDate"])
     left_years = dates_precision(left_dates, Precision.YEAR)

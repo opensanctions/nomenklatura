@@ -47,6 +47,8 @@ setup(
             "coverage>=4.1",
             "types-setuptools",
             "types-requests",
-        ]
+            "plyvel",
+        ],
+        "leveldb": ["plyvel"],
     },
 )
