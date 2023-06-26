@@ -2,7 +2,6 @@ import orjson
 from pathlib import Path
 from typing import Optional
 from followthemoney import model
-from followthemoney.cli.util import path_entities
 
 from nomenklatura.store.base import Store, Writer, View
 from nomenklatura.store.memory import MemoryStore
