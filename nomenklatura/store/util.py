@@ -1,30 +1,7 @@
 import orjson
-from hashlib import sha1
-from functools import cache
-from typing import Tuple
-from followthemoney import model
 
 from nomenklatura.statement import Statement
-
-QNAME_PREFIX = 5
-
-
-def pack_prop(schema: str, prop: str) -> str:
-    return f"{schema}:{prop}"
-
-
-@cache
-def unpack_prop(id: str) -> Tuple[str, str, str]:
-    schema, prop = id.split(":", 1)
-    if prop == Statement.BASE:
-        return schema, Statement.BASE, Statement.BASE
-    schema_obj = model.get(schema)
-    if schema_obj is None:
-        raise TypeError("Schema not found: %s" % schema)
-    prop_obj = schema_obj.get(prop)
-    if prop_obj is None:
-        raise TypeError("Property not found: %s" % prop)
-    return schema, prop_obj.type.name, prop
+from nomenklatura.util import pack_prop, unpack_prop
 
 
 def pack_statement(stmt: Statement) -> bytes:

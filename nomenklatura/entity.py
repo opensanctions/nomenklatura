@@ -15,6 +15,7 @@ from followthemoney.proxy import EntityProxy
 from nomenklatura.dataset import DS
 from nomenklatura.publish.names import pick_name
 from nomenklatura.statement.statement import Statement
+from nomenklatura.util import BASE_ID
 
 if TYPE_CHECKING:
     from nomenklatura.store import View
@@ -60,6 +61,7 @@ class CompositeEntity(EntityProxy):
         self._statements: Dict[str, Set[Statement]] = {}
 
         properties = data.pop("properties", None)
+        # external = data.pop("external", None)
         if isinstance(properties, Mapping):
             for key, value in properties.items():
                 self.add(key, value, cleaned=cleaned, quiet=True)
@@ -88,8 +90,8 @@ class CompositeEntity(EntityProxy):
             yield Statement(
                 canonical_id=self.id,
                 entity_id=self.id,
-                prop=Statement.BASE,
-                prop_type=Statement.BASE,
+                prop=BASE_ID,
+                prop_type=BASE_ID,
                 schema=self.schema.name,
                 value=self.checksum(),
                 dataset=self.default_dataset,
@@ -165,7 +167,7 @@ class CompositeEntity(EntityProxy):
                 self.schema = model.common_schema(self.schema, stmt.schema)
             except InvalidData as exc:
                 raise InvalidData(f"{self.id}: {exc}") from exc
-        if stmt.prop != Statement.BASE:
+        if stmt.prop != BASE_ID:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
 
