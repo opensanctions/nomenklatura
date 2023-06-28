@@ -68,13 +68,14 @@ def read_pack_statements(
     fh: BinaryIO, statement_type: Type[S]
 ) -> Generator[S, None, None]:
     wrapped = TextIOWrapper(fh, encoding="utf-8")
-    for row in csv.DictReader(wrapped, dialect=csv.unix_dialect):
-        row["canonical_id"] = row["entity_id"]
-        schema, prop_type, prop = unpack_prop(row["prop"])
-        row["schema"] = schema
-        row["prop"] = prop
-        row["prop_type"] = prop_type
-        yield statement_type.from_row(row)
+    for row in csv.reader(wrapped, dialect=csv.unix_dialect):
+        data = dict(zip(PACK_COLUMNS, row))
+        data["canonical_id"] = data["entity_id"]
+        schema, prop_type, prop = unpack_prop(data["prop"])
+        data["schema"] = schema
+        data["prop"] = prop
+        data["prop_type"] = prop_type
+        yield statement_type.from_row(data)
 
 
 def read_statements(
@@ -127,7 +128,7 @@ def pack_statement(stmt: S) -> Dict[str, Any]:
     schema = row.pop("schema")
     if prop is None or schema is None:
         raise ValueError("Cannot pack statement without prop and schema")
-    row["prop"] = pack_prop(prop, schema)
+    row["prop"] = pack_prop(schema, prop)
     return row
 
 
@@ -138,7 +139,6 @@ def write_pack_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
             dialect=csv.unix_dialect,
             quoting=csv.QUOTE_MINIMAL,
         )
-        writer.writerow(PACK_COLUMNS)
         for stmt in statements:
             row = pack_statement(stmt)
             writer.writerow([row.get(c) for c in PACK_COLUMNS])
