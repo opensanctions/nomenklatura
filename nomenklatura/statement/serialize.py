@@ -143,7 +143,7 @@ def pack_row(stmt: S) -> List[Any]:
     schema = row.pop("schema")
     if prop is None or schema is None:
         raise ValueError("Cannot pack statement without prop and schema")
-    row["prop"] = pack_prop(prop, schema)
+    row["prop"] = pack_prop(schema, prop)
     return [row.get(c) for c in PACK_COLUMNS]
 
 
