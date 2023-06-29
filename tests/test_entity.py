@@ -106,7 +106,6 @@ def test_other_entity():
     smt = Statement(
         entity_id="blubb",
         prop="name",
-        prop_type="name",
         schema="LegalEntity",
         value="Jane Doe",
         dataset="test",
@@ -121,7 +120,6 @@ def test_other_entity():
     smt2 = Statement(
         entity_id="gnaa",
         prop="birthDate",
-        prop_type="date",
         schema="Person",
         value="1979",
         dataset="source",
@@ -136,7 +134,6 @@ def test_other_entity():
         smt2 = Statement(
             entity_id="gnaa",
             prop="incorporationDate",
-            prop_type="date",
             schema="Company",
             value="1979",
             dataset="source",

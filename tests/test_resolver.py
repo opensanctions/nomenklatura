@@ -109,7 +109,7 @@ def test_resolver_statements():
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
 
-    stmt = Statement("a1", "holder", "entity", "Passport", "b2", "test")
+    stmt = Statement("a1", "holder", "Passport", "b2", "test")
     stmt = resolver.apply_statement(stmt)
     assert stmt.canonical_id == str(canon)
     assert stmt.value == "b2"

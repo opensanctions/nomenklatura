@@ -3,7 +3,8 @@ from sqlalchemy.engine import Row
 from typing import cast, TYPE_CHECKING
 from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
 
-from nomenklatura.util import bool_text, datetime_iso, text_bool, BASE_ID
+from nomenklatura.util import bool_text, datetime_iso, text_bool
+from nomenklatura.util import get_prop_type, BASE_ID
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CE
@@ -62,7 +63,6 @@ class Statement(object):
         self,
         entity_id: Optional[str],
         prop: str,
-        prop_type: str,
         schema: str,
         value: str,
         dataset: str,
@@ -78,7 +78,7 @@ class Statement(object):
         self.entity_id = entity_id
         self.canonical_id = canonical_id or entity_id
         self.prop = prop
-        self.prop_type = prop_type
+        self.prop_type = get_prop_type(schema, prop)
         self.schema = schema
         self.value = value
         self.dataset = dataset
@@ -174,7 +174,6 @@ class Statement(object):
         return cls(
             entity_id=data["entity_id"],
             prop=data["prop"],
-            prop_type=data["prop_type"],
             schema=data["schema"],
             value=data["value"],
             dataset=data["dataset"],
@@ -202,7 +201,6 @@ class Statement(object):
             canonical_id=row.canonical_id,
             entity_id=row.entity_id,
             prop=row.prop,
-            prop_type=row.prop_type,
             schema=row.schema,
             value=row.value,
             dataset=row.dataset,
@@ -228,7 +226,6 @@ class Statement(object):
             yield cls(
                 entity_id=entity.id,
                 prop=BASE_ID,
-                prop_type=BASE_ID,
                 schema=entity.schema.name,
                 value=entity.id,
                 dataset=dataset,
@@ -241,7 +238,6 @@ class Statement(object):
             yield cls(
                 entity_id=entity.id,
                 prop=prop.name,
-                prop_type=prop.type.name,
                 schema=entity.schema.name,
                 value=value,
                 dataset=dataset,

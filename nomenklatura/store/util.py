@@ -33,12 +33,11 @@ def unpack_statement(data: bytes, canonical_id: str, external: bool) -> Statemen
         last_seen,
         target,
     ) = orjson.loads(data)
-    schema, prop_type, prop = unpack_prop(prop_id)
+    schema, _, prop = unpack_prop(prop_id)
     return Statement(
         id=id,
         entity_id=entity_id,
         prop=prop,
-        prop_type=prop_type,
         schema=schema,
         value=value,
         lang=lang,

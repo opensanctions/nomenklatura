@@ -91,7 +91,6 @@ class CompositeEntity(EntityProxy):
                 canonical_id=self.id,
                 entity_id=self.id,
                 prop=BASE_ID,
-                prop_type=BASE_ID,
                 schema=self.schema.name,
                 value=self.checksum(),
                 dataset=self.default_dataset,
@@ -230,7 +229,6 @@ class CompositeEntity(EntityProxy):
             stmt = Statement(
                 entity_id=self.id,
                 prop=prop.name,
-                prop_type=prop.type.name,
                 schema=schema or self.schema.name,
                 value=clean,
                 dataset=dataset or self.default_dataset,
