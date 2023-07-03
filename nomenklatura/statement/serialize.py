@@ -150,9 +150,9 @@ def get_statement_writer(fh: BinaryIO, format: str) -> "StatementWriter":
 
 
 def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None:
-    with get_statement_writer(fh, format) as writer:
-        for stmt in statements:
-            writer.write(stmt)
+    writer = get_statement_writer(fh, format)
+    for stmt in statements:
+        writer.write(stmt)
 
 
 class StatementWriter(object):
