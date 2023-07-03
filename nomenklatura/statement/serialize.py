@@ -4,7 +4,9 @@ import click
 import orjson
 from pathlib import Path
 from io import TextIOWrapper
-from typing import BinaryIO, TextIO, Generator, Iterable, Type, Dict, Any, List
+from types import TracebackType
+from typing import Optional, Dict, Any, List
+from typing import BinaryIO, TextIO, Generator, Iterable, Type
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
@@ -105,24 +107,24 @@ def read_path_statements(
         yield from read_statements(fh, format=format, statement_type=statement_type)
 
 
-def write_json_statement(fh: BinaryIO, statement: S) -> None:
-    data = statement.to_dict()
-    out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
-    fh.write(out)
+# def write_json_statement(fh: BinaryIO, statement: S) -> None:
+#     data = statement.to_dict()
+#     out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
+#     fh.write(out)
 
 
-def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-    for stmt in statements:
-        write_json_statement(fh, stmt)
+# def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
+#     for stmt in statements:
+#         write_json_statement(fh, stmt)
 
 
-def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-    with TextIOWrapper(fh, encoding="utf-8") as wrapped:
-        writer = csv.writer(wrapped, dialect=csv.unix_dialect)
-        writer.writerow(CSV_COLUMNS)
-        for stmt in statements:
-            row = stmt.to_row()
-            writer.writerow([row.get(c) for c in CSV_COLUMNS])
+# def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
+#     with TextIOWrapper(fh, encoding="utf-8") as wrapped:
+#         writer = csv.writer(wrapped, dialect=csv.unix_dialect)
+#         writer.writerow(CSV_COLUMNS)
+#         for stmt in statements:
+#             row = stmt.to_row()
+#             writer.writerow([row.get(c) for c in CSV_COLUMNS])
 
 
 def pack_statement(stmt: S) -> Dict[str, Any]:
@@ -137,35 +139,86 @@ def pack_statement(stmt: S) -> Dict[str, Any]:
     return row
 
 
-def pack_row(stmt: S) -> List[Any]:
-    row = stmt.to_row()
-    prop = row.pop("prop")
-    schema = row.pop("schema")
-    if prop is None or schema is None:
-        raise ValueError("Cannot pack statement without prop and schema")
-    row["prop"] = pack_prop(schema, prop)
-    return [row.get(c) for c in PACK_COLUMNS]
-
-
-def pack_writer(fh: TextIO) -> "_csv._writer":
-    return csv.writer(
-        fh,
-        dialect=csv.unix_dialect,
-        quoting=csv.QUOTE_MINIMAL,
-    )
-
-
-def write_pack_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-    with TextIOWrapper(fh, encoding="utf-8") as wrapped:
-        writer = pack_writer(wrapped)
-        for stmt in statements:
-            writer.writerow(pack_row(stmt))
+def get_statement_writer(fh: BinaryIO, format: str):
+    if format == CSV:
+        return CSVStatementWriter(fh)
+    elif format == PACK:
+        return PackStatementWriter(fh)
+    elif format == JSON:
+        return JSONStatementWriter(fh)
+    raise RuntimeError("Unknown statement format: %s" % format)
 
 
 def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None:
-    if format == CSV:
-        write_csv_statements(fh, statements)
-    elif format == PACK:
-        write_pack_statements(fh, statements)
-    else:
-        write_json_statements(fh, statements)
+    with get_statement_writer(fh, format) as writer:
+        for stmt in statements:
+            writer.write(stmt)
+
+
+class StatementWriter(object):
+    def __init__(self, fh: BinaryIO) -> None:
+        self.fh = fh
+
+    def write(self, stmt: S) -> None:
+        raise NotImplementedError()
+
+    def close(self) -> None:
+        self.fh.close()
+
+    def __enter__(self) -> "StatementWriter":
+        return self
+
+    def __exit__(
+        self,
+        type: Optional[Type[BaseException]],
+        value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        self.close()
+
+
+class JSONStatementWriter(StatementWriter):
+    def write(self, stmt: S) -> None:
+        data = stmt.to_dict()
+        out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
+        self.fh.write(out)
+
+
+class CSVStatementWriter(StatementWriter):
+    def __init__(self, fh: BinaryIO) -> None:
+        super().__init__(fh)
+        self.wrapper = TextIOWrapper(fh, encoding="utf-8")
+        self.writer = csv.writer(self.wrapper, dialect=csv.unix_dialect)
+        self.writer.writerow(CSV_COLUMNS)
+
+    def write(self, stmt: S) -> None:
+        row = stmt.to_row()
+        self.writer.writerow([row.get(c) for c in CSV_COLUMNS])
+
+    def close(self) -> None:
+        self.wrapper.close()
+        super().close()
+
+
+class PackStatementWriter(StatementWriter):
+    def __init__(self, fh: BinaryIO) -> None:
+        super().__init__(fh)
+        self.wrapper = TextIOWrapper(fh, encoding="utf-8")
+        self.writer = csv.writer(
+            self.wrapper,
+            dialect=csv.unix_dialect,
+            quoting=csv.QUOTE_MINIMAL,
+        )
+
+    def write(self, stmt: S) -> None:
+        row = stmt.to_row()
+        prop = row.pop("prop")
+        schema = row.pop("schema")
+        if prop is None or schema is None:
+            raise ValueError("Cannot pack statement without prop and schema")
+        row["prop"] = pack_prop(schema, prop)
+        self.writer.writerow([row.get(c) for c in PACK_COLUMNS])
+
+    def close(self) -> None:
+        self.wrapper.close()
+        super().close()
