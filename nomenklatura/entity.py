@@ -395,7 +395,11 @@ class CompositeEntity(EntityProxy):
 
     def clone(self: CE) -> CE:
         data = {"schema": self.schema.name, "id": self.id}
-        cloned = type(self).from_dict(self.schema.model, data)
+        cloned = type(self).from_dict(
+            self.schema.model,
+            data,
+            default_dataset=self.default_dataset,
+        )
         for stmt in self._iter_stmt():
             cloned.add_statement(stmt)
         return cloned

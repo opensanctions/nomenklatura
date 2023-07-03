@@ -116,16 +116,23 @@ class Enricher(ABC):
             self.cache.set_json(cache_key, resp_data)
         return resp_data
 
+    def _make_data_entity(self, entity: CE, data, cleaned: bool = True) -> CE:
+        return type(entity).from_dict(
+            model,
+            data,
+            default_dataset=self.dataset.name,
+            cleaned=cleaned,
+        )
+
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
-        proxy = type(entity).from_dict(model, data, cleaned=False)
+        proxy = self._make_data_entity(entity, data, cleaned=False)
         for prop in proxy.iterprops():
             if prop.stub:
                 proxy.pop(prop)
         return proxy
 
     def make_entity(self, entity: CE, schema: str) -> CE:
-        data = {"schema": schema}
-        return type(entity).from_dict(model, data)
+        return self._make_data_entity(entity, {"schema": schema})
 
     def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
         if len(self.schemata) and entity.schema.name not in self.schemata:
