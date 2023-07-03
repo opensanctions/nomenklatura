@@ -57,6 +57,7 @@ def test_example_entity():
     assert data["id"] == sp.id, data
     so = sp.clone()
     assert so.id == sp.id
+    assert so.default_dataset == sp.default_dataset
     assert so.checksum() == sp.checksum()
 
     sx = CompositeEntity.from_statements(sp.statements)
