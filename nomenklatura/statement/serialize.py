@@ -139,7 +139,7 @@ def pack_statement(stmt: S) -> Dict[str, Any]:
     return row
 
 
-def get_statement_writer(fh: BinaryIO, format: str):
+def get_statement_writer(fh: BinaryIO, format: str) -> "StatementWriter":
     if format == CSV:
         return CSVStatementWriter(fh)
     elif format == PACK:
