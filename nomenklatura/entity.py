@@ -409,8 +409,7 @@ class CompositeEntity(EntityProxy):
             if self.id is not None:
                 stmt.canonical_id = self.id
             self.add_statement(stmt)
-        self.referents.update(other.referents)
-        self.datasets.update(other.datasets)
+        self.extra_referents.update(other.extra_referents)
         return self
 
     def to_dict(self) -> Dict[str, Any]:

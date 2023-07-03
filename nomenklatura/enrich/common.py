@@ -116,7 +116,9 @@ class Enricher(ABC):
             self.cache.set_json(cache_key, resp_data)
         return resp_data
 
-    def _make_data_entity(self, entity: CE, data, cleaned: bool = True) -> CE:
+    def _make_data_entity(
+        self, entity: CE, data: Dict[str, Any], cleaned: bool = True
+    ) -> CE:
         return type(entity).from_dict(
             model,
             data,
