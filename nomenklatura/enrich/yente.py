@@ -66,7 +66,12 @@ class YenteEnricher(Enricher):
         }
         for retry in range(4):
             try:
-                response = self.http_post_json_cached(url, cache_key, query)
+                response = self.http_post_json_cached(
+                    url,
+                    cache_key,
+                    query,
+                    cache_days=self.cache_days,
+                )
             except EnrichmentException as exc:
                 log.info("Error matching %r: %s", entity, exc)
                 if retry == 3:
