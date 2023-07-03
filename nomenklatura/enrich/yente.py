@@ -105,5 +105,5 @@ class YenteEnricher(Enricher):
             if source_url.startswith(self._api):
                 url = source_url
         url = normalize_url(url, {"nested": self._nested})
-        response = self.http_get_json_cached(url)
+        response = self.http_get_json_cached(url, cache_days=self.cache_days)
         yield from self._traverse_nested(match, response)

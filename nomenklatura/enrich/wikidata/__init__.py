@@ -56,9 +56,12 @@ class WikidataEnricher(Enricher):
                 "format": "json",
                 "search": name,
                 "action": "wbsearchentities",
-                "language": "de",
+                "language": "en",
+                "strictlanguage": "false",
             }
-            data = self.http_get_json_cached(WD_API, params=params)
+            data = self.http_get_json_cached(
+                WD_API, params=params, cache_days=self.cache_days
+            )
             if "search" not in data:
                 self.http_remove_cache(WD_API, params=params)
                 log.warning("Search response [%s] does not include results" % name)

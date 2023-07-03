@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
@@ -14,6 +15,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.util import ParamsType, normalize_url
 
 EnricherConfig = Dict[str, Any]
+log = logging.getLogger(__name__)
 
 
 class EnrichmentException(Exception):
