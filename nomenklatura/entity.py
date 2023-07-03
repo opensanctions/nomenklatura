@@ -73,6 +73,9 @@ class CompositeEntity(EntityProxy):
     def _iter_stmt(self) -> Generator[Statement, None, None]:
         for stmts in self._statements.values():
             for stmt in stmts:
+                if stmt.entity_id is None and self.id is not None:
+                    stmt.entity_id = self.id
+                    stmt.id = stmt.generate_key()
                 if stmt.id is None and stmt.entity_id is not None:
                     stmt.id = stmt.generate_key()
                 yield stmt

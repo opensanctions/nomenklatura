@@ -159,7 +159,7 @@ class Statement(object):
         external: Optional[bool],
     ) -> Optional[str]:
         """Hash the key properties of a statement record to make a unique ID."""
-        if entity_id is None:
+        if entity_id is None or prop is None:
             return None
         key = f"{dataset}.{entity_id}.{prop}.{value}"
         if external:
