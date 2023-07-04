@@ -46,6 +46,9 @@ class Store(Generic[DS, CE]):
                     stmt.canonical_id = canonical_id
                     writer.add_statement(stmt)
 
+    def __repr__(self):
+        return f"<{type(self).__name__}({self.dataset.name!r})>"
+
 
 class Writer(Generic[DS, CE]):
     """Bulk writing operations."""
@@ -76,6 +79,9 @@ class Writer(Generic[DS, CE]):
         traceback: Optional[TracebackType],
     ) -> None:
         self.flush()
+
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__}({self.store!r})>"
 
 
 class View(Generic[DS, CE]):
@@ -108,4 +114,4 @@ class View(Generic[DS, CE]):
         raise NotImplementedError()
 
     def __repr__(self) -> str:
-        return f"<View({self.scope!r})>"
+        return f"<{type(self).__name__}({self.scope.name!r})>"
