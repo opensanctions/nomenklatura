@@ -59,9 +59,7 @@ class WikidataEnricher(Enricher):
                 "language": "en",
                 "strictlanguage": "false",
             }
-            data = self.http_get_json_cached(
-                WD_API, params=params, cache_days=self.cache_days
-            )
+            data = self.http_get_json_cached(WD_API, params=params)
             if "search" not in data:
                 self.http_remove_cache(WD_API, params=params)
                 log.warning("Search response [%s] does not include results" % name)
@@ -106,7 +104,7 @@ class WikidataEnricher(Enricher):
         return cast(Dict[str, Any], data)
 
     def fetch_item(self, qid: str) -> Optional[Item]:
-        data = self.wikibase_getentities(qid, cache_days=self.cache_days)
+        data = self.wikibase_getentities(qid)
         entity = data.get("entities", {}).get(qid)
         if entity is None:
             return None
@@ -118,9 +116,10 @@ class WikidataEnricher(Enricher):
         cached = self.cache.get_json(cache_key, max_age=self.label_cache_days)
         if cached is not None:
             return LangText.parse(cached)
+
         data = self.wikibase_getentities(
             qid,
-            cache_days=self.cache_days,
+            cache_days=0,
             props="labels",
         )
         entity = data.get("entities", {}).get(qid)

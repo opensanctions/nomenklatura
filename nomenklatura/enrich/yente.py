@@ -66,12 +66,7 @@ class YenteEnricher(Enricher):
         }
         for retry in range(4):
             try:
-                response = self.http_post_json_cached(
-                    url,
-                    cache_key,
-                    query,
-                    cache_days=self.cache_days,
-                )
+                response = self.http_post_json_cached(url, cache_key, query)
             except EnrichmentException as exc:
                 log.info("Error matching %r: %s", entity, exc)
                 if retry == 3:
@@ -110,5 +105,5 @@ class YenteEnricher(Enricher):
             if source_url.startswith(self._api):
                 url = source_url
         url = normalize_url(url, {"nested": self._nested})
-        response = self.http_get_json_cached(url, cache_days=self.cache_days)
+        response = self.http_get_json_cached(url)
         yield from self._traverse_nested(match, response)

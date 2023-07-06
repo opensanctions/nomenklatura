@@ -81,7 +81,7 @@ class Cache(object):
         return self.set(key, json.dumps(value))
 
     def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
-        if max_age == 0:
+        if max_age is not None and max_age < 1:
             return None
 
         cache_cutoff = None
