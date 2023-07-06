@@ -6,6 +6,7 @@ from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException
+from followthemoney import model
 
 from nomenklatura import __version__
 from nomenklatura.entity import CE

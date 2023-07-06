@@ -46,7 +46,7 @@ class Store(Generic[DS, CE]):
                     stmt.canonical_id = canonical_id
                     writer.add_statement(stmt)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__}({self.dataset.name!r})>"
 
 
