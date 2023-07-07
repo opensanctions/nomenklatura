@@ -38,7 +38,10 @@ def load_entity_file_store(
             while line := fh.readline():
                 data = orjson.loads(line)
                 proxy = CompositeEntity.from_dict(
-                    model, data, cleaned=cleaned, default_dataset=dataset.name
+                    model,
+                    data,
+                    cleaned=cleaned,
+                    default_dataset=dataset,
                 )
                 writer.add_entity(proxy)
     return store

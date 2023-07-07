@@ -7,6 +7,7 @@ from followthemoney.exc import InvalidData
 
 from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.entity import CompositeEntity
+from nomenklatura.dataset import Dataset
 from nomenklatura.statement.statement import Statement
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -43,14 +44,15 @@ def test_donations_entities(donations_json: List[Dict[str, Any]]):
 
 
 def test_example_entity():
-    sp = CompositeEntity.from_dict(model, EXAMPLE)
+    dx = Dataset.make({"name": "test", "title": "Test"})
+    sp = CompositeEntity.from_dict(model, EXAMPLE, default_dataset=dx)
     assert len(sp) == 3
-    assert sp.checksum() == "18633e25875bdcb9cd13075564243d1a25b62095"
+    assert sp.checksum() == "836baf194d59a68c4092e208df30134800c732cc"
     assert sp.caption == "John Doe"
     assert "John Doe", sp.get_type_values(registry.name)
     sp.add("country", "us")
     assert len(sp) == 4
-    assert sp.checksum() == "3c6ad3c3f5a348d34ca59cca1610cd122555635f"
+    assert sp.checksum() == "c3aec8e1fcd86bc55171917db7c993d6f3ad5fe0"
     sp.set("country", "gb")
     assert len(sp) == 4
     data = sp.to_dict()

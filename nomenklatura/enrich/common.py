@@ -125,7 +125,7 @@ class Enricher(ABC):
         return type(entity).from_dict(
             model,
             data,
-            default_dataset=self.dataset.name,
+            default_dataset=self.dataset,
             cleaned=cleaned,
         )
 

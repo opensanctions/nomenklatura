@@ -33,7 +33,10 @@ class Store(Generic[DS, CE]):
         for stmt in statements:
             if stmt.prop_type == registry.entity.name:
                 stmt.value = self.resolver.get_canonical(stmt.value)
-        entity = self.entity_class.from_statements(statements)
+        entity = self.entity_class.from_statements(
+            statements,
+            default_dataset=self.dataset,
+        )
         if entity.id is not None:
             entity.extra_referents.update(self.resolver.get_referents(entity.id))
         return entity

@@ -12,7 +12,7 @@ from followthemoney.proxy import P
 from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
 
-from nomenklatura.dataset import DS
+from nomenklatura.dataset import DS, Dataset, DefaultDataset
 from nomenklatura.publish.names import pick_name
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import BASE_ID
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     from nomenklatura.store import View
 
 CE = TypeVar("CE", bound="CompositeEntity")
-DEFAULT_DATASET = "default"
 
 
 class CompositeEntity(EntityProxy):
@@ -42,7 +41,7 @@ class CompositeEntity(EntityProxy):
         model: "Model",
         data: Dict[str, Any],
         cleaned: bool = True,
-        default_dataset: str = DEFAULT_DATASET,
+        default_dataset: Dataset = DefaultDataset,
     ):
         data = dict(data or {})
         schema = model.get(data.pop("schema", None))
@@ -96,7 +95,7 @@ class CompositeEntity(EntityProxy):
                 prop=BASE_ID,
                 schema=self.schema.name,
                 value=self.checksum(),
-                dataset=self.default_dataset,
+                dataset=self.default_dataset.name,
             )
         yield from self._iter_stmt()
 
@@ -135,11 +134,11 @@ class CompositeEntity(EntityProxy):
 
     @property
     def key_prefix(self) -> Optional[str]:
-        return self.default_dataset
+        return self.default_dataset.name
 
     @key_prefix.setter
     def key_prefix(self, dataset: str) -> None:
-        self.default_dataset = dataset
+        raise NotImplementedError()
 
     def _pick_caption(self) -> str:
         is_thing = self.schema.is_a("Thing")
@@ -234,7 +233,7 @@ class CompositeEntity(EntityProxy):
                 prop=prop.name,
                 schema=schema or self.schema.name,
                 value=clean,
-                dataset=dataset or self.default_dataset,
+                dataset=dataset or self.default_dataset.name,
                 lang=lang,
                 original_value=original_value,
                 first_seen=seen,
@@ -462,17 +461,21 @@ class CompositeEntity(EntityProxy):
         model: Model,
         data: Dict[str, Any],
         cleaned: bool = True,
-        default_dataset: str = DEFAULT_DATASET,
+        default_dataset: Dataset = DefaultDataset,
     ) -> CE:
         return cls(model, data, cleaned=cleaned, default_dataset=default_dataset)
 
     @classmethod
-    def from_statements(cls: Type[CE], statements: Iterable[Statement]) -> CE:
+    def from_statements(
+        cls: Type[CE],
+        statements: Iterable[Statement],
+        default_dataset: Dataset = DefaultDataset,
+    ) -> CE:
         obj: Optional[CE] = None
         for stmt in statements:
             if obj is None:
                 data = {"schema": stmt.schema, "id": stmt.canonical_id}
-                obj = cls(model, data, default_dataset=stmt.dataset)
+                obj = cls(model, data, default_dataset=default_dataset)
             obj.add_statement(stmt)
         if obj is None:
             raise ValueError("No statements given!")
