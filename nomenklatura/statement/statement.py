@@ -1,7 +1,8 @@
 import hashlib
 from sqlalchemy.engine import Row
 from typing import cast, TYPE_CHECKING
-from typing import Any, Dict, Generator, Optional, Type, TypeVar, TypedDict
+from typing import Any, Dict, Generator, Optional, Type, TypeVar
+from typing_extensions import TypedDict
 
 from nomenklatura.util import bool_text, datetime_iso, text_bool
 from nomenklatura.util import get_prop_type, BASE_ID

@@ -5,7 +5,8 @@
 # As a next step, the matching results could be converted back into a
 # nomenklatura resolver file and then used to generate integrated FtM entities.
 import logging
-from typing import Dict, Generator, List, Optional, TypedDict, Union
+from typing import Dict, Generator, List, Optional, Union
+from typing_extensions import TypedDict
 from followthemoney.types import registry
 
 from nomenklatura.store import View

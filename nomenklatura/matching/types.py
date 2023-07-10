@@ -1,4 +1,5 @@
-from typing import List, Dict, Optional, TypedDict, Callable
+from typing import List, Dict, Optional, Callable
+from typing_extensions import TypedDict
 from followthemoney.proxy import E, EntityProxy
 
 Encoded = List[float]
