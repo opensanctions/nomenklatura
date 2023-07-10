@@ -68,6 +68,9 @@ class OpenCorporatesEnricher(Enricher):
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
             return
+        if entity.has("opencorporatesUrl"):
+            # TODO: fetch entity here when we start to expand with content!
+            return
 
         if entity.schema.name in ["Company", "Organization", "LegalEntity"]:
             yield from self.search_companies(entity)
@@ -80,6 +83,15 @@ class OpenCorporatesEnricher(Enricher):
         clone.id = match.id
         clone.add("opencorporatesUrl", match.get("opencorporatesUrl"))
         yield clone
+
+    # def expand_entity(self, entity):
+    #     for url in entity.get("opencorporatesUrl", quiet=True):
+    #         url = self.make_url(url)
+    #         data = self.get_api(url).get("results", {})
+    #         if "company" in data:
+    #             yield from self.expand_company(entity, data)
+    #         if "officer" in data:
+    #             yield from self.expand_officer(data, officer=entity)
 
     def make_entity_id(self, url: str) -> str:
         parsed = urlparse(url)
@@ -213,12 +225,3 @@ class OpenCorporatesEnricher(Enricher):
     #         directorship.add("organization", company)
     #         directorship.add("role", data.get("position"))
     #         yield directorship
-
-    # def expand_entity(self, entity):
-    #     for url in entity.get("opencorporatesUrl", quiet=True):
-    #         url = self.make_url(url)
-    #         data = self.get_api(url).get("results", {})
-    #         if "company" in data:
-    #             yield from self.expand_company(entity, data)
-    #         if "officer" in data:
-    #             yield from self.expand_officer(data, officer=entity)
