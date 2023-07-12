@@ -6,8 +6,10 @@ from datetime import datetime
 from functools import lru_cache, cache
 from normality.constants import WS
 from followthemoney import model
+from collections.abc import Mapping, Sequence
 from fingerprints.fingerprint import fingerprint
 from fingerprints.cleanup import clean_strict
+from followthemoney.util import sanitize_text
 from typing import cast, Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
@@ -23,6 +25,38 @@ def is_qid(text: Optional[str]) -> bool:
     if text is None:
         return False
     return QID.match(text) is not None
+
+
+def string_list(value: Any) -> List[str]:
+    """Convert a value to a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, (str, bytes)):
+        text = sanitize_text(value)
+        if text is None:
+            return []
+        return [text]
+    if not isinstance(value, Sequence):
+        value = [value]
+    texts: List[str] = []
+    for inner in value:
+        if isinstance(inner, Mapping):
+            text = inner.get("id")
+            if text is not None:
+                texts.append(text)
+            continue
+
+        try:
+            texts.append(inner.id)
+            continue
+        except AttributeError:
+            pass
+
+        text = sanitize_text(inner)
+        if text is not None:
+            texts.append(text)
+
+    return texts
 
 
 def normalize_url(url: str, params: ParamsType = None) -> str:

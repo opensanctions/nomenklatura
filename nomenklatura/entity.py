@@ -15,7 +15,7 @@ from followthemoney.proxy import EntityProxy
 from nomenklatura.dataset import DS, Dataset, DefaultDataset
 from nomenklatura.publish.names import pick_name
 from nomenklatura.statement.statement import Statement
-from nomenklatura.util import BASE_ID
+from nomenklatura.util import BASE_ID, string_list
 
 if TYPE_CHECKING:
     from nomenklatura.store import View
@@ -172,103 +172,6 @@ class CompositeEntity(EntityProxy):
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
 
-    def clean_value(
-        self,
-        prop: Property,
-        value: Optional[str],
-        cleaned: bool = False,
-        fuzzy: bool = False,
-        format: Optional[str] = None,
-    ) -> List[str]:
-        if value is None:
-            return []
-        if cleaned:
-            return [value]
-        value = prop.type.clean_text(value, fuzzy=fuzzy, format=format, proxy=self)
-        if value is None:
-            return []
-        return [value]
-
-    def claim(
-        self,
-        prop: P,
-        value: Optional[str],
-        schema: Optional[str] = None,
-        dataset: Optional[str] = None,
-        seen: Optional[str] = None,
-        lang: Optional[str] = None,
-        original_value: Optional[str] = None,
-        cleaned: bool = False,
-        quiet: bool = False,
-        fuzzy: bool = False,
-        format: Optional[str] = None,
-    ) -> None:
-        prop_name = self._prop_name(prop, quiet=quiet)
-        if prop_name is None:
-            return None
-        prop = self.schema.properties[prop_name]
-
-        # Don't allow setting the reverse properties:
-        if prop.stub:
-            if quiet:
-                return None
-            msg = gettext("Stub property (%s): %s")
-            raise InvalidData(msg % (self.schema, prop))
-
-        if lang is not None:
-            lang = registry.language.clean_text(lang)
-
-        for clean in self.clean_value(
-            prop,
-            value,
-            cleaned=cleaned,
-            fuzzy=fuzzy,
-            format=format,
-        ):
-            if original_value is None and clean != value:
-                original_value = value
-
-            stmt = Statement(
-                entity_id=self.id,
-                prop=prop.name,
-                schema=schema or self.schema.name,
-                value=clean,
-                dataset=dataset or self.default_dataset.name,
-                lang=lang,
-                original_value=original_value,
-                first_seen=seen,
-            )
-            self.add_statement(stmt)
-
-    def claim_many(
-        self,
-        prop: P,
-        values: Iterable[Optional[str]],
-        schema: Optional[str] = None,
-        dataset: Optional[str] = None,
-        seen: Optional[str] = None,
-        lang: Optional[str] = None,
-        original_value: Optional[str] = None,
-        cleaned: bool = False,
-        quiet: bool = False,
-        fuzzy: bool = False,
-        format: Optional[str] = None,
-    ) -> None:
-        for value in values:
-            self.claim(
-                prop,
-                value,
-                schema=schema,
-                dataset=dataset,
-                seen=seen,
-                lang=lang,
-                original_value=original_value,
-                cleaned=cleaned,
-                quiet=quiet,
-                fuzzy=fuzzy,
-                format=format,
-            )
-
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
         if prop_name is None or prop_name not in self._statements:
@@ -289,13 +192,22 @@ class CompositeEntity(EntityProxy):
         quiet: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
+        lang: Optional[str] = None,
+        original_value: Optional[str] = None,
     ) -> None:
         prop_name = self._prop_name(prop, quiet=quiet)
         if prop_name is None:
             return
         self._statements.pop(prop_name, None)
         return self.add(
-            prop, values, cleaned=cleaned, quiet=quiet, fuzzy=fuzzy, format=format
+            prop,
+            values,
+            cleaned=cleaned,
+            quiet=quiet,
+            fuzzy=fuzzy,
+            format=format,
+            lang=lang,
+            original_value=original_value,
         )
 
     def add(
@@ -313,16 +225,16 @@ class CompositeEntity(EntityProxy):
         if prop_name is None:
             return None
         prop = self.schema.properties[prop_name]
-        for value in value_list(values):
-            if not cleaned:
-                value = prop.type.clean(value, proxy=self, fuzzy=fuzzy, format=format)
-            self.claim(
+        for value in string_list(values):
+            self.unsafe_add(
                 prop,
                 value,
+                cleaned=cleaned,
+                fuzzy=fuzzy,
+                format=format,
                 quiet=quiet,
                 lang=lang,
                 original_value=original_value,
-                cleaned=True,
             )
         return None
 
@@ -333,18 +245,48 @@ class CompositeEntity(EntityProxy):
         cleaned: bool = False,
         fuzzy: bool = False,
         format: Optional[str] = None,
+        quiet: bool = False,
+        schema: Optional[str] = None,
+        dataset: Optional[str] = None,
+        seen: Optional[str] = None,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
     ) -> None:
-        self.claim(
-            prop,
-            value,
-            cleaned=cleaned,
-            fuzzy=fuzzy,
-            format=format,
+        """Add a statement to the entity, possibly the value."""
+        if value is None:
+            return
+
+        # Don't allow setting the reverse properties:
+        if prop.stub:
+            if quiet:
+                return None
+            msg = gettext("Stub property (%s): %s")
+            raise InvalidData(msg % (self.schema, prop))
+
+        if lang is not None:
+            lang = registry.language.clean_text(lang)
+
+        clean: Optional[str] = value
+        if not cleaned:
+            clean = prop.type.clean_text(value, proxy=self, fuzzy=fuzzy, format=format)
+
+        if clean is None:
+            return
+
+        if original_value is None and clean != value:
+            original_value = value
+
+        stmt = Statement(
+            entity_id=self.id,
+            prop=prop.name,
+            schema=schema or self.schema.name,
+            value=clean,
+            dataset=dataset or self.default_dataset.name,
             lang=lang,
             original_value=original_value,
+            first_seen=seen,
         )
+        self.add_statement(stmt)
 
     def pop(self, prop: P, quiet: bool = True) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)

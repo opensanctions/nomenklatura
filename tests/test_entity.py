@@ -66,20 +66,20 @@ def test_example_entity():
     assert sx.id == sp.id
     assert len(sx) == len(sp)
 
-    sp.claim("notes", "Ich bin eine banane!", lang="deu")
+    sp.add("notes", "Ich bin eine banane!", lang="deu")
     claim = sp.get_statements("notes")[0]
     assert claim.lang == "deu", claim
 
-    sp.claim("banana", "Ich bin eine banane!", lang="deu", quiet=True)
+    sp.add("banana", "Ich bin eine banane!", lang="deu", quiet=True)
 
     assert len(sp.get_statements("notes")) == 1
-    sp.claim("notes", None, lang="deu", quiet=True)
+    sp.add("notes", None, lang="deu", quiet=True)
     assert len(sp.get_statements("notes")) == 1
 
-    sp.unsafe_add("alias", "Banana Boy")
+    sp.add("alias", "Banana Boy")
     assert len(sp.get_statements("alias")) == 1
 
-    sp.claim("nationality", "Germany")
+    sp.add("nationality", "Germany")
     claim = sp.get_statements("nationality")[0]
     assert claim.value == "de", claim
     assert claim.prop == "nationality", claim
@@ -91,7 +91,9 @@ def test_example_entity():
             assert val == "de"
 
     pre_len = len(sp)
-    sp.claim_many("nationality", ["de", "it", "fr"])
+    sp.add("nationality", "de")
+    sp.add("nationality", "it")
+    sp.add("nationality", "fr")
     assert pre_len + 2 == len(sp), sp._statements["country"]
     assert len(sp.get_type_values(registry.country)) == 4
 
