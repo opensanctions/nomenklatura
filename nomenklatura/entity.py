@@ -7,7 +7,7 @@ from followthemoney.model import Model
 from followthemoney.exc import InvalidData
 from followthemoney.types.common import PropertyType
 from followthemoney.property import Property
-from followthemoney.util import gettext, value_list
+from followthemoney.util import gettext
 from followthemoney.proxy import P
 from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
@@ -33,6 +33,7 @@ class CompositeEntity(EntityProxy):
         "extra_referents",
         "default_dataset",
         "statement_type",
+        "last_change",
         "_statements",
     )
 
@@ -54,6 +55,9 @@ class CompositeEntity(EntityProxy):
 
         self.extra_referents: Set[str] = set(data.pop("referents", []))
         """The IDs of all entities which are included in this canonical entity."""
+
+        self.last_change: Optional[str] = None
+        """The last time this entity was changed."""
 
         self.default_dataset = default_dataset
         self.id: Optional[str] = data.pop("id", None)
@@ -168,9 +172,18 @@ class CompositeEntity(EntityProxy):
                 self.schema = model.common_schema(self.schema, stmt.schema)
             except InvalidData as exc:
                 raise InvalidData(f"{self.id}: {exc}") from exc
+
         if stmt.prop != BASE_ID:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
+        elif stmt.first_seen is not None:
+            # The last_change attribute describes the latest checksum change
+            # of any emitted component of the entity, which is stored in the BASE
+            # field.
+            if self.last_change is None:
+                self.last_change = stmt.first_seen
+            else:
+                self.last_change = max(self.last_change, stmt.first_seen)
 
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
@@ -366,6 +379,8 @@ class CompositeEntity(EntityProxy):
             data["first_seen"] = self.first_seen
         if self.last_seen is not None:
             data["last_seen"] = self.last_seen
+        if self.last_change is not None:
+            data["last_change"] = self.last_change
         return data
 
     def __len__(self) -> int:
