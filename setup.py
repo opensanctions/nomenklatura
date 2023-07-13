@@ -6,7 +6,7 @@ with open("README.md") as f:
 
 setup(
     name="nomenklatura",
-    version="3.2.1",
+    version="3.2.2",
     description="Make record linkages in followthemoney data.",
     long_description=long_description,
     long_description_content_type="text/markdown",
