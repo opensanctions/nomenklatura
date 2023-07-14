@@ -266,7 +266,7 @@ class CompositeEntity(EntityProxy):
         original_value: Optional[str] = None,
     ) -> None:
         """Add a statement to the entity, possibly the value."""
-        if value is None:
+        if value is None or len(value) == 0:
             return
 
         # Don't allow setting the reverse properties:
