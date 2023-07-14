@@ -31,12 +31,10 @@ datasets:
     title: All datasets
     datasets:
       - leak
+      - collection_a
   - name: collection_a
     title: Collection of data
     children:
       - collection_a
-    parents:
-      - all_datasets
-    children:
       - donations
       - company_data

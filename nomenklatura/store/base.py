@@ -91,7 +91,7 @@ class View(Generic[DS, CE]):
     def __init__(self, store: Store[DS, CE], scope: DS, external: bool = False):
         self.store = store
         self.scope = scope
-        self.scope_names = scope.scope_names
+        self.dataset_names = scope.leaf_names
         self.external = external
 
     def get_entity(self, id: str) -> Optional[CE]:

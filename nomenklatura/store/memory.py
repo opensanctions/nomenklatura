@@ -89,7 +89,7 @@ class MemoryView(View[DS, CE]):
 
     def entities(self) -> Generator[CE, None, None]:
         entity_ids: Set[str] = set()
-        for scope in self.scope_names:
+        for scope in self.dataset_names:
             entity_ids.update(self.store.entities.get(scope, []))
         for entity_id in entity_ids:
             entity = self.get_entity(entity_id)

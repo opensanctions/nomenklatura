@@ -133,7 +133,7 @@ class LevelDBView(View[DS, CE]):
                     current_match = False
                 if current_match:
                     continue
-                if dataset in self.scope_names:
+                if dataset in self.dataset_names:
                     current_match = True
                     entity = self.get_entity(entity_id)
                     if entity is not None:

@@ -50,25 +50,23 @@ class Dataset(Named):
             if rdata is not None:
                 self.resources.append(DataResource(rdata))
 
-        # TODO: get rid of the legacy namings
-        self._parents = set(string_list(data.get("parents", [])))
-        self._parents.update(string_list(data.get("collections", [])))
         self._children = set(string_list(data.get("children", [])))
         self._children.update(string_list(data.get("datasets", [])))
 
-    @property
+    @cached_property
     def children(self: DS) -> Set[DS]:
         children: Set[DS] = set()
         for child_name in self._children:
             children.add(self.catalog.require(child_name))
-        for other in self.catalog.datasets:
-            if self.name in other._parents:
-                children.add(other)
         if self in children:
             children.remove(self)
         return children
 
     @cached_property
+    def is_collection(self: DS) -> bool:
+        return len(self.children) > 0
+
+    @property
     def datasets(self: DS) -> Set[DS]:
         current: Set[DS] = set([self])
         for child in self.children:
@@ -76,31 +74,22 @@ class Dataset(Named):
         return current
 
     @property
-    def parents(self: DS) -> Set[DS]:
-        current: Set[DS] = set()
-        for other in self.catalog.datasets:
-            if self in other.datasets:
-                current.add(other)
-        if self in current:
-            current.remove(self)
-        return current
-
-    @property
-    def dataset_names(self) -> List[str]:
+    def dataset_names(self: DS) -> List[str]:
         return [d.name for d in self.datasets]
 
-    @cached_property
-    def scope_names(self) -> Set[str]:
-        """This is based on the premise that collections (ie. datasets which have children)
-        never contain entities themselves that need to be queried."""
-        if len(self.children):
-            return {d.name for d in self.children}
-        return {self.name}
+    @property
+    def leaves(self: DS) -> Set[DS]:
+        """All contained datasets which are not collections (can be 'self')."""
+        return set([d for d in self.datasets if not d.is_collection])
+
+    @property
+    def leaf_names(self: DS) -> Set[str]:
+        return {d.name for d in self.leaves}
 
     def __repr__(self) -> str:
         return f"<Dataset({self.name})>"  # pragma: no cover
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self: DS) -> Dict[str, Any]:
         data: Dict[str, Any] = {
             "name": self.name,
             "title": self.title,
@@ -112,8 +101,13 @@ class Dataset(Named):
             "updated_at": self.updated_at,
             "category": self.category,
             "resources": [r.to_dict() for r in self.resources],
-            "children": [c.name for c in self.children],
         }
+        children = [c.name for c in self.children if c != self]
+        if len(children):
+            data["children"] = children
+        datasets = [c.name for c in self.datasets if c != self]
+        if len(datasets):
+            data["datasets"] = datasets
         if self.coverage is not None:
             data["coverage"] = self.coverage.to_dict()
         if self.publisher is not None:

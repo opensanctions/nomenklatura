@@ -54,6 +54,9 @@ def test_hierarchy(catalog_data: Dict[str, Any]):
     assert leak not in collection_a.datasets
     assert collection_a not in collection_a.children
     assert leak in all_datasets.datasets
+    assert len(all_datasets.children) == 2, all_datasets.children
+    assert len(all_datasets.datasets) == 5, all_datasets.datasets
+    assert len(all_datasets.leaves) == 3, all_datasets.leaves
 
 
 def test_from_path(catalog_path: Path):
