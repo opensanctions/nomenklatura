@@ -36,7 +36,7 @@ def string_list(value: Any) -> List[str]:
         if text is None:
             return []
         return [text]
-    if not isinstance(value, Sequence):
+    if not isinstance(value, (Sequence, set)):
         value = [value]
     texts: List[str] = []
     for inner in value:
