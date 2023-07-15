@@ -23,14 +23,14 @@ def test_nominatim_match():
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_dict(model, data)
+    ent = CompositeEntity.from_data(dataset, data)
     results = list(enricher.match(ent))
     assert len(results) == 1, results
     assert results[0].id == "osm-node-2140755199", results[0]
 
     full = "Jupiter Surface Space Station"
     data = {"schema": "Address", "id": "yyy", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_dict(model, data)
+    ent = CompositeEntity.from_data(dataset, data)
     results = list(enricher.match(ent))
     assert len(results) == 0, results
 
@@ -40,7 +40,7 @@ def test_nominatim_match_list():
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_dict(model, data)
+    ent = CompositeEntity.from_data(dataset, data)
 
     resolver = Resolver()
     assert len(resolver.edges) == 0, resolver.edges
@@ -54,7 +54,7 @@ def test_nominatim_enrich():
     enricher = load_enricher()
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_dict(model, data)
+    ent = CompositeEntity.from_data(dataset, data)
     adjacent = list(enricher.expand(ent, ent))
     assert len(adjacent) == 1, adjacent
 
@@ -64,7 +64,7 @@ def test_nominatim_enrich_list():
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_dict(model, data)
+    ent = CompositeEntity.from_data(dataset, data)
 
     resolver = Resolver()
     results = list(enrich(enricher, resolver, [ent]))

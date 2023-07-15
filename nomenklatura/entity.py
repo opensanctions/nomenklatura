@@ -31,19 +31,13 @@ class CompositeEntity(EntityProxy):
         "id",
         "_caption",
         "extra_referents",
-        "default_dataset",
+        "dataset",
         "statement_type",
         "last_change",
         "_statements",
     )
 
-    def __init__(
-        self,
-        model: "Model",
-        data: Dict[str, Any],
-        cleaned: bool = True,
-        default_dataset: Dataset = DefaultDataset,
-    ):
+    def __init__(self, dataset: Dataset, data: Dict[str, Any], cleaned: bool = True):
         data = dict(data or {})
         schema = model.get(data.pop("schema", None))
         if schema is None:
@@ -59,7 +53,9 @@ class CompositeEntity(EntityProxy):
         self.last_change: Optional[str] = None
         """The last time this entity was changed."""
 
-        self.default_dataset = default_dataset
+        self.dataset = dataset
+        """The default dataset for new statements."""
+
         self.id: Optional[str] = data.pop("id", None)
         self._statements: Dict[str, Set[Statement]] = {}
 
@@ -99,7 +95,7 @@ class CompositeEntity(EntityProxy):
                 prop=BASE_ID,
                 schema=self.schema.name,
                 value=self.checksum(),
-                dataset=self.default_dataset.name,
+                dataset=self.dataset.name,
             )
         yield from self._iter_stmt()
 
@@ -138,7 +134,7 @@ class CompositeEntity(EntityProxy):
 
     @property
     def key_prefix(self) -> Optional[str]:
-        return self.default_dataset.name
+        return self.dataset.name
 
     @key_prefix.setter
     def key_prefix(self, dataset: str) -> None:
@@ -173,17 +169,18 @@ class CompositeEntity(EntityProxy):
             except InvalidData as exc:
                 raise InvalidData(f"{self.id}: {exc}") from exc
 
-        if stmt.prop != BASE_ID:
+        if stmt.prop == BASE_ID:
+            if stmt.first_seen is not None:
+                # The last_change attribute describes the latest checksum change
+                # of any emitted component of the entity, which is stored in the BASE
+                # field.
+                if self.last_change is None:
+                    self.last_change = stmt.first_seen
+                else:
+                    self.last_change = max(self.last_change, stmt.first_seen)
+        else:
             self._statements.setdefault(stmt.prop, set())
             self._statements[stmt.prop].add(stmt)
-        elif stmt.first_seen is not None:
-            # The last_change attribute describes the latest checksum change
-            # of any emitted component of the entity, which is stored in the BASE
-            # field.
-            if self.last_change is None:
-                self.last_change = stmt.first_seen
-            else:
-                self.last_change = max(self.last_change, stmt.first_seen)
 
     def get(self, prop: P, quiet: bool = False) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
@@ -294,7 +291,7 @@ class CompositeEntity(EntityProxy):
             prop=prop.name,
             schema=schema or self.schema.name,
             value=clean,
-            dataset=dataset or self.default_dataset.name,
+            dataset=dataset or self.dataset.name,
             lang=lang,
             original_value=original_value,
             first_seen=seen,
@@ -349,11 +346,7 @@ class CompositeEntity(EntityProxy):
 
     def clone(self: CE) -> CE:
         data = {"schema": self.schema.name, "id": self.id}
-        cloned = type(self).from_dict(
-            self.schema.model,
-            data,
-            default_dataset=self.default_dataset,
-        )
+        cloned = type(self)(self.dataset, data)
         for stmt in self._iter_stmt():
             cloned.add_statement(stmt)
         return cloned
@@ -418,21 +411,29 @@ class CompositeEntity(EntityProxy):
         model: Model,
         data: Dict[str, Any],
         cleaned: bool = True,
-        default_dataset: Dataset = DefaultDataset,
+        default_dataset: Optional[Dataset] = None,
     ) -> CE:
-        return cls(model, data, cleaned=cleaned, default_dataset=default_dataset)
+        # Exists only for backwards compatibility.
+        dataset = default_dataset or DefaultDataset
+        return cls(dataset, data, cleaned=cleaned)
+
+    @classmethod
+    def from_data(
+        cls: Type[CE], dataset: Dataset, data: Dict[str, Any], cleaned: bool = True
+    ) -> CE:
+        return cls(dataset, data, cleaned=cleaned)
 
     @classmethod
     def from_statements(
         cls: Type[CE],
+        dataset: Dataset,
         statements: Iterable[Statement],
-        default_dataset: Dataset = DefaultDataset,
     ) -> CE:
         obj: Optional[CE] = None
         for stmt in statements:
             if obj is None:
                 data = {"schema": stmt.schema, "id": stmt.canonical_id}
-                obj = cls(model, data, default_dataset=default_dataset)
+                obj = cls(dataset, data)
             obj.add_statement(stmt)
         if obj is None:
             raise ValueError("No statements given!")

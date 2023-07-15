@@ -1,7 +1,6 @@
 import orjson
 from pathlib import Path
 from typing import Optional
-from followthemoney import model
 
 from nomenklatura.store.base import Store, Writer, View
 from nomenklatura.store.memory import MemoryStore
@@ -37,11 +36,6 @@ def load_entity_file_store(
         with open(path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_dict(
-                    model,
-                    data,
-                    cleaned=cleaned,
-                    default_dataset=dataset,
-                )
+                proxy = CompositeEntity.from_data(dataset, data, cleaned=cleaned)
                 writer.add_entity(proxy)
     return store

@@ -27,10 +27,8 @@ def test_leveldb_store_basics(test_dataset: Dataset):
     path = Path(tempfile.mkdtemp()) / "leveldb"
     resolver = Resolver[CompositeEntity]()
     store = LevelDBStore(test_dataset, resolver, path)
-    entity = CompositeEntity.from_dict(model, PERSON, default_dataset=test_dataset)
-    entity_ext = CompositeEntity.from_dict(
-        model, PERSON_EXT, default_dataset=test_dataset
-    )
+    entity = CompositeEntity.from_data(test_dataset, PERSON)
+    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
     writer.add_entity(entity)
@@ -59,9 +57,7 @@ def test_leveldb_graph_query(donations_path: Path, test_dataset: Dataset):
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_dict(
-                    model, data, default_dataset=test_dataset
-                )
+                proxy = CompositeEntity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
     assert len(list(store.view(test_dataset).entities())) == 474
 
@@ -82,7 +78,7 @@ def test_leveldb_graph_query(donations_path: Path, test_dataset: Dataset):
     assert model.get("Address") in schemata, set(schemata)
     assert model.get("Company") not in schemata, set(schemata)
 
-    ext_entity = CompositeEntity.from_dict(model, PERSON, default_dataset=test_dataset)
+    ext_entity = CompositeEntity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
             stmt.external = True

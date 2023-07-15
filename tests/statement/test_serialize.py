@@ -1,8 +1,8 @@
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from followthemoney import model
 
+from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement import write_statements, read_statements
 from nomenklatura.statement import read_path_statements
@@ -19,7 +19,7 @@ EXAMPLE = {
 
 def test_json_statements():
     buffer = BytesIO()
-    entity = CompositeEntity.from_dict(model, EXAMPLE)
+    entity = CompositeEntity.from_data(DefaultDataset, EXAMPLE)
 
     write_statements(buffer, JSON, entity.statements)
     buffer.seek(0)
@@ -33,7 +33,7 @@ def test_json_statements():
 
 def test_csv_statements():
     with TemporaryDirectory() as tmpdir:
-        entity = CompositeEntity.from_dict(model, EXAMPLE)
+        entity = CompositeEntity.from_data(DefaultDataset, EXAMPLE)
         path = Path(tmpdir) / "statement.csv"
         with open(path, "wb") as fh:
             write_statements(fh, CSV, entity.statements)
@@ -47,7 +47,7 @@ def test_csv_statements():
 
 def test_pack_statements():
     with TemporaryDirectory() as tmpdir:
-        entity = CompositeEntity.from_dict(model, EXAMPLE)
+        entity = CompositeEntity.from_data(DefaultDataset, EXAMPLE)
         path = Path(tmpdir) / "statement.pack"
         with open(path, "wb") as fh:
             write_statements(fh, PACK, entity.statements)

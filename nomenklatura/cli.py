@@ -12,7 +12,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
-from nomenklatura.dataset import Dataset
+from nomenklatura.dataset import Dataset, DefaultDataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.statement import Statement, CSV, FORMATS
@@ -276,20 +276,24 @@ def format_statements(
 @cli.command("aggregate-statements", help="Roll up statements into entities")
 @click.option("-i", "--infile", type=InPath, default="-")
 @click.option("-o", "--outpath", type=OutPath, default="-")
+@click.option("-d", "--dataset", type=str, default=DefaultDataset.name)
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
-def statements_aggregate(infile: Path, outpath: Path, format: str) -> None:
+def statements_aggregate(
+    infile: Path, outpath: Path, dataset: str, format: str
+) -> None:
+    dataset_ = Dataset.make({"name": dataset, "title": dataset})
     with path_writer(outpath) as outfh:
         statements: List[Statement] = []
         for stmt in read_path_statements(
             infile, format=format, statement_type=Statement
         ):
             if len(statements) and statements[0].canonical_id != stmt.canonical_id:
-                entity = Entity.from_statements(statements)
+                entity = Entity.from_statements(dataset_, statements)
                 write_entity(outfh, entity)
                 statements = []
             statements.append(stmt)
         if len(statements):
-            entity = Entity.from_statements(statements)
+            entity = Entity.from_statements(dataset_, statements)
             write_entity(outfh, entity)
 
 

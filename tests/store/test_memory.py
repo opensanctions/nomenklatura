@@ -24,10 +24,8 @@ PERSON_EXT = {
 def test_basic_store(test_dataset: Dataset):
     resolver = Resolver[CompositeEntity]()
     store = MemoryStore(test_dataset, resolver)
-    entity = CompositeEntity.from_dict(model, PERSON, default_dataset=test_dataset)
-    entity_ext = CompositeEntity.from_dict(
-        model, PERSON_EXT, default_dataset=test_dataset
-    )
+    entity = CompositeEntity.from_data(test_dataset, PERSON)
+    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
     assert len(store.stmts) == 0
     writer = store.writer()
     writer.add_entity(entity)

@@ -1,7 +1,6 @@
 import pytest
 from datetime import datetime
 from typing import Any, Dict, List
-from followthemoney import model
 from followthemoney.types import registry
 from followthemoney.exc import InvalidData
 
@@ -36,8 +35,9 @@ def test_nested_entity(dstore: SimpleMemoryStore):
 
 
 def test_donations_entities(donations_json: List[Dict[str, Any]]):
+    dx = Dataset.make({"name": "test", "title": "Test"})
     for data in donations_json:
-        sp = CompositeEntity.from_dict(model, data)
+        sp = CompositeEntity.from_data(dx, data)
         assert sp.schema is not None
         assert sp.id is not None
         assert len(sp) > 0
@@ -45,7 +45,7 @@ def test_donations_entities(donations_json: List[Dict[str, Any]]):
 
 def test_example_entity():
     dx = Dataset.make({"name": "test", "title": "Test"})
-    sp = CompositeEntity.from_dict(model, EXAMPLE, default_dataset=dx)
+    sp = CompositeEntity.from_data(dx, EXAMPLE)
     assert len(sp) == 3
     assert sp.checksum() == "836baf194d59a68c4092e208df30134800c732cc"
     assert sp.caption == "John Doe"
@@ -65,10 +65,10 @@ def test_example_entity():
     assert data["id"] == sp.id, data
     so = sp.clone()
     assert so.id == sp.id
-    assert so.default_dataset == sp.default_dataset
+    assert so.dataset == sp.dataset
     assert so.checksum() == sp.checksum()
 
-    sx = CompositeEntity.from_statements(sp.statements)
+    sx = CompositeEntity.from_statements(dx, sp.statements)
     assert sx.id == sp.id
     assert len(sx) == len(sp)
 
@@ -114,6 +114,7 @@ def test_example_entity():
 
 
 def test_other_entity():
+    dx = Dataset.make({"name": "test", "title": "Test"})
     smt = Statement(
         entity_id="blubb",
         prop="name",
@@ -121,7 +122,7 @@ def test_other_entity():
         value="Jane Doe",
         dataset="test",
     )
-    sp = CompositeEntity.from_statements([smt])
+    sp = CompositeEntity.from_statements(dx, [smt])
     assert sp.id == "blubb"
     assert sp.schema.name == "LegalEntity"
     assert "test" in sp.datasets

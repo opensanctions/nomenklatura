@@ -122,12 +122,7 @@ class Enricher(ABC):
     def _make_data_entity(
         self, entity: CE, data: Dict[str, Any], cleaned: bool = True
     ) -> CE:
-        return type(entity).from_dict(
-            model,
-            data,
-            default_dataset=self.dataset,
-            cleaned=cleaned,
-        )
+        return type(entity).from_data(self.dataset, data, cleaned=cleaned)
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
         proxy = self._make_data_entity(entity, data, cleaned=False)
