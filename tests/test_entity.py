@@ -53,6 +53,12 @@ def test_example_entity():
     sp.add("country", "us")
     assert len(sp) == 4
     assert sp.checksum() == "c3aec8e1fcd86bc55171917db7c993d6f3ad5fe0"
+    sp.add("country", {"gb"})
+    assert len(sp) == 5
+    sp.add("country", ("gb", "us"))
+    assert len(sp) == 5
+    sp.add("country", ["gb", "us"])
+    assert len(sp) == 5
     sp.set("country", "gb")
     assert len(sp) == 4
     data = sp.to_dict()
