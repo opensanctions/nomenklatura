@@ -122,7 +122,7 @@ class LevelDBView(View[DS, CE]):
                         yield prop.reverse, entity
 
     def entities(self) -> Generator[CE, None, None]:
-        prefix = f"e:".encode("utf-8")
+        prefix = b"e:"
         with self.store.db.iterator(prefix=prefix, include_value=False) as it:
             current_id: Optional[str] = None
             current_match = False

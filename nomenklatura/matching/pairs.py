@@ -3,7 +3,6 @@ from typing import Generator
 from followthemoney import model
 from followthemoney.proxy import EntityProxy
 
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.util import PathLike
 

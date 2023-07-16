@@ -1,12 +1,11 @@
 import csv
-import _csv
 import click
 import orjson
 from pathlib import Path
 from io import TextIOWrapper
 from types import TracebackType
 from typing import Optional, Dict, Any, List
-from typing import BinaryIO, TextIO, Generator, Iterable, Type
+from typing import BinaryIO, Generator, Iterable, Type
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S

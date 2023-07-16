@@ -10,9 +10,9 @@ from nomenklatura.matching.util import props_pair, type_pair, compare_sets
 
 
 class NameMatcher(ScoringAlgorithm):
-    """An algorithm that matches on entity name, using phonetic comparisons and edit distance
-    to generate potential matches. This implementation is vaguely based on the behaviour
-    proposed by the US OFAC documentation (FAQ #249)."""
+    """An algorithm that matches on entity name, using phonetic comparisons and edit
+    distance to generate potential matches. This implementation is vaguely based on
+    the behaviour proposed by the US OFAC documentation (FAQ #249)."""
 
     # Try to re-produce results from: https://sanctionssearch.ofac.treas.gov/
     # cf. https://ofac.treasury.gov/faqs/topic/1636
@@ -57,9 +57,9 @@ class NameMatcher(ScoringAlgorithm):
 
 
 class NameQualifiedMatcher(ScoringAlgorithm):
-    """Same as the name-based algorithm, but scores will be reduced if a mis-match of birth
-    dates and nationalities is found for persons, or different tax/registration identifiers
-    are included for organizations and companies."""
+    """Same as the name-based algorithm, but scores will be reduced if a mis-match
+    of birth dates and nationalities is found for persons, or different
+    tax/registration identifiers are included for organizations and companies."""
 
     NAME = "name-qualified"
     COUNTRIES_DISJOINT = "countries_disjoint"

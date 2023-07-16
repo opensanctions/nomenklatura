@@ -62,10 +62,10 @@ def compare_sets(
 ) -> float:
     """Compare two sets of values pair-wise and select the highest-scored result."""
     results: List[float] = []
-    for (l, r) in product(left, right):
-        if l is None or r is None:
+    for (le, ri) in product(left, right):
+        if le is None or ri is None:
             continue
-        results.append(compare_func(l, r))
+        results.append(compare_func(le, ri))
     if not len(results):
         return 0.0
     return select_func(results)

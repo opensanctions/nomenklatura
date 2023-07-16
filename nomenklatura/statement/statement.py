@@ -164,9 +164,9 @@ class Statement(object):
             return None
         key = f"{dataset}.{entity_id}.{prop}.{value}"
         if external:
-            # We consider the external flag in key composition to avoid race conditions where
-            # a certain entity might be emitted as external while it is already linked in to
-            # the graph via another route.
+            # We consider the external flag in key composition to avoid race conditions
+            # where a certain entity might be emitted as external while it is already
+            # linked in to the graph via another route.
             key = f"{key}.ext"
         return hashlib.sha1(key.encode("utf-8")).hexdigest()
 

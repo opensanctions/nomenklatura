@@ -10,8 +10,9 @@ from nomenklatura.entity import CE, CompositeEntity
 
 
 class Store(Generic[DS, CE]):
-    """A data storage and retrieval mechanism for statement-based entity data. Essentially,
-    this is a triple store which can be implemented using various backends."""
+    """A data storage and retrieval mechanism for statement-based entity data.
+    Essentially, this is a triple store which can be implemented using various
+    backends."""
 
     def __init__(self, dataset: DS, resolver: Resolver[CE]):
         self.dataset = dataset

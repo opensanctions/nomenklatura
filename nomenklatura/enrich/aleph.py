@@ -109,7 +109,7 @@ class AlephEnricher(Enricher):
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
             return
-        url = urljoin(self._base_url, f"match")
+        url = urljoin(self._base_url, "match")
         if self.collection_id is not None:
             url = normalize_url(url, {"collection_ids": self.collection_id})
         query = {

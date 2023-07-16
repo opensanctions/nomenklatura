@@ -1,5 +1,5 @@
 from normality import normalize, WS
-from typing import Generic, Generator, Generic, Tuple
+from typing import Generic, Generator, Tuple
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
 
