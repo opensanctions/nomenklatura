@@ -26,6 +26,7 @@ class YenteEnricher(Enricher):
         self._dataset: str = config.pop("dataset", "default")
         self._threshold: Optional[float] = config.pop("threshold", None)
         self._nested: bool = config.pop("expand_nested", True)
+        self._fuzzy: bool = config.pop("fuzzy", False)
         self._ns: Optional[Namespace] = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
@@ -47,8 +48,10 @@ class YenteEnricher(Enricher):
         if not entity.schema.matchable:
             return
         url = urljoin(self._api, f"match/{self._dataset}")
+        params: Dict[str, Any] = {"fuzzy": self._fuzzy}
         if self._threshold is not None:
-            url = normalize_url(url, {"threshold": self._threshold})
+            params["threshold"] = self._threshold
+        url = normalize_url(url, params)
         cache_key = f"{url}:{entity.id}"
         props: Dict[str, List[str]] = {}
         for prop in entity.iterprops():
