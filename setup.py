@@ -28,6 +28,7 @@ setup(
         "textual >= 0.19.0, < 1.0.0",
         "scikit-learn == 1.2.2",
         "click >= 8.0.0, < 8.1.7",
+        "plyvel",
     ],
     tests_require=[],
     entry_points={
@@ -47,7 +48,7 @@ setup(
             "coverage>=4.1",
             "types-setuptools",
             "types-requests",
-            "plyvel",
+            "requests-mock",
         ],
         "leveldb": ["plyvel"],
     },
