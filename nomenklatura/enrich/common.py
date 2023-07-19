@@ -77,7 +77,7 @@ class Enricher(ABC):
                 msg = "HTTP fetch failed [%s]: %s" % (url, rex)
                 raise EnrichmentException(msg) from rex
             response = resp.text
-            if cache_days is not None and cache_days > 0:
+            if cache_days_ > 0:
                 self.cache.set(url, response)
         return response
 
@@ -114,7 +114,7 @@ class Enricher(ABC):
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
                 raise EnrichmentException(msg) from rex
             resp_data = resp.json()
-            if cache_days is not None and cache_days > 0:
+            if cache_days_ > 0:
                 self.cache.set_json(cache_key, resp_data)
         return resp_data
 
