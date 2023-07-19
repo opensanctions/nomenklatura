@@ -26,7 +26,7 @@ setup(
         "jellyfish >= 1.0.0, < 2.0.0",
         "rich >= 10.9.0, < 14.0.0",
         "textual >= 0.19.0, < 1.0.0",
-        "scikit-learn == 1.2.2",
+        "scikit-learn == 1.3.0",
         "click >= 8.0.0, < 8.1.7",
         "plyvel",
     ],
