@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from fingerprints.fingerprint import fingerprint
 from fingerprints.cleanup import clean_strict
 from followthemoney.util import sanitize_text
-from typing import cast, Any, Mapping, Union, Iterable, Tuple, Optional, List, Set
+from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Set
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
