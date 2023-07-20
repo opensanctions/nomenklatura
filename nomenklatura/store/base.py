@@ -47,6 +47,9 @@ class Store(Generic[DS, CE]):
                     stmt.canonical_id = canonical_id
                     writer.add_statement(stmt)
 
+    def close(self) -> None:
+        pass
+
     def __repr__(self) -> str:
         return f"<{type(self).__name__}({self.dataset.name!r})>"
 

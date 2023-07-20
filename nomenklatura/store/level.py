@@ -24,6 +24,9 @@ class LevelDBStore(Store[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
         return LevelDBView(self, scope, external=external)
 
+    def close(self) -> None:
+        self.db.close()
+
 
 class LevelDBWriter(Writer[DS, CE]):
     BATCH_STATEMENTS = 50000
