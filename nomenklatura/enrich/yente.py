@@ -38,8 +38,8 @@ class YenteEnricher(Enricher):
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
 
-        match_url = urljoin(self._api, f"match/{self._dataset}")
-        self.cache.preload(f"{match_url}%")
+        # match_url = urljoin(self._api, f"match/{self._dataset}")
+        # self.cache.preload(f"{match_url}%")
 
     def make_url(self, entity: CE) -> str:
         return urljoin(self._api, f"entities/{entity.id}")
