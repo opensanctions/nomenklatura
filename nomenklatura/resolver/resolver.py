@@ -7,6 +7,7 @@ from typing import Dict, Generator, Generic, List, Optional, Set, Tuple
 from followthemoney.types import registry
 
 from nomenklatura.entity import CE
+from nomenklatura.stream import StreamEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
@@ -131,7 +132,7 @@ class Resolver(Generic[CE]):
         """Get all NO_JUDGEMENT edges in descending order of score."""
         edges_all = self.edges.values()
         candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
-        cmp = lambda x: x.score or -1.0
+        cmp = lambda x: x.score or -1.0  # noqa
         return sorted(candidates, key=cmp, reverse=True)
 
     def get_candidates(
@@ -254,6 +255,17 @@ class Resolver(Generic[CE]):
             return proxy
         proxy.id = self.get_canonical(proxy.id)
         return self.apply_properties(proxy)
+
+    def apply_stream(self, proxy: StreamEntity) -> StreamEntity:
+        if proxy.id is None:
+            return proxy
+        proxy.id = self.get_canonical(proxy.id)
+        for prop in proxy.iterprops():
+            if prop.type == registry.entity:
+                values = proxy.pop(prop)
+                for value in values:
+                    proxy.unsafe_add(prop, self.get_canonical(value), cleaned=True)
+        return proxy
 
     def apply_properties(self, proxy: CE) -> CE:
         for stmt in proxy._iter_stmt():

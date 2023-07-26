@@ -18,6 +18,7 @@ from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.statement import Statement, CSV, FORMATS
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.statement import write_statements, read_path_statements
+from nomenklatura.stream import StreamEntity
 from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
@@ -108,10 +109,8 @@ def apply(
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     with path_writer(outpath) as outfh:
-        for proxy in path_entities(path, Entity):
-            proxy = resolver_.apply(proxy)
-            if dataset is not None:
-                proxy.datasets.add(dataset)
+        for proxy in path_entities(path, StreamEntity):
+            proxy = resolver_.apply_stream(proxy)
             write_entity(outfh, proxy)
 
 
@@ -119,7 +118,7 @@ def apply(
 @click.option("-i", "--infile", type=InPath, default="-")
 @click.option("-o", "--outfile", type=OutPath, default="-")
 def sorted_aggregate_(infile: Path, outfile: Path) -> None:
-    sorted_aggregate(infile, outfile, Entity)
+    sorted_aggregate(infile, outfile, StreamEntity)
 
 
 @cli.command("make-sortable", help="Convert entities into plain-text sortable form")
