@@ -111,6 +111,8 @@ def apply(
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, StreamEntity):
             proxy = resolver_.apply_stream(proxy)
+            if dataset is not None:
+                proxy.datasets.add(dataset)
             write_entity(outfh, proxy)
 
 
