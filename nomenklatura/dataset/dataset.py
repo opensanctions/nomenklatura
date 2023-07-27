@@ -52,6 +52,7 @@ class Dataset(Named):
 
         self._children = set(string_list(data.get("children", [])))
         self._children.update(string_list(data.get("datasets", [])))
+        self._children.update(string_list(data.get("scopes", [])))
 
     @cached_property
     def children(self: DS) -> Set[DS]:
