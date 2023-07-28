@@ -73,6 +73,9 @@ class Writer(Generic[DS, CE]):
     def flush(self) -> None:
         pass
 
+    def close(self) -> None:
+        self.store.close()
+
     def __enter__(self) -> "Writer[DS, CE]":
         return self
 
