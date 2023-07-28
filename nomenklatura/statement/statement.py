@@ -193,6 +193,10 @@ class Statement(object):
         typed_data = cast(StatementDict, data)
         typed_data["target"] = text_bool(data.get("target"))
         typed_data["external"] = text_bool(data.get("external"))
+        if data.get("lang") == "":
+            typed_data["lang"] = None
+        if data.get("original_value") == "":
+            typed_data["original_value"] = None
         return cls.from_dict(typed_data)
 
     @classmethod
