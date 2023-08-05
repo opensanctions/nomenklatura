@@ -1,7 +1,7 @@
+import yaml
+import logging
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, TypeVar
-
-import yaml
 from followthemoney.types import registry
 
 from nomenklatura.dataset.coverage import DataCoverage
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from nomenklatura.dataset.catalog import DataCatalog
 
 DS = TypeVar("DS", bound="Dataset")
+log = logging.getLogger(__name__)
 
 
 class Dataset(Named):
@@ -58,14 +59,18 @@ class Dataset(Named):
     def children(self: DS) -> Set[DS]:
         children: Set[DS] = set()
         for child_name in self._children:
-            children.add(self.catalog.require(child_name))
-        if self in children:
-            children.remove(self)
+            child = self.catalog.get(child_name)
+            if child is None:
+                log.error("Missing child dataset %r (in %r)", self.name, child_name)
+                continue
+            if child == self:
+                continue
+            children.add(child)
         return children
 
     @cached_property
     def is_collection(self: DS) -> bool:
-        return len(self.children) > 0
+        return len(self._children) > 0
 
     @property
     def datasets(self: DS) -> Set[DS]:
@@ -103,7 +108,7 @@ class Dataset(Named):
             "category": self.category,
             "resources": [r.to_dict() for r in self.resources],
         }
-        children = [c.name for c in self.children if c != self]
+        children = [c for c in self._children if c != self.name]
         if len(children):
             data["children"] = children
         datasets = [c.name for c in self.datasets if c != self]
