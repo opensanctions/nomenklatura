@@ -27,6 +27,7 @@ class StreamEntity(EntityProxy):
         self.first_seen: Optional[str] = data.get("first_seen")
         self.last_seen: Optional[str] = data.get("last_seen")
         self.last_change: Optional[str] = data.get("last_change")
+        self.target: Optional[bool] = data.get("target", False)
         self.context = {}
 
     def merge(self: "StreamEntity", other: "StreamEntity") -> "StreamEntity":
@@ -36,6 +37,7 @@ class StreamEntity(EntityProxy):
         merged.datasets.update(other.datasets)
         self.first_seen = min(_defined(self.first_seen, other.first_seen), default=None)
         self.last_seen = max(_defined(self.last_seen, other.last_seen), default=None)
+        self.target = self.target or other.target
         changed = _defined(self.last_change, other.last_change)
         self.last_change = max(changed, default=None)
         return merged
@@ -48,6 +50,7 @@ class StreamEntity(EntityProxy):
             "properties": self.properties,
             "referents": list(self.referents),
             "datasets": list(self.datasets),
+            "target": self.target,
         }
         if self.first_seen is not None:
             data["first_seen"] = self.first_seen
