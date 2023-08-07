@@ -11,6 +11,7 @@ class DataCoverage(object):
     FREQUENCIES = (
         "unknown",
         "never",
+        "hourly",
         "daily",
         "weekly",
         "monthly",
