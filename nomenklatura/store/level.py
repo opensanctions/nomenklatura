@@ -1,15 +1,16 @@
-import plyvel  # type: ignore
-from typing import Generator, Optional, Tuple, Any, List, Set
 from pathlib import Path
-from followthemoney.types import registry
-from followthemoney.property import Property
+from typing import Any, Generator, List, Optional, Set, Tuple
 
-from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import pack_statement, unpack_statement
-from nomenklatura.statement import Statement
+import plyvel  # type: ignore
+from followthemoney.property import Property
+from followthemoney.types import registry
+
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
+from nomenklatura.statement import Statement
+from nomenklatura.store.base import Store, View, Writer
+from nomenklatura.store.util import pack_statement, unpack_statement
 
 
 class LevelDBStore(Store[DS, CE]):
@@ -90,6 +91,7 @@ class LevelDBWriter(Writer[DS, CE]):
             key = f"e:{entity_id}:{dataset}".encode("utf-8")
             self.batch.delete(key)
 
+        self.flush()
         return list(statements)
 
 
