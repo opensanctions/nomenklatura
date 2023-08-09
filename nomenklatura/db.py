@@ -25,9 +25,13 @@ def get_metadata() -> MetaData:
 
 @contextmanager
 def ensure_tx(conn: Connish = None) -> Generator[Connection, None, None]:
-    if conn is not None:
-        yield conn
-        return
-    engine = get_engine()
-    with engine.begin() as conn:
-        yield conn
+    try:
+        if conn is not None:
+            yield conn
+        else:
+            engine = get_engine()
+            with engine.begin() as conn:
+                yield conn
+    finally:
+        if conn is not None:
+            conn.commit()
