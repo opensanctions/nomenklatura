@@ -61,7 +61,7 @@ class Dataset(Named):
         for child_name in self._children:
             child = self.catalog.get(child_name)
             if child is None:
-                log.error("Missing child dataset %r (in %r)", self.name, child_name)
+                log.error("Missing child dataset: %r (in %r)", child_name, self.name)
                 continue
             if child == self:
                 continue
