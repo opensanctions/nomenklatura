@@ -15,7 +15,7 @@ class DataCoverage(object):
         "daily",
         "weekly",
         "monthly",
-        "annual",
+        "annually",
     )
 
     def __init__(self, data: Dict[str, Any]) -> None:
