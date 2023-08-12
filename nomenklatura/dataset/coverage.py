@@ -26,6 +26,7 @@ class DataCoverage(object):
             self.countries.append(type_require(registry.country, country))
         freq = data.get("frequency", "unknown")
         self.frequency = type_check(registry.string, freq, self.FREQUENCIES)
+        self.schedule = type_check(registry.string, data.get("schedule"))
 
     def to_dict(self) -> Dict[str, Any]:
         data = {
@@ -33,6 +34,7 @@ class DataCoverage(object):
             "end": self.end,
             "countries": self.countries,
             "frequency": self.frequency,
+            "schedule": self.schedule,
         }
         return cleanup(data)
 
