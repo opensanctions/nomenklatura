@@ -141,7 +141,10 @@ class SqlView(View[DS, CE]):
 
     def get_entity(self, id: str) -> Optional[CE]:
         table = self.store.table
-        q = select(table).where(table.c.entity_id == id)
+        ids = [i.id for i in self.store.resolver.connected(id)]
+        q = select(table).where(
+            table.c.entity_id.in_(ids), table.c.dataset.in_(self.dataset_names)
+        )
         for proxy in self.store._iterate(q):
             return proxy
         return None
