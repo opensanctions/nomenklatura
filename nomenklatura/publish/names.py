@@ -3,6 +3,7 @@ import logging
 from itertools import combinations
 from collections import defaultdict
 from typing import Dict, Optional, List, Tuple
+from followthemoney.proxy import E
 from nomenklatura.util import normalize_name, levenshtein
 
 log = logging.getLogger(__name__)
@@ -36,3 +37,16 @@ def pick_name(names: List[str]) -> Optional[str]:
     for cand, _ in sorted(edits.items(), key=lambda x: x[1]):
         return cand
     return None
+
+
+def pick_caption(proxy: E) -> str:
+    is_thing = proxy.schema.is_a("Thing")
+    for prop in proxy.schema.caption:
+        values = proxy.get(prop)
+        if is_thing and len(values) > 1:
+            name = pick_name(values)
+            if name is not None:
+                return name
+        for value in values:
+            return value
+    return proxy.schema.label

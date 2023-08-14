@@ -13,7 +13,7 @@ from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
 
 from nomenklatura.dataset import DS, Dataset, DefaultDataset
-from nomenklatura.publish.names import pick_name
+from nomenklatura.publish.names import pick_caption
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import BASE_ID, string_list
 
@@ -153,25 +153,13 @@ class CompositeEntity(EntityProxy):
     def key_prefix(self, dataset: str) -> None:
         raise NotImplementedError()
 
-    def _pick_caption(self) -> str:
-        is_thing = self.schema.is_a("Thing")
-        for prop in self.schema.caption:
-            values = self.get(prop)
-            if is_thing and len(values) > 1:
-                name = pick_name(values)
-                if name is not None:
-                    return name
-            for value in values:
-                return value
-        return self.schema.label
-
     @property
     def caption(self) -> str:
         """The user-facing label to be used for this entity. This checks a list
         of properties defined by the schema (caption) and returns the first
         available value. If no caption is available, return the schema label."""
         if self._caption is None:
-            self._caption = self._pick_caption()
+            self._caption = pick_caption(self)
         return self._caption
 
     def add_statement(self, stmt: Statement) -> None:
