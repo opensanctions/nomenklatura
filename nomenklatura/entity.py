@@ -75,29 +75,42 @@ class CompositeEntity(EntityProxy):
                 if stmt.entity_id is None and self.id is not None:
                     stmt.entity_id = self.id
                     stmt.id = stmt.generate_key()
-                if stmt.id is None and stmt.entity_id is not None:
+                if stmt.id is None:
                     stmt.id = stmt.generate_key()
                 yield stmt
 
-    def checksum(self) -> str:
-        hash = sha1(self.schema.name.encode("utf-8"))
-        for stmt in sorted(self._iter_stmt()):
-            if stmt.id is not None:
-                hash.update(stmt.id.encode("utf-8"))
-        return hash.hexdigest()
-
     @property
     def statements(self) -> Generator[Statement, None, None]:
+        """Return all statements for this entity, with extra ID statement."""
+        ids: List[str] = []
+        last_seen: Set[str] = set()
+        first_seen: Set[str] = set()
+        for stmt in self._iter_stmt():
+            yield stmt
+            if stmt.id is not None:
+                ids.append(stmt.id)
+            if stmt.last_seen is not None:
+                last_seen.add(stmt.last_seen)
+            if stmt.first_seen is not None:
+                first_seen.add(stmt.first_seen)
         if self.id is not None:
+            digest = sha1(self.schema.name.encode("utf-8"))
+            for id in sorted(ids):
+                digest.update(id.encode("utf-8"))
+            checksum = digest.hexdigest()
+            # This is to make the last_change value stable across
+            # serialisation:
+            first = self.last_change or min(first_seen, default=None)
             yield Statement(
                 canonical_id=self.id,
                 entity_id=self.id,
                 prop=BASE_ID,
                 schema=self.schema.name,
-                value=self.checksum(),
+                value=checksum,
                 dataset=self.dataset.name,
+                first_seen=first,
+                last_seen=max(last_seen, default=None),
             )
-        yield from self._iter_stmt()
 
     @property
     def first_seen(self) -> Optional[str]:
