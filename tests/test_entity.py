@@ -47,12 +47,14 @@ def test_example_entity():
     dx = Dataset.make({"name": "test", "title": "Test"})
     sp = CompositeEntity.from_data(dx, EXAMPLE)
     assert len(sp) == 3
-    assert sp.checksum() == "836baf194d59a68c4092e208df30134800c732cc"
+    idstmt = list(sp.statements)[-1]
+    assert idstmt.value == "836baf194d59a68c4092e208df30134800c732cc"
     assert sp.caption == "John Doe"
     assert "John Doe", sp.get_type_values(registry.name)
     sp.add("country", "us")
     assert len(sp) == 4
-    assert sp.checksum() == "c3aec8e1fcd86bc55171917db7c993d6f3ad5fe0"
+    idstmt = list(sp.statements)[-1]
+    assert idstmt.value == "c3aec8e1fcd86bc55171917db7c993d6f3ad5fe0"
     sp.add("country", {"gb"})
     assert len(sp) == 5
     sp.add("country", ("gb", "us"))
@@ -63,10 +65,12 @@ def test_example_entity():
     assert len(sp) == 4
     data = sp.to_dict()
     assert data["id"] == sp.id, data
+    idstmt = list(sp.statements)[-1]
     so = sp.clone()
     assert so.id == sp.id
     assert so.dataset == sp.dataset
-    assert so.checksum() == sp.checksum()
+    idstmt2 = list(so.statements)[-1]
+    assert idstmt.value == idstmt2.value
 
     sx = CompositeEntity.from_statements(dx, sp.statements)
     assert sx.id == sp.id
