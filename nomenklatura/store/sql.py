@@ -8,7 +8,6 @@ from nomenklatura.dataset import DS
 from nomenklatura.db import (
     DB_URL,
     POOL_SIZE,
-    ensure_tx,
     get_metadata,
     get_statement_table,
     get_upsert_func,
@@ -42,7 +41,7 @@ class SqlStore(Store[DS, CE]):
         return SqlView(self, scope, external=external)
 
     def _iterate_stmts(self, q: Select) -> Generator[Statement, None, None]:
-        with ensure_tx(self.engine.connect()) as conn:
+        with self.engine.connect() as conn:
             conn = conn.execution_options(stream_results=True)
             cursor = conn.execute(q)
             while rows := cursor.fetchmany(10_000):
@@ -94,7 +93,8 @@ class SqlWriter(Writer[DS, CE]):
                     last_seen=istmt.excluded.last_seen,
                 ),
             )
-            with ensure_tx(self.store.engine.connect()) as conn:
+            with self.store.engine.connect() as conn:
+                conn.begin()
                 conn.execute(stmt)
                 conn.commit()
         self.batch = set()
@@ -118,7 +118,8 @@ class SqlWriter(Writer[DS, CE]):
         q = select(table).where(table.c.entity_id == entity_id)
         q_delete = delete(table).where(table.c.entity_id == entity_id)
         statements: List[Statement] = list(self.store._iterate_stmts(q))
-        with ensure_tx(self.store.engine.connect()) as conn:
+        with self.store.engine.connect() as conn:
+            conn.begin()
             conn.execute(q_delete)
             conn.commit()
         return statements
