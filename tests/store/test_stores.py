@@ -49,6 +49,8 @@ def _run_store_test(
             proxy = CompositeEntity.from_data(dataset, data)
             bulk.add_entity(proxy)
 
+    proxies = [e for e in view.entities()]
+    assert len(proxies) == len(donations_json)
     entity = view.get_entity(entity.id)
     assert entity.caption == "Tchibo Holding AG"
     return True
