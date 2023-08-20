@@ -106,6 +106,7 @@ class SqlWriter(Writer[DS, CE]):
             )
             with ensure_tx(self.store.engine.connect()) as conn:
                 conn.execute(stmt)
+                conn.commit()
         self.batch = set()
         self.batch_size = 0
 
@@ -129,6 +130,7 @@ class SqlWriter(Writer[DS, CE]):
         statements: List[Statement] = list(self.store._iterate_stmts(q))
         with ensure_tx(self.store.engine.connect()) as conn:
             conn.execute(q_delete)
+            conn.commit()
         return statements
 
 

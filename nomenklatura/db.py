@@ -38,16 +38,12 @@ def get_statement_table() -> Table:
 
 @contextmanager
 def ensure_tx(conn: Connish = None) -> Generator[Connection, None, None]:
-    try:
-        if conn is not None:
-            yield conn
-        else:
-            engine = get_engine()
-            with engine.begin() as conn:
-                yield conn
-    finally:
-        if conn is not None:
-            conn.commit()
+    if conn is not None:
+        yield conn
+        return
+    engine = get_engine()
+    with engine.begin() as conn:
+        yield conn
 
 
 @cache
