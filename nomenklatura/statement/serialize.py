@@ -1,11 +1,12 @@
 import csv
+from io import TextIOWrapper
+from pathlib import Path
+from types import TracebackType
+from typing import Any, BinaryIO, Dict, Generator, Iterable, List, Optional, Type
+
 import click
 import orjson
-from pathlib import Path
-from io import TextIOWrapper
-from types import TracebackType
-from typing import Optional, Dict, Any, List
-from typing import BinaryIO, Generator, Iterable, Type
+from banal import as_bool
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
@@ -136,6 +137,13 @@ def pack_statement(stmt: S) -> Dict[str, Any]:
         raise ValueError("Cannot pack statement without prop and schema")
     row["prop"] = pack_prop(schema, prop)
     return row
+
+
+def pack_sql_statement(stmt: S) -> Dict[str, Any]:
+    data: Dict[str, Any] = stmt.to_row()
+    data["target"] = as_bool(data["target"])
+    data["external"] = as_bool(data["external"])
+    return data
 
 
 def get_statement_writer(fh: BinaryIO, format: str) -> "StatementWriter":

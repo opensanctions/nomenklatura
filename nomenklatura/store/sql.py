@@ -1,6 +1,5 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
-from banal import as_bool
 from followthemoney.property import Property
 from sqlalchemy import Table, create_engine, delete, select
 from sqlalchemy.sql.selectable import Select
@@ -17,14 +16,8 @@ from nomenklatura.db import (
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
 from nomenklatura.statement import Statement
+from nomenklatura.statement.serialize import pack_sql_statement
 from nomenklatura.store import Store, View, Writer
-
-
-def pack_statement(stmt: Statement) -> dict[str, Any]:
-    data: dict[str, Any] = stmt.to_row()
-    data["target"] = as_bool(data["target"])
-    data["external"] = as_bool(data["external"])
-    return data
 
 
 class SqlStore(Store[DS, CE]):
@@ -87,7 +80,7 @@ class SqlWriter(Writer[DS, CE]):
 
     def flush(self) -> None:
         if self.batch:
-            values = [pack_statement(s) for s in self.batch]
+            values = [pack_sql_statement(s) for s in self.batch]
             istmt = self.insert(self.store.table).values(values)
             stmt = istmt.on_conflict_do_update(
                 index_elements=["id"],
