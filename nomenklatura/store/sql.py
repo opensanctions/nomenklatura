@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Generator, List, Optional, Set, Tuple
 
 from banal import as_bool
@@ -25,8 +24,6 @@ def pack_statement(stmt: Statement) -> dict[str, Any]:
     data: dict[str, Any] = stmt.to_row()
     data["target"] = as_bool(data["target"])
     data["external"] = as_bool(data["external"])
-    data["first_seen"] = data["first_seen"] or datetime.utcnow()
-    data["last_seen"] = data["last_seen"] or datetime.utcnow()
     return data
 
 

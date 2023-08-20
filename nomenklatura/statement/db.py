@@ -20,6 +20,6 @@ def make_statement_table(metadata: MetaData, name: str = "statement") -> Table:
         Column("lang", Unicode(KEY_LEN), nullable=True),
         Column("target", Boolean, default=False, nullable=False),
         Column("external", Boolean, default=False, nullable=False),
-        Column("first_seen", DateTime, nullable=False),
-        Column("last_seen", DateTime, index=True),
+        Column("first_seen", DateTime, nullable=True),
+        Column("last_seen", DateTime, index=True, nullable=True),
     )
