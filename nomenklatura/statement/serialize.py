@@ -10,7 +10,7 @@ from banal import as_bool
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
-from nomenklatura.util import pack_prop, unpack_prop
+from nomenklatura.util import iso_datetime, pack_prop, unpack_prop
 
 JSON = "json"
 CSV = "csv"
@@ -143,6 +143,8 @@ def pack_sql_statement(stmt: S) -> Dict[str, Any]:
     data: Dict[str, Any] = stmt.to_row()
     data["target"] = as_bool(data["target"])
     data["external"] = as_bool(data["external"])
+    data["first_seen"] = iso_datetime(data.get("first_seen"))
+    data["last_seen"] = iso_datetime(data.get("last_seen"))
     return data
 
 
