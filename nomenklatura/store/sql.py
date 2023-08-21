@@ -134,7 +134,7 @@ class SqlView(View[DS, CE]):
 
     def get_entity(self, id: str) -> Optional[CE]:
         table = self.store.table
-        ids = [i.id for i in self.store.resolver.connected(id)]
+        ids = [str(i) for i in self.store.resolver.connected(id)]
         q = select(table).where(
             table.c.entity_id.in_(ids), table.c.dataset.in_(self.dataset_names)
         )
