@@ -40,18 +40,27 @@ class SqlStore(Store[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
         return SqlView(self, scope, external=external)
 
-    def _iterate_stmts(self, q: Select) -> Generator[Statement, None, None]:
+    def _execute(self, q: Select, many: bool = True) -> Generator[Any, None, None]:
+        # execute any read query against sql backend
         with self.engine.connect() as conn:
-            conn = conn.execution_options(stream_results=True)
-            cursor = conn.execute(q)
-            while rows := cursor.fetchmany(10_000):
-                for row in rows:
-                    yield Statement.from_db_row(row)
+            if many:
+                conn = conn.execution_options(stream_results=True)
+                cursor = conn.execute(q)
+                while rows := cursor.fetchmany(10_000):
+                    yield from rows
+            else:
+                yield from conn.execute(q)
 
-    def _iterate(self, q: Select) -> Generator[CE, None, None]:
+    def _iterate_stmts(
+        self, q: Select, many: bool = True
+    ) -> Generator[Statement, None, None]:
+        for row in self._execute(q, many=many):
+            yield Statement.from_db_row(row)
+
+    def _iterate(self, q: Select, many: bool = True) -> Generator[CE, None, None]:
         current_id = None
         current_stmts: list[Statement] = []
-        for stmt in self._iterate_stmts(q):
+        for stmt in self._iterate_stmts(q, many=many):
             entity_id = stmt.entity_id
             if current_id is None:
                 current_id = entity_id
@@ -138,7 +147,7 @@ class SqlView(View[DS, CE]):
         q = select(table).where(
             table.c.entity_id.in_(ids), table.c.dataset.in_(self.dataset_names)
         )
-        for proxy in self.store._iterate(q):
+        for proxy in self.store._iterate(q, many=False):
             return proxy
         return None
 
