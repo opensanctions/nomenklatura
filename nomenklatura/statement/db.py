@@ -10,7 +10,7 @@ def make_statement_table(metadata: MetaData, name: str = "statement") -> Table:
         metadata,
         Column("id", Unicode(KEY_LEN), primary_key=True, unique=True),
         Column("entity_id", Unicode(KEY_LEN), index=True, nullable=False),
-        Column("canonical_id", Unicode(KEY_LEN), index=True, nullable=True),
+        Column("canonical_id", Unicode(KEY_LEN), index=True, nullable=False),
         Column("prop", Unicode(KEY_LEN), index=True, nullable=False),
         Column("prop_type", Unicode(KEY_LEN), index=True, nullable=False),
         Column("schema", Unicode(KEY_LEN), index=True, nullable=False),

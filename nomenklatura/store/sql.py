@@ -171,6 +171,6 @@ class SqlView(View[DS, CE]):
         q = (
             select(table)
             .where(table.c.dataset.in_(self.dataset_names))
-            .order_by("entity_id")
+            .order_by("canonical_id")
         )
         yield from self.store._iterate(q)
