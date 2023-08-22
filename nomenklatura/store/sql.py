@@ -83,7 +83,6 @@ class SqlWriter(Writer[DS, CE]):
     def __init__(self, store: SqlStore[DS, CE]):
         self.store: SqlStore[DS, CE] = store
         self.batch: Optional[Set[Statement]] = None
-        self.batch_size = 0
         self.insert = get_upsert_func(self.store.engine)
 
     def flush(self) -> None:
@@ -107,19 +106,17 @@ class SqlWriter(Writer[DS, CE]):
                 conn.execute(stmt)
                 conn.commit()
         self.batch = set()
-        self.batch_size = 0
 
     def add_statement(self, stmt: Statement) -> None:
         if self.batch is None:
             self.batch = set()
         if stmt.entity_id is None:
             return
-        if self.batch_size >= self.BATCH_STATEMENTS:
+        if len(self.batch) >= self.BATCH_STATEMENTS:
             self.flush()
         canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
         self.batch.add(stmt)
-        self.batch_size += 1
 
     def pop(self, entity_id: str) -> List[Statement]:
         self.flush()
