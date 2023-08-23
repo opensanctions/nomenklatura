@@ -12,7 +12,9 @@ from nomenklatura.store import LevelDBStore, SimpleMemoryStore, SqlStore, Store
 
 
 def _run_store_test(
-    store: Store, dataset: Dataset, donations_json: List[Dict[str, Any]]
+    store: Store[Dataset, CompositeEntity],
+    dataset: Dataset,
+    donations_json: List[Dict[str, Any]],
 ):
     with store.writer() as bulk:
         for data in donations_json:
@@ -24,6 +26,7 @@ def _run_store_test(
     assert len(proxies) == len(donations_json)
 
     entity = view.get_entity("4e0bd810e1fcb49990a2b31709b6140c4c9139c5")
+    assert entity is not None
     assert entity.caption == "Tchibo Holding AG"
 
     tested = False
@@ -40,6 +43,7 @@ def _run_store_test(
 
     writer = store.writer()
     stmts = writer.pop(entity.id)
+    writer.flush()
     assert len(stmts) == len(list(entity.statements))
     assert view.get_entity(entity.id) is None
 

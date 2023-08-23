@@ -4,7 +4,8 @@ from typing import cast, TYPE_CHECKING
 from typing import Any, Dict, Generator, Optional, Type, TypeVar
 from typing_extensions import TypedDict
 
-from nomenklatura.util import bool_text, datetime_iso, text_bool
+from nomenklatura.util import iso_datetime, datetime_iso
+from nomenklatura.util import bool_text, text_bool
 from nomenklatura.util import get_prop_type, BASE_ID
 
 if TYPE_CHECKING:
@@ -113,15 +114,17 @@ class Statement(object):
             "id": self.id,
         }
 
-    def to_row(self) -> Dict[str, Optional[str]]:
-        data = cast(Dict[str, str], self.to_dict())
-        return {
-            **data,
-            "first_seen": self.first_seen,
-            "last_seen": self.last_seen,
-            "target": bool_text(self.target),
-            "external": bool_text(self.external),
-        }
+    def to_csv_row(self) -> Dict[str, Optional[str]]:
+        data = cast(Dict[str, Optional[str]], self.to_dict())
+        data["target"] = bool_text(self.target)
+        data["external"] = bool_text(self.external)
+        return data
+
+    def to_db_row(self) -> Dict[str, Any]:
+        data = cast(Dict[str, Any], self.to_dict())
+        data["first_seen"] = iso_datetime(self.first_seen)
+        data["last_seen"] = iso_datetime(self.last_seen)
+        return data
 
     def __hash__(self) -> int:
         return hash(self.id)

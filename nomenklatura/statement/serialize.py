@@ -2,15 +2,14 @@ import csv
 from io import TextIOWrapper
 from pathlib import Path
 from types import TracebackType
-from typing import Any, BinaryIO, Dict, Generator, Iterable, List, Optional, Type
+from typing import BinaryIO, Generator, Iterable, List, Optional, Type
 
 import click
 import orjson
-from banal import as_bool
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
-from nomenklatura.util import iso_datetime, pack_prop, unpack_prop
+from nomenklatura.util import pack_prop, unpack_prop
 
 JSON = "json"
 CSV = "csv"
@@ -107,47 +106,6 @@ def read_path_statements(
         yield from read_statements(fh, format=format, statement_type=statement_type)
 
 
-# def write_json_statement(fh: BinaryIO, statement: S) -> None:
-#     data = statement.to_dict()
-#     out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
-#     fh.write(out)
-
-
-# def write_json_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-#     for stmt in statements:
-#         write_json_statement(fh, stmt)
-
-
-# def write_csv_statements(fh: BinaryIO, statements: Iterable[S]) -> None:
-#     with TextIOWrapper(fh, encoding="utf-8") as wrapped:
-#         writer = csv.writer(wrapped, dialect=csv.unix_dialect)
-#         writer.writerow(CSV_COLUMNS)
-#         for stmt in statements:
-#             row = stmt.to_row()
-#             writer.writerow([row.get(c) for c in CSV_COLUMNS])
-
-
-def pack_statement(stmt: S) -> Dict[str, Any]:
-    row = stmt.to_row()
-    row.pop("canonical_id", None)
-    row.pop("prop_type", None)
-    prop = row.pop("prop")
-    schema = row.pop("schema")
-    if prop is None or schema is None:
-        raise ValueError("Cannot pack statement without prop and schema")
-    row["prop"] = pack_prop(schema, prop)
-    return row
-
-
-def pack_sql_statement(stmt: S) -> Dict[str, Any]:
-    data: Dict[str, Any] = stmt.to_row()
-    data["target"] = as_bool(data["target"])
-    data["external"] = as_bool(data["external"])
-    data["first_seen"] = iso_datetime(data.get("first_seen"))
-    data["last_seen"] = iso_datetime(data.get("last_seen"))
-    return data
-
-
 def get_statement_writer(fh: BinaryIO, format: str) -> "StatementWriter":
     if format == CSV:
         return CSVStatementWriter(fh)
@@ -201,7 +159,7 @@ class CSVStatementWriter(StatementWriter):
         self.writer.writerow(CSV_COLUMNS)
 
     def write(self, stmt: S) -> None:
-        row = stmt.to_row()
+        row = stmt.to_csv_row()
         self.writer.writerow([row.get(c) for c in CSV_COLUMNS])
 
     def close(self) -> None:
@@ -220,7 +178,7 @@ class PackStatementWriter(StatementWriter):
         )
 
     def write(self, stmt: S) -> None:
-        row = stmt.to_row()
+        row = stmt.to_csv_row()
         prop = row.pop("prop")
         schema = row.pop("schema")
         if prop is None or schema is None:

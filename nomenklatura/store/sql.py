@@ -12,7 +12,6 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
 from nomenklatura.statement import Statement
 from nomenklatura.statement.db import make_statement_table
-from nomenklatura.statement.serialize import pack_sql_statement
 from nomenklatura.store import Store, View, Writer
 
 
@@ -38,27 +37,25 @@ class SqlStore(Store[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
         return SqlView(self, scope, external=external)
 
-    def _execute(self, q: Select, many: bool = True) -> Generator[Any, None, None]:
+    def _execute(self, q: Select, stream: bool = True) -> Generator[Any, None, None]:
         # execute any read query against sql backend
         with self.engine.connect() as conn:
-            if many:
+            if stream:
                 conn = conn.execution_options(stream_results=True)
-                cursor = conn.execute(q)
-                while rows := cursor.fetchmany(10_000):
-                    yield from rows
-            else:
-                yield from conn.execute(q)
+            cursor = conn.execute(q)
+            while rows := cursor.fetchmany(10_000):
+                yield from rows
 
     def _iterate_stmts(
-        self, q: Select, many: bool = True
+        self, q: Select, stream: bool = True
     ) -> Generator[Statement, None, None]:
-        for row in self._execute(q, many=many):
+        for row in self._execute(q, stream=stream):
             yield Statement.from_db_row(row)
 
-    def _iterate(self, q: Select, many: bool = True) -> Generator[CE, None, None]:
+    def _iterate(self, q: Select, stream: bool = True) -> Generator[CE, None, None]:
         current_id = None
         current_stmts: list[Statement] = []
-        for stmt in self._iterate_stmts(q, many=many):
+        for stmt in self._iterate_stmts(q, stream=stream):
             entity_id = stmt.entity_id
             if current_id is None:
                 current_id = entity_id
@@ -81,12 +78,12 @@ class SqlWriter(Writer[DS, CE]):
     def __init__(self, store: SqlStore[DS, CE]):
         self.store: SqlStore[DS, CE] = store
         self.batch: Optional[Set[Statement]] = None
-        self.insert = get_upsert_func(self.store.engine)
+        self.upsert = get_upsert_func(self.store.engine)
 
     def flush(self) -> None:
         if self.batch:
-            values = [pack_sql_statement(s) for s in self.batch]
-            istmt = self.insert(self.store.table).values(values)
+            values = [s.to_db_row() for s in self.batch]
+            istmt = self.upsert(self.store.table).values(values)
             stmt = istmt.on_conflict_do_update(
                 index_elements=["id"],
                 set_=dict(
@@ -140,7 +137,7 @@ class SqlView(View[DS, CE]):
         q = select(table).where(
             table.c.entity_id.in_(ids), table.c.dataset.in_(self.dataset_names)
         )
-        for proxy in self.store._iterate(q, many=False):
+        for proxy in self.store._iterate(q, stream=False):
             return proxy
         return None
 

@@ -91,7 +91,6 @@ class LevelDBWriter(Writer[DS, CE]):
             key = f"e:{entity_id}:{dataset}".encode("utf-8")
             self.batch.delete(key)
 
-        self.flush()
         return list(statements)
 
 
