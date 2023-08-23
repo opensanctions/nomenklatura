@@ -2,8 +2,8 @@ from typing import Any, Generator, List, Optional, Set, Tuple
 
 from followthemoney.property import Property
 from sqlalchemy import Table, delete, select
+from sqlalchemy.engine import Engine, Transaction, create_engine
 from sqlalchemy.sql.selectable import Select
-from sqlalchemy.engine import create_engine, Engine, Transaction
 
 from nomenklatura import settings
 from nomenklatura.dataset import DS
@@ -46,11 +46,16 @@ class SQLStore(Store[DS, CE]):
             while rows := cursor.fetchmany(10_000):
                 yield from rows
 
+    def _iterate_stmts(
+        self, q: Select, stream: bool = True
+    ) -> Generator[Statement, None, None]:
+        for row in self._execute(q, stream=stream):
+            yield Statement.from_db_row(row)
+
     def _iterate(self, q: Select, stream: bool = True) -> Generator[CE, None, None]:
         current_id = None
         current_stmts: list[Statement] = []
-        for row in self._execute(q, stream=stream):
-            stmt = Statement.from_db_row(row)
+        for stmt in self._iterate_stmts(q, stream=stream):
             entity_id = stmt.entity_id
             if current_id is None:
                 current_id = entity_id
