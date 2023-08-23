@@ -1,16 +1,8 @@
 import logging
 from typing import Any, Iterable, List, Mapping
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    MetaData,
-    Table,
-    Unicode,
-    delete,
-    insert,
-)
+from sqlalchemy import Boolean, Column, DateTime, MetaData, Table, Unicode
+from sqlalchemy import delete, insert
 from sqlalchemy.engine import Engine
 
 from nomenklatura import settings
@@ -22,7 +14,8 @@ VALUE_LEN = 65535
 
 
 def make_statement_table(
-    metadata: MetaData, name: str = settings.STATEMENT_TABLE
+    metadata: MetaData,
+    name: str = settings.STATEMENT_TABLE,
 ) -> Table:
     return Table(
         name,
