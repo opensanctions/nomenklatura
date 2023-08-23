@@ -15,8 +15,8 @@ Connish = Optional[Connection]
 
 
 @cache
-def get_engine() -> Engine:
-    return create_engine(settings.DB_URL, pool_size=settings.DB_POOL_SIZE)
+def get_engine(url: str = settings.DB_URL) -> Engine:
+    return create_engine(url, pool_size=settings.DB_POOL_SIZE)
 
 
 @cache

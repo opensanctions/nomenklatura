@@ -8,6 +8,9 @@ from nomenklatura.statement import write_statements, read_statements
 from nomenklatura.statement import read_path_statements
 from nomenklatura.statement.statement import Statement
 from nomenklatura.statement.serialize import CSV, JSON, PACK
+from nomenklatura.statement.serialize import JSONStatementWriter
+from nomenklatura.statement.serialize import CSVStatementWriter
+from nomenklatura.statement.serialize import PackStatementWriter
 
 
 EXAMPLE = {
@@ -18,17 +21,17 @@ EXAMPLE = {
 
 
 def test_json_statements():
-    buffer = BytesIO()
-    entity = CompositeEntity.from_data(DefaultDataset, EXAMPLE)
-
-    write_statements(buffer, JSON, entity.statements)
-    buffer.seek(0)
-    stmts = list(read_statements(buffer, JSON, Statement))
-    assert len(stmts) == 3
-    for stmt in stmts:
-        assert stmt.canonical_id == "bla", stmt
-        assert stmt.entity_id == "bla", stmt
-        assert stmt.schema == "Person", stmt
+    with TemporaryDirectory() as tmpdir:
+        entity = CompositeEntity.from_data(DefaultDataset, EXAMPLE)
+        path = Path(tmpdir) / "statement.json"
+        with open(path, "wb") as fh:
+            write_statements(fh, JSON, entity.statements)
+        stmts = list(read_path_statements(path, JSON, Statement))
+        assert len(stmts) == 3
+        for stmt in stmts:
+            assert stmt.canonical_id == "bla", stmt
+            assert stmt.entity_id == "bla", stmt
+            assert stmt.schema == "Person", stmt
 
 
 def test_csv_statements():

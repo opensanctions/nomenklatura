@@ -2,12 +2,16 @@ import json
 import yaml
 import pytest
 from pathlib import Path
+from tempfile import mkdtemp
 
+from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.dataset import Dataset
 from nomenklatura.index import Index
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
+WORK_PATH = mkdtemp()
+settings.DB_URL = f"sqlite:///{WORK_PATH}/nk.sqlite3"
 
 
 @pytest.fixture(scope="module")

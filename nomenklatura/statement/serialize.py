@@ -120,6 +120,7 @@ def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None
     writer = get_statement_writer(fh, format)
     for stmt in statements:
         writer.write(stmt)
+    writer.close()
 
 
 class StatementWriter(object):
