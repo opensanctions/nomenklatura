@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
-from nomenklatura.store import LevelDBStore, SimpleMemoryStore, SqlStore, Store
+from nomenklatura.store import LevelDBStore, SimpleMemoryStore, SQLStore, Store
 
 
 def _run_store_test(
@@ -65,7 +65,7 @@ def test_store_sql(
 ):
     resolver = Resolver[CompositeEntity]()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
-    store = SqlStore(dataset=test_dataset, resolver=resolver, uri=uri)
+    store = SQLStore(dataset=test_dataset, resolver=resolver, uri=uri)
     assert str(store.engine.url) == uri
     assert _run_store_test(store, test_dataset, donations_json)
 
