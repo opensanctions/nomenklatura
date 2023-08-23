@@ -1,16 +1,12 @@
-from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CompositeEntity
-from nomenklatura.statement import write_statements, read_statements
+from nomenklatura.statement import write_statements
 from nomenklatura.statement import read_path_statements
 from nomenklatura.statement.statement import Statement
 from nomenklatura.statement.serialize import CSV, JSON, PACK
-from nomenklatura.statement.serialize import JSONStatementWriter
-from nomenklatura.statement.serialize import CSVStatementWriter
-from nomenklatura.statement.serialize import PackStatementWriter
 
 
 EXAMPLE = {
