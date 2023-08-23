@@ -1,12 +1,15 @@
-import orjson
 from pathlib import Path
 from typing import Optional
 
-from nomenklatura.store.base import Store, Writer, View
-from nomenklatura.store.memory import MemoryStore
-from nomenklatura.resolver import Resolver
+import orjson
+
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
+from nomenklatura.resolver import Resolver
+from nomenklatura.store.base import Store, View, Writer
+from nomenklatura.store.level import LevelDBStore
+from nomenklatura.store.memory import MemoryStore
+from nomenklatura.store.sql import SqlStore
 
 SimpleMemoryStore = MemoryStore[Dataset, CompositeEntity]
 
@@ -14,8 +17,10 @@ __all__ = [
     "Store",
     "Writer",
     "View",
+    "LevelDBStore",
     "MemoryStore",
     "SimpleMemoryStore",
+    "SqlStore",
     "load_entity_file_store",
 ]
 
