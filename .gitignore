@@ -4,7 +4,6 @@
 *.egg-info
 _store/*
 .env
-settings.py
 .mypy_cache
 tests/fixtures/donations.frag.ijson
 tests/fixtures/donations.rslv.ijson

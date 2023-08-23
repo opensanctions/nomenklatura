@@ -1,20 +1,17 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
 from followthemoney.property import Property
-from sqlalchemy import Table, create_engine, delete, select
+from sqlalchemy import Table, delete, select
 from sqlalchemy.sql.selectable import Select
+from sqlalchemy.engine import create_engine, Engine
 
+from nomenklatura import settings
 from nomenklatura.dataset import DS
-from nomenklatura.db import (
-    DB_URL,
-    POOL_SIZE,
-    get_metadata,
-    get_statement_table,
-    get_upsert_func,
-)
+from nomenklatura.db import get_metadata, get_upsert_func
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
 from nomenklatura.statement import Statement
+from nomenklatura.statement.db import make_statement_table
 from nomenklatura.statement.serialize import pack_sql_statement
 from nomenklatura.store import Store, View, Writer
 
@@ -24,15 +21,16 @@ class SqlStore(Store[DS, CE]):
         self,
         dataset: DS,
         resolver: Resolver[CE],
-        uri: str = DB_URL,
+        uri: str = settings.DB_URL,
         **engine_kwargs: Any,
     ):
         super().__init__(dataset, resolver)
-        engine_kwargs["pool_size"] = engine_kwargs.pop("pool_size", POOL_SIZE)
-        self.metadata = get_metadata()
-        self.engine = create_engine(uri, **engine_kwargs)
-        self.table = get_statement_table()
-        self.metadata.create_all(self.engine, tables=[self.table], checkfirst=True)
+        if "pool_size" not in engine_kwargs:
+            engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+        metadata = get_metadata()
+        self.engine: Engine = create_engine(uri, **engine_kwargs)
+        self.table = make_statement_table(metadata)
+        metadata.create_all(self.engine, tables=[self.table], checkfirst=True)
 
     def writer(self) -> Writer[DS, CE]:
         return SqlWriter(self)
@@ -101,10 +99,8 @@ class SqlWriter(Writer[DS, CE]):
                     last_seen=istmt.excluded.last_seen,
                 ),
             )
-            with self.store.engine.connect() as conn:
-                conn.begin()
+            with self.store.engine.begin() as conn:
                 conn.execute(stmt)
-                conn.commit()
         self.batch = set()
 
     def add_statement(self, stmt: Statement) -> None:
