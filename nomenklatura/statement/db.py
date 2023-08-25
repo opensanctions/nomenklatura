@@ -63,3 +63,13 @@ def insert_dataset(
         if len(batch):
             conn.execute(table.insert().values(batch))
         log.info("Load complete: %r (%d total)" % (dataset_name, dataset_count))
+
+
+# TODO: consider offering a COPY-based loader:
+# raw_conn = await conn.get_raw_connection()
+# driver_conn: Connection = raw_conn.driver_connection
+# result = await driver_conn.copy_records_to_table(
+#     stmt_table.name,
+#     records=load_data_rows(),
+#     columns=COLUMNS,
+# )
