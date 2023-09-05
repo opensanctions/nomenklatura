@@ -37,8 +37,10 @@ def ensure_tx(conn: Connish = None) -> Generator[Connection, None, None]:
 def get_upsert_func(
     engine: Engine,
 ) -> Union[sqlite_insert, mysql_insert, psql_insert]:
-    if engine.name == "sqlite":
+    if engine.dialect.name == "sqlite":
         return sqlite_insert
-    if engine.name == "mysql":
+    if engine.dialect.name == "mysql":
         return mysql_insert
-    return psql_insert
+    if engine.dialect.name == "postgres":
+        return psql_insert
+    raise RuntimeError("Unsupported database engine.")

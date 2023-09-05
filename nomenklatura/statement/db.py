@@ -2,11 +2,12 @@ import logging
 from typing import Any, Iterable, List, Mapping
 
 from sqlalchemy import Boolean, Column, DateTime, MetaData, Table, Unicode
-from sqlalchemy import delete, insert
+from sqlalchemy import delete
 from sqlalchemy.engine import Engine
 
 from nomenklatura import settings
 from nomenklatura.statement.statement import Statement
+from nomenklatura.db import get_upsert_func
 
 log = logging.getLogger(__name__)
 KEY_LEN = 255
@@ -46,6 +47,7 @@ def insert_dataset(
 ) -> None:
     dataset_count: int = 0
     is_postgresql = "postgres" in engine.dialect.name
+    insert_func = get_upsert_func(engine)
     with engine.begin() as conn:
         del_q = delete(table).where(table.c.dataset == dataset_name)
         conn.execute(del_q)
@@ -58,10 +60,14 @@ def insert_dataset(
             if len(batch) >= batch_size:
                 args = (len(batch), dataset_count, dataset_name)
                 log.info("Inserting batch %s statements (total: %s) into %r" % args)
-                conn.execute(insert(table).values(batch))
+                istmt = insert_func(table).values(batch)
+                istmt = istmt.on_conflict_do_nothing(index_elements=["id"])
+                conn.execute(istmt)
                 batch = []
         if len(batch):
-            conn.execute(table.insert().values(batch))
+            istmt = insert_func(table).values(batch)
+            istmt = istmt.on_conflict_do_nothing(index_elements=["id"])
+            conn.execute(istmt)
         log.info("Load complete: %r (%d total)" % (dataset_name, dataset_count))
 
 
