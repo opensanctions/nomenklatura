@@ -51,7 +51,7 @@ class OpenCorporatesEnricher(Enricher):
                 resp.raise_for_status()
             except RequestException as rex:
                 if rex.response is not None:
-                    if rex.response.status_code == 403:
+                    if rex.response.status_code in (403, 429):
                         log.info("OpenCorporates quota exceeded; using only cache now.")
                         self.quota_exceeded = True
                         return None
