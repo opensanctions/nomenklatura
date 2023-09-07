@@ -1,5 +1,4 @@
 from typing import Dict, List
-from nomenklatura.matching.types import ScoringAlgorithm
 from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.heuristic.feature import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch

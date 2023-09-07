@@ -17,6 +17,8 @@ def orgid_disjoint(left: E, right: E) -> float:
     if not has_schema(left, right, "Organization"):
         return 0.0
     left_ids, right_ids = type_pair(left, right, registry.identifier)
+    if not len(left_ids) or not len(right_ids):
+        return 0.0
     return 1 - compare_sets(left_ids, right_ids, _nq_compare_identifiers)
 
 
