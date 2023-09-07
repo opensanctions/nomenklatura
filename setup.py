@@ -27,9 +27,10 @@ setup(
         "rich >= 10.9.0, < 14.0.0",
         "textual >= 0.19.0, < 1.0.0",
         "scikit-learn == 1.3.0",
-        "python-stdnum == 1.19",
+        "python-stdnum >= 1.19, < 2.0",
+        "pydantic > 2.0.0, < 3.0.0",
         "click < 9.0.0",
-        "plyvel",
+        "plyvel < 2.0.0",
     ],
     tests_require=[],
     entry_points={
