@@ -4,22 +4,6 @@ from typing import Iterable, Set, Tuple
 from nomenklatura.util import normalize_name, levenshtein
 
 
-def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
-    """Returns 1.0 if there is any overlap between the iterables, else 0.0."""
-    if len(set(left).intersection(right)) > 0:
-        return 1.0
-    return 0.0
-
-
-def has_overlap(left: Set[str], right: Set[str]) -> float:
-    """Returns 1.0 if both sequences overlap, -1.0 if they're non-empty but disjoint."""
-    if not len(left) or not len(right):
-        return 0.0
-    if set(left).isdisjoint(right):
-        return -1.0
-    return 1.0
-
-
 def compare_levenshtein(left: str, right: str) -> float:
     distance = levenshtein(left, right)
     base = max((1, len(left), len(right)))

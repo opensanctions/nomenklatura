@@ -2,11 +2,10 @@ from typing import Iterable, Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import has_overlap
 from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
+from nomenklatura.matching.compare.util import is_disjoint, has_overlap
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
 from nomenklatura.matching.util import compare_sets
-from nomenklatura.matching.compare.util import is_disjoint
 from nomenklatura.util import fingerprint_name
 
 
@@ -30,13 +29,13 @@ def name_levenshtein(left: E, right: E) -> float:
 def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["firstName"]))
-    return has_overlap(lv, rv)
+    return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def family_name_match(left: E, right: E) -> float:
     """Matching family name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["lastName"]))
-    return has_overlap(lv, rv)
+    return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def name_match(left: E, right: E) -> float:

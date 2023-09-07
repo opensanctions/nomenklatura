@@ -1,8 +1,8 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v2.util import has_overlap, tokenize
-from nomenklatura.matching.v2.util import compare_levenshtein
+from nomenklatura.matching.v2.util import tokenize, compare_levenshtein
+from nomenklatura.matching.compare.util import has_overlap
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
 from nomenklatura.matching.util import compare_sets, has_schema
 from nomenklatura.util import normalize_name
@@ -41,7 +41,7 @@ def identifier_match(left: E, right: E) -> float:
     if has_schema(left, right, "Organization"):
         return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(rv, lv) else 0.0
 
 
 def org_identifier_match(left: E, right: E) -> float:
@@ -50,4 +50,4 @@ def org_identifier_match(left: E, right: E) -> float:
     if not has_schema(left, right, "Organization"):
         return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(lv, rv) else 0.0
