@@ -2,7 +2,7 @@ from typing import List
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from jellyfish import soundex, jaro_winkler_similarity
-from nomenklatura.util import name_words, levenshtein
+from nomenklatura.util import name_words
 from nomenklatura.matching.util import type_pair
 
 
@@ -36,14 +36,3 @@ def jaro_name_parts(query: E, result: E) -> float:
 
         similiarities.append(best)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
-
-
-def compare_identifiers(left: str, right: str) -> float:
-    """Overly clever method for comparing tax and company identifiers."""
-    if min(len(left), len(right)) < 5:
-        return 0.0
-    if left in right or right in left:
-        return 1.0
-    distance = levenshtein(left, right)
-    ratio = 1.0 - (distance / float(max(len(left), len(right))))
-    return ratio if ratio > 0.7 else 0.0

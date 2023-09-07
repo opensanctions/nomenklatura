@@ -40,6 +40,9 @@ class HeuristicAlgorithm(ScoringAlgorithm):
 
     @classmethod
     def compare(cls, query: E, match: E) -> MatchingResult:
+        if not query.schema.can_match(match.schema):
+            if not query.schema.name == match.schema.name:
+                return MatchingResult.make(0.0, {})
         feature_weights: Dict[str, float] = {}
         for feature in cls.features:
             feature_weights[feature.name] = feature.func(query, match)
