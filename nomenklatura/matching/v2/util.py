@@ -11,14 +11,6 @@ def has_intersection(left: Iterable[str], right: Iterable[str]) -> float:
     return 0.0
 
 
-def has_disjoint(left: Set[str], right: Set[str]) -> float:
-    """Returns 1.0 if both sequences are non-empty but have no common values."""
-    if len(left) and len(right):
-        if set(left).isdisjoint(right):
-            return 1.0
-    return 0.0
-
-
 def has_overlap(left: Set[str], right: Set[str]) -> float:
     """Returns 1.0 if both sequences overlap, -1.0 if they're non-empty but disjoint."""
     if not len(left) or not len(right):

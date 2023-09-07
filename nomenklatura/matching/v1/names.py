@@ -2,10 +2,11 @@ from typing import Iterable, Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import has_disjoint, has_overlap
+from nomenklatura.matching.v1.util import has_overlap
 from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
 from nomenklatura.matching.util import compare_sets
+from nomenklatura.matching.compare.util import is_disjoint
 from nomenklatura.util import fingerprint_name
 
 
@@ -60,4 +61,4 @@ def name_token_overlap(left: E, right: E) -> float:
 def name_numbers(left: E, right: E) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
-    return has_disjoint(extract_numbers(lv), extract_numbers(rv))
+    return 1.0 if is_disjoint(extract_numbers(lv), extract_numbers(rv)) else 0.0

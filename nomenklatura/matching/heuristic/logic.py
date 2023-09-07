@@ -1,4 +1,4 @@
-from typing import List, Set, Union
+from typing import List
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from jellyfish import soundex, jaro_winkler_similarity
@@ -36,17 +36,6 @@ def jaro_name_parts(query: E, result: E) -> float:
 
         similiarities.append(best)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
-
-
-def is_disjoint(
-    left: Union[Set[str], List[str]],
-    right: Union[Set[str], List[str]],
-) -> float:
-    """Returns 1.0 if both sequences are non-empty but have no common values."""
-    if len(left) and len(right):
-        if set(left).isdisjoint(right):
-            return True
-    return False
 
 
 def compare_identifiers(left: str, right: str) -> float:

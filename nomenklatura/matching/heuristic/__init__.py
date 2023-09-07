@@ -4,7 +4,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
 from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
-from nomenklatura.matching.heuristic.logic import is_disjoint, compare_identifiers
+from nomenklatura.matching.heuristic.logic import compare_identifiers
 from nomenklatura.matching.heuristic.feature import Feature, HeuristicAlgorithm
 from nomenklatura.matching.util import make_github_url, dates_precision
 from nomenklatura.matching.util import props_pair, type_pair, compare_sets

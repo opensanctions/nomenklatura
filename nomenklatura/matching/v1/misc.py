@@ -1,7 +1,7 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import has_disjoint, has_overlap
+from nomenklatura.matching.v1.util import has_overlap
 from nomenklatura.matching.v1.util import compare_levenshtein, tokenize_pair
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
 from nomenklatura.matching.util import compare_sets, has_schema
@@ -33,12 +33,6 @@ def address_numbers(left: E, right: E) -> float:
     return common - disjoint
 
 
-def gender_mismatch(left: E, right: E) -> float:
-    """Both entities have a different gender associated with them."""
-    lv, rv = props_pair(left, right, ["gender"])
-    return has_disjoint(lv, rv)
-
-
 def phone_match(left: E, right: E) -> float:
     """Matching phone numbers between the two entities."""
     lv, rv = type_pair(left, right, registry.phone)
@@ -67,9 +61,3 @@ def org_identifier_match(left: E, right: E) -> float:
         return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
     return has_overlap(set(lv), set(rv))
-
-
-def country_mismatch(left: E, right: E) -> float:
-    """Both entities are linked to different countries."""
-    lv, rv = type_pair(left, right, registry.country)
-    return has_disjoint(set(lv), set(rv))

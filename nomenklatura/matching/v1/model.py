@@ -12,8 +12,9 @@ from nomenklatura.matching.v1.names import name_token_overlap, name_numbers
 from nomenklatura.matching.v1.misc import phone_match, email_match
 from nomenklatura.matching.v1.misc import address_match, address_numbers
 from nomenklatura.matching.v1.misc import identifier_match, birth_place
-from nomenklatura.matching.v1.misc import gender_mismatch, country_mismatch
 from nomenklatura.matching.v1.misc import org_identifier_match
+from nomenklatura.matching.compare.countries import country_mismatch
+from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url

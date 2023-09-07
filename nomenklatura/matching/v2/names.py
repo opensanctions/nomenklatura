@@ -4,10 +4,11 @@ from jellyfish import soundex
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v2.util import has_disjoint, has_overlap
+from nomenklatura.matching.v2.util import has_overlap
 from nomenklatura.matching.v2.util import compare_levenshtein, tokenize
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.util import extract_numbers
+from nomenklatura.matching.compare.util import is_disjoint
 from nomenklatura.util import fingerprint_name
 
 
@@ -82,4 +83,4 @@ def name_part_soundex(left: E, right: E) -> float:
 def name_numbers(left: E, right: E) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
-    return has_disjoint(extract_numbers(lv), extract_numbers(rv))
+    return 1.0 if is_disjoint(extract_numbers(lv), extract_numbers(rv)) else 0.0
