@@ -3,7 +3,8 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from jellyfish import soundex, jaro_winkler_similarity
 from nomenklatura.util import name_words
-from nomenklatura.matching.util import type_pair
+from nomenklatura.matching.util import type_pair, props_pair
+from nomenklatura.matching.compare.util import is_disjoint
 
 
 def soundex_name_parts(query: E, result: E) -> float:
@@ -36,3 +37,11 @@ def jaro_name_parts(query: E, result: E) -> float:
 
         similiarities.append(best)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
+
+
+def last_name_mismatch(left: E, right: E) -> float:
+    """The two persons have different last names."""
+    lv, rv = props_pair(left, right, ["lastName"])
+    lvt = name_words(lv)
+    rvt = name_words(rv)
+    return 1.0 if is_disjoint(lvt, rvt) else 0.0

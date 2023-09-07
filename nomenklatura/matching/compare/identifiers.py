@@ -1,13 +1,24 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.util import type_pair, has_schema, compare_sets
+from nomenklatura.matching.util import type_pair, props_pair, has_schema, compare_sets
 from nomenklatura.util import levenshtein
 
 # def imo_match(left: E, right: E) -> float:
 #     """Matching IMO numbers between the two entities."""
 #     lv, rv = type_pair(left, right, registry.imo)
 #     return has_overlap(set(lv), set(rv))
+
+
+def crypto_wallet_address(left: E, right: E) -> float:
+    """Two cryptocurrency wallets have the same public key."""
+    if not has_schema(left, right, "CryptoWallet"):
+        pass
+    lv, rv = props_pair(left, right, ["publicKey"])
+    for key in lv.intersection(rv):
+        if len(key) > 10:
+            return 1.0
+    return 0.0
 
 
 def orgid_disjoint(left: E, right: E) -> float:

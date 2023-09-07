@@ -3,7 +3,7 @@ from nomenklatura.matching.v1.model import MatcherV1
 from nomenklatura.matching.v1.train import train_matcher as train_v1_matcher
 from nomenklatura.matching.v2.model import MatcherV2
 from nomenklatura.matching.v2.train import train_matcher as train_v2_matcher
-from nomenklatura.matching.heuristic import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.heuristic import NameMatcher, NameQualifiedMatcher, LogicV1
 from nomenklatura.matching.types import ScoringAlgorithm
 
 ALGORITHMS: List[Type[ScoringAlgorithm]] = [
@@ -11,6 +11,7 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     MatcherV2,
     NameMatcher,
     NameQualifiedMatcher,
+    LogicV1,
 ]
 
 DefaultAlgorithm = MatcherV2
@@ -31,6 +32,7 @@ __all__ = [
     "train_v2_matcher",
     "DefaultAlgorithm",
     "ScoringAlgorithm",
-    "OFAC249Matcher",
-    "OFAC249QualifiedMatcher",
+    "NameMatcher",
+    "NameQualifiedMatcher",
+    "LogicV1",
 ]
