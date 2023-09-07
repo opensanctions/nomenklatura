@@ -38,11 +38,11 @@ def process_pairs(source_path: Path):
         for algorithm in ALGORITHMS:
             name = algorithm.NAME
             score = algorithm.compare(pair.left, pair.right)
-            loss = math.fabs(value - score["score"])
+            loss = math.fabs(value - score.score)
             losses[name] += loss
 
             decision = (pair.judgement, Judgement.NEGATIVE)
-            if score["score"] >= threshold:
+            if score.score >= threshold:
                 decision = (pair.judgement, Judgement.POSITIVE)
 
             matrix[name][decision] = matrix[name].get(decision, 0) + 1
@@ -55,10 +55,13 @@ def process_pairs(source_path: Path):
         true_pos = algo_matrix.get((Judgement.POSITIVE, Judgement.POSITIVE), 0)
         false_pos = algo_matrix.get((Judgement.NEGATIVE, Judgement.POSITIVE), 0)
         false_neg = algo_matrix.get((Judgement.POSITIVE, Judgement.NEGATIVE), 0)
+        total = true_pos + true_neg + false_pos + false_neg
 
         log.info("True match: %s" % (true_pos + true_neg))
         log.info("False positive: %s" % false_pos)
         log.info("False negative: %s" % false_neg)
+        fail_pct = float(false_neg + false_pos) / float(total)
+        log.info("Fail %%: %s" % (fail_pct * 100))
 
 
 if __name__ == "__main__":
