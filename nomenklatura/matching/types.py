@@ -1,12 +1,12 @@
+from pydantic import BaseModel
 from typing import List, Dict, Optional, Callable
-from typing_extensions import TypedDict
 from followthemoney.proxy import E, EntityProxy
 
 Encoded = List[float]
-FeatureItem = Callable[[EntityProxy, EntityProxy], float]
+CompareFunction = Callable[[EntityProxy, EntityProxy], float]
 
 
-class FeatureDoc(TypedDict):
+class FeatureDoc(BaseModel):
     """Documentation for a particular feature in the matching API model."""
 
     description: Optional[str]
@@ -17,11 +17,17 @@ class FeatureDoc(TypedDict):
 FeatureDocs = Dict[str, FeatureDoc]
 
 
-class MatchingResult(TypedDict):
+class MatchingResult(BaseModel):
     """Score and feature comparison results for matching comparison."""
 
     score: float
     features: Dict[str, float]
+
+    @classmethod
+    def make(cls, score: float, features: Dict[str, float]) -> "MatchingResult":
+        """Create a new matching result."""
+        results = {k: v for k, v in features.items() if v is not None and v != 0.0}
+        return cls(score=score, features=results)
 
 
 class ScoringAlgorithm(object):

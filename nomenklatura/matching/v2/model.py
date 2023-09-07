@@ -6,7 +6,6 @@ from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney.proxy import E
 
-from nomenklatura.matching.types import FeatureDocs, MatchingResult
 from nomenklatura.matching.v2.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.v2.names import first_name_match, family_name_match
 from nomenklatura.matching.v2.names import name_levenshtein
@@ -15,16 +14,18 @@ from nomenklatura.matching.v2.misc import address_match, address_numbers
 from nomenklatura.matching.v2.misc import identifier_match, birth_place
 from nomenklatura.matching.v2.misc import gender_mismatch, country_mismatch
 from nomenklatura.matching.v2.misc import org_identifier_match
+from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
+from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
-from nomenklatura.matching.types import FeatureItem, Encoded, ScoringAlgorithm
 
 
 class MatcherV2(ScoringAlgorithm):
-    """A simple matching algorithm based on a regression model with phonetic comparison."""
+    """A simple matching algorithm based on a regression model with phonetic
+    comparison."""
 
     NAME = "regression-v2"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
-    FEATURES: List[FeatureItem] = [
+    FEATURES: List[CompareFunction] = [
         name_part_soundex,
         name_numbers,
         name_levenshtein,
@@ -71,11 +72,11 @@ class MatcherV2(ScoringAlgorithm):
         _, coefficients = cls.load()
         for func in cls.FEATURES:
             name = func.__name__
-            features[name] = {
-                "description": func.__doc__,
-                "coefficient": float(coefficients[name]),
-                "url": make_github_url(func),
-            }
+            features[name] = FeatureDoc(
+                description=func.__doc__,
+                coefficient=float(coefficients[name]),
+                url=make_github_url(func),
+            )
         return features
 
     @classmethod
@@ -87,7 +88,7 @@ class MatcherV2(ScoringAlgorithm):
         pred = pipe.predict_proba(npfeat)
         score = cast(float, pred[0][1])
         features = {f.__name__: float(c) for f, c in zip(cls.FEATURES, encoded)}
-        return {"score": score, "features": features}
+        return MatchingResult.make(score=score, features=features)
 
     @classmethod
     def encode_pair(cls, left: E, right: E) -> Encoded:
