@@ -1,10 +1,12 @@
 from typing import Dict, List
-from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.heuristic.feature import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
+from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
+from nomenklatura.matching.compare.names import soundex_name_parts, jaro_name_parts
+from nomenklatura.matching.compare.names import last_name_mismatch
 
 
 class NameMatcher(HeuristicAlgorithm):
@@ -49,6 +51,38 @@ class NameQualifiedMatcher(HeuristicAlgorithm):
             if not feature.qualifier:
                 scores.append(weights.get(feature.name, 0.0))
         score = sum(scores) / float(len(scores))
+        for feature in cls.features:
+            if feature.qualifier:
+                weight = weights.get(feature.name, 0.0) * feature.weight
+                score += weight
+        return score
+
+
+class LogicV1(HeuristicAlgorithm):
+    """Same as the name-based algorithm, but scores will be reduced if a mis-match
+    of birth dates and nationalities is found for persons, or different
+    tax/registration identifiers are included for organizations and companies."""
+
+    NAME = "logic-v1"
+    features = [
+        Feature(func=jaro_name_parts, weight=0.9),
+        Feature(func=soundex_name_parts, weight=0.8),
+        Feature(func=crypto_wallet_address, weight=0.98),
+        Feature(func=country_mismatch, weight=-0.1, qualifier=True),
+        Feature(func=last_name_mismatch, weight=-0.1, qualifier=True),
+        Feature(func=dob_year_disjoint, weight=-0.1, qualifier=True),
+        Feature(func=dob_day_disjoint, weight=-0.15, qualifier=True),
+        Feature(func=gender_mismatch, weight=-0.1, qualifier=True),
+    ]
+
+    @classmethod
+    def compute_score(cls, weights: Dict[str, float]) -> float:
+        scores: List[float] = []
+        for feature in cls.features:
+            if not feature.qualifier:
+                weight = weights.get(feature.name, 0.0) * feature.weight
+                scores.append(weight)
+        score = max(scores)
         for feature in cls.features:
             if feature.qualifier:
                 weight = weights.get(feature.name, 0.0) * feature.weight

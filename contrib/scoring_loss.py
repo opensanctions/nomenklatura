@@ -4,7 +4,7 @@ from typing import Dict, Type, List
 from pathlib import Path
 from zavod.logs import get_logger, configure_logging
 from nomenklatura.judgement import Judgement
-from nomenklatura.matching import MatcherV1, NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching import MatcherV1, NameMatcher, NameQualifiedMatcher, LogicV1
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.matching.pairs import read_pairs
 from followthemoney.cli.util import InPath
@@ -16,6 +16,7 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     # MatcherV2,
     NameMatcher,
     NameQualifiedMatcher,
+    LogicV1,
 ]
 
 
