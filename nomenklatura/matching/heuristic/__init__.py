@@ -5,11 +5,12 @@ from followthemoney.types import registry
 from nomenklatura.matching.types import MatchingResult, ScoringAlgorithm, FeatureDocs
 from nomenklatura.matching.heuristic.logic import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.heuristic.logic import is_disjoint, compare_identifiers
+from nomenklatura.matching.heuristic.feature import Feature, HeuristicAlgorithm
 from nomenklatura.matching.util import make_github_url, dates_precision
 from nomenklatura.matching.util import props_pair, type_pair, compare_sets
 
 
-class NameMatcher(ScoringAlgorithm):
+class NameMatcher(HeuristicAlgorithm):
     """An algorithm that matches on entity name, using phonetic comparisons and edit
     distance to generate potential matches. This implementation is vaguely based on
     the behaviour proposed by the US OFAC documentation (FAQ #249)."""
@@ -18,42 +19,14 @@ class NameMatcher(ScoringAlgorithm):
     # cf. https://ofac.treasury.gov/faqs/topic/1636
 
     NAME = "name-based"
+    features = [
+        Feature(func=jaro_name_parts, weight=0.5),
+        Feature(func=soundex_name_parts, weight=0.5),
+    ]
 
     @classmethod
-    def explain(cls) -> FeatureDocs:
-        return {
-            "jaro_name_parts": {
-                "description": jaro_name_parts.__doc__,
-                "coefficient": 0.5,
-                "url": make_github_url(jaro_name_parts),
-            },
-            "soundex_name_parts": {
-                "description": soundex_name_parts.__doc__,
-                "coefficient": 0.5,
-                "url": make_github_url(soundex_name_parts),
-            },
-            # "full_name_match": {
-            #     "description": full_name_match.__doc__,
-            #     "coefficient": 0.3,
-            #     "url": make_github_url(full_name_match),
-            # },
-        }
-
-    @classmethod
-    def compare(cls, query: E, match: E) -> MatchingResult:
-        query_names, match_names = type_pair(query, match, registry.name)
-
-        jaro_score = jaro_name_parts(query_names, match_names)
-        soundex_score = soundex_name_parts(query_names, match_names)
-        # full_name_score = full_name_match(query_names, match_names)
-        features: Dict[str, float] = {
-            "jaro_name_parts": jaro_score,
-            "soundex_name_parts": soundex_score,
-            # "full_name_score": full_name_score,
-        }
-        # score = (jaro_score + soundex_score + full_name_score) / 3.0
-        score = (jaro_score + soundex_score) / 2.0
-        return MatchingResult(score=score, features=features)
+    def compute_score(cls, weights: Dict[str, float]) -> float:
+        return sum(weights.values()) / float(len(weights))
 
 
 class NameQualifiedMatcher(ScoringAlgorithm):

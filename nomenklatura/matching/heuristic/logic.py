@@ -1,26 +1,31 @@
 from typing import List, Set, Union
+from followthemoney.proxy import E
+from followthemoney.types import registry
 from jellyfish import soundex, jaro_winkler_similarity
 from nomenklatura.util import name_words, levenshtein
+from nomenklatura.matching.util import type_pair
 
 
-def soundex_name_parts(query: List[str], result: List[str]) -> float:
+def soundex_name_parts(query: E, result: E) -> float:
     """Compare two sets of name parts using the phonetic matching."""
-    result_parts = name_words(result)
+    query_names, result_names = type_pair(query, result, registry.name)
+    result_parts = name_words(query_names)
     result_soundex = [soundex(p) for p in result_parts]
     similiarities: List[float] = []
-    for part in name_words(query):
+    for part in name_words(result_names):
         part_soundex = soundex(part)
         soundex_score = 1.0 if part_soundex in result_soundex else 0.0
         similiarities.append(soundex_score)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
 
 
-def jaro_name_parts(query: List[str], result: List[str]) -> float:
+def jaro_name_parts(query: E, result: E) -> float:
     """Compare two sets of name parts using the Jaro-Winkler string similarity
     algorithm."""
-    result_parts = name_words(result)
+    query_names, result_names = type_pair(query, result, registry.name)
+    result_parts = name_words(query_names)
     similiarities: List[float] = []
-    for part in name_words(query):
+    for part in name_words(result_names):
         best = 0.0
 
         for other in result_parts:
@@ -31,21 +36,6 @@ def jaro_name_parts(query: List[str], result: List[str]) -> float:
 
         similiarities.append(best)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
-
-
-# def full_name_match(query: List[str], result: List[str]) -> float:
-#     """Both entities share the same full name."""
-#     overlap = _fingerprint_set(query).intersection(_fingerprint_set(result))
-#     return 1.0 if len(overlap) else 0.0
-
-
-# def _fingerprint_set(names: List[str]) -> Set[str]:
-#     fps: Set[str] = set()
-#     for name in names:
-#         fp = fingerprint_name(name)
-#         if fp is not None and len(fp) > 3:
-#             fps.add(fp)
-#     return fps
 
 
 def is_disjoint(
