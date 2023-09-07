@@ -12,8 +12,9 @@ from nomenklatura.matching.v2.names import name_levenshtein
 from nomenklatura.matching.v2.names import name_part_soundex, name_numbers
 from nomenklatura.matching.v2.misc import address_match, address_numbers
 from nomenklatura.matching.v2.misc import identifier_match, birth_place
-from nomenklatura.matching.v2.misc import gender_mismatch, country_mismatch
 from nomenklatura.matching.v2.misc import org_identifier_match
+from nomenklatura.matching.compare.countries import country_mismatch
+from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
