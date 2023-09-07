@@ -27,6 +27,7 @@ setup(
         "rich >= 10.9.0, < 14.0.0",
         "textual >= 0.19.0, < 1.0.0",
         "scikit-learn == 1.2.2",
+        "python-stdnum == 1.19",
         "click < 9.0.0",
         "plyvel",
     ],
