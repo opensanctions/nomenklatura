@@ -64,7 +64,7 @@ def xref(
 
             if scored:
                 result = algorithm.compare(left, right)
-                score = result["score"]
+                score = result.score
             scores.append(score)
 
             # Not sure this is globally a good idea.
