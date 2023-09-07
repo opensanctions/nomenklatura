@@ -48,9 +48,8 @@ def match(
                 if not entity.schema.can_match(match.schema):
                     continue
                 result = DefaultAlgorithm.compare(entity, match)
-                score = result["score"]
-                log.info("Match [%s]: %.2f -> %s", entity, score, match)
-                resolver.suggest(entity.id, match.id, score)
+                log.info("Match [%s]: %.2f -> %s", entity, result.score, match)
+                resolver.suggest(entity.id, match.id, result.score)
                 match.datasets.add(enricher.dataset.name)
                 match = resolver.apply(match)
                 yield match
