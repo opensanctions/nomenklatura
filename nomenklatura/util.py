@@ -114,7 +114,7 @@ def fingerprint_name(original: str, keep_order: bool = True) -> Optional[str]:
     return fingerprint(original, keep_order=keep_order, keep_brackets=True)
 
 
-def name_words(names: List[str]) -> Set[str]:
+def name_words(names: Iterable[str]) -> Set[str]:
     """Get a unique set of tokens present in the given set of names."""
     words: Set[str] = set()
     for name in names:

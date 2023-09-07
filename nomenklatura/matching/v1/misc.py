@@ -1,8 +1,8 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import has_overlap
 from nomenklatura.matching.v1.util import compare_levenshtein, tokenize_pair
+from nomenklatura.matching.compare.util import has_overlap
 from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
 from nomenklatura.matching.util import compare_sets, has_schema
 from nomenklatura.util import normalize_name
@@ -36,13 +36,13 @@ def address_numbers(left: E, right: E) -> float:
 def phone_match(left: E, right: E) -> float:
     """Matching phone numbers between the two entities."""
     lv, rv = type_pair(left, right, registry.phone)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def email_match(left: E, right: E) -> float:
     """Matching email addresses between the two entities."""
     lv, rv = type_pair(left, right, registry.email)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def identifier_match(left: E, right: E) -> float:
@@ -51,7 +51,7 @@ def identifier_match(left: E, right: E) -> float:
     if has_schema(left, right, "Organization"):
         return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def org_identifier_match(left: E, right: E) -> float:
@@ -60,4 +60,4 @@ def org_identifier_match(left: E, right: E) -> float:
     if not has_schema(left, right, "Organization"):
         return 0.0
     lv, rv = type_pair(left, right, registry.identifier)
-    return has_overlap(set(lv), set(rv))
+    return 1.0 if has_overlap(lv, rv) else 0.0

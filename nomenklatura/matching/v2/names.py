@@ -4,12 +4,11 @@ from jellyfish import soundex
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v2.util import has_overlap
-from nomenklatura.matching.v2.util import compare_levenshtein, tokenize
+from nomenklatura.matching.v2.util import compare_levenshtein
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.util import extract_numbers
-from nomenklatura.matching.compare.util import is_disjoint
-from nomenklatura.util import fingerprint_name
+from nomenklatura.matching.compare.util import is_disjoint, has_overlap
+from nomenklatura.util import fingerprint_name, name_words
 
 
 def _name_parts(names: Iterable[str], min_length: int = 1) -> List[List[str]]:
@@ -48,17 +47,17 @@ def name_levenshtein(left: E, right: E) -> float:
 def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = props_pair(left, right, ["firstName", "secondName", "middleName"])
-    lvt = tokenize(lv)
-    rvt = tokenize(rv)
-    return has_overlap(lvt, rvt)
+    lvt = name_words(lv)
+    rvt = name_words(rv)
+    return 1.0 if has_overlap(lvt, rvt) else 0.0
 
 
 def family_name_match(left: E, right: E) -> float:
     """Matching family name between the two entities."""
     lv, rv = props_pair(left, right, ["lastName"])
-    lvt = tokenize(lv)
-    rvt = tokenize(rv)
-    return has_overlap(lvt, rvt)
+    lvt = name_words(lv)
+    rvt = name_words(rv)
+    return 1.0 if has_overlap(lvt, rvt) else 0.0
 
 
 def name_part_soundex(left: E, right: E) -> float:
