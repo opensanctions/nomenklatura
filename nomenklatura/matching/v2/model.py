@@ -9,12 +9,13 @@ from followthemoney.proxy import E
 from nomenklatura.matching.v2.names import first_name_match, family_name_match
 from nomenklatura.matching.v2.names import name_levenshtein
 from nomenklatura.matching.v2.names import name_part_soundex, name_numbers
-from nomenklatura.matching.v2.misc import address_match, address_numbers
-from nomenklatura.matching.v2.misc import identifier_match, birth_place
-from nomenklatura.matching.v2.misc import org_identifier_match
+from nomenklatura.matching.v2.misc import address_numbers, birth_place
+from nomenklatura.matching.v2.misc import identifier_match, org_identifier_match
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
+from nomenklatura.matching.compare.addresses import address_entity_match
+from nomenklatura.matching.compare.addresses import address_prop_match
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
@@ -39,7 +40,8 @@ class MatcherV2(ScoringAlgorithm):
         gender_mismatch,
         country_mismatch,
         org_identifier_match,
-        address_match,
+        address_entity_match,
+        address_prop_match,
         address_numbers,
     ]
 

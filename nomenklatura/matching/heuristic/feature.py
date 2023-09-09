@@ -48,4 +48,5 @@ class HeuristicAlgorithm(ScoringAlgorithm):
             feature_weights[feature.name] = feature.func(query, match)
         score = cls.compute_score(feature_weights)
         score = min(1.0, max(0.0, score))
-        return MatchingResult.make(score, feature_weights)
+        # print(feature_weights)
+        return MatchingResult.make(score=score, features=feature_weights)

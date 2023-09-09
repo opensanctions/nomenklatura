@@ -4,10 +4,10 @@ from jellyfish import soundex
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v2.util import compare_levenshtein
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.util import extract_numbers
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
+from nomenklatura.matching.compare.util import compare_levenshtein
 from nomenklatura.util import fingerprint_name, name_words
 
 
