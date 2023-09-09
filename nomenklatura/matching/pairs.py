@@ -20,6 +20,13 @@ class JudgedPair(object):
         self.right = right
         self.judgement = judgement
 
+    def to_dict(self) -> dict:
+        return {
+            "left": self.left.to_dict(),
+            "right": self.right.to_dict(),
+            "judgement": self.judgement.value,
+        }
+
 
 def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
     """Read judgement pairs (training data) from a JSON file."""

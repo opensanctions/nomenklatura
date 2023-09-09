@@ -1,10 +1,17 @@
 import math
 import click
+from pprint import pprint
 from typing import Dict, Type, List
 from pathlib import Path
 from zavod.logs import get_logger, configure_logging
 from nomenklatura.judgement import Judgement
-from nomenklatura.matching import MatcherV1, NameMatcher, NameQualifiedMatcher, LogicV1
+from nomenklatura.matching import (
+    MatcherV1,
+    MatcherV2,
+    NameMatcher,
+    NameQualifiedMatcher,
+    LogicV1,
+)
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.matching.pairs import read_pairs
 from followthemoney.cli.util import InPath
@@ -32,6 +39,10 @@ def process_pairs(source_path: Path):
     for pair in read_pairs(source_path):
         if pair.judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
             continue
+        datasets = set(pair.left.context.get("datasets", []))
+        datasets.update(pair.right.context.get("datasets", []))
+        if "opencorporates" in datasets:
+            continue
         total += 1
         if total % 10000 == 0:
             log.info("Processed %s pairs..." % total)
@@ -43,10 +54,16 @@ def process_pairs(source_path: Path):
             losses[name] += loss
 
             decision = (pair.judgement, Judgement.NEGATIVE)
-            if score.score >= threshold:
+            if score.score > threshold:
                 decision = (pair.judgement, Judgement.POSITIVE)
 
             matrix[name][decision] = matrix[name].get(decision, 0) + 1
+
+            if algorithm.NAME == LogicV1.NAME:
+                if decision == (Judgement.POSITIVE, Judgement.NEGATIVE):
+                    data = pair.to_dict()
+                    data["features"] = score.features
+                    # pprint(data)
 
     for algorithm in ALGORITHMS:
         log.info("---------------------------------")

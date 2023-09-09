@@ -1,10 +1,30 @@
-from typing import List
+from typing import List, Optional
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from jellyfish import soundex, jaro_winkler_similarity
-from nomenklatura.util import name_words
-from nomenklatura.matching.util import type_pair, props_pair
-from nomenklatura.matching.compare.util import is_disjoint
+from nomenklatura.util import name_words, fingerprint_name
+from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
+from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
+from nomenklatura.matching.compare.util import compare_levenshtein
+
+
+def name_literal_match(query: E, result: E) -> float:
+    """Two entities have the same name, without normalization applied to the name."""
+    query_names, result_names = type_pair(query, result, registry.name)
+    qnames = clean_map(query_names, lambda s: s.lower())
+    rnames = clean_map(result_names, lambda s: s.lower())
+    return 1.0 if has_overlap(qnames, rnames) else 0.0
+
+
+def name_fingerprint_levenshtein(query: E, result: E) -> float:
+    """Two non-person entities have similar fingerprinted names. This includes
+    simplifying entity type names (e.g. "Limited" -> "Ltd")."""
+    if has_schema(query, result, "Person"):
+        return 0.0
+    query_names, result_names = type_pair(query, result, registry.name)
+    qnames = clean_map(query_names, fingerprint_name)
+    rnames = clean_map(result_names, fingerprint_name)
+    return compare_sets(qnames, rnames, compare_levenshtein)
 
 
 def soundex_name_parts(query: E, result: E) -> float:
@@ -37,6 +57,23 @@ def jaro_name_parts(query: E, result: E) -> float:
 
         similiarities.append(best)
     return sum(similiarities) / float(max(1.0, len(similiarities)))
+
+
+def _sorted_fingerprint(name: str) -> Optional[str]:
+    fp = fingerprint_name(name)
+    if fp is None:
+        return None
+    return " ".join(sorted(fp.split(" ")))
+
+
+def person_name_jaro_winkler(query: E, result: E) -> float:
+    """Compare two persons' names using the Jaro-Winkler string similarity algorithm."""
+    if not has_schema(query, result, "Person"):
+        return 0.0
+    query_names, result_names = type_pair(query, result, registry.name)
+    qnames = clean_map(query_names, _sorted_fingerprint)
+    rnames = clean_map(result_names, _sorted_fingerprint)
+    return compare_sets(qnames, rnames, jaro_winkler_similarity)
 
 
 def last_name_mismatch(left: E, right: E) -> float:
