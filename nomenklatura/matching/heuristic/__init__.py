@@ -10,9 +10,11 @@ from nomenklatura.matching.compare.identifiers import isin_security_match
 from nomenklatura.matching.compare.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
+from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
+
 from nomenklatura.matching.compare.addresses import address_entity_match
 
 
@@ -72,9 +74,8 @@ class LogicV1(HeuristicAlgorithm):
 
     NAME = "logic-v1"
     features = [
-        # Feature(func=jaro_name_parts, weight=0.9),
-        # Feature(func=soundex_name_parts, weight=0.8),
         Feature(func=person_name_jaro_winkler, weight=0.8),
+        Feature(func=person_name_phonetic_match, weight=0.8),
         Feature(func=name_literal_match, weight=1.0),
         Feature(func=name_fingerprint_levenshtein, weight=0.9),
         Feature(func=address_entity_match, weight=0.98),
