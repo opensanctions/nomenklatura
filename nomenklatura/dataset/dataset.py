@@ -96,13 +96,13 @@ class Dataset(Named):
 
     def __eq__(self, other: Any) -> bool:
         try:
-            return self.name == other.name
+            return self.name == str(other.name)
         except AttributeError:
             return False
 
     def __lt__(self, other: Any) -> bool:
         try:
-            return self.name < other.name
+            return self.name < str(other.name)
         except AttributeError:
             return False
 
