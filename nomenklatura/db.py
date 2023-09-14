@@ -41,6 +41,6 @@ def get_upsert_func(
         return sqlite_insert
     if engine.dialect.name == "mysql":
         return mysql_insert
-    if engine.dialect.name == "postgres":
+    if engine.dialect.name in ("postgresql", "postgres"):
         return psql_insert
-    raise RuntimeError("Unsupported database engine.")
+    raise RuntimeError("Unsupported database engine: %s" % engine.dialect.name)
