@@ -53,7 +53,6 @@ class Dataset(Named):
 
         self._children = set(string_list(data.get("children", [])))
         self._children.update(string_list(data.get("datasets", [])))
-        self._children.update(string_list(data.get("scopes", [])))
 
     @cached_property
     def children(self: DS) -> Set[DS]:
@@ -91,6 +90,21 @@ class Dataset(Named):
     @property
     def leaf_names(self: DS) -> Set[str]:
         return {d.name for d in self.leaves}
+
+    def __eq__(self, other: Any) -> bool:
+        try:
+            return self.name == other.name
+        except AttributeError:
+            return False
+
+    def __lt__(self, other: Any) -> bool:
+        try:
+            return self.name < other.name
+        except AttributeError:
+            return False
+
+    def __hash__(self) -> int:
+        return hash(repr(self))
 
     def __repr__(self) -> str:
         return f"<Dataset({self.name})>"  # pragma: no cover
