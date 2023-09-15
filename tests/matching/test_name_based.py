@@ -3,6 +3,8 @@ from followthemoney import model
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
 
+from .util import e
+
 
 def _make_named(*names):
     data = {"id": "test", "schema": "Person", "properties": {"name": names}}
@@ -10,8 +12,8 @@ def _make_named(*names):
 
 
 def test_heuristic_scoring():
-    a = _make_named("Vladimir Putin")
-    b = _make_named("Vladimir Putin")
+    a = e("Person", name="Vladimir Putin")
+    b = e("Person", name="Vladimir Putin")
     assert NameMatcher.compare(a, b).score == 1.0
     b = _make_named("Vladimir Pudin")
     assert NameMatcher.compare(a, b).score < 1.0
@@ -19,8 +21,8 @@ def test_heuristic_scoring():
 
 
 def test_heuristic_qualified_country():
-    a = _make_named("Vladimir Putin")
-    b = _make_named("Vladimir Putin")
+    a = e("Person", name="Vladimir Putin")
+    b = e("Person", name="Vladimir Putin")
     assert NameQualifiedMatcher.compare(a, b).score == 1.0
     a.add("country", "pa")
     b.add("country", "ru")
@@ -28,8 +30,8 @@ def test_heuristic_qualified_country():
 
 
 def test_heuristic_qualified_dob():
-    a = _make_named("Vladimir Putin")
-    b = _make_named("Vladimir Putin")
+    a = e("Person", name="Vladimir Putin")
+    b = e("Person", name="Vladimir Putin")
     assert NameQualifiedMatcher.compare(a, b).score == 1.0
     a.set("birthDate", "1952-02-10")
     b.set("birthDate", "1952-05-01")
@@ -40,9 +42,8 @@ def test_heuristic_qualified_dob():
 
 
 def test_heuristic_qualified_corp():
-    data = {"id": "test", "schema": "Company", "properties": {"name": "CRYSTALORD LTD"}}
-    a = Entity.from_dict(model, data)
-    b = Entity.from_dict(model, data)
+    a = e("Company", name="CRYSTALORD LTD")
+    b = e("Company", name="CRYSTALORD LTD")
     assert NameQualifiedMatcher.compare(a, b).score == 1.0
     a.set("registrationNumber", "137332")
     b.set("registrationNumber", "748745")

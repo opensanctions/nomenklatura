@@ -61,6 +61,18 @@ def test_logic_id_only_corp():
     assert LogicV1.compare(a, b).score < 0.9
 
 
+def test_imo_match():
+    query = e("Vessel", imoNumber="IMO 9929429", country="lr")
+    result = e("Vessel", imoNumber="IMO 9929429")
+    imo_match = LogicV1.compare(query, result).score
+    assert imo_match > 0.7
+
+    result = e("Vessel", imoNumber="9929429", country="ru")
+    imo_match_mis = LogicV1.compare(query, result).score
+    assert imo_match > imo_match_mis
+    assert imo_match_mis > 0.7
+
+
 def test_logic_id_disjoint():
     a = e("Company", name="CRYSTALORD LTD", registrationNumber="77401103")
     b = e("Company", name="CRYSTALORD LTD", registrationNumber="77401103")
