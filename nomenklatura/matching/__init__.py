@@ -3,7 +3,8 @@ from nomenklatura.matching.v1.model import MatcherV1
 from nomenklatura.matching.v1.train import train_matcher as train_v1_matcher
 from nomenklatura.matching.v2.model import MatcherV2
 from nomenklatura.matching.v2.train import train_matcher as train_v2_matcher
-from nomenklatura.matching.heuristic import NameMatcher, NameQualifiedMatcher, LogicV1
+from nomenklatura.matching.name_based import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.logic import LogicV1
 from nomenklatura.matching.types import ScoringAlgorithm
 
 ALGORITHMS: List[Type[ScoringAlgorithm]] = [

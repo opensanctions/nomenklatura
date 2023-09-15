@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional, Callable
 from itertools import product
+from normality import collapse_spaces, category_replace
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from nomenklatura.util import name_words, fingerprint_name, normalize_name
@@ -19,6 +20,16 @@ def _name_parts(text: str, func: Optional[Callable[[str], str]] = None) -> List[
             part = func(part)
         parts.append(part)
     return parts
+
+
+def _clean_light(name: str) -> Optional[str]:
+    """Clean up a name for comparison."""
+    name = name.lower()
+    cleaned = category_replace(name)
+    cleaned = collapse_spaces(cleaned)
+    if cleaned is None or len(cleaned) < 2:
+        return None
+    return cleaned
 
 
 def _count_overlap(query: List[str], result: List[str]) -> int:
@@ -93,8 +104,8 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
 def name_literal_match(query: E, result: E) -> float:
     """Two entities have the same name, without normalization applied to the name."""
     query_names, result_names = type_pair(query, result, registry.name)
-    qnames = clean_map(query_names, lambda s: s.lower())
-    rnames = clean_map(result_names, lambda s: s.lower())
+    qnames = clean_map(query_names, _clean_light)
+    rnames = clean_map(result_names, _clean_light)
     return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 

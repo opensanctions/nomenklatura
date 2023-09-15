@@ -15,8 +15,6 @@ CODE_PATH = DATA_PATH.joinpath("..").resolve()
 def has_schema(left: E, right: E, schema: str) -> bool:
     """Check if one of the entities has the required schema."""
     if left.schema.is_a(schema) or right.schema.is_a(schema):
-        if not left.schema.can_match(right.schema):
-            return False
         return True
     return False
 
