@@ -2,8 +2,8 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.v2.util import tokenize
-from nomenklatura.matching.compare.util import has_overlap
-from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.compare.util import has_overlap, extract_numbers
+from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import has_schema
 
 

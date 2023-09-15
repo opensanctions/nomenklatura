@@ -1,8 +1,10 @@
+import re
 from typing import List, Set, Union, Iterable, Callable, Optional
 
 from nomenklatura.util import levenshtein
 
 CleanFunc = Optional[Callable[[str], Optional[str]]]
+FIND_NUM = re.compile(r"\d{1,}")
 
 
 def is_disjoint(
@@ -50,3 +52,11 @@ def compare_levenshtein(left: str, right: str) -> float:
         return 0.0
     distance = levenshtein(left, right)
     return 1 - (min(distance, shortest) / shortest)
+
+
+def extract_numbers(values: List[str]) -> Set[str]:
+    """Extract all numbers from a list of strings."""
+    numbers: Set[str] = set()
+    for value in values:
+        numbers.update(FIND_NUM.findall(value))
+    return numbers

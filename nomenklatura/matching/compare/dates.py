@@ -20,51 +20,51 @@ def flip_day_month(value: str) -> str:
     return f"{year}-{day}-{month}"
 
 
-def dob_matches(left: E, right: E) -> float:
+def dob_matches(query: E, result: E) -> float:
     """The birth date of the two entities is the same."""
-    left_dates, right_dates = props_pair(left, right, ["birthDate"])
-    if len(left_dates) == 0 or len(right_dates) == 0:
+    query_dates, result_dates = props_pair(query, result, ["birthDate"])
+    if len(query_dates) == 0 or len(result_dates) == 0:
         return 0.0
-    right_days = dates_precision(right_dates, Precision.DAY)
-    left_days = dates_precision(left_dates, Precision.DAY)
-    if has_overlap(left_days, right_days):
+    result_days = dates_precision(result_dates, Precision.DAY)
+    query_days = dates_precision(query_dates, Precision.DAY)
+    if has_overlap(query_days, result_days):
         return 1.0
-    left_flipped = [flip_day_month(d) for d in left_days]
-    if has_overlap(left_flipped, right_days):
+    query_flipped = [flip_day_month(d) for d in query_days]
+    if has_overlap(query_flipped, result_days):
         return 0.5
     return 0.0
 
 
-def dob_year_matches(left: E, right: E) -> float:
+def dob_year_matches(query: E, result: E) -> float:
     """The birth date of the two entities is the same."""
-    left_dates, right_dates = props_pair(left, right, ["birthDate"])
-    left_years = dates_precision(left_dates, Precision.YEAR)
-    right_years = dates_precision(right_dates, Precision.YEAR)
-    if has_overlap(left_years, right_years):
+    query_dates, result_dates = props_pair(query, result, ["birthDate"])
+    query_years = dates_precision(query_dates, Precision.YEAR)
+    result_years = dates_precision(result_dates, Precision.YEAR)
+    if has_overlap(query_years, result_years):
         return 1.0
     return 0.0
 
 
-def dob_day_disjoint(left: E, right: E) -> float:
+def dob_day_disjoint(query: E, result: E) -> float:
     """The birth date of the two entities is not the same."""
-    left_dates, right_dates = props_pair(left, right, ["birthDate"])
-    if len(left_dates) == 0 or len(right_dates) == 0:
+    query_dates, result_dates = props_pair(query, result, ["birthDate"])
+    if len(query_dates) == 0 or len(result_dates) == 0:
         return 0.0
-    right_days = dates_precision(right_dates, Precision.DAY)
-    left_days = dates_precision(left_dates, Precision.DAY)
-    if has_overlap(left_days, right_days):
+    result_days = dates_precision(result_dates, Precision.DAY)
+    query_days = dates_precision(query_dates, Precision.DAY)
+    if has_overlap(query_days, result_days):
         return 0.0
-    left_flipped = [flip_day_month(d) for d in left_days]
-    if has_overlap(left_flipped, right_days):
+    query_flipped = [flip_day_month(d) for d in query_days]
+    if has_overlap(query_flipped, result_days):
         return 0.5
     return 1.0
 
 
-def dob_year_disjoint(left: E, right: E) -> float:
+def dob_year_disjoint(query: E, result: E) -> float:
     """The birth date of the two entities is not the same."""
-    left_dates, right_dates = props_pair(left, right, ["birthDate"])
-    left_years = dates_precision(left_dates, Precision.YEAR)
-    right_years = dates_precision(right_dates, Precision.YEAR)
-    if is_disjoint(left_years, right_years):
+    query_dates, result_dates = props_pair(query, result, ["birthDate"])
+    query_years = dates_precision(query_dates, Precision.YEAR)
+    result_years = dates_precision(result_dates, Precision.YEAR)
+    if is_disjoint(query_years, result_years):
         return 1.0
     return 0.0

@@ -14,7 +14,7 @@ from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import soundex_name_parts, jaro_name_parts
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
-
+from nomenklatura.matching.compare.multi import numbers_mismatch
 from nomenklatura.matching.compare.addresses import address_entity_match
 
 
@@ -92,7 +92,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=dob_day_disjoint, weight=-0.2, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
         Feature(func=orgid_disjoint, weight=-0.2, qualifier=True),
-        # Feature(func=identifier_match, weight=0.1, qualifier=True),
+        Feature(func=numbers_mismatch, weight=-0.1, qualifier=True),
     ]
 
     @classmethod

@@ -2,9 +2,10 @@ from typing import Iterable, Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import is_disjoint, has_overlap
-from nomenklatura.matching.util import extract_numbers, props_pair, type_pair
+from nomenklatura.matching.v1.util import tokenize_pair
+from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
+from nomenklatura.matching.compare.util import compare_levenshtein
+from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import compare_sets
 from nomenklatura.util import fingerprint_name
 

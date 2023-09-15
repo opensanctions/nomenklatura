@@ -1,5 +1,5 @@
 import json
-from typing import Generator
+from typing import Generator, Dict, Any
 from followthemoney import model
 from followthemoney.proxy import EntityProxy
 
@@ -20,7 +20,7 @@ class JudgedPair(object):
         self.right = right
         self.judgement = judgement
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "left": self.left.to_dict(),
             "right": self.right.to_dict(),
