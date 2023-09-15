@@ -9,7 +9,7 @@ from nomenklatura import __version__
 from nomenklatura.util import DATA_PATH
 
 V = TypeVar("V")
-FIND_NUM = re.compile(r"\d{2,}")
+FIND_NUM = re.compile(r"\d{1,}")
 BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
 

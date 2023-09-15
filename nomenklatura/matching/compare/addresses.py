@@ -11,7 +11,7 @@ def _address_match(left: E, right: E) -> float:
     lv, rv = type_pair(left, right, registry.address)
     lvn = name_words(lv)
     rvn = name_words(rv)
-    base = float(min(len(lvn), len(rvn)))
+    base = float(max(1, min(len(lvn), len(rvn))))
     # TODO: is this better token-based?
     # return compare_sets(lvn, rvn, compare_levenshtein)
     return len(lvn.intersection(rvn)) / base
