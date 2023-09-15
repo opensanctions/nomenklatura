@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional, Callable
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
@@ -9,24 +9,15 @@ from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overl
 from nomenklatura.matching.compare.util import compare_levenshtein
 
 
-def _name_parts(text: str) -> List[str]:
+def _name_parts(text: str, func: Optional[Callable[[str], str]] = None) -> List[str]:
     normalized = normalize_name(text)
     if normalized is None:
         return []
-    return normalized.split(" ")
-
-
-def _phonetic_name_parts(text: str) -> List[str]:
     parts: List[str] = []
-    for part in _name_parts(text):
-        parts.append(phonetic_token(part))
-    return parts
-
-
-def _soundex_name_parts(text: str) -> List[str]:
-    parts: List[str] = []
-    for part in _name_parts(text):
-        parts.append(soundex_token(part))
+    for part in normalized.split(" "):
+        if func is not None:
+            part = func(part)
+        parts.append(part)
     return parts
 
 
@@ -40,32 +31,28 @@ def _count_overlap(query: List[str], result: List[str]) -> int:
     return overlap
 
 
+def _phonetic_match(query: E, result: E, func: Callable[[str], str]) -> float:
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_name_parts(n, func) for n in query_names_]
+    result_names = [_name_parts(n, func) for n in result_names_]
+    score = 0.0
+    for (q, r) in product(query_names, result_names):
+        length = max(2, min(len(q), len(r)))
+        combo = _count_overlap(q, r) / float(length)
+        score = max(score, combo)
+    return score
+
+
 def person_name_phonetic_match(query: E, result: E) -> float:
     """Two persons have similar names, using a phonetic algorithm."""
     if not has_schema(query, result, "Person"):
         return 0.0
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_phonetic_name_parts(n) for n in query_names_]
-    result_names = [_phonetic_name_parts(n) for n in result_names_]
-    score = 0.0
-    for (q, r) in product(query_names, result_names):
-        length = min(len(q), len(r))
-        combo = _count_overlap(q, r) / float(length)
-        score = max(score, combo)
-    return score
+    return _phonetic_match(query, result, phonetic_token)
 
 
 def soundex_name_parts(query: E, result: E) -> float:
     """Compare two sets of name parts using the phonetic matching."""
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_soundex_name_parts(n) for n in query_names_]
-    result_names = [_soundex_name_parts(n) for n in result_names_]
-    score = 0.0
-    for (q, r) in product(query_names, result_names):
-        length = min(len(q), len(r))
-        combo = _count_overlap(q, r) / float(length)
-        score = max(score, combo)
-    return score
+    return _phonetic_match(query, result, soundex_token)
 
 
 def _align_name_parts(left: List[str], right: List[str]) -> float:
