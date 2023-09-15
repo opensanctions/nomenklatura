@@ -117,7 +117,7 @@ def orgid_disjoint(query: E, result: E) -> float:
     if not len(query_ids) or not len(result_ids):
         return 0.0
     if len(query_ids.intersection(result_ids)) > 0:
-        return 1.0
+        return 0.0
     return 1 - compare_sets(query_ids, result_ids, _nq_compare_identifiers)
 
 
