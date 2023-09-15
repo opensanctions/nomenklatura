@@ -107,3 +107,16 @@ def test_person_name_phonetic_match():
 
     other = e("Person", name="AL BEN ALI, Isa Ben Tarif")
     assert person_name_phonetic_match(name, other) == 1.0
+
+
+def test_name_alphabets():
+    name = e("Person", name="Arkadiii Romanovich Rotenberg")
+    other = e("Person", name="Ротенберг Аркадий")
+    assert person_name_phonetic_match(name, other) > 0
+    assert person_name_phonetic_match(name, other) < 1.0
+    assert person_name_jaro_winkler(name, other) > 0.7
+
+    name = e("Person", name="Usāma ibn Muhammad ibn Awad ibn Lādin")
+    other = e("Person", name="Osama bin Laden")
+    assert person_name_phonetic_match(name, other) > 0.1
+    assert person_name_jaro_winkler(name, other) > 0.5

@@ -2,6 +2,7 @@ from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import lei_code_match
 from nomenklatura.matching.compare.identifiers import isin_security_match
 from nomenklatura.matching.compare.identifiers import vessel_imo_mmsi_match
+from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 
 from .util import e
 
@@ -45,7 +46,7 @@ def test_isin_match():
 
 
 def test_imo_match():
-    query = e("Vessel", imoNumber="IMO 9929429")
+    query = e("Vessel", imoNumber="IMO 9929429", country="lr")
     result = e("Vessel", imoNumber="IMO 9929429")
     assert vessel_imo_mmsi_match(query, result) == 1.0
 
@@ -54,3 +55,13 @@ def test_imo_match():
 
     result = e("Vessel", imoNumber="992942")
     assert vessel_imo_mmsi_match(query, result) == 0.0
+
+
+def test_crypto_wallet():
+    query = e("CryptoWallet", publicKey="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh")
+    result = e("CryptoWallet", publicKey="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh")
+    assert crypto_wallet_address(query, result) == 1.0
+
+    query = e("CryptoWallet", publicKey="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh")
+    result = e("CryptoWallet", publicKey="bc1qxy2kgdygjrsqtzq2n0yrf2484p83kkfjhx0wlh")
+    assert crypto_wallet_address(query, result) == 0.0
