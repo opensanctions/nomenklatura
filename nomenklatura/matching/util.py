@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 from itertools import product
 from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
@@ -9,16 +8,8 @@ from nomenklatura import __version__
 from nomenklatura.util import DATA_PATH
 
 V = TypeVar("V")
-FIND_NUM = re.compile(r"\d{1,}")
 BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
-
-
-def extract_numbers(values: List[str]) -> Set[str]:
-    numbers: Set[str] = set()
-    for value in values:
-        numbers.update(FIND_NUM.findall(value))
-    return numbers
 
 
 def has_schema(left: E, right: E, schema: str) -> bool:

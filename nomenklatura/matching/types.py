@@ -36,7 +36,7 @@ class ScoringAlgorithm(object):
     NAME = "algorithm_name"
 
     @classmethod
-    def compare(cls, query: E, match: E) -> MatchingResult:
+    def compare(cls, query: E, result: E) -> MatchingResult:
         """Compare the two entities and return a score and feature comparison."""
         raise NotImplementedError
 

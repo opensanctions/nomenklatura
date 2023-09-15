@@ -11,34 +11,34 @@ ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
 
 
 def _id_prop_match(
-    left: E,
-    right: E,
+    query: E,
+    result: E,
     prop_name: str,
     clean: CleanFunc = None,
 ) -> bool:
     """Check if a specific property identifier is shared by two entities."""
-    prop = left.schema.get(prop_name)
+    prop = query.schema.get(prop_name)
     if prop is None:
         return False
-    lv = clean_map(left.get(prop), clean=clean)
+    lv = clean_map(query.get(prop), clean=clean)
     if not len(lv):
         return False
-    rv_ = right.get_type_values(prop.type, matchable=True)
+    rv_ = result.get_type_values(prop.type, matchable=True)
     rv = clean_map(rv_, clean=clean)
     common = lv.intersection(rv)
     return len(common) > 0
 
 
 def _bidi_id_prop_match(
-    left: E,
-    right: E,
+    query: E,
+    result: E,
     prop_name: str,
     clean: CleanFunc = None,
 ) -> float:
     """Check if a specific property identifier is shared by two entities."""
-    if _id_prop_match(left, right, prop_name, clean=clean):
+    if _id_prop_match(query, result, prop_name, clean=clean):
         return 1.0
-    if _id_prop_match(right, left, prop_name, clean=clean):
+    if _id_prop_match(result, query, prop_name, clean=clean):
         return 1.0
     return 0.0
 
@@ -57,26 +57,26 @@ def _clean_lei_code(value: str) -> Optional[str]:
     return _clean_identifier(value, min_length=18, max_length=20)
 
 
-def lei_code_match(left: E, right: E) -> float:
+def lei_code_match(query: E, result: E) -> float:
     """Two entities have the same Legal Entity Identifier."""
-    return _bidi_id_prop_match(left, right, "leiCode", _clean_lei_code)
+    return _bidi_id_prop_match(query, result, "leiCode", _clean_lei_code)
 
 
-def ogrn_code_match(left: E, right: E) -> float:
+def ogrn_code_match(query: E, result: E) -> float:
     """Two entities have the same Russian company registration (OGRN) code."""
-    return _bidi_id_prop_match(left, right, "ogrnCode")
+    return _bidi_id_prop_match(query, result, "ogrnCode")
 
 
-def inn_code_match(left: E, right: E) -> float:
+def inn_code_match(query: E, result: E) -> float:
     """Two entities have the same Russian tax identifier (INN)."""
-    return _bidi_id_prop_match(left, right, "innCode")
+    return _bidi_id_prop_match(query, result, "innCode")
 
 
-def isin_security_match(left: E, right: E) -> float:
+def isin_security_match(query: E, result: E) -> float:
     """Two securities have the same ISIN."""
-    if not has_schema(left, right, "Security"):
+    if not has_schema(query, result, "Security"):
         return 0.0
-    return _bidi_id_prop_match(left, right, "isin")
+    return _bidi_id_prop_match(query, result, "isin")
 
 
 def _clean_imo_number(num: str) -> Optional[str]:
@@ -86,51 +86,51 @@ def _clean_imo_number(num: str) -> Optional[str]:
     return _clean_identifier(num, min_length=6)
 
 
-def vessel_imo_mmsi_match(left: E, right: E) -> float:
+def vessel_imo_mmsi_match(query: E, result: E) -> float:
     """Two vessels have the same IMO or MMSI identifier."""
-    imo_score = _bidi_id_prop_match(left, right, "imoNumber", _clean_imo_number)
+    imo_score = _bidi_id_prop_match(query, result, "imoNumber", _clean_imo_number)
     if imo_score > 0.0:
         return imo_score
-    return _bidi_id_prop_match(left, right, "mmsi")
+    return _bidi_id_prop_match(query, result, "mmsi")
 
 
-def crypto_wallet_address(left: E, right: E) -> float:
+def crypto_wallet_address(query: E, result: E) -> float:
     """Two cryptocurrency wallets have the same public key."""
-    if not has_schema(left, right, "CryptoWallet"):
+    if not has_schema(query, result, "CryptoWallet"):
         return 0.0
-    lv, rv = props_pair(left, right, ["publicKey"])
+    lv, rv = props_pair(query, result, ["publicKey"])
     for key in lv.intersection(rv):
         if len(key) > 10:
             return 1.0
     return 0.0
 
 
-def orgid_disjoint(left: E, right: E) -> float:
+def orgid_disjoint(query: E, result: E) -> float:
     """Two companies or organizations have different tax identifiers or registration
     numbers."""
     # used by name-qualified
-    if not has_schema(left, right, "Organization"):
+    if not has_schema(query, result, "Organization"):
         return 0.0
-    left_ids_, right_ids_ = type_pair(left, right, registry.identifier)
-    left_ids = clean_map(left_ids_, _clean_identifier)
-    right_ids = clean_map(right_ids_, _clean_identifier)
-    if not len(left_ids) or not len(right_ids):
+    query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
+    query_ids = clean_map(query_ids_, _clean_identifier)
+    result_ids = clean_map(result_ids_, _clean_identifier)
+    if not len(query_ids) or not len(result_ids):
         return 0.0
-    if len(left_ids.intersection(right_ids)) > 0:
+    if len(query_ids.intersection(result_ids)) > 0:
         return 1.0
-    return 1 - compare_sets(left_ids, right_ids, _nq_compare_identifiers)
+    return 1 - compare_sets(query_ids, result_ids, _nq_compare_identifiers)
 
 
-def identifier_match(left: E, right: E) -> float:
+def identifier_match(query: E, result: E) -> float:
     """Two entities have the same tax or registration identifier."""
-    left_ids_, right_ids_ = type_pair(left, right, registry.identifier)
-    left_ids = clean_map(left_ids_, _clean_identifier)
-    right_ids = clean_map(right_ids_, _clean_identifier)
-    return 1.0 if has_overlap(left_ids, right_ids) else 0.0
+    query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
+    query_ids = clean_map(query_ids_, _clean_identifier)
+    result_ids = clean_map(result_ids_, _clean_identifier)
+    return 1.0 if has_overlap(query_ids, result_ids) else 0.0
 
 
-def _nq_compare_identifiers(left: str, right: str) -> float:
+def _nq_compare_identifiers(query: str, result: str) -> float:
     """Overly clever method for comparing tax and company identifiers."""
-    distance = levenshtein(left, right)
-    ratio = 1.0 - (distance / float(max(len(left), len(right))))
+    distance = levenshtein(query, result)
+    ratio = 1.0 - (distance / float(max(len(query), len(result))))
     return ratio if ratio > 0.7 else 0.0

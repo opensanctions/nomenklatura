@@ -1,13 +1,12 @@
-from typing import Iterable, Set, List
+from typing import Iterable, List
 from normality import WS
-from jellyfish import soundex
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
-from nomenklatura.matching.util import extract_numbers
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
-from nomenklatura.matching.compare.util import compare_levenshtein
+from nomenklatura.matching.compare.util import compare_levenshtein, extract_numbers
+from nomenklatura.matching.compare.names import soundex_name_parts, last_name_mismatch
 from nomenklatura.util import fingerprint_name, name_words
 
 
@@ -20,13 +19,6 @@ def _name_parts(names: Iterable[str], min_length: int = 1) -> List[List[str]]:
             if len(tokens):
                 parts.append(sorted(tokens))
     return parts
-
-
-def _name_parts_soundex(names: Iterable[str]) -> List[Set[str]]:
-    outs: List[Set[str]] = []
-    for parts in _name_parts(names):
-        outs.append(set([soundex(part) for part in parts]))
-    return outs
 
 
 def _name_norms(names: Iterable[str]) -> List[str]:
@@ -53,30 +45,13 @@ def first_name_match(left: E, right: E) -> float:
 
 
 def family_name_match(left: E, right: E) -> float:
-    """Matching family name between the two entities."""
-    lv, rv = props_pair(left, right, ["lastName"])
-    lvt = name_words(lv)
-    rvt = name_words(rv)
-    return 1.0 if has_overlap(lvt, rvt) else 0.0
+    """Mismatching family name between the two entities."""
+    return last_name_mismatch(left, right)
 
 
 def name_part_soundex(left: E, right: E) -> float:
     """Check for overlap of phonetic forms of the names."""
-    lv, rv = type_pair(left, right, registry.name)
-    rvn = _name_parts_soundex(rv)
-    best_score = 0.0
-    for lns in _name_parts_soundex(lv):
-        if not len(lns):
-            continue
-        for rns in rvn:
-            if not len(rns):
-                continue
-            overlap = len(lns.intersection(rns))
-            score = float(overlap) / float(min(len(lns), len(rns)))
-            best_score = max(best_score, score)
-        if best_score == 1.0:
-            return best_score
-    return best_score
+    return soundex_name_parts(left, right)
 
 
 def name_numbers(left: E, right: E) -> float:

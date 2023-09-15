@@ -1,14 +1,13 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.compare.util import clean_map, compare_levenshtein
-from nomenklatura.matching.util import type_pair, has_schema, compare_sets
-from nomenklatura.util import normalize_name, name_words
+from nomenklatura.matching.util import type_pair, has_schema
+from nomenklatura.util import name_words
 
 
-def _address_match(left: E, right: E) -> float:
+def _address_match(query: E, result: E) -> float:
     """Text similarity between addresses."""
-    lv, rv = type_pair(left, right, registry.address)
+    lv, rv = type_pair(query, result, registry.address)
     lvn = name_words(lv)
     rvn = name_words(rv)
     base = float(max(1, min(len(lvn), len(rvn))))
@@ -17,15 +16,15 @@ def _address_match(left: E, right: E) -> float:
     return len(lvn.intersection(rvn)) / base
 
 
-def address_entity_match(left: E, right: E) -> float:
+def address_entity_match(query: E, result: E) -> float:
     """Two address entities relate to similar addresses."""
-    if not has_schema(left, right, "Address"):
+    if not has_schema(query, result, "Address"):
         return 0.0
-    return _address_match(left, right)
+    return _address_match(query, result)
 
 
-def address_prop_match(left: E, right: E) -> float:
+def address_prop_match(query: E, result: E) -> float:
     """Two entities have similar stated addresses."""
-    if has_schema(left, right, "Address"):
+    if has_schema(query, result, "Address"):
         return 0.0
-    return _address_match(left, right)
+    return _address_match(query, result)

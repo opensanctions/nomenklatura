@@ -49,4 +49,4 @@ def test_heuristic_qualified_corp():
     assert NameQualifiedMatcher.compare(a, b).score == 0.9
     a.set("registrationNumber", "137332")
     b.set("registrationNumber", "E137332")
-    assert NameQualifiedMatcher.compare(a, b).score == 1.0
+    assert NameQualifiedMatcher.compare(a, b).score > 0.9

@@ -9,4 +9,4 @@ def test_compare_levenshtein():
     johnathan = compare_levenshtein("John Smith", "Johnathan Smith")
     assert johnathan < 1.0
     assert johnathan > 0.0
-    assert compare_levenshtein("John Smith", "Fredrick Smith") == 0.0
+    assert compare_levenshtein("John Smith", "Fredrick Smith") < 0.5

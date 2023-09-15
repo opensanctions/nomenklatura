@@ -39,13 +39,13 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         return {f.name: f.doc for f in cls.features}
 
     @classmethod
-    def compare(cls, query: E, match: E) -> MatchingResult:
-        if not query.schema.can_match(match.schema):
-            if not query.schema.name == match.schema.name:
+    def compare(cls, query: E, result: E) -> MatchingResult:
+        if not query.schema.can_match(result.schema):
+            if not query.schema.name == result.schema.name:
                 return MatchingResult.make(0.0, {})
         feature_weights: Dict[str, float] = {}
         for feature in cls.features:
-            feature_weights[feature.name] = feature.func(query, match)
+            feature_weights[feature.name] = feature.func(query, result)
         score = cls.compute_score(feature_weights)
         score = min(1.0, max(0.0, score))
         # print(feature_weights)
