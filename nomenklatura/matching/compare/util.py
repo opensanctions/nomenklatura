@@ -49,7 +49,4 @@ def compare_levenshtein(left: str, right: str) -> float:
     if shortest == 0.0:
         return 0.0
     distance = levenshtein(left, right)
-    max_error = min(15.0, shortest * 0.7)
-    if distance > max_error:
-        return 0.0
-    return 1.0 - (distance / shortest)
+    return 1 - (min(distance, shortest) / shortest)

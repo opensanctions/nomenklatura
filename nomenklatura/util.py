@@ -1,9 +1,10 @@
 import re
 import os
-import Levenshtein
 from pathlib import Path
 from datetime import datetime
 from functools import lru_cache, cache
+from jellyfish import damerau_levenshtein_distance, metaphone
+from jellyfish import jaro_winkler_similarity, soundex
 from normality.constants import WS
 from followthemoney import model
 from collections.abc import Mapping, Sequence
@@ -130,10 +131,30 @@ def normalize_name(original: str) -> Optional[str]:
     return clean_strict(original)
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=1024)
+def phonetic_token(token: str) -> str:
+    if token.isalpha() and len(token) > 1:
+        return metaphone(token)
+    return token.upper()
+
+
+@lru_cache(maxsize=1024)
+def soundex_token(token: str) -> str:
+    if token.isalpha() and len(token) > 1:
+        return soundex(token)
+    return token.upper()
+
+
+@lru_cache(maxsize=1024)
 def levenshtein(left: str, right: str) -> int:
     """Compute the Levenshtein distance between two strings."""
-    return Levenshtein.distance(left[:128], right[:128])
+    return damerau_levenshtein_distance(left[:128], right[:128])
+
+
+@lru_cache(maxsize=1024)
+def jaro_winkler(left: str, right: str) -> float:
+    score = jaro_winkler_similarity(left, right)
+    return score if score > 0.6 else 0.0
 
 
 def pack_prop(schema: str, prop: str) -> str:
