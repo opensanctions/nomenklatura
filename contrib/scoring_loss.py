@@ -59,11 +59,11 @@ def process_pairs(source_path: Path):
 
             matrix[name][decision] = matrix[name].get(decision, 0) + 1
 
-            if algorithm.NAME == LogicV1.NAME:
-                if decision == (Judgement.POSITIVE, Judgement.NEGATIVE):
-                    data = pair.to_dict()
-                    data["features"] = score.features
-                    # pprint(data)
+            # if algorithm.NAME == LogicV1.NAME:
+            #     if decision == (Judgement.NEGATIVE, Judgement.POSITIVE):
+            #         data = pair.to_dict()
+            #         data["features"] = score.features
+            #         pprint(data)
 
     for algorithm in ALGORITHMS:
         log.info("---------------------------------")

@@ -47,11 +47,11 @@ def clean_map(
 
 def compare_levenshtein(left: str, right: str) -> float:
     """Generate a similarity score out of a levenshtein distance for two names."""
-    shortest = float(min(len(left), len(right)))
-    if shortest == 0.0:
+    base = float(max(len(left), len(right)))
+    if base == 0.0:
         return 0.0
     distance = levenshtein(left, right)
-    return 1 - (min(distance, shortest) / shortest)
+    return 1.0 - (float(distance) / base)
 
 
 def extract_numbers(values: List[str]) -> Set[str]:

@@ -42,7 +42,8 @@ def test_name_fingerprint_levenshtein():
     assert name_fingerprint_levenshtein(main, other) == 1.0
 
     other = e("Company", name="Siemens Aktiongesellschaft")
-    assert name_fingerprint_levenshtein(main, other) == 0.0
+    assert name_fingerprint_levenshtein(main, other) > 0.0
+    assert name_fingerprint_levenshtein(main, other) < 0.5
 
     other = e("Company", name="Siemens AktG")
     assert name_fingerprint_levenshtein(main, other) > 0.7
