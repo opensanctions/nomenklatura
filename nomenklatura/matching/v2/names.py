@@ -6,7 +6,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein, extract_numbers
-from nomenklatura.matching.compare.names import soundex_name_parts, last_name_mismatch
+from nomenklatura.matching.compare.names import soundex_name_parts
 from nomenklatura.util import fingerprint_name, name_words
 
 
@@ -42,11 +42,6 @@ def first_name_match(left: E, right: E) -> float:
     lvt = name_words(lv)
     rvt = name_words(rv)
     return 1.0 if has_overlap(lvt, rvt) else 0.0
-
-
-def family_name_match(left: E, right: E) -> float:
-    """Mismatching family name between the two entities."""
-    return last_name_mismatch(left, right)
 
 
 def name_part_soundex(left: E, right: E) -> float:

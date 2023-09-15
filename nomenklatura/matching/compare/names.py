@@ -37,6 +37,7 @@ def _phonetic_match(query: E, result: E, func: Callable[[str], str]) -> float:
     result_names = [_name_parts(n, func) for n in result_names_]
     score = 0.0
     for (q, r) in product(query_names, result_names):
+        # length = max(1, len(q))
         length = max(2, min(len(q), len(r)))
         combo = _count_overlap(q, r) / float(length)
         score = max(score, combo)
@@ -55,19 +56,19 @@ def soundex_name_parts(query: E, result: E) -> float:
     return _phonetic_match(query, result, soundex_token)
 
 
-def _align_name_parts(left: List[str], right: List[str]) -> float:
+def _align_name_parts(query: List[str], result: List[str]) -> float:
     scores: Dict[Tuple[str, str], float] = {}
-    for ln, rn in product(set(left), set(right)):
-        scores[(ln, rn)] = jaro_winkler(ln, rn)
+    for qn, rn in product(set(query), set(result)):
+        scores[(qn, rn)] = jaro_winkler(qn, rn)
     weights = []
-    shortest = min(len(left), len(right))
+    length = min(len(query), len(result))
     for (ln, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
-        while ln in left and rn in right:
-            left.remove(ln)
-            right.remove(rn)
+        while ln in query and rn in result:
+            query.remove(ln)
+            result.remove(rn)
             weights.append(score)
     # assume there should be at least two name parts:
-    return sum(weights) / float(max(2.0, shortest))
+    return sum(weights) / float(max(2.0, length))
 
 
 def jaro_name_parts(query: E, result: E) -> float:
