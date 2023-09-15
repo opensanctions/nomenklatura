@@ -1,4 +1,5 @@
 import re
+from stdnum import isin, lei
 from typing import Optional
 from followthemoney.proxy import E
 from followthemoney.types import registry
@@ -54,7 +55,7 @@ def _clean_identifier(
 
 
 def _clean_lei_code(value: str) -> Optional[str]:
-    return _clean_identifier(value, min_length=18, max_length=20)
+    return value if lei.is_valid(value) else None
 
 
 def lei_code_match(query: E, result: E) -> float:
@@ -72,11 +73,20 @@ def inn_code_match(query: E, result: E) -> float:
     return _bidi_id_prop_match(query, result, "innCode")
 
 
+def _clean_isin_code(value: str) -> Optional[str]:
+    try:
+        if not isin.validate(value):
+            return None
+        return isin.compact(value)
+    except Exception:
+        return None
+
+
 def isin_security_match(query: E, result: E) -> float:
     """Two securities have the same ISIN."""
     if not has_schema(query, result, "Security"):
         return 0.0
-    return _bidi_id_prop_match(query, result, "isin")
+    return _bidi_id_prop_match(query, result, "isin", _clean_isin_code)
 
 
 def _clean_imo_number(num: str) -> Optional[str]:
