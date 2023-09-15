@@ -1,6 +1,6 @@
 import re
-from stdnum import isin, lei
-from typing import Optional
+from stdnum import isin, lei  # type: ignore
+from typing import cast, Optional
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
@@ -77,7 +77,7 @@ def _clean_isin_code(value: str) -> Optional[str]:
     try:
         if not isin.validate(value):
             return None
-        return isin.compact(value)
+        return cast(str, isin.compact(value))
     except Exception:
         return None
 
