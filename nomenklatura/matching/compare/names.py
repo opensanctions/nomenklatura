@@ -49,7 +49,8 @@ def _phonetic_match(query: E, result: E, func: Callable[[str], str]) -> float:
     score = 0.0
     for (q, r) in product(query_names, result_names):
         # length = max(1, len(q))
-        length = max(2, min(len(q), len(r)))
+        # length = max(2, min(len(q), len(r)))
+        length = max(2.0, (len(q) + len(r)) / 2.0)
         combo = _count_overlap(q, r) / float(length)
         score = max(score, combo)
     return score
@@ -72,7 +73,8 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     for qn, rn in product(set(query), set(result)):
         scores[(qn, rn)] = jaro_winkler(qn, rn)
     weights = []
-    length = min(len(query), len(result))
+    # length = min(len(query), len(result))
+    length = max(2.0, (len(query) + len(result)) / 2.0)
     for (ln, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
         while ln in query and rn in result:
             query.remove(ln)

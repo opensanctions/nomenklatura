@@ -55,7 +55,8 @@ def test_arabic_name_similarity():
     other = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     assert person_name_jaro_winkler(name, other) == 1.0
     other = e("Person", name="Isa Bin Tarif Al Bin Ali")
-    assert person_name_jaro_winkler(name, other) == 1.0
+    assert person_name_jaro_winkler(name, other) < 1.0
+    assert person_name_jaro_winkler(name, other) > 0.7
 
     other = e("Person", name="AL BEN ALI, Isa Ben Tarif")
     assert person_name_jaro_winkler(name, other) > 0.6
@@ -65,10 +66,11 @@ def test_arabic_name_similarity():
 def test_duplicative_name_similarity():
     name = e("Person", name="Michaela Michelle Micheli")
     other = e("Person", name="Michelle Michaela")
-    assert person_name_jaro_winkler(name, other) == 1.0
+    assert person_name_jaro_winkler(name, other) > 0.7
 
     other = e("Person", name="Michelle Obama")
-    assert person_name_jaro_winkler(name, other) == 0.5
+    assert person_name_jaro_winkler(name, other) > 0.3
+    assert person_name_jaro_winkler(name, other) < 0.7
 
     other = e("Person", name="Michaela")
     assert person_name_jaro_winkler(name, other) == 0.5
@@ -77,10 +79,12 @@ def test_duplicative_name_similarity():
 def test_soundex_name_comparison():
     name = e("Person", name="Michaela Michelle Micheli")
     other = e("Person", name="Michelle Michaela")
-    assert soundex_name_parts(name, other) == 1.0
+    assert soundex_name_parts(name, other) < 1.0
+    assert soundex_name_parts(name, other) > 0.7
 
     other = e("Person", name="Michelle Michi")
-    assert soundex_name_parts(name, other) == 0.5
+    assert soundex_name_parts(name, other) > 0.3
+    assert soundex_name_parts(name, other) < 0.7
 
     other = e("Person", name="Donald Duck")
     assert soundex_name_parts(name, other) == 0.0
@@ -111,20 +115,24 @@ def test_person_name_phonetic_match():
 
     name = e("Person", name="Michaela Michelle Micheli")
     other = e("Person", name="Michelle Michaela")
-    assert person_name_phonetic_match(name, other) == 1.0
+    assert person_name_phonetic_match(name, other) < 1.0
+    assert person_name_phonetic_match(name, other) > 0.7
 
     name = e("Person", name="Michaela Michelle Micheli")
     other = e("Person", name="Michell Obama")
-    assert person_name_phonetic_match(name, other) == 0.5
+    assert person_name_phonetic_match(name, other) > 0.3
+    assert person_name_phonetic_match(name, other) < 0.7
 
     name = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     other = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     assert person_name_phonetic_match(name, other) == 1.0
     other = e("Person", name="Isa Bin Tarif Al Bin Ali")
-    assert person_name_phonetic_match(name, other) == 1.0
+    assert person_name_phonetic_match(name, other) < 1.0
+    assert person_name_phonetic_match(name, other) > 0.9
 
     other = e("Person", name="AL BEN ALI, Isa Ben Tarif")
-    assert person_name_phonetic_match(name, other) == 1.0
+    assert person_name_phonetic_match(name, other) < 1.0
+    assert person_name_phonetic_match(name, other) > 0.9
 
 
 def test_name_alphabets():
@@ -137,4 +145,4 @@ def test_name_alphabets():
     name = e("Person", name="Usāma ibn Muhammad ibn Awad ibn Lādin")
     other = e("Person", name="Osama bin Laden")
     assert person_name_phonetic_match(name, other) > 0.1
-    assert person_name_jaro_winkler(name, other) > 0.5
+    assert person_name_jaro_winkler(name, other) > 0.3

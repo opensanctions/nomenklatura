@@ -94,7 +94,7 @@ def test_logic_different_country():
 def test_qualifiers_progression():
     result = e(
         "Person",
-        name="Alexander Boris de Pfeffel Johnson",
+        name="Boris de Pfeffel Johnson",
         birthDate="1964-06-19",
         nationality="gb",
         gender="male",
