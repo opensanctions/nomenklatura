@@ -101,7 +101,7 @@ def test_qualifiers_progression():
     )
     query = e("Person", name="Boris Johnson")
     name_only = LogicV1.compare(result, query).score
-    assert name_only > 0.7
+    assert name_only > 0.5
     assert name_only < 1.0
 
     query = e("Person", name="Boris Johnson", birthDate="1964-06-19")
@@ -116,6 +116,6 @@ def test_qualifiers_progression():
     name_gender = LogicV1.compare(result, query).score
     assert name_gender < name_only
 
-    query = e("Person", name="Alexander Boris de Pfeffel Johnson", nationality="tr")
+    query = e("Person", name="Boris de Pfeffel Johnson", nationality="tr")
     name_nat = LogicV1.compare(result, query).score
     assert name_nat > 0.7

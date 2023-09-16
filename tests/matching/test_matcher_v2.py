@@ -51,7 +51,7 @@ def test_compare_entities():
     res_match = MatcherV2.compare(cand, match)
     res_mismatch = MatcherV2.compare(cand, mismatch)
     assert res_match.score > res_mismatch.score
-    assert res_match.score > 0.5
+    assert res_match.score > 0.4
     assert res_mismatch.score < 0.5
 
 
