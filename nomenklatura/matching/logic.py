@@ -27,7 +27,7 @@ class LogicV1(HeuristicAlgorithm):
     features = [
         Feature(func=name_literal_match, weight=1.0),
         Feature(func=person_name_jaro_winkler, weight=0.8),
-        Feature(func=person_name_phonetic_match, weight=0.95),
+        Feature(func=person_name_phonetic_match, weight=0.9),
         Feature(func=name_fingerprint_levenshtein, weight=0.9),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
