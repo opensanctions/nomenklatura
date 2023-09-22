@@ -14,6 +14,7 @@ from nomenklatura.matching.v2.misc import identifier_match, org_identifier_match
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
+from nomenklatura.matching.compare.dates import dob_year_disjoint
 from nomenklatura.matching.compare.addresses import address_entity_match
 from nomenklatura.matching.compare.addresses import address_prop_match
 from nomenklatura.matching.compare.names import last_name_mismatch
@@ -35,6 +36,7 @@ class MatcherV2(ScoringAlgorithm):
         identifier_match,
         dob_matches,
         dob_year_matches,
+        dob_year_disjoint,
         first_name_match,
         last_name_mismatch,
         birth_place,
