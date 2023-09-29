@@ -1,11 +1,10 @@
 from typing import List, Dict, Tuple, Optional, Callable
 from itertools import product
-from functools import lru_cache
-from normality import collapse_spaces, category_replace
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from nomenklatura.util import name_words, fingerprint_name, normalize_name
 from nomenklatura.util import phonetic_token, soundex_token, jaro_winkler
+from nomenklatura.util import clean_name_light
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
@@ -21,17 +20,6 @@ def _name_parts(text: str, func: Optional[Callable[[str], str]] = None) -> List[
             part = func(part)
         parts.append(part)
     return parts
-
-
-@lru_cache(maxsize=1000)
-def _clean_light(name: str) -> Optional[str]:
-    """Clean up a name for comparison."""
-    name = name.lower()
-    cleaned = category_replace(name)
-    cleaned = collapse_spaces(cleaned)
-    if cleaned is None or len(cleaned) < 2:
-        return None
-    return cleaned
 
 
 def _count_overlap(query: List[str], result: List[str]) -> int:
@@ -108,8 +96,8 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
 def name_literal_match(query: E, result: E) -> float:
     """Two entities have the same name, without normalization applied to the name."""
     query_names, result_names = type_pair(query, result, registry.name)
-    qnames = clean_map(query_names, _clean_light)
-    rnames = clean_map(result_names, _clean_light)
+    qnames = clean_map(query_names, clean_name_light)
+    rnames = clean_map(result_names, clean_name_light)
     return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 
@@ -120,9 +108,9 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         return 0.0
     query_names, result_names = type_pair(query, result, registry.name)
     qnames = clean_map(query_names, fingerprint_name)
-    qnames.update(clean_map(query_names, _clean_light))
+    qnames.update(clean_map(query_names, clean_name_light))
     rnames = clean_map(result_names, fingerprint_name)
-    rnames.update(clean_map(result_names, _clean_light))
+    rnames.update(clean_map(result_names, clean_name_light))
     return compare_sets(qnames, rnames, compare_levenshtein)
 
 
@@ -136,10 +124,10 @@ def last_name_mismatch(query: E, result: E) -> float:
 
 def weak_alias_match(query: E, result: E) -> float:
     """The query name is exactly the same as a result's weak alias."""
-    # NOTE: This is unbalanced, i.e. it treats query and result differently.
+    # NOTE: This is unbalanced, i.e. it treats 'query' and 'result' differently.
     query_names = query.get_type_values(registry.name)
     query_names.extend(query.get("weakAlias", quiet=True))
     result_names = result.get("weakAlias", quiet=True)
-    qnames = clean_map(query_names, _clean_light)
-    rnames = clean_map(result_names, _clean_light)
+    qnames = clean_map(query_names, clean_name_light)
+    rnames = clean_map(result_names, clean_name_light)
     return 1.0 if has_overlap(qnames, rnames) else 0.0

@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import lru_cache, cache
 from jellyfish import damerau_levenshtein_distance, metaphone
 from jellyfish import jaro_winkler_similarity, soundex
-from normality.constants import WS
+from normality.constants import WS, category_replace, collapse_spaces
 from followthemoney import model
 from collections.abc import Mapping, Sequence
 from fingerprints.fingerprint import fingerprint
@@ -129,6 +129,17 @@ def name_words(names: Iterable[str]) -> Set[str]:
 def normalize_name(original: str) -> Optional[str]:
     """Normalize a legal entity name."""
     return clean_strict(original)
+
+
+@lru_cache(maxsize=1024)
+def clean_name_light(name: str) -> Optional[str]:
+    """Clean up a name for comparison."""
+    name = name.lower()
+    cleaned = category_replace(name)
+    cleaned = collapse_spaces(cleaned)
+    if cleaned is None or len(cleaned) < 2:
+        return None
+    return cleaned
 
 
 @lru_cache(maxsize=1024)
