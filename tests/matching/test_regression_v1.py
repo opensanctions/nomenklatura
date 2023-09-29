@@ -35,7 +35,7 @@ saddam = {
 
 
 def test_explain_matcher():
-    explanation = MatcherV1.explain()
+    explanation = RegressionV1.explain()
     assert len(explanation) > 3, explanation
     for _, desc in explanation.items():
         assert len(desc.description) > 0, desc
@@ -48,8 +48,8 @@ def test_compare_entities():
     match = Entity.from_dict(model, putin)
     mismatch = Entity.from_dict(model, saddam)
 
-    res_match = MatcherV1.compare(cand, match)
-    res_mismatch = MatcherV1.compare(cand, mismatch)
+    res_match = RegressionV1.compare(cand, match)
+    res_mismatch = RegressionV1.compare(cand, mismatch)
     assert res_match.score > res_mismatch.score
     assert res_match.score > 0.5
     assert res_mismatch.score < 0.5
@@ -58,15 +58,15 @@ def test_compare_entities():
 def test_compare_features():
     cand = Entity.from_dict(model, candidate)
     match = Entity.from_dict(model, putin)
-    ref_match = MatcherV1.compare(cand, match)
+    ref_match = RegressionV1.compare(cand, match)
     ref_score = ref_match.score
 
     no_bday = match.clone()
     no_bday.pop("birthDate")
-    bday_match = MatcherV1.compare(cand, no_bday)
+    bday_match = RegressionV1.compare(cand, no_bday)
     assert ref_score > bday_match.score
 
     bela = match.clone()
     bela.set("nationality", "by")
-    bela_match = MatcherV1.compare(cand, bela)
+    bela_match = RegressionV1.compare(cand, bela)
     assert ref_score > bela_match.score
