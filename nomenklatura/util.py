@@ -17,6 +17,7 @@ from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
 QID = re.compile(r"^Q(\d+)$")
+ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
 BASE_ID = "id"
 PathLike = Union[str, os.PathLike[str]]
 ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
@@ -161,6 +162,16 @@ def levenshtein(left: str, right: str) -> int:
 def jaro_winkler(left: str, right: str) -> float:
     score = jaro_winkler_similarity(left, right)
     return score if score > 0.6 else 0.0
+
+
+def clean_identifier(
+    value: str, min_length: int = 6, max_length: int = 100
+) -> Optional[str]:
+    """Clean up an identifier for comparison."""
+    value = ID_CLEAN.sub("", value.upper())
+    if len(value) < min_length or len(value) > max_length:
+        return None
+    return value
 
 
 def pack_prop(schema: str, prop: str) -> str:

@@ -5,7 +5,7 @@ from followthemoney.types.common import PropertyType
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.util import fingerprint_name
+from nomenklatura.util import fingerprint_name, clean_identifier
 
 WORD_FIELD = "word"
 NAME_PART_FIELD = "namepart"
@@ -43,18 +43,18 @@ class Tokenizer(Generic[DS, CE]):
                     if len(token) > 2 and len(token) < 30:
                         yield NAME_PART_FIELD, token
             return
-        if type in (*TEXT_TYPES, registry.identifier):
+        if type == registry.identifier:
+            clean_id = clean_identifier(value)
+            if clean_id is not None:
+                yield type.name, clean_id
+            return
+        if type in TEXT_TYPES:
             norm = normalize(value, ascii=True, lowercase=True)
             if norm is None:
                 return
             tokens = [t for t in norm.split(WS) if len(t) > 2]
-            if type == registry.identifier:
-                yield type.name, norm
-                for token in tokens:
-                    yield type.name, token
-            field = type.name if type == registry.address else WORD_FIELD
             for token in tokens:
-                yield field, token
+                yield WORD_FIELD, token
 
     def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0

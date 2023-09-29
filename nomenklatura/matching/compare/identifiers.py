@@ -1,4 +1,3 @@
-import re
 from stdnum import isin, lei  # type: ignore
 from typing import cast, Optional
 from followthemoney.proxy import E
@@ -6,9 +5,7 @@ from followthemoney.types import registry
 
 from nomenklatura.matching.util import type_pair, props_pair, has_schema, compare_sets
 from nomenklatura.matching.compare.util import has_overlap, clean_map, CleanFunc
-from nomenklatura.util import levenshtein
-
-ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
+from nomenklatura.util import levenshtein, clean_identifier
 
 
 def _id_prop_match(
@@ -42,16 +39,6 @@ def _bidi_id_prop_match(
     if _id_prop_match(result, query, prop_name, clean=clean):
         return 1.0
     return 0.0
-
-
-def _clean_identifier(
-    value: str, min_length: int = 6, max_length: int = 100
-) -> Optional[str]:
-    """Clean up an identifier for comparison."""
-    value = ID_CLEAN.sub("", value.upper())
-    if len(value) < min_length or len(value) > max_length:
-        return None
-    return value
 
 
 def _clean_lei_code(value: str) -> Optional[str]:
@@ -93,7 +80,7 @@ def _clean_imo_number(num: str) -> Optional[str]:
     """Clean up an IMO number for comparison."""
     if num.startswith("IMO"):
         num = num[3:]
-    return _clean_identifier(num, min_length=6)
+    return clean_identifier(num, min_length=6)
 
 
 def vessel_imo_mmsi_match(query: E, result: E) -> float:
@@ -122,8 +109,8 @@ def orgid_disjoint(query: E, result: E) -> float:
     if not has_schema(query, result, "Organization"):
         return 0.0
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
-    query_ids = clean_map(query_ids_, _clean_identifier)
-    result_ids = clean_map(result_ids_, _clean_identifier)
+    query_ids = clean_map(query_ids_, clean_identifier)
+    result_ids = clean_map(result_ids_, clean_identifier)
     if not len(query_ids) or not len(result_ids):
         return 0.0
     if len(query_ids.intersection(result_ids)) > 0:
@@ -134,8 +121,8 @@ def orgid_disjoint(query: E, result: E) -> float:
 def identifier_match(query: E, result: E) -> float:
     """Two entities have the same tax or registration identifier."""
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
-    query_ids = clean_map(query_ids_, _clean_identifier)
-    result_ids = clean_map(result_ids_, _clean_identifier)
+    query_ids = clean_map(query_ids_, clean_identifier)
+    result_ids = clean_map(result_ids_, clean_identifier)
     return 1.0 if has_overlap(query_ids, result_ids) else 0.0
 
 
