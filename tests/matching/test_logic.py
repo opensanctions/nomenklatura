@@ -106,28 +106,33 @@ def test_logic_different_country():
 def test_qualifiers_progression():
     result = e(
         "Person",
-        name="Boris de Pfeffel Johnson",
+        name="Alexandre Boris de Pfeffel Johnson",
         birthDate="1964-06-19",
         nationality="gb",
         gender="male",
     )
     query = e("Person", name="Boris Johnson")
-    name_only = LogicV1.compare(result, query).score
+    name_only = LogicV1.compare(query, result).score
     assert name_only > 0.5
     assert name_only < 1.0
 
     query = e("Person", name="Boris Johnson", birthDate="1964-06-19")
-    name_dob = LogicV1.compare(result, query).score
+    name_dob = LogicV1.compare(query, result).score
     assert name_dob == name_only
 
     query = e("Person", name="Boris Johnson", birthDate="1967")
-    name_dob = LogicV1.compare(result, query).score
+    name_dob = LogicV1.compare(query, result).score
     assert name_dob < name_only
 
     query = e("Person", name="Boris Johnson", gender="female")
-    name_gender = LogicV1.compare(result, query).score
+    name_gender = LogicV1.compare(query, result).score
     assert name_gender < name_only
 
+    query = e("Person", name="Geoffrey Boris Johnson")
+    name_extra = LogicV1.compare(query, result).score
+    assert name_extra < name_only
+
     query = e("Person", name="Boris de Pfeffel Johnson", nationality="tr")
-    name_nat = LogicV1.compare(result, query).score
-    assert name_nat > 0.7
+    name_nat = LogicV1.compare(query, result).score
+    assert name_nat < 1.0
+    assert name_nat > 0.5
