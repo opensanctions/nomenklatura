@@ -6,11 +6,11 @@ from followthemoney import model
 from functools import lru_cache, cache
 from jellyfish import damerau_levenshtein_distance, metaphone
 from jellyfish import jaro_winkler_similarity, soundex
+from normality import collapse_spaces
 from normality.constants import WS
-from normality import category_replace, collapse_spaces
 from collections.abc import Mapping, Sequence
-from fingerprints.fingerprint import fingerprint
-from fingerprints.cleanup import clean_strict
+from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
+from fingerprints import replace_types
 from followthemoney.util import sanitize_text
 from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Set
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
@@ -111,9 +111,15 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
 
 
 @lru_cache(maxsize=1024)
-def fingerprint_name(original: str, keep_order: bool = True) -> Optional[str]:
+def fingerprint_name(original: str) -> Optional[str]:
     """Fingerprint a legal entity name."""
-    return fingerprint(original, keep_order=keep_order, keep_brackets=True)
+    # this needs to happen before the replacements
+    text = original.lower()
+    text = clean_entity_prefix(text)
+    # Super hard-core string scrubbing
+    cleaned = clean_name_ascii(text)
+    cleaned = replace_types(cleaned)
+    return collapse_spaces(cleaned)
 
 
 def name_words(names: Iterable[str]) -> Set[str]:
@@ -126,21 +132,9 @@ def name_words(names: Iterable[str]) -> Set[str]:
     return words
 
 
-@lru_cache(maxsize=1024)
 def normalize_name(original: str) -> Optional[str]:
     """Normalize a legal entity name."""
-    return clean_strict(original)
-
-
-@lru_cache(maxsize=1024)
-def clean_name_light(name: str) -> Optional[str]:
-    """Clean up a name for comparison."""
-    name = name.lower()
-    cleaned = category_replace(name)
-    cleaned = collapse_spaces(cleaned)
-    if cleaned is None or len(cleaned) < 2:
-        return None
-    return cleaned
+    return clean_name_ascii(original)
 
 
 @lru_cache(maxsize=1024)

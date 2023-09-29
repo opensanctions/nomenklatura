@@ -2,9 +2,9 @@ from typing import List, Dict, Tuple, Optional, Callable
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from fingerprints.cleanup import clean_name_light
 from nomenklatura.util import name_words, fingerprint_name, normalize_name
 from nomenklatura.util import phonetic_token, soundex_token, jaro_winkler
-from nomenklatura.util import clean_name_light
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
@@ -71,7 +71,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
             result.remove(rn)
             weights.append(score)
     # assume there should be at least two name parts:
-    return sum(weights) / float(max(2.0, length))
+    return sum(weights) / float(length)
 
 
 def jaro_name_parts(query: E, result: E) -> float:
@@ -125,6 +125,7 @@ def last_name_mismatch(query: E, result: E) -> float:
 def weak_alias_match(query: E, result: E) -> float:
     """The query name is exactly the same as a result's weak alias."""
     # NOTE: This is unbalanced, i.e. it treats 'query' and 'result' differently.
+    # cf. https://ofac.treasury.gov/faqs/topic/1646
     query_names = query.get_type_values(registry.name)
     query_names.extend(query.get("weakAlias", quiet=True))
     result_names = result.get("weakAlias", quiet=True)

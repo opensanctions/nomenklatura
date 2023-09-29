@@ -17,7 +17,7 @@ def test_name_literal_match():
     other = e("Company", name="siemens ag")
     assert name_literal_match(main, other) == 1.0
     other = e("Company", name="siemen's ag")
-    assert name_literal_match(main, other) == 0.0
+    assert name_literal_match(main, other) == 1.0
     other = e("Company", name="siemen ag")
     assert name_literal_match(main, other) == 0.0
     other = e("Company", name="siemens")

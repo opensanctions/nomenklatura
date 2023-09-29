@@ -22,6 +22,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "followthemoney >= 3.3.0, < 4.0.0",
+        "fingerprints >= 1.2.0, < 2.0.0",
         "shortuuid >= 1.0.11, < 2.0.0",
         "jellyfish >= 1.0.0, < 2.0.0",
         "rich >= 10.9.0, < 14.0.0",
