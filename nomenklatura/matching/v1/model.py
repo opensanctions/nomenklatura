@@ -86,7 +86,9 @@ class MatcherV1(ScoringAlgorithm):
         return features
 
     @classmethod
-    def compare(cls, query: E, match: E) -> MatchingResult:
+    def compare(
+        cls, query: E, match: E, override_weights: Dict[str, float] = {}
+    ) -> MatchingResult:
         """Use a regression model to compare two entities."""
         pipe, _ = cls.load()
         encoded = cls.encode_pair(query, match)
