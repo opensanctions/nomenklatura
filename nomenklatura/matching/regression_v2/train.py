@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
-from nomenklatura.matching.v2.model import MatcherV2
+from nomenklatura.matching.regression_v2.model import RegressionV2
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 def pair_convert(pair: JudgedPair) -> Tuple[List[float], int]:
     """Encode a pair of training data into features and target."""
     judgement = 1 if pair.judgement == Judgement.POSITIVE else 0
-    features = MatcherV2.encode_pair(pair.left, pair.right)
+    features = RegressionV2.encode_pair(pair.left, pair.right)
     return features, judgement
 
 
@@ -64,8 +64,8 @@ def train_matcher(pairs_file: PathLike) -> None:
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
-    coefficients = {n.__name__: c for n, c in zip(MatcherV2.FEATURES, coef)}
-    MatcherV2.save(pipe, coefficients)
+    coefficients = {n.__name__: c for n, c in zip(RegressionV2.FEATURES, coef)}
+    RegressionV2.save(pipe, coefficients)
     print("Coefficients:")
     pprint(coefficients)
     y_pred = pipe.predict(X_test)

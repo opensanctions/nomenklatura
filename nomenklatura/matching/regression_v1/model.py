@@ -2,49 +2,50 @@ import pickle
 import numpy as np
 from typing import List, Dict, Tuple, cast
 from functools import cache
-from nomenklatura.util import DATA_PATH
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney.proxy import E
 
-from nomenklatura.matching.v2.names import first_name_match
-from nomenklatura.matching.v2.names import name_levenshtein
-from nomenklatura.matching.v2.names import name_part_soundex, name_numbers
-from nomenklatura.matching.v2.misc import address_numbers, birth_place
-from nomenklatura.matching.v2.misc import identifier_match, org_identifier_match
+from nomenklatura.matching.regression_v1.names import first_name_match
+from nomenklatura.matching.regression_v1.names import family_name_match
+from nomenklatura.matching.regression_v1.names import name_levenshtein, name_match
+from nomenklatura.matching.regression_v1.names import name_token_overlap, name_numbers
+from nomenklatura.matching.regression_v1.misc import phone_match, email_match
+from nomenklatura.matching.regression_v1.misc import address_match, address_numbers
+from nomenklatura.matching.regression_v1.misc import identifier_match, birth_place
+from nomenklatura.matching.regression_v1.misc import org_identifier_match
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_year_disjoint
-from nomenklatura.matching.compare.addresses import address_entity_match
-from nomenklatura.matching.compare.addresses import address_prop_match
-from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
+from nomenklatura.util import DATA_PATH
 
 
-class MatcherV2(ScoringAlgorithm):
-    """A simple matching algorithm based on a regression model with phonetic
-    comparison."""
+class RegressionV1(ScoringAlgorithm):
+    """A simple matching algorithm based on a regression model."""
 
-    NAME = "regression-v2"
+    NAME = "regression-v1"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
     FEATURES: List[CompareFunction] = [
-        name_part_soundex,
+        name_match,
+        name_token_overlap,
         name_numbers,
         name_levenshtein,
+        phone_match,
+        email_match,
         identifier_match,
         dob_matches,
         dob_year_matches,
         dob_year_disjoint,
         first_name_match,
-        last_name_mismatch,
+        family_name_match,
         birth_place,
         gender_mismatch,
         country_mismatch,
         org_identifier_match,
-        address_entity_match,
-        address_prop_match,
+        address_match,
         address_numbers,
     ]
 
@@ -87,11 +88,11 @@ class MatcherV2(ScoringAlgorithm):
 
     @classmethod
     def compare(
-        cls, query: E, result: E, override_weights: Dict[str, float] = {}
+        cls, query: E, match: E, override_weights: Dict[str, float] = {}
     ) -> MatchingResult:
         """Use a regression model to compare two entities."""
         pipe, _ = cls.load()
-        encoded = cls.encode_pair(query, result)
+        encoded = cls.encode_pair(query, match)
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
         score = cast(float, pred[0][1])

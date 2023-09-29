@@ -1,21 +1,21 @@
 from typing import List, Type, Optional
-from nomenklatura.matching.v1.model import MatcherV1
-from nomenklatura.matching.v1.train import train_matcher as train_v1_matcher
-from nomenklatura.matching.v2.model import MatcherV2
-from nomenklatura.matching.v2.train import train_matcher as train_v2_matcher
+from nomenklatura.matching.regression_v1.model import RegressionV1
+from nomenklatura.matching.regression_v1.train import train_matcher as train_v1_matcher
+from nomenklatura.matching.regression_v2.model import RegressionV2
+from nomenklatura.matching.regression_v2.train import train_matcher as train_v2_matcher
 from nomenklatura.matching.name_based import NameMatcher, NameQualifiedMatcher
 from nomenklatura.matching.logic import LogicV1
 from nomenklatura.matching.types import ScoringAlgorithm
 
 ALGORITHMS: List[Type[ScoringAlgorithm]] = [
-    MatcherV1,
-    MatcherV2,
+    RegressionV1,
+    RegressionV2,
     NameMatcher,
     NameQualifiedMatcher,
     LogicV1,
 ]
 
-DefaultAlgorithm = MatcherV2
+DefaultAlgorithm = RegressionV2
 
 
 def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
@@ -27,9 +27,9 @@ def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
 
 
 __all__ = [
-    "MatcherV1",
+    "RegressionV1",
     "train_v1_matcher",
-    "MatcherV2",
+    "RegressionV2",
     "train_v2_matcher",
     "DefaultAlgorithm",
     "ScoringAlgorithm",

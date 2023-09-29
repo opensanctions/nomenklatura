@@ -3,7 +3,7 @@ from jellyfish import levenshtein_distance
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.v1.util import tokenize_pair
+from nomenklatura.matching.regression_v1.util import tokenize_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
 from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import compare_sets
