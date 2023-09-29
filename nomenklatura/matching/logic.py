@@ -14,6 +14,7 @@ from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
+from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.compare.multi import numbers_mismatch
 from nomenklatura.matching.compare.addresses import address_entity_match
 
@@ -37,6 +38,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=vessel_imo_mmsi_match, weight=0.95),
         Feature(func=inn_code_match, weight=0.9),
         Feature(func=identifier_match, weight=0.85),
+        Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=last_name_mismatch, weight=-0.2, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),

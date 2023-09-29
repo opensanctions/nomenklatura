@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional, Callable
 from itertools import product
+from functools import lru_cache
 from normality import collapse_spaces, category_replace
 from followthemoney.proxy import E
 from followthemoney.types import registry
@@ -22,6 +23,7 @@ def _name_parts(text: str, func: Optional[Callable[[str], str]] = None) -> List[
     return parts
 
 
+@lru_cache(maxsize=1000)
 def _clean_light(name: str) -> Optional[str]:
     """Clean up a name for comparison."""
     name = name.lower()
@@ -118,13 +120,26 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         return 0.0
     query_names, result_names = type_pair(query, result, registry.name)
     qnames = clean_map(query_names, fingerprint_name)
+    qnames.update(clean_map(query_names, _clean_light))
     rnames = clean_map(result_names, fingerprint_name)
+    rnames.update(clean_map(result_names, _clean_light))
     return compare_sets(qnames, rnames, compare_levenshtein)
 
 
-def last_name_mismatch(left: E, right: E) -> float:
+def last_name_mismatch(query: E, result: E) -> float:
     """The two persons have different last names."""
-    lv, rv = props_pair(left, right, ["lastName"])
-    lvt = name_words(lv)
+    qv, rv = props_pair(query, result, ["lastName"])
+    qvt = name_words(qv)
     rvt = name_words(rv)
-    return 1.0 if is_disjoint(lvt, rvt) else 0.0
+    return 1.0 if is_disjoint(qvt, rvt) else 0.0
+
+
+def weak_alias_match(query: E, result: E) -> float:
+    """The query name is exactly the same as a result's weak alias."""
+    # NOTE: This is unbalanced, i.e. it treats query and result differently.
+    query_names = query.get_type_values(registry.name)
+    query_names.extend(query.get("weakAlias", quiet=True))
+    result_names = result.get("weakAlias", quiet=True)
+    qnames = clean_map(query_names, _clean_light)
+    rnames = clean_map(result_names, _clean_light)
+    return 1.0 if has_overlap(qnames, rnames) else 0.0
