@@ -4,6 +4,7 @@ from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import soundex_name_parts
 from nomenklatura.matching.compare.names import person_name_phonetic_match
+from nomenklatura.matching.compare.names import weak_alias_match
 
 
 from .util import e
@@ -146,3 +147,14 @@ def test_name_alphabets():
     other = e("Person", name="Osama bin Laden")
     assert person_name_phonetic_match(name, other) > 0.1
     assert person_name_jaro_winkler(name, other) > 0.3
+
+
+def test_weak_name_match():
+    query = e("Person", name="Abu")
+    result = e("Person", weakAlias="ABU.")
+    assert weak_alias_match(query, result) == 1.0
+    result = e("Person", name="ABU.")
+    assert weak_alias_match(query, result) == 0.0
+    query = e("Person", weakAlias="Abu")
+    result = e("Person", weakAlias="ABU.")
+    assert weak_alias_match(query, result) == 1.0

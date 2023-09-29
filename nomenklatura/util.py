@@ -2,11 +2,12 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
+from followthemoney import model
 from functools import lru_cache, cache
 from jellyfish import damerau_levenshtein_distance, metaphone
 from jellyfish import jaro_winkler_similarity, soundex
-from normality.constants import WS, category_replace, collapse_spaces
-from followthemoney import model
+from normality.constants import WS
+from normality import category_replace, collapse_spaces
 from collections.abc import Mapping, Sequence
 from fingerprints.fingerprint import fingerprint
 from fingerprints.cleanup import clean_strict
