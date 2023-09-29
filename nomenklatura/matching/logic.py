@@ -49,15 +49,19 @@ class LogicV1(HeuristicAlgorithm):
     ]
 
     @classmethod
-    def compute_score(cls, weights: Dict[str, float]) -> float:
-        scores: List[float] = []
-        for feature in cls.features:
-            if not feature.qualifier:
-                weight = weights.get(feature.name, 0.0) * feature.weight
-                scores.append(weight)
-        score = max(scores)
-        for feature in cls.features:
-            if feature.qualifier:
-                weight = weights.get(feature.name, 0.0) * feature.weight
-                score += weight
+    def compute_score(
+        cls, scores: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
+        mains: List[float] = []
+        for feat in cls.features:
+            if feat.qualifier:
+                continue
+            weight = scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+            mains.append(weight)
+        score = max(mains)
+        for feat in cls.features:
+            if not feat.qualifier:
+                continue
+            weight = scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+            score += weight
         return score

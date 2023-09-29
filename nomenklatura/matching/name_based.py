@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
@@ -23,8 +23,13 @@ class NameMatcher(HeuristicAlgorithm):
     ]
 
     @classmethod
-    def compute_score(cls, weights: Dict[str, float]) -> float:
-        return sum(weights.values()) / float(len(weights))
+    def compute_score(
+        cls, scores: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
+        score = 0.0
+        for feat in cls.features:
+            score += scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+        return score
 
 
 class NameQualifiedMatcher(HeuristicAlgorithm):
@@ -44,14 +49,10 @@ class NameQualifiedMatcher(HeuristicAlgorithm):
     ]
 
     @classmethod
-    def compute_score(cls, weights: Dict[str, float]) -> float:
-        scores: List[float] = []
-        for feature in cls.features:
-            if not feature.qualifier:
-                scores.append(weights.get(feature.name, 0.0))
-        score = sum(scores) / float(len(scores))
-        for feature in cls.features:
-            if feature.qualifier:
-                weight = weights.get(feature.name, 0.0) * feature.weight
-                score += weight
+    def compute_score(
+        cls, scores: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
+        score = 0.0
+        for feat in cls.features:
+            score += scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
         return score

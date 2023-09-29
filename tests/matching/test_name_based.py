@@ -2,6 +2,7 @@ from followthemoney import model
 
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.compare.names import jaro_name_parts, soundex_name_parts
 
 from .util import e
 
@@ -51,3 +52,21 @@ def test_heuristic_qualified_corp():
     a.set("registrationNumber", "137332")
     b.set("registrationNumber", "E137332")
     assert NameQualifiedMatcher.compare(a, b).score > 0.9
+
+
+def test_heuristic_overrides():
+    overrides = {
+        jaro_name_parts.__name__: 0.0,
+        soundex_name_parts.__name__: 0.0,
+    }
+    a = e("Company", name="CRYSTALORD LTD")
+    b = e("Company", name="CRYSTALORD LTD")
+    result = NameQualifiedMatcher.compare(a, b, overrides)
+    assert result.score == 0.0
+    overrides = {
+        jaro_name_parts.__name__: 1.0,
+        soundex_name_parts.__name__: 0.0,
+    }
+    result = NameQualifiedMatcher.compare(a, b, overrides)
+    assert result.score == 1.0
+    assert len(result.features) == 1

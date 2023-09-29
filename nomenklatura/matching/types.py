@@ -38,7 +38,9 @@ class ScoringAlgorithm(object):
     NAME = "algorithm_name"
 
     @classmethod
-    def compare(cls, query: E, result: E) -> MatchingResult:
+    def compare(
+        cls, query: E, result: E, override_weights: Dict[str, float] = {}
+    ) -> MatchingResult:
         """Compare the two entities and return a score and feature comparison."""
         raise NotImplementedError
 
@@ -72,7 +74,9 @@ class HeuristicAlgorithm(ScoringAlgorithm):
     features: List[Feature]
 
     @classmethod
-    def compute_score(cls, weights: Dict[str, float]) -> float:
+    def compute_score(
+        cls, scores: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
         raise NotImplementedError
 
     @classmethod
@@ -80,14 +84,19 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         return {f.name: f.doc for f in cls.features}
 
     @classmethod
-    def compare(cls, query: E, result: E) -> MatchingResult:
+    def compare(
+        cls, query: E, result: E, override_weights: Dict[str, float] = {}
+    ) -> MatchingResult:
         if not query.schema.can_match(result.schema):
             if not query.schema.name == result.schema.name:
                 return MatchingResult.make(0.0, {})
-        feature_weights: Dict[str, float] = {}
+        scores: Dict[str, float] = {}
+        weights: Dict[str, float] = {}
         for feature in cls.features:
-            feature_weights[feature.name] = feature.func(query, result)
-        score = cls.compute_score(feature_weights)
+            weights[feature.name] = override_weights.get(feature.name, feature.weight)
+            if weights[feature.name] != 0.0:
+                scores[feature.name] = feature.func(query, result)
+        score = cls.compute_score(scores, weights)
         score = min(1.0, max(0.0, score))
-        # print(feature_weights)
-        return MatchingResult.make(score=score, features=feature_weights)
+        # print(scores, weights)
+        return MatchingResult.make(score=score, features=scores)

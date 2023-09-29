@@ -1,4 +1,5 @@
 from nomenklatura.matching import LogicV1
+from nomenklatura.matching.compare.names import name_literal_match
 
 from .util import e
 
@@ -10,6 +11,17 @@ def test_logic_scoring():
     b = e("Person", name="Vladimir Pudin")
     assert LogicV1.compare(a, b).score < 1.0
     assert LogicV1.compare(a, b).score > 0.7
+
+
+def test_logic_overrides():
+    overrides = {
+        name_literal_match.__name__: 0.0,
+    }
+    a = e("Company", name="CRYSTALORD LTD")
+    b = e("Company", name="CRYSTALORD LTD")
+    result = LogicV1.compare(a, b, overrides)
+    assert result.score < 1.0
+    assert name_literal_match.__name__ not in result.features
 
 
 def test_logic_qualified_country():
