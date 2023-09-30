@@ -1,0 +1,51 @@
+from typing import List
+from itertools import product
+from followthemoney.proxy import E
+from followthemoney.types import registry
+from nomenklatura.matching.util import type_pair
+from nomenklatura.util import name_words, jaro_winkler, soundex_token
+from nomenklatura.matching.compare.names import _count_overlap, _name_parts
+
+
+# def soundex_name_parts(query: List[str], result: List[str]) -> float:
+#     """Compare two sets of name parts using the phonetic matching."""
+#     result_parts = name_words(result)
+#     result_soundex = [soundex(p) for p in result_parts]
+#     similiarities: List[float] = []
+#     for part in name_words(query):
+#         part_soundex = soundex(part)
+#         soundex_score = 1.0 if part_soundex in result_soundex else 0.0
+#         similiarities.append(soundex_score)
+#     return sum(similiarities) / float(max(1.0, len(similiarities)))
+
+
+def soundex_name_parts(query: E, result: E) -> float:
+    """Compare two sets of name parts using the phonetic matching."""
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_name_parts(n, soundex_token) for n in query_names_]
+    result_names = [_name_parts(n, soundex_token) for n in result_names_]
+    score = 0.0
+    for (q, r) in product(query_names, result_names):
+        # length = max(2.0, (len(q) + len(r)) / 2.0)
+        length = max(2.0, len(q))
+        combo = _count_overlap(q, r) / float(length)
+        score = max(score, combo)
+    return score
+
+
+# def jaro_name_parts(query: List[str], result: List[str]) -> float:
+#     """Compare two sets of name parts using the Jaro-Winkler string similarity
+#     algorithm."""
+#     result_parts = name_words(result)
+#     similiarities: List[float] = []
+#     for part in name_words(query):
+#         best = 0.0
+#
+#         for other in result_parts:
+#             part_similarity = jaro_winkler(part, other)
+#             if part_similarity < 0.5:
+#                 part_similarity = 0.0
+#             best = max(best, part_similarity)
+#
+#         similiarities.append(best)
+#     return sum(similiarities) / float(max(1.0, len(similiarities)))

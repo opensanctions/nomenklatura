@@ -4,7 +4,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints.cleanup import clean_name_light
 from nomenklatura.util import name_words, fingerprint_name, normalize_name
-from nomenklatura.util import phonetic_token, soundex_token, jaro_winkler
+from nomenklatura.util import phonetic_token, jaro_winkler
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
@@ -32,10 +32,13 @@ def _count_overlap(query: List[str], result: List[str]) -> int:
     return overlap
 
 
-def _phonetic_match(query: E, result: E, func: Callable[[str], str]) -> float:
+def person_name_phonetic_match(query: E, result: E) -> float:
+    """Two persons have similar names, using a phonetic algorithm."""
+    if not has_schema(query, result, "Person"):
+        return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_name_parts(n, func) for n in query_names_]
-    result_names = [_name_parts(n, func) for n in result_names_]
+    query_names = [_name_parts(n, phonetic_token) for n in query_names_]
+    result_names = [_name_parts(n, phonetic_token) for n in result_names_]
     score = 0.0
     for (q, r) in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
@@ -43,18 +46,6 @@ def _phonetic_match(query: E, result: E, func: Callable[[str], str]) -> float:
         combo = _count_overlap(q, r) / float(length)
         score = max(score, combo)
     return score
-
-
-def person_name_phonetic_match(query: E, result: E) -> float:
-    """Two persons have similar names, using a phonetic algorithm."""
-    if not has_schema(query, result, "Person"):
-        return 0.0
-    return _phonetic_match(query, result, phonetic_token)
-
-
-def soundex_name_parts(query: E, result: E) -> float:
-    """Compare two sets of name parts using the phonetic matching."""
-    return _phonetic_match(query, result, soundex_token)
 
 
 def _align_name_parts(query: List[str], result: List[str]) -> float:
