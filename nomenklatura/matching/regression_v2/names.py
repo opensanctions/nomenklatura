@@ -1,13 +1,13 @@
 from typing import Iterable, List, Set
 from normality import WS
-from jellyfish import levenshtein_distance, soundex
+from jellyfish import levenshtein_distance
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
 from nomenklatura.matching.compare.util import extract_numbers
-from nomenklatura.util import fingerprint_name, names_word_list
+from nomenklatura.util import fingerprint_name, names_word_list, soundex_token
 
 
 def _name_parts(names: Iterable[str], min_length: int = 1) -> List[List[str]]:
@@ -54,7 +54,7 @@ def first_name_match(left: E, right: E) -> float:
 def _name_parts_soundex(names: Iterable[str]) -> List[Set[str]]:
     outs: List[Set[str]] = []
     for parts in _name_parts(names):
-        outs.append(set([soundex(part) for part in parts]))
+        outs.append(set([soundex_token(part) for part in parts]))
     return outs
 
 
