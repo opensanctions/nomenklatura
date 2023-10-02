@@ -2,18 +2,18 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.util import type_pair, has_schema
-from nomenklatura.util import name_words
+from nomenklatura.util import names_word_list, list_intersection
 
 
 def _address_match(query: E, result: E) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(query, result, registry.address)
-    lvn = name_words(lv)
-    rvn = name_words(rv)
+    lvn = names_word_list(lv)
+    rvn = names_word_list(rv)
     base = float(max(1, min(len(lvn), len(rvn))))
     # TODO: is this better token-based?
     # return compare_sets(lvn, rvn, compare_levenshtein)
-    return len(lvn.intersection(rvn)) / base
+    return list_intersection(lvn, rvn) / base
 
 
 def address_entity_match(query: E, result: E) -> float:

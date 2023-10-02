@@ -7,7 +7,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.util import compare_sets, props_pair, type_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
 from nomenklatura.matching.compare.util import extract_numbers
-from nomenklatura.util import fingerprint_name, name_words
+from nomenklatura.util import fingerprint_name, names_word_list
 
 
 def _name_parts(names: Iterable[str], min_length: int = 1) -> List[List[str]]:
@@ -46,8 +46,8 @@ def name_levenshtein(left: E, right: E) -> float:
 def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = props_pair(left, right, ["firstName", "secondName", "middleName"])
-    lvt = name_words(lv)
-    rvt = name_words(rv)
+    lvt = names_word_list(lv)
+    rvt = names_word_list(rv)
     return 1.0 if has_overlap(lvt, rvt) else 0.0
 
 

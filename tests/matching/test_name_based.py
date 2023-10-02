@@ -2,7 +2,7 @@ from followthemoney import model
 
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
-from nomenklatura.matching.compare.names import jaro_name_parts
+from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
 
 from .util import e

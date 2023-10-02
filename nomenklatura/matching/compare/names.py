@@ -1,35 +1,22 @@
-from typing import List, Dict, Tuple, Optional, Callable
+from typing import List, Dict, Tuple
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints.cleanup import clean_name_light
-from nomenklatura.util import name_words, fingerprint_name, normalize_name
-from nomenklatura.util import phonetic_token, jaro_winkler
+from nomenklatura.util import names_word_list, fingerprint_name, normalize_name
+from nomenklatura.util import phonetic_token, jaro_winkler, list_intersection
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
 
 
-def _name_parts(text: str, func: Optional[Callable[[str], str]] = None) -> List[str]:
-    normalized = normalize_name(text)
-    if normalized is None:
-        return []
-    parts: List[str] = []
-    for part in normalized.split(" "):
-        if func is not None:
-            part = func(part)
-        parts.append(part)
-    return parts
-
-
-def _count_overlap(query: List[str], result: List[str]) -> int:
-    overlap = 0
-    remainder = list(result)
-    for q in query:
-        if q in remainder:
-            overlap += 1
-            remainder.remove(q)
-    return overlap
+def _phonetic_tokens(token: str) -> List[str]:
+    return names_word_list(
+        [token],
+        normalizer=normalize_name,
+        processor=phonetic_token,
+        min_length=2,
+    )
 
 
 def person_name_phonetic_match(query: E, result: E) -> float:
@@ -37,15 +24,19 @@ def person_name_phonetic_match(query: E, result: E) -> float:
     if not has_schema(query, result, "Person"):
         return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_name_parts(n, phonetic_token) for n in query_names_]
-    result_names = [_name_parts(n, phonetic_token) for n in result_names_]
+    query_names = [_phonetic_tokens(n) for n in query_names_]
+    result_names = [_phonetic_tokens(n) for n in result_names_]
     score = 0.0
     for (q, r) in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
         length = max(2.0, len(q))
-        combo = _count_overlap(q, r) / float(length)
+        combo = list_intersection(q, r) / float(length)
         score = max(score, combo)
     return score
+
+
+def _name_parts(name: str) -> List[str]:
+    return names_word_list([name], normalizer=normalize_name)
 
 
 def _align_name_parts(query: List[str], result: List[str]) -> float:
@@ -64,9 +55,10 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     return sum(weights) / float(length)
 
 
-def jaro_name_parts(query: E, result: E) -> float:
-    """Compare two sets of name parts using the Jaro-Winkler string similarity
-    algorithm."""
+def person_name_jaro_winkler(query: E, result: E) -> float:
+    """Compare two persons' names using the Jaro-Winkler string similarity algorithm."""
+    if not has_schema(query, result, "Person"):
+        return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_name_parts(n) for n in query_names_]
     result_names = [_name_parts(n) for n in result_names_]
@@ -74,13 +66,6 @@ def jaro_name_parts(query: E, result: E) -> float:
     for (qn, rn) in product(query_names, result_names):
         score = max(score, _align_name_parts(qn, rn))
     return score
-
-
-def person_name_jaro_winkler(query: E, result: E) -> float:
-    """Compare two persons' names using the Jaro-Winkler string similarity algorithm."""
-    if not has_schema(query, result, "Person"):
-        return 0.0
-    return jaro_name_parts(query, result)
 
 
 def name_literal_match(query: E, result: E) -> float:
@@ -107,8 +92,8 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
 def last_name_mismatch(query: E, result: E) -> float:
     """The two persons have different last names."""
     qv, rv = props_pair(query, result, ["lastName"])
-    qvt = name_words(qv)
-    rvt = name_words(rv)
+    qvt = names_word_list(qv, min_length=2)
+    rvt = names_word_list(rv, min_length=2)
     return 1.0 if is_disjoint(qvt, rvt) else 0.0
 
 

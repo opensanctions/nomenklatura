@@ -12,7 +12,7 @@ from collections.abc import Mapping, Sequence
 from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
 from fingerprints import replace_types
 from followthemoney.util import sanitize_text
-from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Set
+from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Callable
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
@@ -123,13 +123,22 @@ def fingerprint_name(original: str) -> Optional[str]:
     return collapse_spaces(cleaned)
 
 
-def name_words(names: Iterable[str]) -> Set[str]:
-    """Get a unique set of tokens present in the given set of names."""
-    words: Set[str] = set()
+def names_word_list(
+    names: Iterable[str],
+    normalizer: Callable[[str], Optional[str]] = fingerprint_name,
+    processor: Optional[Callable[[str], str]] = None,
+    min_length: int = 1,
+) -> List[str]:
+    """Get a list of tokens present in the given set of names."""
+    words: List[str] = []
     for name in names:
-        normalized = fingerprint_name(name)
+        normalized = normalizer(name)
         if normalized is not None:
-            words.update(normalized.split(WS))
+            for word in normalized.split(WS):
+                if len(word) >= min_length:
+                    if processor is not None:
+                        word = processor(word)
+                    words.append(word)
     return words
 
 
@@ -172,6 +181,20 @@ def clean_identifier(
     if len(value) < min_length or len(value) > max_length:
         return None
     return value
+
+
+def list_intersection(left: List[str], right: List[str]) -> int:
+    """Return the number of elements in the intersection of two lists, accounting
+    properly for duplicates."""
+    overlap = 0
+    remainder = list(right)
+    for elem in left:
+        try:
+            remainder.remove(elem)
+            overlap += 1
+        except ValueError:
+            pass
+    return overlap
 
 
 def pack_prop(schema: str, prop: str) -> str:
