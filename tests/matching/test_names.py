@@ -4,7 +4,6 @@ from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.name_based.names import soundex_name_parts
 
 
 from .util import e
@@ -81,32 +80,16 @@ def test_duplicative_name_similarity():
     assert person_name_jaro_winkler(query, result) < 0.5
 
 
-def test_soundex_name_comparison():
-    query = e("Person", name="Michelle Michaela")
-    result = e("Person", name="Michaela Michelle Micheli")
-    assert soundex_name_parts(query, result) == 1.0
-
-    result = e("Person", name="Michelle Michi")
-    assert soundex_name_parts(query, result) > 0.3
-    assert soundex_name_parts(query, result) < 0.7
-
-    result = e("Person", name="Donald Duck")
-    assert soundex_name_parts(query, result) == 0.0
-
-
 def test_single_name():
     name = e("Person", name="Hannibal")
     other = e("Person", name="Hannibal")
-    assert soundex_name_parts(name, other) == 0.5
     assert person_name_phonetic_match(name, other) == 0.5
     assert person_name_jaro_winkler(name, other) == 0.5
 
     other = e("Person", name="Hanniball")
-    assert soundex_name_parts(name, other) == 0.5
     assert person_name_phonetic_match(name, other) == 0.5
 
     other = e("Person", name="Hannibol")
-    assert soundex_name_parts(name, other) == 0.5
     assert person_name_phonetic_match(name, other) == 0.5
     assert person_name_jaro_winkler(name, other) < 0.5
     assert person_name_jaro_winkler(name, other) > 0.2
