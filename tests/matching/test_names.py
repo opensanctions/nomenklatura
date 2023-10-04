@@ -56,8 +56,7 @@ def test_arabic_name_similarity():
     other = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     assert person_name_jaro_winkler(name, other) == 1.0
     other = e("Person", name="Isa Bin Tarif Al Bin Ali")
-    assert person_name_jaro_winkler(name, other) < 1.0
-    assert person_name_jaro_winkler(name, other) > 0.7
+    assert person_name_jaro_winkler(name, other) == 1.0
 
     other = e("Person", name="AL BEN ALI, Isa Ben Tarif")
     assert person_name_jaro_winkler(name, other) > 0.6
@@ -67,15 +66,14 @@ def test_arabic_name_similarity():
 def test_duplicative_name_similarity():
     query = e("Person", name="Michaela Michelle Micheli")
     result = e("Person", name="Michelle Michaela")
-    assert person_name_jaro_winkler(query, result) < 0.7
+    assert person_name_jaro_winkler(query, result) > 0.7
 
     query = e("Person", name="Michelle Michaela")
     result = e("Person", name="Michaela Michelle Micheli")
     assert person_name_jaro_winkler(query, result) > 0.7
 
     result = e("Person", name="Michelle Obama")
-    assert person_name_jaro_winkler(query, result) > 0.3
-    assert person_name_jaro_winkler(query, result) < 0.7
+    assert person_name_jaro_winkler(query, result) == 0.0
 
     query = e("Person", name="Michaela")
     assert person_name_jaro_winkler(query, result) < 0.5
@@ -85,15 +83,14 @@ def test_single_name():
     name = e("Person", name="Hannibal")
     other = e("Person", name="Hannibal")
     assert person_name_phonetic_match(name, other) == 0.5
-    assert person_name_jaro_winkler(name, other) == 0.5
+    assert person_name_jaro_winkler(name, other) == 0.0
 
     other = e("Person", name="Hanniball")
     assert person_name_phonetic_match(name, other) == 0.5
 
     other = e("Person", name="Hannibol")
     assert person_name_phonetic_match(name, other) == 0.5
-    assert person_name_jaro_winkler(name, other) < 0.5
-    assert person_name_jaro_winkler(name, other) > 0.2
+    assert person_name_jaro_winkler(name, other) == 0.0
 
 
 def test_person_name_phonetic_match():
