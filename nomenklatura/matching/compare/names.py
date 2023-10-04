@@ -86,16 +86,21 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     scores: Dict[Tuple[str, str], float] = {}
     for qn, rn in product(set(query), set(result)):
         scores[(qn, rn)] = jaro_winkler(qn, rn)
-    weights = []
-    # length = max(2.0, (len(query) + len(result)) / 2.0)
-    length = max(2.0, len(query))
-    for (ln, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
-        while ln in query and rn in result:
-            query.remove(ln)
+    pairs: List[Tuple[str, str]] = []
+    for (qn, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
+        if score == 0.0:
+            break
+        if qn in query and rn in result:
+            query.remove(qn)
             result.remove(rn)
-            weights.append(score)
+            pairs.append((qn, rn))
     # assume there should be at least two name parts:
-    return sum(weights) / float(length)
+    if len(pairs) < max(2.0, len(query)):
+        return 0.0
+    aligned = pairs[::-1]
+    query_aligned = " ".join(p[0] for p in aligned)
+    result_aligned = " ".join(p[1] for p in aligned)
+    return jaro_winkler(query_aligned, result_aligned)
 
 
 def person_name_jaro_winkler(query: E, result: E) -> float:
