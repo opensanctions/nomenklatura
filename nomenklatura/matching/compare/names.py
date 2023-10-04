@@ -3,8 +3,9 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints.cleanup import clean_name_light
-from nomenklatura.util import names_word_list, fingerprint_name, normalize_name
-from nomenklatura.util import phonetic_token, jaro_winkler, list_intersection
+from nomenklatura.util import names_word_list, list_intersection
+from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
+from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
@@ -19,13 +20,9 @@ def _phonetic_tokens(token: str) -> List[str]:
     )
 
 
-def person_name_phonetic_match(query: E, result: E) -> float:
-    """Two persons have similar names, using a phonetic algorithm."""
-    if not has_schema(query, result, "Person"):
-        return 0.0
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_phonetic_tokens(n) for n in query_names_]
-    result_names = [_phonetic_tokens(n) for n in result_names_]
+def _token_names_compare(
+    query_names: List[List[str]], result_names: List[List[str]]
+) -> float:
     score = 0.0
     for (q, r) in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
@@ -33,6 +30,52 @@ def person_name_phonetic_match(query: E, result: E) -> float:
         combo = list_intersection(q, r) / float(length)
         score = max(score, combo)
     return score
+
+
+def person_name_phonetic_match(query: E, result: E) -> float:
+    """Two persons have similar names, using a phonetic algorithm."""
+    if not has_schema(query, result, "Person"):
+        return 0.0
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_phonetic_tokens(n) for n in query_names_]
+    result_names = [_phonetic_tokens(n) for n in result_names_]
+    return _token_names_compare(query_names, result_names)
+
+
+def _metaphone_tokens(token: str) -> List[str]:
+    return names_word_list(
+        [token],
+        normalizer=fingerprint_name,
+        processor=metaphone_token,
+        min_length=2,
+    )
+
+
+def name_metaphone_match(query: E, result: E) -> float:
+    """Two entities (person and non-person) have similar names, using the metaphone
+    algorithm."""
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_metaphone_tokens(n) for n in query_names_]
+    result_names = [_metaphone_tokens(n) for n in result_names_]
+    return _token_names_compare(query_names, result_names)
+
+
+def _soundex_tokens(token: str) -> List[str]:
+    return names_word_list(
+        [token],
+        normalizer=fingerprint_name,
+        processor=soundex_token,
+        min_length=2,
+    )
+
+
+def name_soundex_match(query: E, result: E) -> float:
+    """Two entities (person and non-person) have similar names, using the soundex
+    algorithm."""
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_soundex_tokens(n) for n in query_names_]
+    result_names = [_soundex_tokens(n) for n in result_names_]
+    return _token_names_compare(query_names, result_names)
 
 
 def _name_parts(name: str) -> List[str]:

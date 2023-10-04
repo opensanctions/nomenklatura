@@ -147,8 +147,12 @@ def normalize_name(original: str) -> Optional[str]:
     return clean_name_ascii(original)
 
 
-@lru_cache(maxsize=1024)
 def phonetic_token(token: str) -> str:
+    return metaphone_token(token)
+
+
+@lru_cache(maxsize=1024)
+def metaphone_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
         return metaphone(token)
     return token.upper()

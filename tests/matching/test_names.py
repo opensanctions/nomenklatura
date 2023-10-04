@@ -4,6 +4,7 @@ from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import weak_alias_match
+from nomenklatura.matching.compare.names import name_metaphone_match, name_soundex_match
 
 
 from .util import e
@@ -99,10 +100,21 @@ def test_person_name_phonetic_match():
     query = e("Company", name="Michaela Michelle Micheli")
     result = e("Company", name="Michelle Michaela")
     assert person_name_phonetic_match(query, result) == 0.0
+    assert name_metaphone_match(query, result) > 0.5
+    assert name_metaphone_match(query, result) < 1.0
+    assert name_soundex_match(query, result) > 0.5
+    assert name_soundex_match(query, result) < 1.0
+
+    query = e("Company", name="OAO Gazprom")
+    result = e("Company", name="Open Joint Stock Company Gazprom")
+    assert name_metaphone_match(query, result) == 1.0
+    assert name_soundex_match(query, result) == 1.0
 
     query = e("Person", name="Michelle Michaela")
     result = e("Person", name="Michaela Michelle Micheli")
     assert person_name_phonetic_match(query, result) == 1.0
+    assert name_metaphone_match(query, result) == 1.0
+    assert name_soundex_match(query, result) == 1.0
 
     query = e("Person", name="Michaela Michelle Micheli")
     result = e("Person", name="Michelle Michaela")
@@ -113,6 +125,10 @@ def test_person_name_phonetic_match():
     result = e("Person", name="Michell Obama")
     assert person_name_phonetic_match(query, result) > 0.3
     assert person_name_phonetic_match(query, result) < 0.7
+    assert name_metaphone_match(query, result) > 0.0
+    assert name_metaphone_match(query, result) < 0.5
+    assert name_soundex_match(query, result) > 0.0
+    assert name_soundex_match(query, result) < 0.5
 
     query = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     result = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")

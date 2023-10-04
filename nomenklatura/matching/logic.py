@@ -15,8 +15,10 @@ from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import weak_alias_match
+from nomenklatura.matching.compare.names import name_soundex_match, name_metaphone_match
 from nomenklatura.matching.compare.multi import numbers_mismatch
 from nomenklatura.matching.compare.addresses import address_entity_match
+from nomenklatura.matching.util import FNUL
 
 
 class LogicV1(HeuristicAlgorithm):
@@ -30,6 +32,9 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=person_name_jaro_winkler, weight=0.8),
         Feature(func=person_name_phonetic_match, weight=0.9),
         Feature(func=name_fingerprint_levenshtein, weight=0.9),
+        # These are there so they can be enabled using custom weights:
+        Feature(func=name_metaphone_match, weight=FNUL),
+        Feature(func=name_soundex_match, weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
         Feature(func=isin_security_match, weight=0.98),
@@ -56,12 +61,12 @@ class LogicV1(HeuristicAlgorithm):
         for feat in cls.features:
             if feat.qualifier:
                 continue
-            weight = scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+            weight = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
             mains.append(weight)
         score = max(mains)
         for feat in cls.features:
             if not feat.qualifier:
                 continue
-            weight = scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+            weight = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
             score += weight
         return score

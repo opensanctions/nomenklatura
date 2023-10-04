@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional, Callable
 from followthemoney.proxy import E, EntityProxy
 
-from nomenklatura.matching.util import make_github_url
+from nomenklatura.matching.util import make_github_url, FNUL
 
 Encoded = List[float]
 CompareFunction = Callable[[EntityProxy, EntityProxy], float]
@@ -28,7 +28,7 @@ class MatchingResult(BaseModel):
     @classmethod
     def make(cls, score: float, features: Dict[str, float]) -> "MatchingResult":
         """Create a new matching result."""
-        results = {k: v for k, v in features.items() if v is not None and v != 0.0}
+        results = {k: v for k, v in features.items() if v is not None and v != FNUL}
         return cls(score=score, features=results)
 
 
@@ -89,14 +89,13 @@ class HeuristicAlgorithm(ScoringAlgorithm):
     ) -> MatchingResult:
         if not query.schema.can_match(result.schema):
             if not query.schema.name == result.schema.name:
-                return MatchingResult.make(0.0, {})
+                return MatchingResult.make(FNUL, {})
         scores: Dict[str, float] = {}
         weights: Dict[str, float] = {}
         for feature in cls.features:
             weights[feature.name] = override_weights.get(feature.name, feature.weight)
-            if weights[feature.name] != 0.0:
+            if weights[feature.name] != FNUL:
                 scores[feature.name] = feature.func(query, result)
         score = cls.compute_score(scores, weights)
-        score = min(1.0, max(0.0, score))
-        # print(scores, weights)
+        score = min(1.0, max(FNUL, score))
         return MatchingResult.make(score=score, features=scores)

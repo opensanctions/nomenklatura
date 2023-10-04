@@ -10,6 +10,7 @@ from nomenklatura.util import DATA_PATH
 V = TypeVar("V")
 BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%s#L%s"
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
+FNUL = 0.0
 
 
 def has_schema(left: E, right: E, schema: str) -> bool:
