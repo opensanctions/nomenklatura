@@ -1,4 +1,4 @@
-from normality import normalize, WS
+from normality import WS
 from typing import Generic, Generator, Tuple
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
@@ -6,6 +6,7 @@ from followthemoney.types.common import PropertyType
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.util import fingerprint_name, clean_identifier
+from nomenklatura.util import names_word_list, normalize_name
 
 WORD_FIELD = "word"
 NAME_PART_FIELD = "namepart"
@@ -49,12 +50,12 @@ class Tokenizer(Generic[DS, CE]):
                 yield type.name, clean_id
             return
         if type in TEXT_TYPES:
-            norm = normalize(value, ascii=True, lowercase=True)
-            if norm is None:
-                return
-            tokens = [t for t in norm.split(WS) if len(t) > 2]
-            for token in tokens:
-                yield WORD_FIELD, token
+            for word in names_word_list(
+                [value],
+                normalizer=normalize_name,
+                min_length=3,
+            ):
+                yield WORD_FIELD, word
 
     def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
