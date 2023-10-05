@@ -89,7 +89,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
         scores[(qn, rn)] = jaro_winkler(qn, rn)
     pairs: List[Tuple[str, str]] = []
     # original length of query:
-    length = max(2.0, len(query))
+    length = len(query)
     # find the best pairing for each name part by score:
     for (qn, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
         if score == 0.0:
@@ -107,7 +107,6 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     query_aligned = " ".join(p[0] for p in aligned)
     result_aligned = " ".join(p[1] for p in aligned)
     # return the jaro-winkler score for the aligned name parts:
-    print("ALIGNED", query_aligned, result_aligned)
     return jaro_winkler(query_aligned, result_aligned)
 
 

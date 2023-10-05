@@ -92,21 +92,22 @@ def test_duplicative_name_similarity():
     assert person_name_jaro_winkler(query, result) == 0.0
 
     query = e("Person", name="Michaela")
-    assert person_name_jaro_winkler(query, result) == 0.0
+    assert person_name_jaro_winkler(query, result) > 0.7
 
 
 def test_single_name():
     name = e("Person", name="Hannibal")
     other = e("Person", name="Hannibal")
     assert person_name_phonetic_match(name, other) == 0.5
-    assert person_name_jaro_winkler(name, other) == 0.0
+    assert person_name_jaro_winkler(name, other) == 1.0
 
     other = e("Person", name="Hanniball")
     assert person_name_phonetic_match(name, other) == 0.5
 
     other = e("Person", name="Hannibol")
     assert person_name_phonetic_match(name, other) == 0.5
-    assert person_name_jaro_winkler(name, other) == 0.0
+    assert person_name_jaro_winkler(name, other) > 0.8
+    assert person_name_jaro_winkler(name, other) < 1.0
 
 
 def test_person_name_phonetic_match():
