@@ -52,31 +52,47 @@ def test_name_fingerprint_levenshtein():
 
 
 def test_arabic_name_similarity():
-    name = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
-    other = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
-    assert person_name_jaro_winkler(name, other) == 1.0
-    other = e("Person", name="Isa Bin Tarif Al Bin Ali")
-    assert person_name_jaro_winkler(name, other) == 1.0
+    query = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
+    result = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
+    assert person_name_jaro_winkler(query, result) == 1.0
+    query = e("Person", name="Isa Bin Tarif Al Bin Ali")
+    assert person_name_jaro_winkler(query, result) == 1.0
 
-    other = e("Person", name="AL BEN ALI, Isa Ben Tarif")
-    assert person_name_jaro_winkler(name, other) > 0.6
-    assert person_name_jaro_winkler(name, other) < 1.0
+    query = e("Person", name="AL BEN ALI, Isa Ben Tarif")
+    assert person_name_jaro_winkler(query, result) > 0.6
+    assert person_name_jaro_winkler(query, result) < 1.0
 
 
 def test_duplicative_name_similarity():
     query = e("Person", name="Michaela Michelle Micheli")
     result = e("Person", name="Michelle Michaela")
-    assert person_name_jaro_winkler(query, result) > 0.7
+    assert person_name_jaro_winkler(query, result) == 0.0
 
     query = e("Person", name="Michelle Michaela")
     result = e("Person", name="Michaela Michelle Micheli")
+    assert person_name_jaro_winkler(query, result) == 1.0
+
+    query = e("Person", name="Michele Michaela")
     assert person_name_jaro_winkler(query, result) > 0.7
+    assert person_name_jaro_winkler(query, result) < 1.0
+
+    query = e("Person", name="Michele Nichaela")
+    assert person_name_jaro_winkler(query, result) > 0.7
+    assert person_name_jaro_winkler(query, result) < 1.0
+
+    query = e("Person", name="Michele Nychaela")
+    assert person_name_jaro_winkler(query, result) > 0.7
+    assert person_name_jaro_winkler(query, result) < 1.0
+
+    query = e("Person", name="Michele Mugaloo")
+    assert person_name_jaro_winkler(query, result) < 0.7
+    assert person_name_jaro_winkler(query, result) > 0.3
 
     result = e("Person", name="Michelle Obama")
     assert person_name_jaro_winkler(query, result) == 0.0
 
     query = e("Person", name="Michaela")
-    assert person_name_jaro_winkler(query, result) < 0.5
+    assert person_name_jaro_winkler(query, result) == 0.0
 
 
 def test_single_name():
@@ -141,6 +157,12 @@ def test_person_name_phonetic_match():
     assert person_name_phonetic_match(query, result) > 0.7
 
 
+def test_person_name_jaro_winkler():
+    query = e("Person", name="Jan Daniel Bothma")
+    result = e("Person", name="RAZAFIMAHATRATRA Jean Daniel Christian")
+    assert person_name_jaro_winkler(query, result) < 0.7
+
+
 def test_name_alphabets():
     query = e("Person", name="Ротенберг Аркадий")
     result = e("Person", name="Arkadiii Romanovich Rotenberg")
@@ -149,7 +171,7 @@ def test_name_alphabets():
     assert person_name_jaro_winkler(query, result) > 0.7
 
     query = e("Person", name="Osama bin Laden")
-    result = e("Person", name="Usāma ibn Muhammad ibn Awad ibn Lādin")
+    result = e("Person", name="Usāma bin Muhammad ibn Awad ibn Lādin")
     assert person_name_phonetic_match(query, result) > 0.3
     assert person_name_phonetic_match(query, result) < 0.9
     assert person_name_jaro_winkler(query, result) > 0.3
