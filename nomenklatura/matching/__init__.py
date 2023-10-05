@@ -8,11 +8,11 @@ from nomenklatura.matching.logic import LogicV1
 from nomenklatura.matching.types import ScoringAlgorithm
 
 ALGORITHMS: List[Type[ScoringAlgorithm]] = [
-    RegressionV1,
-    RegressionV2,
+    LogicV1,
     NameMatcher,
     NameQualifiedMatcher,
-    LogicV1,
+    RegressionV1,
+    RegressionV2,
 ]
 
 DefaultAlgorithm = RegressionV2
