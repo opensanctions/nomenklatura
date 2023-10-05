@@ -86,13 +86,11 @@ def test_duplicative_name_similarity():
 
     query = e("Person", name="Michele Mugaloo")
     assert person_name_jaro_winkler(query, result) < 0.7
-    assert person_name_jaro_winkler(query, result) > 0.3
+    query = e("Person", name="Michaela")
+    assert person_name_jaro_winkler(query, result) > 0.7
 
     result = e("Person", name="Michelle Obama")
     assert person_name_jaro_winkler(query, result) == 0.0
-
-    query = e("Person", name="Michaela")
-    assert person_name_jaro_winkler(query, result) > 0.7
 
 
 def test_single_name():
@@ -163,6 +161,79 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="RAZAFIMAHATRATRA Jean Daniel Christian")
     assert person_name_jaro_winkler(query, result) < 0.7
 
+    query = e("Person", name="Friedrich Lindenberg")
+    false_positives = [
+        "Lars Friedrich Lindemann",
+        "Wolfgang Friedrich Ischinger",
+        "Gerhard Friedrich Karl Westdickenberg",
+        "Klaus-Peter Friedrich Walter Schulze",
+    ]
+    for fp in false_positives:
+        result = e("Person", name=fp)
+        assert person_name_jaro_winkler(query, result) < 0.8
+
+    true_positives = [
+        "Fridrich Lindenberg",
+        "Fredrich Lindenberg",
+        "Friedrich Lindenburg",
+        "Friedrich Lyndenburg",
+    ]
+    for fp in true_positives:
+        result = e("Person", name=fp)
+        assert person_name_jaro_winkler(query, result) > 0.88
+
+    query = e("Person", name="Frederik Richter")
+    false_positives = [
+        "Frederick Matthias Benjamin Bolte",
+        "Matthi Bolte-Richter",
+        "Frank Richter",
+    ]
+    for fp in false_positives:
+        result = e("Person", name=fp)
+        assert person_name_jaro_winkler(query, result) < 0.8
+
+    query = e("Person", name="Barack Obama")
+    result = e("Person", name="George Hussein Onyango Obama")
+    assert person_name_jaro_winkler(query, result) < 0.7
+
+    result = e("Person", name="Barak Obama")
+    assert person_name_jaro_winkler(query, result) > 0.9
+
+    result = e("Person", name="Barackk Obama")
+    assert person_name_jaro_winkler(query, result) > 0.9
+
+    result = e("Person", name="Michelle Obama")
+    assert person_name_jaro_winkler(query, result) < 0.7
+
+    query = e("Person", name="Michelle Obama")
+    result = e("Person", name="Marie-Thérèse Obama")
+    assert person_name_jaro_winkler(query, result) < 0.7
+
+    result = e("Person", name="Michel Obama")
+    assert person_name_jaro_winkler(query, result) > 0.9
+
+    query = e("Person", name="Pol Pot")
+    result = e("Person", name="Paul Murphy")
+    assert person_name_jaro_winkler(query, result) < 0.7
+    result = e("Person", name="Paul Mitchell")
+    assert person_name_jaro_winkler(query, result) < 0.7
+    result = e("Person", name="Pot Pouv")
+    assert person_name_jaro_winkler(query, result) < 1.0
+    assert person_name_jaro_winkler(query, result) > 0.7
+
+    query = e("Person", name="Thomas Lindemann")
+    false_positives = [
+        "Jeremy Thomas England",
+        "Niranjan Thomas Alva",
+        "Iain Thomas Rankin",
+    ]
+    for fp in false_positives:
+        result = e("Person", name=fp)
+        assert person_name_jaro_winkler(query, result) < 0.7
+
+    result = e("Person", name="Thomas A. Lind")
+    assert person_name_jaro_winkler(query, result) < 0.8
+
 
 def test_name_alphabets():
     query = e("Person", name="Ротенберг Аркадий")
@@ -175,7 +246,7 @@ def test_name_alphabets():
     result = e("Person", name="Usāma bin Muhammad ibn Awad ibn Lādin")
     assert person_name_phonetic_match(query, result) > 0.3
     assert person_name_phonetic_match(query, result) < 0.9
-    assert person_name_jaro_winkler(query, result) > 0.3
+    assert person_name_jaro_winkler(query, result) > 0.5
     assert person_name_jaro_winkler(query, result) < 0.9
 
 

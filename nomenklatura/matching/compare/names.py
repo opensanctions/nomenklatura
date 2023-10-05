@@ -6,6 +6,7 @@ from fingerprints.cleanup import clean_name_light
 from nomenklatura.util import names_word_list, list_intersection
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
 from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
+from nomenklatura.util import levenshtein
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
@@ -106,7 +107,11 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     aligned = pairs[::-1]
     query_aligned = " ".join(p[0] for p in aligned)
     result_aligned = " ".join(p[1] for p in aligned)
-    # return the jaro-winkler score for the aligned name parts:
+    # Skip results with an overall distance of more than 3 characters:
+    max_edits = min(3, (min(len(query_aligned), len(result_aligned)) // 3))
+    if levenshtein(query_aligned, result_aligned) > max_edits:
+        return 0.0
+    # return an amped-up jaro-winkler score for the aligned name parts:
     return jaro_winkler(query_aligned, result_aligned)
 
 
