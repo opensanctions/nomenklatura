@@ -4,7 +4,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store, View
 from nomenklatura.index import Index
 
-__version__ = "3.6.6"
+__version__ = "3.6.7"
 __all__ = [
     "Dataset",
     "CompositeEntity",
