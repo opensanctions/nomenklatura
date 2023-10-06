@@ -2,6 +2,7 @@ from typing import List, Dict, Tuple, Optional
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from normality.cleaning import decompose_nfkd, category_replace
 from fingerprints import clean_name_light, clean_entity_prefix, replace_types
 from nomenklatura.util import names_word_list, list_intersection
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
@@ -16,7 +17,9 @@ def _clean_phonetic_person(original: str) -> Optional[str]:
     """Normalize a person name without transliteration."""
     text = original.lower()
     text = clean_entity_prefix(text)
-    return clean_name_light(original)
+    cleaned = clean_name_light(original)
+    cleaned = decompose_nfkd(cleaned)
+    return category_replace(cleaned)
 
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:
@@ -24,6 +27,8 @@ def _clean_phonetic_entity(original: str) -> Optional[str]:
     text = original.lower()
     text = clean_entity_prefix(text)
     cleaned = clean_name_light(original)
+    cleaned = decompose_nfkd(cleaned)
+    cleaned = category_replace(cleaned)
     return replace_types(cleaned)
 
 

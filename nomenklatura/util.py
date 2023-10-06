@@ -154,14 +154,20 @@ def phonetic_token(token: str) -> str:
 @lru_cache(maxsize=1024)
 def metaphone_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
-        return metaphone(token)
+        out = metaphone(token)
+        # doesn't handle non-ascii characters
+        if len(out):
+            return out
     return token.upper()
 
 
 @lru_cache(maxsize=1024)
 def soundex_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
-        return soundex(token)
+        out = soundex(token)
+        # doesn't handle non-ascii characters
+        if len(out):
+            return out
     return token.upper()
 
 
