@@ -52,6 +52,8 @@ def dob_day_disjoint(query: E, result: E) -> float:
         return 0.0
     result_days = _dates_precision(result_dates, Precision.DAY)
     query_days = _dates_precision(query_dates, Precision.DAY)
+    if len(result_days) == 0 or len(query_days) == 0:
+        return 0.0
     if has_overlap(query_days, result_days):
         return 0.0
     query_flipped = [_flip_day_month(d) for d in query_days]

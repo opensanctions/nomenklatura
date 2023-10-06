@@ -11,6 +11,16 @@ def test_dob_matches():
     assert dob_year_matches(left, right) == 1.0
     assert dob_day_disjoint(left, right) == 0.0
     assert dob_year_disjoint(left, right) == 0.0
+    right = e("Person", birthDate="1980")
+    assert dob_year_matches(left, right) == 1.0
+    assert dob_day_disjoint(left, right) == 0.0
+    right = e("Person", birthDate="1980-04")
+    assert dob_year_matches(left, right) == 1.0
+    assert dob_day_disjoint(left, right) == 0.0
+    right = e("Person", birthDate="1980-04-16T19:00:00")
+    assert dob_matches(left, right) == 1.0
+    assert dob_year_matches(left, right) == 1.0
+    assert dob_day_disjoint(left, right) == 0.0
     right = e("Person", birthDate="1965-04-16")
     assert dob_matches(left, right) == 0.0
     assert dob_year_matches(left, right) == 0.0
