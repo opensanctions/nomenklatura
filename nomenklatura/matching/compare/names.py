@@ -15,18 +15,16 @@ from nomenklatura.matching.compare.util import compare_levenshtein
 
 def _clean_phonetic_person(original: str) -> Optional[str]:
     """Normalize a person name without transliteration."""
-    text = original.lower()
-    text = clean_entity_prefix(text)
-    cleaned = clean_name_light(original)
+    text = clean_entity_prefix(original)
+    cleaned = clean_name_light(text)
     cleaned = decompose_nfkd(cleaned)
     return category_replace(cleaned)
 
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:
     """Normalize a legal entity name without transliteration."""
-    text = original.lower()
-    text = clean_entity_prefix(text)
-    cleaned = clean_name_light(original)
+    text = clean_entity_prefix(original)
+    cleaned = clean_name_light(text)
     cleaned = decompose_nfkd(cleaned)
     cleaned = category_replace(cleaned)
     return replace_types(cleaned)
