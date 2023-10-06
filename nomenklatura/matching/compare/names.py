@@ -27,22 +27,21 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     # compute all pairwise scores for name parts:
     for qn, rn in product(set(query), set(result)):
         score = jaro_winkler(qn, rn)
-        if not _is_levenshtein_plausible(qn, rn):
-            score = 0.0
-        scores[(qn, rn)] = score
+        if score > 0.0 and _is_levenshtein_plausible(qn, rn):
+            scores[(qn, rn)] = score
     pairs: List[Tuple[str, str]] = []
     # original length of query:
     length = len(query)
+    total_score = 1.0
     # find the best pairing for each name part by score:
     for (qn, rn), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
-        if score == 0.0:
-            break
         # one name part can only be used once, but can show up multiple times:
         while qn in query and rn in result:
             query.remove(qn)
             result.remove(rn)
+            total_score = total_score * score
             pairs.append((qn, rn))
-    # assume there should be at least two name parts:
+    # assume there should be at least a candidate for each query name part:
     if len(pairs) < length:
         return 0.0
     # weakest evidence first to bias jaro-winkler for lower scores on imperfect matches:
@@ -52,7 +51,8 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     if not _is_levenshtein_plausible(query_aligned, result_aligned):
         return 0.0
     # return an amped-up jaro-winkler score for the aligned name parts:
-    return jaro_winkler(query_aligned, result_aligned)
+    return total_score
+    # return jaro_winkler(query_aligned, result_aligned)
 
 
 def person_name_jaro_winkler(query: E, result: E) -> float:

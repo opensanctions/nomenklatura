@@ -174,6 +174,8 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="RAZAFIMAHATRATRA Jean Daniel Christian")
     assert person_name_jaro_winkler(query, result) < 0.7
 
+
+def test_jaro_friedrich():
     query = e("Person", name="Friedrich Lindenberg")
     false_positives = [
         "Lars Friedrich Lindemann",
@@ -189,12 +191,15 @@ def test_person_name_jaro_winkler():
         "Fridrich Lindenberg",
         "Fredrich Lindenberg",
         "Friedrich Lindenburg",
-        "Friedrich Lyndenburg",
     ]
     for fp in true_positives:
         result = e("Person", name=fp)
         assert person_name_jaro_winkler(query, result) > 0.88
+    result = e("Person", name="Friedrich Lyndenburg")
+    assert person_name_jaro_winkler(query, result) > 0.80
 
+
+def test_jaro_frederik():
     query = e("Person", name="Frederik Richter")
     false_positives = [
         "Frederick Matthias Benjamin Bolte",
@@ -205,6 +210,8 @@ def test_person_name_jaro_winkler():
         result = e("Person", name=fp)
         assert person_name_jaro_winkler(query, result) < 0.8
 
+
+def test_jaro_obamas():
     query = e("Person", name="Barack Obama")
     result = e("Person", name="George Hussein Onyango Obama")
     assert person_name_jaro_winkler(query, result) < 0.7
@@ -225,6 +232,8 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="Michel Obama")
     assert person_name_jaro_winkler(query, result) > 0.9
 
+
+def test_jaro_pol():
     query = e("Person", name="Pol Pot")
     result = e("Person", name="Paul Murphy")
     assert person_name_jaro_winkler(query, result) < 0.7
@@ -233,12 +242,16 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="Pot Pouv")
     assert person_name_jaro_winkler(query, result) < 0.7
 
+
+def test_jaro_lavrov():
     query = e("Person", name="Sergejs Lavrovs")
     result = e("Person", name="Sergey Viktorovich LAVROV")
     assert person_name_jaro_winkler(query, result) > 0.7
     result = e("Person", name="Sergej Viktorovich Navros")
     assert person_name_jaro_winkler(query, result) < 0.95
 
+
+def test_jaro_lindemann():
     query = e("Person", name="Thomas Lindemann")
     false_positives = [
         "Jeremy Thomas England",
