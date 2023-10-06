@@ -1,6 +1,6 @@
 from nomenklatura.matching import LogicV1
 from nomenklatura.matching.compare.names import name_literal_match
-from nomenklatura.matching.compare.names import name_metaphone_match
+from nomenklatura.matching.compare.phonetic import name_metaphone_match
 
 from .util import e
 

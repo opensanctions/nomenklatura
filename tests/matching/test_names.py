@@ -2,9 +2,10 @@ from nomenklatura.matching.compare.names import name_literal_match
 from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
-from nomenklatura.matching.compare.names import person_name_phonetic_match
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.compare.names import name_metaphone_match, name_soundex_match
+from nomenklatura.matching.compare.phonetic import person_name_phonetic_match
+from nomenklatura.matching.compare.phonetic import name_metaphone_match
+from nomenklatura.matching.compare.phonetic import name_soundex_match
 
 
 from .util import e
@@ -230,8 +231,13 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="Paul Mitchell")
     assert person_name_jaro_winkler(query, result) < 0.7
     result = e("Person", name="Pot Pouv")
-    assert person_name_jaro_winkler(query, result) < 1.0
+    assert person_name_jaro_winkler(query, result) < 0.7
+
+    query = e("Person", name="Sergejs Lavrovs")
+    result = e("Person", name="Sergey Viktorovich LAVROV")
     assert person_name_jaro_winkler(query, result) > 0.7
+    result = e("Person", name="Sergej Viktorovich Navros")
+    assert person_name_jaro_winkler(query, result) < 0.95
 
     query = e("Person", name="Thomas Lindemann")
     false_positives = [
