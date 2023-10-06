@@ -1,8 +1,8 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from fingerprints.cleanup import clean_name_light
+from fingerprints import clean_name_light, clean_entity_prefix, replace_types
 from nomenklatura.util import names_word_list, list_intersection
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
 from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
@@ -12,10 +12,25 @@ from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overl
 from nomenklatura.matching.compare.util import compare_levenshtein
 
 
+def _clean_phonetic_person(original: str) -> Optional[str]:
+    """Normalize a person name without transliteration."""
+    text = original.lower()
+    text = clean_entity_prefix(text)
+    return clean_name_light(original)
+
+
+def _clean_phonetic_entity(original: str) -> Optional[str]:
+    """Normalize a legal entity name without transliteration."""
+    text = original.lower()
+    text = clean_entity_prefix(text)
+    cleaned = clean_name_light(original)
+    return replace_types(cleaned)
+
+
 def _phonetic_tokens(token: str) -> List[str]:
     return names_word_list(
         [token],
-        normalizer=normalize_name,
+        normalizer=_clean_phonetic_person,
         processor=phonetic_token,
         min_length=2,
     )
@@ -46,7 +61,7 @@ def person_name_phonetic_match(query: E, result: E) -> float:
 def _metaphone_tokens(token: str) -> List[str]:
     return names_word_list(
         [token],
-        normalizer=fingerprint_name,
+        normalizer=_clean_phonetic_entity,
         processor=metaphone_token,
         min_length=2,
     )
@@ -64,7 +79,7 @@ def name_metaphone_match(query: E, result: E) -> float:
 def _soundex_tokens(token: str) -> List[str]:
     return names_word_list(
         [token],
-        normalizer=fingerprint_name,
+        normalizer=_clean_phonetic_entity,
         processor=soundex_token,
         min_length=2,
     )
