@@ -64,10 +64,7 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
     result_names = [_name_parts(n) for n in result_names_]
     score = 0.0
     for (qn, rn) in product(query_names, result_names):
-        pair_score = _align_name_parts(list(qn), list(rn))
-        if pair_score > 0.0:
-            print("JW", qn, rn, pair_score)
-        score = max(score, pair_score)
+        score = max(score, _align_name_parts(list(qn), list(rn)))
     return score
 
 
