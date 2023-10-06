@@ -90,6 +90,35 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     return compare_sets(qnames, rnames, compare_levenshtein)
 
 
+def _org_name_parts(name: str) -> List[str]:
+    return names_word_list([name], normalizer=fingerprint_name)
+
+
+def org_name_partial_match(query: E, result: E) -> float:
+    """All query name parts are included in a result organization name. The
+    comparison is conducted on the fingerprinted names."""
+    if not has_schema(query, result, "Organization"):
+        return 0.0
+    query_names_, result_names_ = type_pair(query, result, registry.name)
+    query_names = [_org_name_parts(n) for n in query_names_]
+    result_names = [_org_name_parts(n) for n in result_names_]
+    max_score = 0.0
+    for (qn, rn) in product(query_names, result_names):
+        common_length = 0
+        remainder = list(rn)
+        for elem in qn:
+            try:
+                remainder.remove(elem)
+                common_length += len(elem)
+            except ValueError:
+                pass
+        if common_length == 0:
+            continue
+        query_length = sum(len(q) for q in qn)
+        max_score = max(max_score, common_length / float(query_length))
+    return max_score
+
+
 def last_name_mismatch(query: E, result: E) -> float:
     """The two persons have different last names."""
     qv, rv = props_pair(query, result, ["lastName"])

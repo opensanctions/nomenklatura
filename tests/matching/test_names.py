@@ -3,6 +3,7 @@ from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import weak_alias_match
+from nomenklatura.matching.compare.names import org_name_partial_match
 from nomenklatura.matching.compare.phonetic import person_name_phonetic_match
 from nomenklatura.matching.compare.phonetic import name_metaphone_match
 from nomenklatura.matching.compare.phonetic import name_soundex_match
@@ -289,3 +290,14 @@ def test_weak_name_match():
     query = e("Person", weakAlias="Abu")
     result = e("Person", weakAlias="ABU.")
     assert weak_alias_match(query, result) == 1.0
+
+
+def test_org_name_partial_match():
+    query = e("Company", name="CRYSTALORD LIMITED")
+    result = e("Company", name="CRYSTALORD LTD")
+    assert org_name_partial_match(query, result) == 1.0
+    query = e("Company", name="CRYSTALORD SYSTEMS LIMITED")
+    assert org_name_partial_match(query, result) < 0.7
+    assert org_name_partial_match(query, result) > 0.5
+    query = e("Company", name="CRYSTALORD")
+    assert org_name_partial_match(query, result) == 1.0
