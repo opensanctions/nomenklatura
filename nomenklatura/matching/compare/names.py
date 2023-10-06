@@ -1,111 +1,35 @@
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from normality.cleaning import decompose_nfkd, category_replace
-from fingerprints import clean_name_light, clean_entity_prefix, replace_types
-from nomenklatura.util import names_word_list, list_intersection
+from fingerprints import clean_name_light
+from nomenklatura.util import names_word_list, levenshtein
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
-from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
-from nomenklatura.util import levenshtein
 from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 from nomenklatura.matching.compare.util import compare_levenshtein
-
-
-def _clean_phonetic_person(original: str) -> Optional[str]:
-    """Normalize a person name without transliteration."""
-    text = clean_entity_prefix(original)
-    cleaned = clean_name_light(text)
-    cleaned = decompose_nfkd(cleaned)
-    return category_replace(cleaned)
-
-
-def _clean_phonetic_entity(original: str) -> Optional[str]:
-    """Normalize a legal entity name without transliteration."""
-    text = clean_entity_prefix(original)
-    cleaned = clean_name_light(text)
-    cleaned = decompose_nfkd(cleaned)
-    cleaned = category_replace(cleaned)
-    return replace_types(cleaned)
-
-
-def _phonetic_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_person,
-        processor=phonetic_token,
-        min_length=2,
-    )
-
-
-def _token_names_compare(
-    query_names: List[List[str]], result_names: List[List[str]]
-) -> float:
-    score = 0.0
-    for (q, r) in product(query_names, result_names):
-        # length = max(2.0, (len(q) + len(r)) / 2.0)
-        length = max(2.0, len(q))
-        combo = list_intersection(q, r) / float(length)
-        score = max(score, combo)
-    return score
-
-
-def person_name_phonetic_match(query: E, result: E) -> float:
-    """Two persons have similar names, using a phonetic algorithm."""
-    if not has_schema(query, result, "Person"):
-        return 0.0
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_phonetic_tokens(n) for n in query_names_]
-    result_names = [_phonetic_tokens(n) for n in result_names_]
-    return _token_names_compare(query_names, result_names)
-
-
-def _metaphone_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_entity,
-        processor=metaphone_token,
-        min_length=2,
-    )
-
-
-def name_metaphone_match(query: E, result: E) -> float:
-    """Two entities (person and non-person) have similar names, using the metaphone
-    algorithm."""
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_metaphone_tokens(n) for n in query_names_]
-    result_names = [_metaphone_tokens(n) for n in result_names_]
-    return _token_names_compare(query_names, result_names)
-
-
-def _soundex_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_entity,
-        processor=soundex_token,
-        min_length=2,
-    )
-
-
-def name_soundex_match(query: E, result: E) -> float:
-    """Two entities (person and non-person) have similar names, using the soundex
-    algorithm."""
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_soundex_tokens(n) for n in query_names_]
-    result_names = [_soundex_tokens(n) for n in result_names_]
-    return _token_names_compare(query_names, result_names)
 
 
 def _name_parts(name: str) -> List[str]:
     return names_word_list([name], normalizer=normalize_name)
 
 
+def _is_levenshtein_plausible(query: str, result: str) -> bool:
+    # Skip results with an overall distance of more than 3 characters:
+    max_edits = min(3, (min(len(query), len(result)) // 3))
+    return levenshtein(query, result) <= max_edits
+
+
 def _align_name_parts(query: List[str], result: List[str]) -> float:
+    if len(query) == 0 or len(result) == 0:
+        return 0.0
     scores: Dict[Tuple[str, str], float] = {}
     # compute all pairwise scores for name parts:
     for qn, rn in product(set(query), set(result)):
-        scores[(qn, rn)] = jaro_winkler(qn, rn)
+        score = jaro_winkler(qn, rn)
+        if not _is_levenshtein_plausible(qn, rn):
+            score = 0.0
+        scores[(qn, rn)] = score
     pairs: List[Tuple[str, str]] = []
     # original length of query:
     length = len(query)
@@ -125,9 +49,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     aligned = pairs[::-1]
     query_aligned = " ".join(p[0] for p in aligned)
     result_aligned = " ".join(p[1] for p in aligned)
-    # Skip results with an overall distance of more than 3 characters:
-    max_edits = min(3, (min(len(query_aligned), len(result_aligned)) // 3))
-    if levenshtein(query_aligned, result_aligned) > max_edits:
+    if not _is_levenshtein_plausible(query_aligned, result_aligned):
         return 0.0
     # return an amped-up jaro-winkler score for the aligned name parts:
     return jaro_winkler(query_aligned, result_aligned)
@@ -142,7 +64,10 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
     result_names = [_name_parts(n) for n in result_names_]
     score = 0.0
     for (qn, rn) in product(query_names, result_names):
-        score = max(score, _align_name_parts(qn, rn))
+        pair_score = _align_name_parts(list(qn), list(rn))
+        if pair_score > 0.0:
+            print("JW", qn, rn, pair_score)
+        score = max(score, pair_score)
     return score
 
 
@@ -156,7 +81,8 @@ def name_literal_match(query: E, result: E) -> float:
 
 def name_fingerprint_levenshtein(query: E, result: E) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
-    simplifying entity type names (e.g. "Limited" -> "Ltd")."""
+    simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
+    Damerau-Levensthein string distance algorithm."""
     if has_schema(query, result, "Person"):
         return 0.0
     query_names, result_names = type_pair(query, result, registry.name)
