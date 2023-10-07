@@ -2,28 +2,26 @@ from typing import List, Optional
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from normality.cleaning import decompose_nfkd, category_replace
-from fingerprints import clean_name_light, clean_entity_prefix, replace_types
-from nomenklatura.util import names_word_list, list_intersection
+from normality.scripts import is_modern_alphabet
+from fingerprints import clean_name_ascii, clean_entity_prefix
+from nomenklatura.util import names_word_list, list_intersection, fingerprint_name
 from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
 from nomenklatura.matching.util import type_pair, has_schema
 
 
 def _clean_phonetic_person(original: str) -> Optional[str]:
     """Normalize a person name without transliteration."""
+    if not is_modern_alphabet(original):
+        return None
     text = clean_entity_prefix(original)
-    cleaned = clean_name_light(text)
-    cleaned = decompose_nfkd(cleaned)
-    return category_replace(cleaned)
+    return clean_name_ascii(text)
 
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:
     """Normalize a legal entity name without transliteration."""
-    text = clean_entity_prefix(original)
-    cleaned = clean_name_light(text)
-    cleaned = decompose_nfkd(cleaned)
-    cleaned = category_replace(cleaned)
-    return replace_types(cleaned)
+    if not is_modern_alphabet(original):
+        return None
+    return fingerprint_name(original)
 
 
 def _phonetic_tokens(token: str) -> List[str]:

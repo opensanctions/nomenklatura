@@ -132,7 +132,7 @@ def test_person_name_phonetic_match():
     result = e("Person", name="George Hussein Onyango Obama")
     assert person_name_phonetic_match(query, result) < 0.7
     result = e("Person", name="Բարակ Օբամա")
-    assert person_name_phonetic_match(query, result) < 0.7
+    assert person_name_phonetic_match(query, result) > 0.7
     result = e("Person", name="ジョージ")
     assert person_name_phonetic_match(query, result) < 0.7
     result = e("Person", name="Marie-Therese Abena Ondoa")
@@ -254,7 +254,8 @@ def test_jaro_lindemann():
 def test_name_alphabets():
     query = e("Person", name="Ротенберг Аркадий")
     result = e("Person", name="Arkadiii Romanovich Rotenberg")
-    assert person_name_phonetic_match(query, result) == 0.0
+    assert person_name_phonetic_match(query, result) > 0.0
+    assert person_name_phonetic_match(query, result) < 0.7
     assert person_name_jaro_winkler(query, result) > 0.7
 
     query = e("Person", name="Osama bin Laden")
