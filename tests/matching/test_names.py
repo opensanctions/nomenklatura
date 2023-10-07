@@ -298,7 +298,7 @@ def test_org_name_partial_match():
     assert name_fingerprint_levenshtein(query, result) == 0.0
     query = e("Company", name="CRYSTALORD")
     assert name_fingerprint_levenshtein(query, result) == 1.0
-    query = e("Company", name="CRISTALORD")
+    query = e("Company", name="CRISTALORD LIMITED")
     assert name_fingerprint_levenshtein(query, result) > 0.8
 
 
@@ -318,6 +318,11 @@ def test_org_name_example_2():
     result = e("Company", name="TACTICAL MISSILES CORPORATION JSC")
     assert name_fingerprint_levenshtein(query, result) == 1.0
     query = e("Company", name="TACTICAL MISSILES CORPORATION OJSC")
+    assert name_fingerprint_levenshtein(query, result) > 0.8
+    assert name_fingerprint_levenshtein(query, result) < 1.0
+
+    query = e("Company", name="TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY")
+    result = e("Company", name="TACTICAL MISSILES CORPORATION JOYNT STOCK COMPANY")
     assert name_fingerprint_levenshtein(query, result) > 0.8
     assert name_fingerprint_levenshtein(query, result) < 1.0
 

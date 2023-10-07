@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from fingerprints import clean_name_light
+from fingerprints import clean_name_light, clean_name_ascii
 from nomenklatura.util import names_word_list, levenshtein
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
@@ -79,6 +79,14 @@ def _fp_name_parts(name: str) -> List[str]:
     return names_word_list([name], normalizer=fingerprint_name, min_length=2)
 
 
+def _fpw_name_parts(name: str) -> List[str]:
+    parts = names_word_list([name], normalizer=fingerprint_name, min_length=2)
+    for part in names_word_list([name], normalizer=clean_name_ascii, min_length=2):
+        if part not in parts:
+            parts.append(part)
+    return parts
+
+
 def name_fingerprint_levenshtein(query: E, result: E) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
@@ -87,7 +95,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_fp_name_parts(n) for n in query_names_]
-    result_names = [_fp_name_parts(n) for n in result_names_]
+    result_names = [_fpw_name_parts(n) for n in result_names_]
     max_score = 0.0
     for (qn, rn) in product(query_names, result_names):
         if len(qn) == 0:
@@ -112,7 +120,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         raligned = " ".join(p[1] for p in aligned)
         distance = levenshtein(qaligned, raligned)
         # Skip results with an overall distance of more than 5 characters:
-        max_edits = min(5, (min(len(qaligned), len(raligned)) // 3))
+        max_edits = min(4, (min(len(qaligned), len(raligned)) // 3))
         if distance > max_edits:
             continue
         score = 1.0 - (distance / float(max(len(qaligned), len(raligned))))
