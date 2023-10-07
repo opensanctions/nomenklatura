@@ -12,7 +12,6 @@ def _address_match(query: E, result: E) -> float:
     rvn = names_word_list(rv)
     base = float(max(1, min(len(lvn), len(rvn))))
     # TODO: is this better token-based?
-    # return compare_sets(lvn, rvn, compare_levenshtein)
     return list_intersection(lvn, rvn) / base
 
 

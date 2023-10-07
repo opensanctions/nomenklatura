@@ -1,8 +1,6 @@
 import re
 from typing import List, Set, Union, Iterable, Callable, Optional
 
-from nomenklatura.util import levenshtein
-
 CleanFunc = Optional[Callable[[str], Optional[str]]]
 FIND_NUM = re.compile(r"\d{1,}")
 
@@ -43,15 +41,6 @@ def clean_map(
                 continue
         out.add(text)
     return out
-
-
-def compare_levenshtein(left: str, right: str) -> float:
-    """Generate a similarity score out of a levenshtein distance for two names."""
-    base = float(max(len(left), len(right)))
-    if base == 0.0:
-        return 0.0
-    distance = levenshtein(left, right)
-    return 1.0 - (float(distance) / base)
 
 
 def extract_numbers(values: List[str]) -> Set[str]:

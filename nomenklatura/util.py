@@ -174,7 +174,21 @@ def soundex_token(token: str) -> str:
 @lru_cache(maxsize=1024)
 def levenshtein(left: str, right: str) -> int:
     """Compute the Levenshtein distance between two strings."""
+    if left == right:
+        return 0
     return damerau_levenshtein_distance(left[:128], right[:128])
+
+
+def levenshtein_similarity(
+    left: str, right: str, distance: Optional[int] = None
+) -> float:
+    """Compute the levenshtein similarity of two strings."""
+    if distance is None:
+        distance = levenshtein(left, right)
+    base = max(len(left), len(right))
+    if base == 0:
+        return 0.0
+    return 1.0 - (float(distance) / base)
 
 
 @lru_cache(maxsize=1024)

@@ -1,7 +1,7 @@
 from normality.constants import WS
 from typing import Iterable, Set, Tuple
 
-from nomenklatura.util import normalize_name
+from nomenklatura.util import normalize_name, levenshtein
 
 
 def tokenize(texts: Iterable[str]) -> Set[str]:
@@ -21,3 +21,10 @@ def tokenize_pair(
     pair: Tuple[Iterable[str], Iterable[str]]
 ) -> Tuple[Set[str], Set[str]]:
     return tokenize(pair[0]), tokenize(pair[1])
+
+
+def compare_levenshtein(left: str, right: str) -> float:
+    distance = levenshtein(left, right)
+    base = max((1, len(left), len(right)))
+    return 1.0 - (distance / float(base))
+    # return math.sqrt(distance)

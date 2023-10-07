@@ -3,7 +3,7 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
-from nomenklatura.util import names_word_list, levenshtein
+from nomenklatura.util import names_word_list, levenshtein, levenshtein_similarity
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
@@ -103,8 +103,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         scores: Dict[Tuple[str, str], float] = {}
         # compute all pairwise scores for name parts:
         for q, r in product(set(qn), set(rn)):
-            distance = levenshtein(q, r)
-            scores[(q, r)] = 1.0 - (float(distance) / max(len(q), len(r)))
+            scores[(q, r)] = levenshtein_similarity(q, r)
         aligned: List[Tuple[str, str, float]] = []
         # find the best pairing for each name part by score:
         for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
@@ -123,7 +122,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         max_edits = min(4, (min(len(qaligned), len(raligned)) // 3))
         if distance > max_edits:
             continue
-        score = 1.0 - (distance / float(max(len(qaligned), len(raligned))))
+        score = levenshtein_similarity(qaligned, raligned, distance)
         max_score = max(max_score, score)
     return max_score
 

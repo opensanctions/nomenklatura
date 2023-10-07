@@ -1,9 +1,8 @@
 from typing import Iterable, Set
-from jellyfish import levenshtein_distance
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.regression_v1.util import tokenize_pair
+from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
 from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import compare_sets
@@ -19,19 +18,12 @@ def normalize_names(raws: Iterable[str]) -> Set[str]:
     return names
 
 
-def _compare_levenshtein(left: str, right: str) -> float:
-    distance = levenshtein_distance(left[:128], right[:128])
-    base = max((1, len(left), len(right)))
-    return 1.0 - (distance / float(base))
-    # return math.sqrt(distance)
-
-
 def name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
-    return compare_sets(lvn, rvn, _compare_levenshtein)
+    return compare_sets(lvn, rvn, compare_levenshtein)
 
 
 def first_name_match(left: E, right: E) -> float:
