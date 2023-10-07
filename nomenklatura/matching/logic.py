@@ -14,7 +14,6 @@ from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.compare.names import org_name_partial_match
 from nomenklatura.matching.compare.phonetic import person_name_phonetic_match
 from nomenklatura.matching.compare.phonetic import name_soundex_match
 from nomenklatura.matching.compare.phonetic import name_metaphone_match
@@ -37,7 +36,6 @@ class LogicV1(HeuristicAlgorithm):
         # These are there so they can be enabled using custom weights:
         Feature(func=name_metaphone_match, weight=FNUL),
         Feature(func=name_soundex_match, weight=FNUL),
-        Feature(func=org_name_partial_match, weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
         Feature(func=isin_security_match, weight=0.98),

@@ -5,9 +5,8 @@ from followthemoney.types import registry
 from fingerprints import clean_name_light
 from nomenklatura.util import names_word_list, levenshtein
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
-from nomenklatura.matching.util import type_pair, props_pair, compare_sets, has_schema
+from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
-from nomenklatura.matching.compare.util import compare_levenshtein
 
 
 def _name_parts(name: str) -> List[str]:
@@ -76,46 +75,48 @@ def name_literal_match(query: E, result: E) -> float:
     return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 
+def _fp_name_parts(name: str) -> List[str]:
+    return names_word_list([name], normalizer=fingerprint_name, min_length=2)
+
+
 def name_fingerprint_levenshtein(query: E, result: E) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
     if has_schema(query, result, "Person"):
         return 0.0
-    query_names, result_names = type_pair(query, result, registry.name)
-    qnames = clean_map(query_names, fingerprint_name)
-    qnames.update(clean_map(query_names, clean_name_light))
-    rnames = clean_map(result_names, fingerprint_name)
-    rnames.update(clean_map(result_names, clean_name_light))
-    return compare_sets(qnames, rnames, compare_levenshtein)
-
-
-def _org_name_parts(name: str) -> List[str]:
-    return names_word_list([name], normalizer=fingerprint_name)
-
-
-def org_name_partial_match(query: E, result: E) -> float:
-    """All query name parts are included in a result organization name. The
-    comparison is conducted on the fingerprinted names."""
-    if not has_schema(query, result, "Organization"):
-        return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_org_name_parts(n) for n in query_names_]
-    result_names = [_org_name_parts(n) for n in result_names_]
+    query_names = [_fp_name_parts(n) for n in query_names_]
+    result_names = [_fp_name_parts(n) for n in result_names_]
     max_score = 0.0
     for (qn, rn) in product(query_names, result_names):
-        common_length = 0
-        remainder = list(rn)
-        for elem in qn:
-            try:
-                remainder.remove(elem)
-                common_length += len(elem)
-            except ValueError:
-                pass
-        if common_length == 0:
+        if len(qn) == 0:
             continue
-        query_length = sum(len(q) for q in qn)
-        max_score = max(max_score, common_length / float(query_length))
+        scores: Dict[Tuple[str, str], float] = {}
+        # compute all pairwise scores for name parts:
+        for q, r in product(set(qn), set(rn)):
+            distance = levenshtein(q, r)
+            scores[(q, r)] = 1.0 - (float(distance) / max(len(q), len(r)))
+        aligned: List[Tuple[str, str, float]] = []
+        # find the best pairing for each name part by score:
+        for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
+            # one name part can only be used once, but can show up multiple times:
+            while q in qn and r in rn:
+                qn.remove(q)
+                rn.remove(r)
+                aligned.append((q, r, score))
+        # assume there should be at least a candidate for each query name part:
+        if len(qn):
+            continue
+        qaligned = " ".join(p[0] for p in aligned)
+        raligned = " ".join(p[1] for p in aligned)
+        distance = levenshtein(qaligned, raligned)
+        # Skip results with an overall distance of more than 5 characters:
+        max_edits = min(5, (min(len(qaligned), len(raligned)) // 3))
+        if distance > max_edits:
+            continue
+        score = 1.0 - (distance / float(max(len(qaligned), len(raligned))))
+        max_score = max(max_score, score)
     return max_score
 
 
