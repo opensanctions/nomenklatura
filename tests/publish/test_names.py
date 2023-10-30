@@ -19,7 +19,8 @@ PUTIN = [
 
 
 def test_pick_putin():
-    assert "Putin" in pick_name(PUTIN), pick_name(PUTIN)
+    name = pick_name(PUTIN).lower()
+    assert name.endswith("putin"), name
 
 
 def test_pick_latin():

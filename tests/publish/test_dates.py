@@ -1,7 +1,7 @@
 from followthemoney import model
 
 from nomenklatura.publish.dates import simplify_dates
-from nomenklatura.statement import StatementProxy
+from nomenklatura.entity import CompositeEntity
 
 ENTITY = {
     "id": "demo",
@@ -14,7 +14,7 @@ ENTITY = {
 
 
 def test_simplify_dates():
-    entity = StatementProxy.from_dict(model, ENTITY)
+    entity = CompositeEntity.from_dict(model, ENTITY)
     assert len(entity.get("birthDate")) == 3
     assert len(entity.get("createdAt")) == 2
     simple = simplify_dates(entity)
