@@ -287,6 +287,8 @@ class CompositeEntity(EntityProxy):
         if original_value is None and clean != value:
             original_value = value
 
+        if self.id is None:
+            raise InvalidData("Cannot add statement to entity without ID!")
         stmt = Statement(
             entity_id=self.id,
             prop=prop.name,

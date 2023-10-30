@@ -63,7 +63,7 @@ class Statement(object):
 
     def __init__(
         self,
-        entity_id: Optional[str],
+        entity_id: str,
         prop: str,
         schema: str,
         value: str,
@@ -95,10 +95,8 @@ class Statement(object):
         self.id = id
 
     def to_dict(self) -> StatementDict:
-        if self.entity_id is None:
-            raise ValueError("Statement has no entity ID!")
         return {
-            "canonical_id": self.canonical_id or self.entity_id,
+            "canonical_id": self.canonical_id,
             "entity_id": self.entity_id,
             "prop": self.prop,
             "prop_type": self.prop_type,
@@ -127,7 +125,9 @@ class Statement(object):
         return data
 
     def __hash__(self) -> int:
-        return hash(self.id)
+        if self.id is not None:
+            return hash(self.id)
+        return hash(self.generate_key())
 
     def __repr__(self) -> str:
         return "<Statement(%r, %r, %r)>" % (self.entity_id, self.prop, self.value)
@@ -157,13 +157,13 @@ class Statement(object):
     def make_key(
         cls,
         dataset: str,
-        entity_id: Optional[str],
+        entity_id: str,
         prop: str,
         value: str,
         external: Optional[bool],
     ) -> Optional[str]:
         """Hash the key properties of a statement record to make a unique ID."""
-        if entity_id is None or prop is None:
+        if prop is None or value is None:
             return None
         key = f"{dataset}.{entity_id}.{prop}.{value}"
         if external:
