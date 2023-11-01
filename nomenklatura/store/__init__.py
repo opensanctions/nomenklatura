@@ -8,6 +8,7 @@ from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.store.level import LevelDBStore
+from nomenklatura.store.redis_ import RedisStore
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.sql import SQLStore
 
@@ -18,6 +19,7 @@ __all__ = [
     "Writer",
     "View",
     "LevelDBStore",
+    "RedisStore",
     "MemoryStore",
     "SimpleMemoryStore",
     "SQLStore",

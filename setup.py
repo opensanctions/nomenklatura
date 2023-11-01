@@ -32,6 +32,7 @@ setup(
         "pydantic > 2.0.0, < 3.0.0",
         "click < 9.0.0",
         "plyvel < 2.0.0",
+        "redis > 5.0.0, < 6.0.0",
     ],
     tests_require=[],
     entry_points={
@@ -51,8 +52,9 @@ setup(
             "coverage>=4.1",
             "types-setuptools",
             "types-requests",
+            "types-redis",
             "requests-mock",
-        ],
-        "leveldb": ["plyvel"],
+            "fakeredis",
+        ]
     },
 )

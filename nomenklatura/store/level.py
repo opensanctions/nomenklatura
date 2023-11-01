@@ -10,7 +10,7 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Resolver
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import pack_statement, unpack_statement
+from nomenklatura.store.util import b, pack_statement, unpack_statement
 
 
 class LevelDBStore(Store[DS, CE]):
@@ -53,17 +53,17 @@ class LevelDBWriter(Writer[DS, CE]):
         canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
 
-        key = f"e:{canonical_id}:{stmt.dataset}".encode("utf-8")
-        self.batch.put(key, stmt.schema.encode("utf-8"))
+        key = b(f"e:{canonical_id}:{stmt.dataset}")
+        self.batch.put(key, b(stmt.schema))
         if stmt.external:
-            key = f"x:{canonical_id}:{stmt.id}".encode("utf-8")
+            key = b(f"x:{canonical_id}:{stmt.id}")
         else:
-            key = f"s:{canonical_id}:{stmt.id}".encode("utf-8")
+            key = b(f"s:{canonical_id}:{stmt.id}")
         self.batch.put(key, pack_statement(stmt))
         if stmt.prop_type == registry.entity.name:
             vc = self.store.resolver.get_canonical(stmt.value)
-            key = f"i:{vc}:{stmt.canonical_id}".encode("utf-8")
-            self.batch.put(key, stmt.canonical_id.encode("utf-8"))
+            key = b(f"i:{vc}:{stmt.canonical_id}")
+            self.batch.put(key, b(stmt.canonical_id))
 
         self.batch_size += 1
 
@@ -75,7 +75,7 @@ class LevelDBWriter(Writer[DS, CE]):
         statements: List[Statement] = []
         datasets: Set[str] = set()
         for prefix in (f"s:{entity_id}:", f"x:{entity_id}:"):
-            with self.store.db.iterator(prefix=prefix.encode("utf-8")) as it:
+            with self.store.db.iterator(prefix=b(prefix)) as it:
                 for k, v in it:
                     self.batch.delete(k)
                     stmt = unpack_statement(v, entity_id, False)
@@ -84,12 +84,10 @@ class LevelDBWriter(Writer[DS, CE]):
 
                     if stmt.prop_type == registry.entity.name:
                         vc = self.store.resolver.get_canonical(stmt.value)
-                        key = f"i:{vc}:{entity_id}".encode("utf-8")
-                        self.batch.delete(key)
+                        self.batch.delete(b(f"i:{vc}:{entity_id}"))
 
         for dataset in datasets:
-            key = f"e:{entity_id}:{dataset}".encode("utf-8")
-            self.batch.delete(key)
+            self.batch.delete(b(f"e:{entity_id}:{dataset}"))
 
         return list(statements)
 
@@ -103,19 +101,19 @@ class LevelDBView(View[DS, CE]):
 
     def get_entity(self, id: str) -> Optional[CE]:
         statements: List[Statement] = []
-        prefix = f"s:{id}:".encode("utf-8")
+        prefix = b(f"s:{id}:")
         with self.store.db.iterator(prefix=prefix, include_key=False) as it:
             for v in it:
                 statements.append(unpack_statement(v, id, False))
         if self.external:
-            prefix = f"x:{id}:".encode("utf-8")
+            prefix = b(f"x:{id}:")
             with self.store.db.iterator(prefix=prefix, include_key=False) as it:
                 for v in it:
                     statements.append(unpack_statement(v, id, True))
         return self.store.assemble(statements)
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
-        prefix = f"i:{id}:".encode("utf-8")
+        prefix = b(f"i:{id}:")
         with self.store.db.iterator(prefix=prefix, include_key=False) as it:
             for v in it:
                 entity = self.get_entity(v.decode("utf-8"))
