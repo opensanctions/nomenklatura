@@ -18,7 +18,7 @@ class RedisStore(Store[DS, CE]):
         dataset: DS,
         resolver: Resolver[CE],
         url: str,
-        db: Optional[Redis[bytes]] = None,
+        db: Optional["Redis[bytes]"] = None,
     ):
         super().__init__(dataset, resolver)
         self.url = url
@@ -43,7 +43,7 @@ class RedisWriter(Writer[DS, CE]):
 
     def __init__(self, store: RedisStore[DS, CE]):
         self.store: RedisStore[DS, CE] = store
-        self.pipeline: Optional[Pipeline[bytes]] = None
+        self.pipeline: Optional["Pipeline[bytes]"] = None
         self.batch_size = 0
 
     def flush(self) -> None:
