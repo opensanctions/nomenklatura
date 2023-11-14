@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import time
 from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
@@ -111,6 +112,10 @@ class Enricher(ABC):
             except RequestException as rex:
                 if rex.response is not None and rex.response.status_code in (401, 403):
                     raise EnrichmentAbort("Authorization failure: %s" % url) from rex
+                if rex.response is not None and rex.response.status_code == 429:
+                    log.info("Rate limit exceeded. Sleeping for 60s.")
+                    time.sleep(61)
+                    return self.http_post_json_cached(url, cache_key, json, cache_days)
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
                 raise EnrichmentException(msg) from rex
             resp_data = resp.json()
