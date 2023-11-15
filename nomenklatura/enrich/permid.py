@@ -77,7 +77,7 @@ class PermIDEnricher(Enricher):
             return name.text
         return value
 
-    def fetch_permid(self, url: str) -> Dict[str, Any]:
+    def fetch_permid(self, url: str) -> Any:
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden)
@@ -86,7 +86,7 @@ class PermIDEnricher(Enricher):
         return json.loads(res_raw)
 
     def fetch_perm_org(self, entity: CE, url: str) -> CE:
-        res = self.fetch_permid(url)
+        res: Dict[str, Any] = self.fetch_permid(url)
         res.pop("@id", None)
         res.pop("@type", None)
         res.pop("@context", None)
@@ -126,7 +126,7 @@ class PermIDEnricher(Enricher):
 
         quote = res.pop("hasOrganizationPrimaryQuote", None)
         if quote is not None:
-            quote_res = self.fetch_permid(quote)
+            quote_res: Dict[str, Any] = self.fetch_permid(quote)
             match.add("ticker", quote_res.pop("tr-fin:hasExchangeTicker", None))
             match.add("ricCode", quote_res.pop("tr-fin:hasRic", None))
         return match
