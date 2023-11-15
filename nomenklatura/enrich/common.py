@@ -121,7 +121,7 @@ class Enricher(ABC):
                             url, cache_key, json, cache_days, retry - 1
                         )
                     else:
-                        raise EnrichmentException(
+                        raise EnrichmentAbort(
                             "Rate limit exceeded and out of retries: %s" % url
                         ) from rex
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
