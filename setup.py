@@ -53,6 +53,7 @@ setup(
             "types-setuptools",
             "types-requests",
             "types-redis",
+            "lxml-stubs",
             "requests-mock",
             "fakeredis",
         ]
