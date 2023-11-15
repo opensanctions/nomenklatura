@@ -7,7 +7,7 @@ from lxml import etree
 # from pprint import pprint
 from itertools import product
 from functools import lru_cache
-from typing import Set, Generator, Optional
+from typing import Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 from followthemoney.types import registry
 
@@ -76,14 +76,16 @@ class PermIDEnricher(Enricher):
             return name.text
         return value
 
-    def fetch_permid(self, entity: CE, url: str) -> CE:
+    def fetch_permid(self, url: str) -> Dict[str, Any]:
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden)
         if not len(res_raw):
             raise EnrichmentException("Empty response from PermID")
-        res = json.loads(res_raw)
+        return json.loads(res_raw)
 
+    def fetch_perm_org(self, entity: CE, url: str) -> CE:
+        res = self.fetch_permid(url)
         res.pop("@id", None)
         res.pop("@type", None)
         res.pop("@context", None)
@@ -95,6 +97,7 @@ class PermIDEnricher(Enricher):
         match.id = f"lei-{lei_code}" if lei_code is not None else f"permid-{perm_id}"
         match.add("sourceUrl", url)
         match.add("leiCode", lei_code)
+        match.add("permId", perm_id)
         match.add("name", res.pop("vcard:organization-name", None))
         match.add("website", res.pop("hasURL", None))
         match.add("country", self.fetch_placename(res.pop("isDomiciledIn", None)))
@@ -119,8 +122,12 @@ class PermIDEnricher(Enricher):
         match.add("phone", res.pop("tr-org:hasRegisteredPhoneNumber", None))
         res.pop("tr-org:hasHeadquartersFaxNumber", None)
         res.pop("tr-org:hasRegisteredFaxNumber", None)
-        # pprint(match.to_dict())
-        # pprint(res)
+
+        quote = res.pop("hasOrganizationPrimaryQuote", None)
+        if quote is not None:
+            quote_res = self.fetch_permid(quote)
+            match.add("ticker", quote_res.pop("tr-fin:hasExchangeTicker", None))
+            match.add("ricCode", quote_res.pop("tr-fin:hasRic", None))
         return match
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
@@ -142,7 +149,7 @@ class PermIDEnricher(Enricher):
             if match_permid_url is None or match_permid_url in seen_matches:
                 continue
             seen_matches.add(match_permid_url)
-            match = self.fetch_permid(entity, match_permid_url)
+            match = self.fetch_perm_org(entity, match_permid_url)
             yield match
 
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
