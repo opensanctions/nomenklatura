@@ -33,6 +33,7 @@ setup(
         "click < 9.0.0",
         "plyvel < 2.0.0",
         "redis > 5.0.0, < 6.0.0",
+        "lxml > 4.0.0, < 5.0.0",
     ],
     tests_require=[],
     entry_points={
