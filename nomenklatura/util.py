@@ -21,6 +21,7 @@ ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
 BASE_ID = "id"
 PathLike = Union[str, os.PathLike[str]]
 ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
+HeadersType = Optional[Mapping[str, Union[str, bytes, None]]]
 
 
 def is_qid(text: Optional[str]) -> bool:
