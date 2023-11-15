@@ -2,7 +2,6 @@ import os
 import logging
 from typing import Generator, Dict, Optional
 from followthemoney.util import make_entity_id
-from normality import slugify
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -11,11 +10,12 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 
 log = logging.getLogger(__name__)
 
-URL = "https://api.openfigi.com/v3/search"
-
 
 class OpenFIGIEnricher(Enricher):
     """Uses the `OpenFIGI` search API to look up FIGIs by company name."""
+
+    SEARCH_URL = "https://api.openfigi.com/v3/search"
+    MAPPING_URL = "https://api.openfigi.com/v3/mapping"
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
@@ -31,10 +31,10 @@ class OpenFIGIEnricher(Enricher):
             self.session.headers["X-OPENFIGI-APIKEY"] = api_key
 
     def make_company_id(self, name: str) -> str:
-        return f"figi-co-{make_entity_id(name)}"
+        return f"figi-company-{make_entity_id(name)}"
 
     def make_security_id(self, figi: str) -> str:
-        return f"figi-id-{slugify(figi, sep='-')}"
+        return f"figi-{figi}"
 
     def search(self, query: str) -> Generator[Dict[str, str], None, None]:
         body = {"query": query}
@@ -44,9 +44,9 @@ class OpenFIGIEnricher(Enricher):
             if next is not None:
                 body["start"] = next
 
-            log.info(f"Searching {query}. Offset={next}")
-            cache_key = f"{URL}:{query}:{next}"
-            resp = self.http_post_json_cached(URL, cache_key, json=body)
+            log.info(f"Searching {query!r}, offset={next}")
+            cache_key = f"{self.SEARCH_URL}:{query}:{next}"
+            resp = self.http_post_json_cached(self.SEARCH_URL, cache_key, json=body)
             if "data" in resp:
                 yield from resp["data"]
 
@@ -54,7 +54,7 @@ class OpenFIGIEnricher(Enricher):
             if next is None:
                 break
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match_organization(self, entity: CE) -> Generator[CE, None, None]:
         for name in entity.get("name"):
             for match in self.search(name):
                 match_name = match.get("name", None)
@@ -65,23 +65,48 @@ class OpenFIGIEnricher(Enricher):
                 other.add("name", match_name)
                 yield other
 
+    def match_security(self, entity: CE) -> Generator[CE, None, None]:
+        for isin in entity.get("isin"):
+            cache_key = f"{self.MAPPING_URL}:{isin}"
+            query = {"idType": "ID_ISIN", "idValue": isin}
+            resp = self.http_post_json_cached(self.SEARCH_URL, cache_key, json=query)
+            for item in resp:
+                security = self.make_entity(entity, "Security")
+                # security.id = self.make_security_id(item["figi"])
+                security.id = entity.id
+                security.add("isin", isin)
+                security.add("figiCode", item["figi"])
+                security.add("ticker", item["ticker"])
+                security.add("type", item["securityType"])
+                yield security
+
+    def match(self, entity: CE) -> Generator[CE, None, None]:
+        if entity.schema.is_a("Organization"):
+            yield from self.match_organization(entity)
+        if entity.schema.is_a("Security"):
+            yield from self.match_security(entity)
+
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
-        name = match.get("name")[0]
-        for item in self.search(name):
+        if match.schema.is_a("Security"):
+            yield match
+        if match.schema.is_a("Organization"):
+            name = match.first("name")
+            if name is None:
+                return
+            yield match
+            for item in self.search(name):
+                # Only emit the securities which match the name of the positive match
+                # to the company exactly. Skip everything else.
+                if item["name"] != name:
+                    continue
 
-            # Only emit the securities which match the name of the positive match
-            # to the company exactly. Skip everything else.
-            if item["name"] != name:
-                continue
-
-            security = self.make_entity(match, "Security")
-            security.id = self.make_security_id(item["figi"])
-            security.add("name", item["figi"])
-            security.add("issuer", match)
-            security.add("ticker", item["ticker"])
-            security.add("type", item["securityType"])
-            if item["exchCode"] is not None:
-                security.add("notes", f'exchange {item["exchCode"]}')
-            security.add("description", item["securityDescription"])
-
-            yield security
+                security = self.make_entity(match, "Security")
+                security.id = self.make_security_id(item["figi"])
+                security.add("figiCode", item["figi"])
+                security.add("issuer", match)
+                security.add("ticker", item["ticker"])
+                security.add("type", item["securityType"])
+                # if item["exchCode"] is not None:
+                #     security.add("notes", f'exchange {item["exchCode"]}')
+                security.add("description", item["securityDescription"])
+                yield security

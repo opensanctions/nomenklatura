@@ -47,7 +47,7 @@ def load_enricher():
     return enricher_cls(dataset, cache, {})
 
 
-def test_nominatim_match():
+def test_figi_match():
     enricher = load_enricher()
     with requests_mock.Mocker() as m:
         m.post("/v3/search", json=RESPONSE)
@@ -66,6 +66,6 @@ def test_nominatim_match():
         assert m2.get("name") == ["Bank of Russia Russia Central"], m2
 
         e_results = list(enricher.expand(ent, m_results[0]))
-        assert len(e_results) == 1, e_results
-        assert e_results[0].get("ticker") == ["BKRUSS F 12/31/01"], e_results
-        assert e_results[0].get("issuer") == [m_results[0].id], e_results
+        assert len(e_results) == 2, e_results
+        assert e_results[1].get("ticker") == ["BKRUSS F 12/31/01"], e_results
+        assert e_results[1].get("issuer") == [m_results[0].id], e_results
