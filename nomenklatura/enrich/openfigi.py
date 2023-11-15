@@ -1,7 +1,6 @@
 import os
 import logging
-from typing import Any, Generator, Dict, List
-from urllib.parse import urljoin
+from typing import Generator, Dict, Optional
 from followthemoney.util import make_entity_id
 from normality import slugify
 
@@ -20,6 +19,12 @@ class OpenFIGIEnricher(Enricher):
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
+        api_key_var = "${OPENFIGI_API_KEY}"
+        self.api_key: Optional[str] = self.get_config_expand("api_key", api_key_var)
+        if self.api_key == api_key_var:
+            self.api_key = None
+        if self.api_key is None:
+            log.warning("PermID has no API token (%s)" % api_key_var)
 
         api_key = os.environ.get("OPENFIGI_API_KEY")
         if api_key is not None:
@@ -41,7 +46,7 @@ class OpenFIGIEnricher(Enricher):
 
             log.info(f"Searching {query}. Offset={next}")
             cache_key = f"{URL}:{query}:{next}"
-            resp = self.http_post_json_cached(URL, cache_key, body)
+            resp = self.http_post_json_cached(URL, cache_key, json=body)
             if "data" in resp:
                 yield from resp["data"]
 

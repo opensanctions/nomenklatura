@@ -34,7 +34,6 @@ class PermIDEnricher(Enricher):
         super().__init__(dataset, cache, config)
         token_var = "${PERMID_API_TOKEN}"
         self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
-        self.quota_exceeded = False
         if self.api_token == token_var:
             self.api_token = None
         if self.api_token is None:

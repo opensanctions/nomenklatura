@@ -120,7 +120,11 @@ class Enricher(ABC):
                         log.info("Rate limit exceeded. Sleeping for 60s.")
                         time.sleep(61)
                         return self.http_post_json_cached(
-                            url, cache_key, json, cache_days, retry - 1
+                            url,
+                            cache_key,
+                            json=json,
+                            cache_days=cache_days,
+                            retry=retry - 1,
                         )
                     else:
                         raise EnrichmentAbort(
