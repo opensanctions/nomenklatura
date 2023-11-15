@@ -22,15 +22,16 @@ class OpenFIGIEnricher(Enricher):
         super().__init__(dataset, cache, config)
 
         api_key = os.environ.get("OPENFIGI_API_KEY")
-        self.session.headers["X-OPENFIGI-APIKEY"] = api_key
+        if api_key is not None:
+            self.session.headers["X-OPENFIGI-APIKEY"] = api_key
 
-    def make_company_id(self, name):
+    def make_company_id(self, name: str) -> str:
         return f"figi-co-{make_entity_id(name)}"
 
-    def make_security_id(self, figi):
+    def make_security_id(self, figi: str) -> str:
         return f"figi-id-{slugify(figi, sep='-')}"
 
-    def search(self, query):
+    def search(self, query: str) -> Generator[Dict[str, str], None, None]:
         body = {"query": query}
         next = None
 
@@ -41,7 +42,8 @@ class OpenFIGIEnricher(Enricher):
             log.info(f"Searching {query}. Offset={next}")
             cache_key = f"{URL}:{query}:{next}"
             resp = self.http_post_json_cached(URL, cache_key, body)
-            yield from resp["data"]
+            if "data" in resp:
+                yield from resp["data"]
 
             next = resp.get("next", None)
             if next is None:
@@ -50,19 +52,20 @@ class OpenFIGIEnricher(Enricher):
     def match(self, entity: CE) -> Generator[CE, None, None]:
         for name in entity.get("name"):
             for match in self.search(name):
-                other = self.make_entity(entity, "Company")
-                name = match.get("name", None)
-                if name is None:
+                match_name = match.get("name", None)
+                if match_name is None:
                     continue
-                other.id = self.make_company_id(name)
-                other.add("name", name)
+                other = self.make_entity(entity, "Company")
+                other.id = self.make_company_id(match_name)
+                other.add("name", match_name)
                 yield other
 
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
-        yield match
-
         name = match.get("name")[0]
         for item in self.search(name):
+
+            # Only emit the securities which match the name of the positive match
+            # to the company exactly. Skip everything else.
             if item["name"] != name:
                 continue
 
@@ -72,6 +75,8 @@ class OpenFIGIEnricher(Enricher):
             security.add("issuer", match)
             security.add("ticker", item["ticker"])
             security.add("type", item["securityType"])
-            security.add("notes", f'exchange {item["exchCode"]}')
+            if item["exchCode"] is not None:
+                security.add("notes", f'exchange {item["exchCode"]}')
+            security.add("description", item["securityDescription"])
 
             yield security
