@@ -12,7 +12,7 @@ from nomenklatura import __version__
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.util import ParamsType, normalize_url
+from nomenklatura.util import ParamsType, HeadersType, normalize_url
 
 EnricherConfig = Dict[str, Any]
 log = logging.getLogger(__name__)
@@ -100,7 +100,9 @@ class Enricher(ABC):
         self,
         url: str,
         cache_key: str,
-        json: Any,
+        json: Any = None,
+        data: Any = None,
+        headers: HeadersType = None,
         cache_days: Optional[int] = None,
         retry: int = 3,
     ) -> Any:
@@ -108,7 +110,7 @@ class Enricher(ABC):
         resp_data = self.cache.get_json(cache_key, max_age=cache_days_)
         if resp_data is None:
             try:
-                resp = self.session.post(url, json=json)
+                resp = self.session.post(url, json=json, data=data, headers=headers)
                 resp.raise_for_status()
             except RequestException as rex:
                 if rex.response is not None and rex.response.status_code in (401, 403):
