@@ -15,7 +15,7 @@ from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentException
+from nomenklatura.enrich.common import EnrichmentException, EnrichmentAbort
 
 
 log = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class PermIDEnricher(Enricher):
             self.api_token = None
         if self.api_token is None:
             log.warning("PermID has no API token (%s)" % token_var)
+        self.quota_exceeded = False
 
     def entity_to_queries(self, entity: CE) -> bytes:
         names = entity.get_type_values(registry.name, matchable=True)
@@ -131,6 +132,8 @@ class PermIDEnricher(Enricher):
         return match
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
+        if self.quota_exceeded:
+            return
         if not entity.schema.is_a("Organization"):
             return
         headers = {
@@ -138,19 +141,27 @@ class PermIDEnricher(Enricher):
             "X-AG-Access-Token": self.api_token,
             "x-openmatch-dataType": "Organization",
         }
-        cache_key = f"permid:{entity.id}"
-        query = self.entity_to_queries(entity)
-        res = self.http_post_json_cached(
-            self.MATCHING_API, cache_key, data=query, headers=headers
-        )
-        seen_matches: Set[str] = set()
-        for result in res.get("outputContentResponse", []):
-            match_permid_url = result.get("Match OpenPermID")
-            if match_permid_url is None or match_permid_url in seen_matches:
-                continue
-            seen_matches.add(match_permid_url)
-            match = self.fetch_perm_org(entity, match_permid_url)
-            yield match
+        try:
+            cache_key = f"permid:{entity.id}"
+            query = self.entity_to_queries(entity)
+            res = self.http_post_json_cached(
+                self.MATCHING_API,
+                cache_key,
+                data=query,
+                headers=headers,
+                retry=0,
+            )
+            seen_matches: Set[str] = set()
+            for result in res.get("outputContentResponse", []):
+                match_permid_url = result.get("Match OpenPermID")
+                if match_permid_url is None or match_permid_url in seen_matches:
+                    continue
+                seen_matches.add(match_permid_url)
+                match = self.fetch_perm_org(entity, match_permid_url)
+                yield match
+        except EnrichmentAbort as exc:
+            self.quota_exceeded = True
+            log.warning("PermID quota exceeded: %s", exc)
 
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
         yield match
