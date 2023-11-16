@@ -63,6 +63,7 @@ class OpenFIGIEnricher(Enricher):
                 other = self.make_entity(entity, "Company")
                 other.id = self.make_company_id(match_name)
                 other.add("name", match_name)
+                other.add("topics", "corp.public")
                 yield other
 
     def match_security(self, entity: CE) -> Generator[CE, None, None]:
