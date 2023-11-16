@@ -68,18 +68,22 @@ class OpenFIGIEnricher(Enricher):
 
     def match_security(self, entity: CE) -> Generator[CE, None, None]:
         for isin in entity.get("isin"):
-            cache_key = f"{self.MAPPING_URL}:{isin}"
-            query = {"idType": "ID_ISIN", "idValue": isin}
-            resp = self.http_post_json_cached(self.SEARCH_URL, cache_key, json=query)
-            for item in resp["data"]:
-                security = self.make_entity(entity, "Security")
-                # security.id = self.make_security_id(item["figi"])
-                security.id = entity.id
-                security.add("isin", isin)
-                security.add("figiCode", item["figi"])
-                security.add("ticker", item["ticker"])
-                security.add("type", item["securityType"])
-                yield security
+            cache_key = f"{self.MAPPING_URL}:ISIN:{isin}"
+            query = [{"idType": "ID_ISIN", "idValue": isin}]
+            resp = self.http_post_json_cached(self.MAPPING_URL, cache_key, json=query)
+            for section in resp:
+                for item in section.get("data", []):
+                    figi = item["figi"]
+                    if figi != item.get("compositeFIGI", figi):
+                        continue
+                    security = self.make_entity(entity, "Security")
+                    # security.id = self.make_security_id(item["figi"])
+                    security.id = entity.id
+                    security.add("isin", isin)
+                    security.add("figiCode", item["figi"])
+                    security.add("ticker", item["ticker"])
+                    security.add("type", item["securityType"])
+                    yield security
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if entity.schema.is_a("Organization"):
@@ -96,14 +100,15 @@ class OpenFIGIEnricher(Enricher):
                 return
             yield match
             for item in self.search(name):
+                figi = item["figi"]
                 # Only emit the securities which match the name of the positive match
                 # to the company exactly. Skip everything else.
-                if item["name"] != name:
+                if item["name"] != name or figi != item.get("compositeFIGI", figi):
                     continue
 
                 security = self.make_entity(match, "Security")
-                security.id = self.make_security_id(item["figi"])
-                security.add("figiCode", item["figi"])
+                security.id = self.make_security_id(figi)
+                security.add("figiCode", figi)
                 security.add("issuer", match)
                 security.add("ticker", item["ticker"])
                 security.add("type", item["securityType"])
