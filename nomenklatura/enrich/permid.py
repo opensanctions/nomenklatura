@@ -129,6 +129,7 @@ class PermIDEnricher(Enricher):
             quote_res: Dict[str, Any] = self.fetch_permid(quote)
             match.add("ticker", quote_res.pop("tr-fin:hasExchangeTicker", None))
             match.add("ricCode", quote_res.pop("tr-fin:hasRic", None))
+            match.add("topics", "corp.public")
         return match
 
     def match(self, entity: CE) -> Generator[CE, None, None]:

@@ -70,7 +70,7 @@ class OpenFIGIEnricher(Enricher):
             cache_key = f"{self.MAPPING_URL}:{isin}"
             query = {"idType": "ID_ISIN", "idValue": isin}
             resp = self.http_post_json_cached(self.SEARCH_URL, cache_key, json=query)
-            for item in resp:
+            for item in resp["data"]:
                 security = self.make_entity(entity, "Security")
                 # security.id = self.make_security_id(item["figi"])
                 security.id = entity.id
