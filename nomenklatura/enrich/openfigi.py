@@ -100,12 +100,12 @@ class OpenFIGIEnricher(Enricher):
                 return
             yield match
             for item in self.search(name):
-                figi = item["figi"]
                 # Only emit the securities which match the name of the positive match
                 # to the company exactly. Skip everything else.
-                if item["name"] != name or figi != item.get("compositeFIGI", figi):
+                if item["name"] != name:
                     continue
 
+                figi = item["figi"]
                 security = self.make_entity(match, "Security")
                 security.id = self.make_security_id(figi)
                 security.add("figiCode", figi)
