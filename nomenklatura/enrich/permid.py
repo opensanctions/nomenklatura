@@ -69,7 +69,7 @@ class PermIDEnricher(Enricher):
         if not value.startswith("http://sws.geonames.org/"):
             raise ValueError("Not a GeoNames URL: %s" % value)
         url = urljoin(value, "about.rdf")
-        res = self.http_get_cached(url, cache_days=500)
+        res = self.http_get_cached(url, cache_days=120)
         doc = etree.fromstring(res.encode("utf=8"))
         for code in doc.findall(".//%scountryCode" % GN):
             return code.text
@@ -80,7 +80,7 @@ class PermIDEnricher(Enricher):
     def fetch_permid(self, url: str) -> Any:
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
-        res_raw = self.http_get_cached(url, params=params, hidden=hidden)
+        res_raw = self.http_get_cached(url, params=params, hidden=hidden, cache_days=90)
         if not len(res_raw):
             raise EnrichmentException("Empty response from PermID")
         return json.loads(res_raw)
@@ -151,6 +151,7 @@ class PermIDEnricher(Enricher):
                 data=query,
                 headers=headers,
                 retry=0,
+                cache_days=20,
             )
             seen_matches: Set[str] = set()
             for result in res.get("outputContentResponse", []):
