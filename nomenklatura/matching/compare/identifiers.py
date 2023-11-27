@@ -1,5 +1,4 @@
-from stdnum import isin, lei  # type: ignore
-from typing import cast, Optional
+from rigour.ids import LEI, ISIN, INN, OGRN, IMO
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
@@ -41,51 +40,31 @@ def _bidi_id_prop_match(
     return 0.0
 
 
-def _clean_lei_code(value: str) -> Optional[str]:
-    return value if lei.is_valid(value) else None
-
-
 def lei_code_match(query: E, result: E) -> float:
     """Two entities have the same Legal Entity Identifier."""
-    return _bidi_id_prop_match(query, result, "leiCode", _clean_lei_code)
+    return _bidi_id_prop_match(query, result, "leiCode", LEI.normalize)
 
 
 def ogrn_code_match(query: E, result: E) -> float:
     """Two entities have the same Russian company registration (OGRN) code."""
-    return _bidi_id_prop_match(query, result, "ogrnCode")
+    return _bidi_id_prop_match(query, result, "ogrnCode", OGRN.normalize)
 
 
 def inn_code_match(query: E, result: E) -> float:
     """Two entities have the same Russian tax identifier (INN)."""
-    return _bidi_id_prop_match(query, result, "innCode")
-
-
-def _clean_isin_code(value: str) -> Optional[str]:
-    try:
-        if not isin.validate(value):
-            return None
-        return cast(str, isin.compact(value))
-    except Exception:
-        return None
+    return _bidi_id_prop_match(query, result, "innCode", INN.normalize)
 
 
 def isin_security_match(query: E, result: E) -> float:
     """Two securities have the same ISIN."""
     if not has_schema(query, result, "Security"):
         return 0.0
-    return _bidi_id_prop_match(query, result, "isin", _clean_isin_code)
-
-
-def _clean_imo_number(num: str) -> Optional[str]:
-    """Clean up an IMO number for comparison."""
-    if num.startswith("IMO"):
-        num = num[3:]
-    return clean_identifier(num, min_length=6)
+    return _bidi_id_prop_match(query, result, "isin", ISIN.normalize)
 
 
 def vessel_imo_mmsi_match(query: E, result: E) -> float:
     """Two vessels have the same IMO or MMSI identifier."""
-    imo_score = _bidi_id_prop_match(query, result, "imoNumber", _clean_imo_number)
+    imo_score = _bidi_id_prop_match(query, result, "imoNumber", IMO.normalize)
     if imo_score > 0.0:
         return imo_score
     return _bidi_id_prop_match(query, result, "mmsi")
