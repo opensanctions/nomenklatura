@@ -28,12 +28,10 @@ setup(
         "rich >= 10.9.0, < 14.0.0",
         "textual >= 0.19.0, < 1.0.0",
         "scikit-learn == 1.3.1",
-        "python-stdnum >= 1.19, < 2.0",
         "pydantic > 2.0.0, < 3.0.0",
         "click < 9.0.0",
-        "plyvel < 2.0.0",
-        "redis > 5.0.0, < 6.0.0",
         "lxml > 4.0.0, < 5.0.0",
+        "rigour > 0.1.0, < 1.0.0",
     ],
     tests_require=[],
     entry_points={
@@ -57,6 +55,14 @@ setup(
             "lxml-stubs",
             "requests-mock",
             "fakeredis",
-        ]
+            "plyvel < 2.0.0",
+            "redis > 5.0.0, < 6.0.0",
+        ],
+        "leveldb": [
+            "plyvel < 2.0.0",
+        ],
+        "redis": [
+            "redis > 5.0.0, < 6.0.0",
+        ],
     },
 )

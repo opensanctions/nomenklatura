@@ -5,7 +5,7 @@ from followthemoney import model
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
-from nomenklatura.store import RedisStore
+from nomenklatura.store.redis_ import RedisStore
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 
