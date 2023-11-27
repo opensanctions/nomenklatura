@@ -8,7 +8,8 @@ from typing import Any, Dict, List
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
-from nomenklatura.store import LevelDBStore, SimpleMemoryStore, SQLStore, Store
+from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
+from nomenklatura.store.level import LevelDBStore
 
 
 def _run_store_test(
@@ -27,6 +28,7 @@ def _run_store_test(
 
     entity = view.get_entity("4e0bd810e1fcb49990a2b31709b6140c4c9139c5")
     assert entity is not None
+    assert entity.id is not None
     assert entity.caption == "Tchibo Holding AG"
 
     tested = False
@@ -56,6 +58,7 @@ def _run_store_test(
     proxies = [e for e in view.entities()]
     assert len(proxies) == len(donations_json)
     entity = view.get_entity(entity.id)
+    assert entity is not None
     assert entity.caption == "Tchibo Holding AG"
     return True
 
