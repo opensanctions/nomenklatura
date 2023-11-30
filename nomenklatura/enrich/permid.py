@@ -82,6 +82,7 @@ class PermIDEnricher(Enricher):
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden, cache_days=90)
         if not len(res_raw):
+            self.http_remove_cache(url, params=params)
             raise EnrichmentException("Empty response from PermID")
         return json.loads(res_raw)
 
@@ -151,7 +152,7 @@ class PermIDEnricher(Enricher):
                 data=query,
                 headers=headers,
                 retry=0,
-                cache_days=20,
+                cache_days=self.cache_days,
             )
             seen_matches: Set[str] = set()
             for result in res.get("outputContentResponse", []):
