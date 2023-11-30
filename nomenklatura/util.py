@@ -181,15 +181,23 @@ def levenshtein(left: str, right: str) -> int:
 
 
 def levenshtein_similarity(
-    left: str, right: str, distance: Optional[int] = None
+    left: str,
+    right: str,
+    max_edits: Optional[int] = None,
+    max_percent: float = 0.5,
 ) -> float:
     """Compute the levenshtein similarity of two strings."""
-    if distance is None:
-        distance = levenshtein(left, right)
-    base = max(len(left), len(right))
-    if base == 0:
+    distance = levenshtein(left, right)
+    left_len = len(left)
+    right_len = len(right)
+    if left_len == 0 or right_len == 0:
         return 0.0
-    return 1.0 - (float(distance) / base)
+    # Skip results with an overall distance of more than N characters:
+    pct_edits = min(left_len, right_len) * max_percent
+    max_edits_ = min(max_edits, pct_edits) if max_edits is not None else pct_edits
+    if distance > max_edits_:
+        return 0.0
+    return 1.0 - (float(distance) / max(left_len, right_len))
 
 
 @lru_cache(maxsize=1024)

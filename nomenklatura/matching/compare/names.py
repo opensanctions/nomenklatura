@@ -117,12 +117,12 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
             continue
         qaligned = " ".join(p[0] for p in aligned)
         raligned = " ".join(p[1] for p in aligned)
-        distance = levenshtein(qaligned, raligned)
-        # Skip results with an overall distance of more than 5 characters:
-        max_edits = min(4, (min(len(qaligned), len(raligned)) // 3))
-        if distance > max_edits:
-            continue
-        score = levenshtein_similarity(qaligned, raligned, distance)
+        score = levenshtein_similarity(
+            qaligned,
+            raligned,
+            max_edits=4,
+            max_percent=0.33,
+        )
         max_score = max(max_score, score)
     return max_score
 
