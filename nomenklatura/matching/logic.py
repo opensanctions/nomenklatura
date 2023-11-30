@@ -5,6 +5,7 @@ from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
+from nomenklatura.matching.compare.identifiers import bic_code_match
 from nomenklatura.matching.compare.identifiers import inn_code_match, ogrn_code_match
 from nomenklatura.matching.compare.identifiers import lei_code_match, identifier_match
 from nomenklatura.matching.compare.identifiers import isin_security_match
@@ -42,7 +43,8 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=lei_code_match, weight=0.95),
         Feature(func=ogrn_code_match, weight=0.95),
         Feature(func=vessel_imo_mmsi_match, weight=0.95),
-        Feature(func=inn_code_match, weight=0.9),
+        Feature(func=inn_code_match, weight=0.95),
+        Feature(func=bic_code_match, weight=0.95),
         Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),

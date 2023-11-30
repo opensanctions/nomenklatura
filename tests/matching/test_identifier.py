@@ -1,5 +1,6 @@
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import lei_code_match
+from nomenklatura.matching.compare.identifiers import bic_code_match
 from nomenklatura.matching.compare.identifiers import isin_security_match
 from nomenklatura.matching.compare.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
@@ -32,6 +33,16 @@ def test_lei_match():
     query = e("Company", leiCode="1595VL9OPPQ5THEK2")
     result = e("Company", registrationNumber="1595VL9OPPQ5THEK2")
     assert lei_code_match(query, result) == 0.0
+
+
+def test_bic_match():
+    query = e("Company", swiftBic="GENODEM1GLS")
+    result = e("Company", swiftBic="GENODEM1GLS")
+    assert bic_code_match(query, result) == 1.0
+    result = e("Company", swiftBic="GENODEM1")
+    assert bic_code_match(query, result) == 1.0
+    result = e("Company", swiftBic="GENODEM2")
+    assert bic_code_match(query, result) == 0.0
 
 
 def test_isin_match():

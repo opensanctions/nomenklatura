@@ -1,4 +1,4 @@
-from rigour.ids import LEI, ISIN, INN, OGRN, IMO
+from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
@@ -43,6 +43,11 @@ def _bidi_id_prop_match(
 def lei_code_match(query: E, result: E) -> float:
     """Two entities have the same Legal Entity Identifier."""
     return _bidi_id_prop_match(query, result, "leiCode", LEI.normalize)
+
+
+def bic_code_match(query: E, result: E) -> float:
+    """Two entities have the same SWIFT BIC."""
+    return _bidi_id_prop_match(query, result, "swiftBic", BIC.normalize)
 
 
 def ogrn_code_match(query: E, result: E) -> float:
