@@ -45,8 +45,8 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
         return 0.0
     # weakest evidence first to bias jaro-winkler for lower scores on imperfect matches:
     aligned = pairs[::-1]
-    query_aligned = " ".join(p[0] for p in aligned)
-    result_aligned = " ".join(p[1] for p in aligned)
+    query_aligned = "".join(p[0] for p in aligned)
+    result_aligned = "".join(p[1] for p in aligned)
     if not _is_levenshtein_plausible(query_aligned, result_aligned):
         return 0.0
     # return an amped-up jaro-winkler score for the aligned name parts:
@@ -115,8 +115,8 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         # assume there should be at least a candidate for each query name part:
         if len(qn):
             continue
-        qaligned = " ".join(p[0] for p in aligned)
-        raligned = " ".join(p[1] for p in aligned)
+        qaligned = "".join(p[0] for p in aligned)
+        raligned = "".join(p[1] for p in aligned)
         score = levenshtein_similarity(
             qaligned,
             raligned,
