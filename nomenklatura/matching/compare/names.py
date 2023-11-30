@@ -76,45 +76,53 @@ def name_literal_match(query: E, result: E) -> float:
     return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 
-def _fp_name_parts(name: str) -> List[str]:
-    return name_words(fingerprint_name(name), min_length=2)
-
-
-def _fpw_name_parts(name: str) -> List[str]:
-    parts = name_words(fingerprint_name(name), min_length=2)
-    for part in name_words(clean_name_ascii(name), min_length=2):
-        if part not in parts:
-            parts.append(part)
-    return parts
-
-
 def name_fingerprint_levenshtein(query: E, result: E) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
     if has_schema(query, result, "Person"):
         return 0.0
-    query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_fp_name_parts(n) for n in query_names_]
-    result_names = [_fpw_name_parts(n) for n in result_names_]
+    query_names, result_names = type_pair(query, result, registry.name)
     max_score = 0.0
     for (qn, rn) in product(query_names, result_names):
-        if len(qn) == 0:
+        score = levenshtein_similarity(
+            qn,
+            rn,
+            max_edits=4,
+            max_percent=0.33,
+        )
+        max_score = max(max_score, score)
+        qfp = fingerprint_name(qn)
+        rfp = fingerprint_name(rn)
+        if qfp is None or rfp is None:
             continue
+        score = levenshtein_similarity(
+            qfp.replace(" ", ""),
+            rfp.replace(" ", ""),
+            max_edits=4,
+            max_percent=0.33,
+        )
+        max_score = max(max_score, score)
+        qtokens = name_words(qfp, min_length=2)
+        rtokens = name_words(rfp, min_length=2)
+        for part in name_words(clean_name_ascii(rfp), min_length=2):
+            if part not in rtokens:
+                rtokens.append(part)
+
         scores: Dict[Tuple[str, str], float] = {}
         # compute all pairwise scores for name parts:
-        for q, r in product(set(qn), set(rn)):
+        for q, r in product(set(qtokens), set(rtokens)):
             scores[(q, r)] = levenshtein_similarity(q, r)
         aligned: List[Tuple[str, str, float]] = []
         # find the best pairing for each name part by score:
         for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
             # one name part can only be used once, but can show up multiple times:
-            while q in qn and r in rn:
-                qn.remove(q)
-                rn.remove(r)
+            while q in qtokens and r in rtokens:
+                qtokens.remove(q)
+                rtokens.remove(r)
                 aligned.append((q, r, score))
         # assume there should be at least a candidate for each query name part:
-        if len(qn):
+        if len(qtokens):
             continue
         qaligned = "".join(p[0] for p in aligned)
         raligned = "".join(p[1] for p in aligned)

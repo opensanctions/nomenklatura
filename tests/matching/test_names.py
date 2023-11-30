@@ -281,6 +281,8 @@ def test_name_fingerprint_levenshtein():
     query = e("Company", name="Siemens AG")
     result = e("Company", name="Siemens Aktiengesellschaft")
     assert name_fingerprint_levenshtein(query, result) == 1.0
+    result = e("Company", name="SiemensAG")
+    assert name_fingerprint_levenshtein(query, result) == 1.0
 
     # result = e("Company", name="Siemens Aktiongesellschaft")
     # assert name_fingerprint_levenshtein(query, result) > 0.0
@@ -289,6 +291,10 @@ def test_name_fingerprint_levenshtein():
     result = e("Company", name="Siemens AktG")
     assert name_fingerprint_levenshtein(query, result) > 0.7
     assert name_fingerprint_levenshtein(query, result) < 1.0
+
+    query = e("Company", name="Good Will Company")
+    result = e("Company", name="Goodwill Company")
+    assert name_fingerprint_levenshtein(query, result) == 1.0
 
 
 def test_org_name_partial_match():
