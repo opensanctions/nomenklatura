@@ -124,6 +124,17 @@ def fingerprint_name(original: str) -> Optional[str]:
     return collapse_spaces(cleaned)
 
 
+def name_words(name: Optional[str], min_length: int = 1) -> List[str]:
+    """Get a list of tokens present in the given name."""
+    if name is None:
+        return []
+    words: List[str] = []
+    for word in name.split(WS):
+        if len(word) >= min_length:
+            words.append(word)
+    return words
+
+
 def names_word_list(
     names: Iterable[str],
     normalizer: Callable[[str], Optional[str]] = fingerprint_name,
@@ -134,12 +145,10 @@ def names_word_list(
     words: List[str] = []
     for name in names:
         normalized = normalizer(name)
-        if normalized is not None:
-            for word in normalized.split(WS):
-                if len(word) >= min_length:
-                    if processor is not None:
-                        word = processor(word)
-                    words.append(word)
+        for word in name_words(normalized, min_length=min_length):
+            if processor is not None:
+                word = processor(word)
+            words.append(word)
     return words
 
 

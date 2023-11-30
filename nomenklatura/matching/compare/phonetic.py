@@ -4,7 +4,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from normality.scripts import is_modern_alphabet
 from fingerprints import clean_name_ascii, clean_entity_prefix
-from nomenklatura.util import names_word_list, list_intersection, fingerprint_name
+from nomenklatura.util import name_words, list_intersection, fingerprint_name
 from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
 from nomenklatura.matching.util import type_pair, has_schema
 
@@ -25,12 +25,10 @@ def _clean_phonetic_entity(original: str) -> Optional[str]:
 
 
 def _phonetic_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_person,
-        processor=phonetic_token,
-        min_length=2,
-    )
+    words: List[str] = []
+    for word in name_words(_clean_phonetic_person(token), min_length=2):
+        words.append(phonetic_token(word))
+    return words
 
 
 def _token_names_compare(
@@ -56,12 +54,10 @@ def person_name_phonetic_match(query: E, result: E) -> float:
 
 
 def _metaphone_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_entity,
-        processor=metaphone_token,
-        min_length=2,
-    )
+    words: List[str] = []
+    for word in name_words(_clean_phonetic_entity(token), min_length=2):
+        words.append(metaphone_token(word))
+    return words
 
 
 def name_metaphone_match(query: E, result: E) -> float:
@@ -74,12 +70,10 @@ def name_metaphone_match(query: E, result: E) -> float:
 
 
 def _soundex_tokens(token: str) -> List[str]:
-    return names_word_list(
-        [token],
-        normalizer=_clean_phonetic_entity,
-        processor=soundex_token,
-        min_length=2,
-    )
+    words: List[str] = []
+    for word in name_words(_clean_phonetic_entity(token), min_length=2):
+        words.append(soundex_token(word))
+    return words
 
 
 def name_soundex_match(query: E, result: E) -> float:

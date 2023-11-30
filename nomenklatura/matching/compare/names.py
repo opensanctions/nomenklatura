@@ -3,14 +3,15 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
-from nomenklatura.util import names_word_list, levenshtein, levenshtein_similarity
+from nomenklatura.util import names_word_list, name_words
+from nomenklatura.util import levenshtein, levenshtein_similarity
 from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 
 
 def _name_parts(name: str) -> List[str]:
-    return names_word_list([name], normalizer=normalize_name)
+    return name_words(normalize_name(name))
 
 
 def _is_levenshtein_plausible(query: str, result: str) -> bool:
@@ -76,12 +77,12 @@ def name_literal_match(query: E, result: E) -> float:
 
 
 def _fp_name_parts(name: str) -> List[str]:
-    return names_word_list([name], normalizer=fingerprint_name, min_length=2)
+    return name_words(fingerprint_name(name), min_length=2)
 
 
 def _fpw_name_parts(name: str) -> List[str]:
-    parts = names_word_list([name], normalizer=fingerprint_name, min_length=2)
-    for part in names_word_list([name], normalizer=clean_name_ascii, min_length=2):
+    parts = name_words(fingerprint_name(name), min_length=2)
+    for part in name_words(clean_name_ascii(name), min_length=2):
         if part not in parts:
             parts.append(part)
     return parts

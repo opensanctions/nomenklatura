@@ -6,7 +6,7 @@ from followthemoney.types.common import PropertyType
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.util import fingerprint_name, clean_identifier
-from nomenklatura.util import names_word_list, normalize_name
+from nomenklatura.util import name_words, normalize_name
 
 WORD_FIELD = "word"
 NAME_PART_FIELD = "namepart"
@@ -50,11 +50,7 @@ class Tokenizer(Generic[DS, CE]):
                 yield type.name, clean_id
             return
         if type in TEXT_TYPES:
-            for word in names_word_list(
-                [value],
-                normalizer=normalize_name,
-                min_length=3,
-            ):
+            for word in name_words(normalize_name(value), min_length=3):
                 yield WORD_FIELD, word
 
     def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
