@@ -23,6 +23,7 @@ def _is_levenshtein_plausible(query: str, result: str) -> bool:
 def _align_name_parts(query: List[str], result: List[str]) -> float:
     if len(query) == 0 or len(result) == 0:
         return 0.0
+
     scores: Dict[Tuple[str, str], float] = {}
     # compute all pairwise scores for name parts:
     for qn, rn in product(set(query), set(result)):
@@ -64,6 +65,10 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
     result_names = [_name_parts(n) for n in result_names_]
     score = 0.0
     for (qn, rn) in product(query_names, result_names):
+        qns = "".join(qn)
+        rns = "".join(rn)
+        if _is_levenshtein_plausible(qns, rns):
+            score = max(score, jaro_winkler(qns, rns) ** len(qns))
         score = max(score, _align_name_parts(list(qn), list(rn)))
     return score
 

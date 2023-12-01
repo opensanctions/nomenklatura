@@ -159,6 +159,10 @@ def test_person_name_jaro_winkler():
     result = e("Person", name="RAZAFIMAHATRATRA Jean Daniel Christian")
     assert person_name_jaro_winkler(query, result) < 0.7
 
+    query = e("Person", name="Jan Daniel Bothma")
+    result = e("Person", name="JanDaniel Bothma")
+    assert person_name_jaro_winkler(query, result) > 0.7
+
 
 def test_jaro_friedrich():
     query = e("Person", name="Friedrich Lindenberg")
