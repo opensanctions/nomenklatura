@@ -22,7 +22,7 @@ Feature = Union[str, Dict[str, str]]
 class SenzingRecord(TypedDict):
     DATA_SOURCE: str
     RECORD_ID: str
-    RECORD_TYPE: str
+    RECORD_TYPE: Optional[str]
     FEATURES: List[Feature]
 
 
@@ -65,17 +65,30 @@ def senzing_adjacent_features(
 def senzing_record(
     data_source: str, entity: CE, view: Optional[View[DS, CE]] = None
 ) -> Optional[SenzingRecord]:
-    if not entity.schema.matchable or entity.schema.name == "Address":
+    if not entity.schema.is_a("LegalEntity"):
         return None
     if entity.id is None:
         return None
+    record_type = None
+    is_org = False
+    if entity.schema.is_a("Person"):
+        record_type = "PERSON"
+    elif entity.schema.is_a("Organization"):
+        record_type = "ORGANIZATION"
+        is_org = True
+    elif entity.schema.is_a("Airplane"):
+        record_type = "AIRCRAFT"
+    elif entity.schema.is_a("Vessel"):
+        record_type = "VESSEL"
+    elif entity.schema.is_a("Vehicle"):
+        record_type = "VEHICLE"
+
     record: SenzingRecord = {
         "DATA_SOURCE": data_source,
         "RECORD_ID": entity.id,
-        "RECORD_TYPE": entity.schema.name.upper(),
+        "RECORD_TYPE": record_type,
         "FEATURES": [],
     }
-    is_org = entity.schema.is_a("Organization")
 
     features: List[Feature] = []
     for name in entity.get_type_values(registry.name):
