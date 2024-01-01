@@ -30,7 +30,7 @@ setup(
         "scikit-learn == 1.3.2",
         "pydantic > 2.0.0, < 3.0.0",
         "click < 9.0.0",
-        "lxml > 4.0.0, < 5.0.0",
+        "lxml > 4.0.0, < 6.0.0",
         "rigour > 0.1.0, < 1.0.0",
     ],
     tests_require=[],
