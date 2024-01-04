@@ -15,7 +15,7 @@ from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentException, EnrichmentAbort
+from nomenklatura.enrich.common import EnrichmentAbort
 
 
 log = logging.getLogger(__name__)
@@ -77,17 +77,20 @@ class PermIDEnricher(Enricher):
             return name.text
         return value
 
-    def fetch_permid(self, url: str) -> Any:
+    def fetch_permid(self, url: str) -> Optional[Dict[str, Any]]:
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden, cache_days=90)
         if not len(res_raw):
             self.http_remove_cache(url, params=params)
-            raise EnrichmentException("Empty response from PermID")
+            log.info("Empty response from PermID: %s", url)
+            return None
         return json.loads(res_raw)
 
-    def fetch_perm_org(self, entity: CE, url: str) -> CE:
-        res: Dict[str, Any] = self.fetch_permid(url)
+    def fetch_perm_org(self, entity: CE, url: str) -> Optional[CE]:
+        res = self.fetch_permid(url)
+        if res is None:
+            return None
         res.pop("@id", None)
         res.pop("@type", None)
         res.pop("@context", None)
@@ -127,10 +130,11 @@ class PermIDEnricher(Enricher):
 
         quote = res.pop("hasOrganizationPrimaryQuote", None)
         if quote is not None:
-            quote_res: Dict[str, Any] = self.fetch_permid(quote)
-            match.add("ticker", quote_res.pop("tr-fin:hasExchangeTicker", None))
-            match.add("ricCode", quote_res.pop("tr-fin:hasRic", None))
-            match.add("topics", "corp.public")
+            quote_res = self.fetch_permid(quote)
+            if quote_res is not None:
+                match.add("ticker", quote_res.pop("tr-fin:hasExchangeTicker", None))
+                match.add("ricCode", quote_res.pop("tr-fin:hasRic", None))
+                match.add("topics", "corp.public")
         return match
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
@@ -161,7 +165,8 @@ class PermIDEnricher(Enricher):
                     continue
                 seen_matches.add(match_permid_url)
                 match = self.fetch_perm_org(entity, match_permid_url)
-                yield match
+                if match is not None:
+                    yield match
         except EnrichmentAbort as exc:
             self.quota_exceeded = True
             log.warning("PermID quota exceeded: %s", exc)
