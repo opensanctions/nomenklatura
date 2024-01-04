@@ -7,7 +7,7 @@ from lxml import etree
 # from pprint import pprint
 from itertools import product
 from functools import lru_cache
-from typing import Set, Generator, Optional, Dict, Any
+from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 from followthemoney.types import registry
 
@@ -85,7 +85,7 @@ class PermIDEnricher(Enricher):
             self.http_remove_cache(url, params=params)
             log.info("Empty response from PermID: %s", url)
             return None
-        return json.loads(res_raw)
+        return cast(Dict[str, Any], json.loads(res_raw))
 
     def fetch_perm_org(self, entity: CE, url: str) -> Optional[CE]:
         res = self.fetch_permid(url)
