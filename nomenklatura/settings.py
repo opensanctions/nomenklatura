@@ -1,12 +1,5 @@
-from os import environ as env
 from pathlib import Path
-from normality import stringify
-
-
-def env_str(name: str, default: str) -> str:
-    """Ensure the env returns a string even on Windows (#100)."""
-    value = stringify(env.get(name))
-    return default if value is None else value
+from rigour.env import env_str
 
 
 DB_PATH = Path("nomenklatura.db").resolve()

@@ -1,8 +1,8 @@
 import logging
 from prefixdate import Precision
 from typing import TYPE_CHECKING, cast, Any, Dict, Optional
+from rigour.ids.wikidata import is_qid
 
-from nomenklatura.util import is_qid
 from nomenklatura.enrich.wikidata.lang import LangText
 
 if TYPE_CHECKING:

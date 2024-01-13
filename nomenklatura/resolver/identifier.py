@@ -1,7 +1,7 @@
 import shortuuid
 from typing import Any, Optional, Tuple, Union
+from rigour.ids.wikidata import is_qid
 
-from nomenklatura.util import is_qid
 from nomenklatura.resolver.common import ResolverLogicError
 
 StrIdent = Union[str, "Identifier"]

@@ -1,13 +1,6 @@
-from nomenklatura.util import is_qid, normalize_url
+from nomenklatura.util import normalize_url
 from nomenklatura.util import levenshtein_similarity
 from nomenklatura.util import metaphone_token
-
-
-def test_is_qid():
-    assert is_qid("Q7747")
-    assert not is_qid("q7747")
-    assert not is_qid("Q7747B")
-    assert not is_qid("banana")
 
 
 def test_normalize_url():

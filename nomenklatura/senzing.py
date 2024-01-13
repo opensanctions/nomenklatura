@@ -8,11 +8,11 @@ import logging
 from typing import Dict, Generator, List, Optional, Union
 from typing_extensions import TypedDict
 from followthemoney.types import registry
+from rigour.ids.wikidata import is_qid
 
 from nomenklatura.store import View
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.util import is_qid
 
 log = logging.getLogger(__name__)
 

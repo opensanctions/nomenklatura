@@ -1,7 +1,7 @@
 import re
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from followthemoney import model
 from functools import lru_cache, cache
 from jellyfish import damerau_levenshtein_distance, metaphone
@@ -80,7 +80,8 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
     if value is None or len(value) == 0:
         return None
     value = value[:19].replace(" ", "T")
-    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+    dt = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+    return dt.replace(tzinfo=timezone.utc)
 
 
 def datetime_iso(dt: Optional[Union[str, datetime]]) -> Optional[str]:

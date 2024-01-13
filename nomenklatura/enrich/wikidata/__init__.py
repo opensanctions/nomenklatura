@@ -2,6 +2,7 @@ import logging
 from functools import cache
 from typing import cast, Generator, Any, Dict, Optional, Set
 from followthemoney.helpers import check_person_cutoff
+from rigour.ids.wikidata import is_qid
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -17,7 +18,6 @@ from nomenklatura.enrich.wikidata.props import (
 )
 from nomenklatura.enrich.wikidata.model import Claim, Item
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.util import is_qid
 
 WD_API = "https://www.wikidata.org/w/api.php"
 LABEL_PREFIX = "wd:lb:"

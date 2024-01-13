@@ -5,6 +5,7 @@ from functools import lru_cache
 from collections import defaultdict
 from typing import Dict, Generator, Generic, List, Optional, Set, Tuple
 from followthemoney.types import registry
+from rigour.ids.wikidata import is_qid
 
 from nomenklatura.entity import CE
 from nomenklatura.stream import StreamEntity
@@ -12,7 +13,7 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.statement.statement import Statement
-from nomenklatura.util import PathLike, is_qid
+from nomenklatura.util import PathLike
 
 
 class Resolver(Generic[CE]):
