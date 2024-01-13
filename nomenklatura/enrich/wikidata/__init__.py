@@ -62,7 +62,7 @@ class WikidataEnricher(Enricher):
             data = self.http_get_json_cached(WD_API, params=params)
             if "search" not in data:
                 self.http_remove_cache(WD_API, params=params)
-                log.warning("Search response [%s] does not include results" % name)
+                log.info("Search response [%s] does not include results" % name)
                 continue
             for result in data["search"]:
                 item = self.fetch_item(result["id"])
