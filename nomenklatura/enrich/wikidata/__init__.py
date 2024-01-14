@@ -87,7 +87,7 @@ class WikidataEnricher(Enricher):
         yield from self.item_graph(proxy, item)
 
     def get_wikidata_id(self, entity: CE) -> Optional[str]:
-        if is_qid(entity.id):
+        if entity.id is not None and is_qid(entity.id):
             return str(entity.id)
         for value in entity.get("wikidataId", quiet=True):
             if is_qid(value):

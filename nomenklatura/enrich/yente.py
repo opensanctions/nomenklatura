@@ -6,13 +6,13 @@ from typing import Any, Generator, Optional, Dict, List
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
+from rigour.urls import build_url
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentException
-from nomenklatura.util import normalize_url
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class YenteEnricher(Enricher):
         params: Dict[str, Any] = {"fuzzy": self._fuzzy, "algorithm": self._algorithm}
         if self._threshold is not None:
             params["threshold"] = self._threshold
-        url = normalize_url(url, params)
+        url = build_url(url, params)
         cache_key = f"{url}:{entity.id}"
         props: Dict[str, List[str]] = {}
         for prop in entity.iterprops():
@@ -108,6 +108,6 @@ class YenteEnricher(Enricher):
         for source_url in match.get("sourceUrl", quiet=True):
             if source_url.startswith(self._api):
                 url = source_url
-        url = normalize_url(url, {"nested": self._nested})
+        url = build_url(url, {"nested": self._nested})
         response = self.http_get_json_cached(url)
         yield from self._traverse_nested(match, response)

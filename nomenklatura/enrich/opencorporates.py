@@ -6,13 +6,13 @@ from urllib.parse import urlparse
 from banal import ensure_dict
 from followthemoney.types import registry
 from requests.exceptions import RequestException
+from rigour.urls import build_url, ParamsType
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
-from nomenklatura.util import normalize_url, ParamsType
 
 
 log = logging.getLogger(__name__)
@@ -40,12 +40,12 @@ class OpenCorporatesEnricher(Enricher):
         self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
 
     def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
-        url = normalize_url(url, params=params)
+        url = build_url(url, params=params)
         response = self.cache.get(url, max_age=self.cache_days)
         if response is None:
             if self.quota_exceeded:
                 return None
-            hidden_url = normalize_url(url, params={"api_token": self.api_token})
+            hidden_url = build_url(url, params={"api_token": self.api_token})
             try:
                 resp = self.session.get(hidden_url)
                 resp.raise_for_status()

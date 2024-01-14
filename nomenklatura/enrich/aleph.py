@@ -7,12 +7,12 @@ from urllib.parse import urljoin
 from functools import cached_property
 from followthemoney.exc import InvalidData
 from followthemoney.namespace import Namespace
+from rigour.urls import build_url
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.util import normalize_url
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class AlephEnricher(Enricher):
         if self._collection is None:
             return None
         url = urljoin(self._base_url, "collections")
-        url = normalize_url(url, {"filter:foreign_id": self._collection})
+        url = build_url(url, {"filter:foreign_id": self._collection})
         res = self.session.get(url)
         res.raise_for_status()
         response = res.json()
@@ -111,7 +111,7 @@ class AlephEnricher(Enricher):
             return
         url = urljoin(self._base_url, "match")
         if self.collection_id is not None:
-            url = normalize_url(url, {"collection_ids": self.collection_id})
+            url = build_url(url, {"collection_ids": self.collection_id})
         query = {
             "schema": entity.schema.name,
             "properties": entity.properties,

@@ -1,17 +1,5 @@
-from nomenklatura.util import normalize_url
 from nomenklatura.util import levenshtein_similarity
 from nomenklatura.util import metaphone_token
-
-
-def test_normalize_url():
-    assert normalize_url("http://pudo.org") == "http://pudo.org"
-    assert normalize_url("http://pudo.org/blub") == "http://pudo.org/blub"
-    assert normalize_url("http://pudo.org", {"q": "bla"}) == "http://pudo.org?q=bla"
-    assert normalize_url("http://pudo.org", [("q", "bla")]) == "http://pudo.org?q=bla"
-    assert (
-        normalize_url("http://pudo.org?t=1", {"q": "bla"})
-        == "http://pudo.org?t=1&q=bla"
-    )
 
 
 def test_compare_levenshtein():

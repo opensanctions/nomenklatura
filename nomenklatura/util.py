@@ -13,22 +13,12 @@ from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
 from fingerprints import replace_types
 from followthemoney.util import sanitize_text
 from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Callable
-from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
-QID = re.compile(r"^Q(\d+)$")
 ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
 BASE_ID = "id"
 PathLike = Union[str, os.PathLike[str]]
-ParamsType = Union[None, Iterable[Tuple[str, Any]], Mapping[str, Any]]
 HeadersType = Optional[Mapping[str, Union[str, bytes, None]]]
-
-
-def is_qid(text: Optional[str]) -> bool:
-    """Determine if the given string is a valid wikidata QID."""
-    if text is None:
-        return False
-    return QID.match(text) is not None
 
 
 def string_list(value: Any) -> List[str]:
@@ -61,17 +51,6 @@ def string_list(value: Any) -> List[str]:
             texts.append(text)
 
     return texts
-
-
-def normalize_url(url: str, params: ParamsType = None) -> str:
-    """Compose a URL with the given query parameters."""
-    parsed = urlparse(url)
-    query = parse_qsl(parsed.query, keep_blank_values=True)
-    if params is not None:
-        values = params.items() if isinstance(params, Mapping) else params
-        query.extend(sorted(values))
-    parsed = parsed._replace(query=urlencode(query))
-    return urlunparse(parsed)
 
 
 @lru_cache(maxsize=1000)

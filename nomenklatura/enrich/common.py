@@ -7,12 +7,13 @@ from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException
+from rigour.urls import build_url, ParamsType
 
 from nomenklatura import __version__
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.util import ParamsType, HeadersType, normalize_url
+from nomenklatura.util import HeadersType
 
 EnricherConfig = Dict[str, Any]
 log = logging.getLogger(__name__)
@@ -63,12 +64,12 @@ class Enricher(ABC):
         hidden: ParamsType = None,
         cache_days: Optional[int] = None,
     ) -> str:
-        url = normalize_url(url, params=params)
+        url = build_url(url, params=params)
         cache_days_ = self.cache_days if cache_days is None else cache_days
         response = self.cache.get(url, max_age=cache_days_)
         if response is None:
             log.debug("HTTP GET: %s", url)
-            hidden_url = normalize_url(url, params=hidden)
+            hidden_url = build_url(url, params=hidden)
             try:
                 resp = self.session.get(hidden_url)
                 resp.raise_for_status()
@@ -83,7 +84,7 @@ class Enricher(ABC):
         return response
 
     def http_remove_cache(self, url: str, params: ParamsType = None) -> None:
-        url = normalize_url(url, params=params)
+        url = build_url(url, params=params)
         self.cache.delete(url)
 
     def http_get_json_cached(
