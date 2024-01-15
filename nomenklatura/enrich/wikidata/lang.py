@@ -19,8 +19,11 @@ class LangText(object):
     ) -> None:
         if text is None or len(text.strip()) == 0:
             text = None
-        self.text = text
         self.lang = registry.language.clean(lang)
+        if lang is not None and self.lang is None:
+            self.text = None
+        else:
+            self.text = text
         self.original = original
 
     def __hash__(self) -> int:
