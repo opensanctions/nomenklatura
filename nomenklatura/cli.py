@@ -1,4 +1,3 @@
-import orjson
 import yaml
 import click
 import logging
@@ -19,7 +18,6 @@ from nomenklatura.statement import Statement, CSV, FORMATS
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.stream import StreamEntity
-from nomenklatura.senzing import senzing_record
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
 
@@ -211,20 +209,6 @@ def enrich_command(
                 write_entity(fh, proxy)
     finally:
         enricher.close()
-
-
-@cli.command("export-senzing", help="Export entities to Senzing API format")
-@click.argument("path", type=InPath)
-@click.option("-o", "--outpath", type=OutPath, default="-")
-@click.option("-d", "--dataset", type=str, required=True)
-def export_senzing(path: Path, outpath: Path, dataset: str) -> None:
-    with path_writer(outpath) as outfh:
-        for entity in path_entities(path, Entity):
-            record = senzing_record(dataset, entity)
-            if record is None:
-                continue
-            out = orjson.dumps(record, option=orjson.OPT_APPEND_NEWLINE)
-            outfh.write(out)
 
 
 @cli.command("statements", help="Export entities to statements")
