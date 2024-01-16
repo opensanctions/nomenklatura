@@ -24,7 +24,7 @@ def _clean_phonetic_entity(original: str) -> Optional[str]:
     return fingerprint_name(original)
 
 
-def _phonetic_tokens(token: str) -> List[str]:
+def _phonetic_person_tokens(token: str) -> List[str]:
     words: List[str] = []
     for word in name_words(_clean_phonetic_person(token), min_length=2):
         words.append(phonetic_token(word))
@@ -48,8 +48,8 @@ def person_name_phonetic_match(query: E, result: E) -> float:
     if not has_schema(query, result, "Person"):
         return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_names = [_phonetic_tokens(n) for n in query_names_]
-    result_names = [_phonetic_tokens(n) for n in result_names_]
+    query_names = [_phonetic_person_tokens(n) for n in query_names_]
+    result_names = [_phonetic_person_tokens(n) for n in result_names_]
     return _token_names_compare(query_names, result_names)
 
 

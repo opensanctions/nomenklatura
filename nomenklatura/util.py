@@ -146,7 +146,7 @@ def metaphone_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
         out = metaphone(token)
         # doesn't handle non-ascii characters
-        if len(out):
+        if len(out) >= 3:
             return out
     return token.upper()
 
