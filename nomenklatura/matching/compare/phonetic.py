@@ -2,7 +2,7 @@ from typing import List, Optional
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from normality.scripts import is_modern_alphabet
+from rigour.text.scripts import is_modern_alphabet
 from fingerprints import clean_name_ascii, clean_entity_prefix
 from nomenklatura.util import name_words, list_intersection, fingerprint_name
 from nomenklatura.util import phonetic_token, metaphone_token, soundex_token
