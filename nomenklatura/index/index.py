@@ -26,7 +26,7 @@ class Index(Generic[DS, CE]):
         # registry.country.name: 1.5,
         # registry.date.name: 1.5,
         # registry.language: 0.7,
-        registry.iban.name: 3.0,
+        # registry.iban.name: 3.0,
         registry.phone.name: 3.0,
         registry.email.name: 3.0,
         # registry.entity: 0.0,

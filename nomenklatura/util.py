@@ -6,10 +6,11 @@ from followthemoney import model
 from functools import lru_cache, cache
 from jellyfish import damerau_levenshtein_distance, metaphone
 from jellyfish import jaro_winkler_similarity, soundex
-from normality import collapse_spaces
+from normality import collapse_spaces, category_replace
 from normality.constants import WS
 from collections.abc import Mapping, Sequence
 from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
+from fingerprints.cleanup import CHARACTERS_REMOVE_RE
 from fingerprints import replace_types
 from followthemoney.util import sanitize_text
 from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Callable
@@ -104,6 +105,15 @@ def fingerprint_name(original: str) -> Optional[str]:
     return collapse_spaces(cleaned)
 
 
+def clean_text_basic(text: Optional[str]) -> Optional[str]:
+    """Clean up some text for comparison and tokenization, do not transliterate."""
+    if text is None:
+        return None
+    text = CHARACTERS_REMOVE_RE.sub("", text)
+    text = text.lower()
+    return category_replace(text)
+
+
 def name_words(name: Optional[str], min_length: int = 1) -> List[str]:
     """Get a list of tokens present in the given name."""
     if name is None:
@@ -193,16 +203,6 @@ def levenshtein_similarity(
 def jaro_winkler(left: str, right: str) -> float:
     score = jaro_winkler_similarity(left, right)
     return score if score > 0.6 else 0.0
-
-
-def clean_identifier(
-    value: str, min_length: int = 6, max_length: int = 100
-) -> Optional[str]:
-    """Clean up an identifier for comparison."""
-    value = ID_CLEAN.sub("", value.upper())
-    if len(value) < min_length or len(value) > max_length:
-        return None
-    return value
 
 
 def list_intersection(left: List[str], right: List[str]) -> int:

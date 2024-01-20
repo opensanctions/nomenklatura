@@ -1,10 +1,10 @@
-from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC
+from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC, StrictFormat
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.util import type_pair, props_pair, has_schema, compare_sets
 from nomenklatura.matching.compare.util import has_overlap, clean_map, CleanFunc
-from nomenklatura.util import levenshtein, clean_identifier
+from nomenklatura.util import levenshtein
 
 
 def _id_prop_match(
@@ -93,8 +93,8 @@ def orgid_disjoint(query: E, result: E) -> float:
     if not has_schema(query, result, "Organization"):
         return 0.0
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
-    query_ids = clean_map(query_ids_, clean_identifier)
-    result_ids = clean_map(result_ids_, clean_identifier)
+    query_ids = clean_map(query_ids_, StrictFormat.normalize)
+    result_ids = clean_map(result_ids_, StrictFormat.normalize)
     if not len(query_ids) or not len(result_ids):
         return 0.0
     if len(query_ids.intersection(result_ids)) > 0:
@@ -105,8 +105,8 @@ def orgid_disjoint(query: E, result: E) -> float:
 def identifier_match(query: E, result: E) -> float:
     """Two entities have the same tax or registration identifier."""
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
-    query_ids = clean_map(query_ids_, clean_identifier)
-    result_ids = clean_map(result_ids_, clean_identifier)
+    query_ids = clean_map(query_ids_, StrictFormat.normalize)
+    result_ids = clean_map(result_ids_, StrictFormat.normalize)
     return 1.0 if has_overlap(query_ids, result_ids) else 0.0
 
 
