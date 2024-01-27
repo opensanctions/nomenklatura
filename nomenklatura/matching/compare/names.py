@@ -3,9 +3,10 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
+from rigour.text.distance import levenshtein_similarity
+from rigour.text.distance import dam_levenshtein, jaro_winkler
 from nomenklatura.util import names_word_list, name_words
-from nomenklatura.util import levenshtein, levenshtein_similarity
-from nomenklatura.util import fingerprint_name, normalize_name, jaro_winkler
+from nomenklatura.util import fingerprint_name, normalize_name
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
 
@@ -17,7 +18,7 @@ def _name_parts(name: str) -> List[str]:
 def _is_levenshtein_plausible(query: str, result: str) -> bool:
     # Skip results with an overall distance of more than 3 characters:
     max_edits = min(3, (min(len(query), len(result)) // 3))
-    return levenshtein(query, result) <= max_edits
+    return dam_levenshtein(query, result) <= max_edits
 
 
 def _align_name_parts(query: List[str], result: List[str]) -> float:
@@ -71,14 +72,6 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
             score = max(score, jaro_winkler(qns, rns) ** len(qns))
         score = max(score, _align_name_parts(list(qn), list(rn)))
     return score
-
-
-def name_literal_match(query: E, result: E) -> float:
-    """Two entities have the same name, without normalization applied to the name."""
-    query_names, result_names = type_pair(query, result, registry.name)
-    qnames = clean_map(query_names, clean_name_light)
-    rnames = clean_map(result_names, clean_name_light)
-    return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 
 def name_fingerprint_levenshtein(query: E, result: E) -> float:
@@ -141,11 +134,22 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     return max_score
 
 
+def name_literal_match(query: E, result: E) -> float:
+    """Two entities have the same name, without normalization applied to the name."""
+    query_names, result_names = type_pair(query, result, registry.name)
+    qnames = clean_map(query_names, clean_name_light)
+    rnames = clean_map(result_names, clean_name_light)
+    return 1.0 if has_overlap(qnames, rnames) else 0.0
+
+
 def last_name_mismatch(query: E, result: E) -> float:
     """The two persons have different last names."""
     qv, rv = props_pair(query, result, ["lastName"])
     qvt = names_word_list(qv, min_length=2)
     rvt = names_word_list(rv, min_length=2)
+    # TODO: levenshtein
+    # for (qn, rn) in product(qvt, rvt):
+    #     similarity = levenshtein_similarity(qn, rn)
     return 1.0 if is_disjoint(qvt, rvt) else 0.0
 
 

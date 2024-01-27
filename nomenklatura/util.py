@@ -4,8 +4,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from followthemoney import model
 from functools import lru_cache, cache
-from jellyfish import damerau_levenshtein_distance, metaphone
-from jellyfish import jaro_winkler_similarity, soundex
+from jellyfish import metaphone, soundex
 from normality import collapse_spaces, category_replace
 from normality.constants import WS
 from collections.abc import Mapping, Sequence
@@ -169,40 +168,6 @@ def soundex_token(token: str) -> str:
         if len(out):
             return out
     return token.upper()
-
-
-@lru_cache(maxsize=1024)
-def levenshtein(left: str, right: str) -> int:
-    """Compute the Levenshtein distance between two strings."""
-    if left == right:
-        return 0
-    return damerau_levenshtein_distance(left[:128], right[:128])
-
-
-def levenshtein_similarity(
-    left: str,
-    right: str,
-    max_edits: Optional[int] = None,
-    max_percent: float = 0.5,
-) -> float:
-    """Compute the levenshtein similarity of two strings."""
-    distance = levenshtein(left, right)
-    left_len = len(left)
-    right_len = len(right)
-    if left_len == 0 or right_len == 0:
-        return 0.0
-    # Skip results with an overall distance of more than N characters:
-    pct_edits = min(left_len, right_len) * max_percent
-    max_edits_ = min(max_edits, pct_edits) if max_edits is not None else pct_edits
-    if distance > max_edits_:
-        return 0.0
-    return 1.0 - (float(distance) / max(left_len, right_len))
-
-
-@lru_cache(maxsize=1024)
-def jaro_winkler(left: str, right: str) -> float:
-    score = jaro_winkler_similarity(left, right)
-    return score if score > 0.6 else 0.0
 
 
 def list_intersection(left: List[str], right: List[str]) -> int:

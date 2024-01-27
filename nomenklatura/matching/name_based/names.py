@@ -1,8 +1,10 @@
 from typing import List
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from rigour.text.distance import jaro_winkler
+
 from nomenklatura.matching.util import type_pair
-from nomenklatura.util import names_word_list, soundex_token, jaro_winkler
+from nomenklatura.util import names_word_list, soundex_token
 
 
 def soundex_name_parts(query: E, result: E) -> float:

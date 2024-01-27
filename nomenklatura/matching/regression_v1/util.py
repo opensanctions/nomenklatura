@@ -1,7 +1,8 @@
 from normality.constants import WS
 from typing import Iterable, Set, Tuple
+from rigour.text.distance import levenshtein
 
-from nomenklatura.util import normalize_name, levenshtein
+from nomenklatura.util import normalize_name
 
 
 def tokenize(texts: Iterable[str]) -> Set[str]:

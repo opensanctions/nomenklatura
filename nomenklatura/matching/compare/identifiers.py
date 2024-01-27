@@ -1,10 +1,10 @@
 from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC, StrictFormat
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from rigour.text.distance import levenshtein
 
 from nomenklatura.matching.util import type_pair, props_pair, has_schema, compare_sets
 from nomenklatura.matching.compare.util import has_overlap, clean_map, CleanFunc
-from nomenklatura.util import levenshtein
 
 
 def _id_prop_match(

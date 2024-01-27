@@ -4,7 +4,8 @@ from itertools import combinations
 from collections import defaultdict
 from typing import Dict, Optional, List, Tuple
 from followthemoney.proxy import E
-from nomenklatura.util import normalize_name, levenshtein
+from nomenklatura.util import normalize_name
+from rigour.text.distance import dam_levenshtein
 
 log = logging.getLogger(__name__)
 ASCII = set(string.ascii_letters + string.digits + string.whitespace)
@@ -30,7 +31,7 @@ def pick_name(names: List[str]) -> Optional[str]:
 
     edits: Dict[str, float] = defaultdict(float)
     for ((l_norm, left, l_weight), (r_norm, right, r_weight)) in combinations(forms, 2):
-        distance = levenshtein(l_norm, r_norm)
+        distance = dam_levenshtein(l_norm, r_norm)
         edits[left] += distance * l_weight
         edits[right] += distance * r_weight
 
