@@ -1,8 +1,7 @@
 from typing import Dict, Any, Optional, Set, List
+from rigour.names import pick_name
 from followthemoney.model import Model
 from followthemoney.proxy import EntityProxy
-
-from nomenklatura.publish.names import pick_name
 
 
 def _defined(*args: Optional[str]) -> List[str]:
