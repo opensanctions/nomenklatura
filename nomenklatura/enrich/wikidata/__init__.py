@@ -241,13 +241,14 @@ class WikidataEnricher(Enricher):
             return None
         proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
-        item.label.apply(proxy, "name")
+        for label in item.labels:
+            label.apply(proxy, "name")
         item.description.apply(proxy, "notes")
         for alias in item.aliases:
             alias.apply(proxy, "alias")
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
-            log.debug("Person is not a Q5 [%s]: %s", item.id, item.label)
+            log.debug("Person is not a Q5 [%s]: %s", item.id, item.labels)
             return None
 
         for claim in item.claims:

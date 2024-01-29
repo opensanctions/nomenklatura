@@ -68,17 +68,15 @@ class Item(object):
         self.modified: Optional[str] = data.pop("modified", None)
 
         labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
-        self.label: LangText = pick_obj_lang(labels)
-        self.aliases: Set[LangText] = set()
+        self.labels: Set[LangText] = set()
         for obj in labels.values():
-            self.aliases.add(LangText(obj["value"], obj["language"]))
+            self.labels.add(LangText(obj["value"], obj["language"]))
 
         aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases", {})
+        self.aliases: Set[LangText] = set()
         for lang in aliases.values():
             for obj in lang:
                 self.aliases.add(LangText(obj["value"], obj["language"]))
-
-        self.aliases.discard(self.label)
 
         descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions", {})
         self.description = pick_obj_lang(descriptions)
