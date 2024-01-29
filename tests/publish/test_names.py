@@ -1,4 +1,7 @@
-from nomenklatura.publish.names import pick_name
+from followthemoney import model
+
+from nomenklatura.publish.names import pick_caption
+from nomenklatura.entity import CompositeEntity
 
 PUTIN = [
     "Vladimir Vladimirovich Putin",
@@ -19,25 +22,9 @@ PUTIN = [
 
 
 def test_pick_putin():
-    name = pick_name(PUTIN).lower()
-    assert name.endswith("putin"), name
+    entity = CompositeEntity.from_dict(model, {"schema": "Person", 'id': 'putin'})
+    assert pick_caption(entity) == "Person"
 
-
-def test_pick_latin():
-    names = [
-        "Vladimir Vladimirovich Putin",
-        "Владимир Владимирович Путин",
-        "Владимир Владимирович Путин",
-    ]
-    name = pick_name(names)
-    assert "Putin" in name, name
-
-
-def test_pick_titlecase():
-    names = [
-        "Vladimir Vladimirovich Putin",
-        "Vladimir Vladimirovich PUTIN",
-        "Vladimir Vladimirovich PUTIN",
-    ]
-    name = pick_name(names)
-    assert "Putin" in name, names
+    data = {"schema": "Person", 'id': 'putin', 'properties': {'name': PUTIN}}
+    entity = CompositeEntity.from_dict(model, data)
+    assert pick_caption(entity).lower().endswith("putin"), entity.caption
