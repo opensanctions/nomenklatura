@@ -16,6 +16,7 @@ from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
+from nomenklatura.util import fingerprint_name
 
 
 log = logging.getLogger(__name__)
@@ -48,6 +49,18 @@ class PermIDEnricher(Enricher):
         country_set = {c.upper()[:2] for c in countries}
         if len(country_set) == 0:
             country_set.add("")
+        if len(names) * len(country_set) < 999:
+            country_set.add("")
+        if len(names) * len(country_set) < 999:
+            fp = fingerprint_name(entity.caption)
+            if fp is not None and fp not in names:
+                names.append(fp)
+        for name in entity.get('name', quiet=True):
+            if len(names) * len(country_set) >= 999:
+                break
+            fp = fingerprint_name(entity.caption)
+            if fp is not None and fp not in names:
+                names.append(fp)
         sio = io.StringIO()
         writer = csv.writer(sio, dialect=csv.unix_dialect, delimiter=",")
         # LocalID,Standard Identifier,Name,Country,Street,City,PostalCode,State,Website
@@ -143,7 +156,7 @@ class PermIDEnricher(Enricher):
         if not entity.schema.is_a("Organization"):
             return
         headers = {
-            "x-openmatch-numberOfMatchesPerRecord": "3",
+            "x-openmatch-numberOfMatchesPerRecord": "4",
             "X-AG-Access-Token": self.api_token,
             "x-openmatch-dataType": "Organization",
         }
