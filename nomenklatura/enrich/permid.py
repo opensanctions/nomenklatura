@@ -155,12 +155,17 @@ class PermIDEnricher(Enricher):
             return
         if not entity.schema.is_a("Organization"):
             return
-        headers = {
-            "x-openmatch-numberOfMatchesPerRecord": "4",
-            "X-AG-Access-Token": self.api_token,
-            "x-openmatch-dataType": "Organization",
-        }
         try:
+            for permid in entity.get('permId', quiet=True):
+                permid_url = f"https://permid.org/1-{permid}"
+                match = self.fetch_perm_org(entity, permid_url)
+                if match is not None:
+                    yield match
+            headers = {
+                "x-openmatch-numberOfMatchesPerRecord": "4",
+                "X-AG-Access-Token": self.api_token,
+                "x-openmatch-dataType": "Organization",
+            }
             cache_key = f"permid:{entity.id}"
             query = self.entity_to_queries(entity)
             res = self.http_post_json_cached(
