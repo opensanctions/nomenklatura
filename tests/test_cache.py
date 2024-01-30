@@ -1,17 +1,23 @@
 from pathlib import Path
 from tempfile import mkdtemp
+from sqlalchemy import MetaData
 
-from nomenklatura import settings
+from nomenklatura.db import get_engine
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 
-DB_PATH = Path(mkdtemp()) / "test.sqlite3"
-settings.DB_URL = f"sqlite:///{DB_PATH.as_posix()}"
+
+def _make_cache(dataset: Dataset) -> Cache:
+    db_path = Path(mkdtemp()) / "test.sqlite3"
+    url = f"sqlite:///{db_path.as_posix()}"
+    engine = get_engine(url)
+    metadata = MetaData()
+    return Cache(engine, metadata, dataset, create=True)
 
 
 def test_cache():
     ds = Dataset.make({"name": "test", "title": "Test Case"})
-    cache = Cache.make_default(ds)
+    cache = _make_cache(ds)
     res = cache.get("name")
     assert res is None, res
     assert not cache.has("name")
@@ -39,13 +45,13 @@ def test_cache():
 
 def test_cache_utils():
     ds = Dataset.make({"name": "test", "title": "Test Case"})
-    cache = Cache.make_default(ds)
+    cache = _make_cache(ds)
     assert hash(cache) != 0
 
 
 def test_preload_cache():
     ds = Dataset.make({"name": "test", "title": "Test Case"})
-    cache = Cache.make_default(ds)
+    cache = _make_cache(ds)
     res = cache.get("name")
     cache.set("name", "TestCase")
     assert len(cache._preload) == 0, cache._preload
