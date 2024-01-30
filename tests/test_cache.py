@@ -1,12 +1,12 @@
 from pathlib import Path
 from tempfile import mkdtemp
 
-from nomenklatura import db
+from nomenklatura import settings
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 
 DB_PATH = Path(mkdtemp()) / "test.sqlite3"
-db.DB_URL = f"sqlite:///{DB_PATH.as_posix()}"
+settings.DB_URL = f"sqlite:///{DB_PATH.as_posix()}"
 
 
 def test_cache():
