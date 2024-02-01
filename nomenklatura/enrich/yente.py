@@ -8,7 +8,7 @@ from followthemoney.types import registry
 from followthemoney.namespace import Namespace
 from rigour.urls import build_url
 
-from nomenklatura.entity import CE
+from nomenklatura.entity import CE, CompositeEntity
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -23,7 +23,7 @@ class YenteEnricher(Enricher):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self._api: str = config.pop("api")
-        self._dataset: str = config.pop("dataset", "default")
+        self._yente_dataset: str = config.pop("dataset", "default")
         self._threshold: Optional[float] = config.pop("threshold", None)
         self._algorithm: Optional[float] = config.pop("algorithm", "best")
         self._nested: bool = config.pop("expand_nested", True)
@@ -39,16 +39,13 @@ class YenteEnricher(Enricher):
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
 
-        # match_url = urljoin(self._api, f"match/{self._dataset}")
-        # self.cache.preload(f"{match_url}%")
-
-    def make_url(self, entity: CE) -> str:
+    def make_url(self, entity: CompositeEntity) -> str:
         return urljoin(self._api, f"entities/{entity.id}")
 
     def match(self, entity: CE) -> Generator[CE, None, None]:
         if not entity.schema.matchable:
             return
-        url = urljoin(self._api, f"match/{self._dataset}")
+        url = urljoin(self._api, f"match/{self._yente_dataset}")
         params: Dict[str, Any] = {"fuzzy": self._fuzzy, "algorithm": self._algorithm}
         if self._threshold is not None:
             params["threshold"] = self._threshold
@@ -71,19 +68,18 @@ class YenteEnricher(Enricher):
         for retry in range(4):
             try:
                 response = self.http_post_json_cached(url, cache_key, query, retry=0)
+                inner_resp = response.get("responses", {}).get("entity", {})
+                for result in inner_resp.get("results", []):
+                    proxy = self.load_entity(entity, result)
+                    proxy.add("sourceUrl", self.make_url(proxy))
+                    if self._ns is not None:
+                        proxy = self._ns.apply(proxy)
+                    yield proxy
             except EnrichmentException as exc:
                 log.info("Error matching %r: %s", entity, exc)
                 if retry == 3:
                     raise
                 time.sleep((retry + 1) ** 2)
-
-        inner_resp = response.get("responses", {}).get("entity", {})
-        for result in inner_resp.get("results", []):
-            proxy = self.load_entity(entity, result)
-            proxy.add("sourceUrl", self.make_url(proxy))
-            if self._ns is not None:
-                proxy = self._ns.apply(proxy)
-            yield proxy
 
     def _traverse_nested(self, entity: CE, response: Any) -> Generator[CE, None, None]:
         entity = self.load_entity(entity, response)

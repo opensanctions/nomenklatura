@@ -42,6 +42,7 @@ dataset = Dataset.make({"name": "ext_open_figi", "title": "OpenFIGI"})
 
 def load_enricher():
     enricher_cls = get_enricher(PATH)
+    assert enricher_cls is not None
     assert issubclass(enricher_cls, Enricher)
     cache = Cache.make_default(dataset)
     return enricher_cls(dataset, cache, {})

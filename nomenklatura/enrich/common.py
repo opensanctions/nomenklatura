@@ -7,10 +7,12 @@ from typing import Union, Any, Dict, Optional, Generator
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException
+from followthemoney.types import registry
+from followthemoney.types.topic import TopicType
 from rigour.urls import build_url, ParamsType
 
 from nomenklatura import __version__
-from nomenklatura.entity import CE
+from nomenklatura.entity import CE, CompositeEntity
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
@@ -33,7 +35,8 @@ class Enricher(ABC):
         self.cache = cache
         self.config = config
         self.cache_days = int(config.pop("cache_days", 90))
-        self.schemata = config.pop("schemata", [])
+        self._filter_schemata = config.pop("schemata", [])
+        self._filter_topics = config.pop("topics", [])
         self._session: Optional[Session] = None
 
     def get_config_expand(
@@ -141,6 +144,8 @@ class Enricher(ABC):
     def _make_data_entity(
         self, entity: CE, data: Dict[str, Any], cleaned: bool = True
     ) -> CE:
+        """Create an entity which is of the same sub-type of CE as the given
+        query entity."""
         return type(entity).from_data(self.dataset, data, cleaned=cleaned)
 
     def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
@@ -151,15 +156,32 @@ class Enricher(ABC):
         return proxy
 
     def make_entity(self, entity: CE, schema: str) -> CE:
+        """Create a new entity of the given schema."""
         return self._make_data_entity(entity, {"schema": schema})
+    
+    def _filter_entity(self, entity: CompositeEntity) -> bool:
+        """Check if the given entity should be filtered out. Filters
+        can be applied by schema or by topic."""
+        if len(self._filter_schemata):
+            if entity.schema.name not in self._filter_schemata:
+                return False
+        _filter_topics = set(self._filter_topics)
+        if 'all' in _filter_topics:
+            assert isinstance(registry.topic, TopicType)
+            _filter_topics.update(registry.topic.names.keys())
+        if len(_filter_topics):
+            topics = set(entity.get_type_values(registry.topic))
+            if not len(topics.intersection(_filter_topics)):
+                return False
+        return True
 
     def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
-        if len(self.schemata) and entity.schema.name not in self.schemata:
+        if not self._filter_entity(entity):
             return
         yield from self.match(entity)
 
     def expand_wrapped(self, entity: CE, match: CE) -> Generator[CE, None, None]:
-        if len(self.schemata) and entity.schema.name not in self.schemata:
+        if not self._filter_entity(entity):
             return
         yield from self.expand(entity, match)
 

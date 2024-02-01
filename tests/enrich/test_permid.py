@@ -157,6 +157,7 @@ GEONAME = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
 def load_enricher():
     enricher_cls = get_enricher(PATH)
+    assert enricher_cls is not None
     assert issubclass(enricher_cls, Enricher)
     cache = Cache.make_default(dataset)
     return enricher_cls(dataset, cache, {})
