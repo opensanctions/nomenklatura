@@ -4,21 +4,16 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
 from rigour.text.distance import levenshtein_similarity
-from rigour.text.distance import dam_levenshtein, jaro_winkler
+from rigour.text.distance import jaro_winkler
 from nomenklatura.util import names_word_list, name_words
 from nomenklatura.util import fingerprint_name, normalize_name
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
+from nomenklatura.matching.compare.util import is_levenshtein_plausible
 
 
 def _name_parts(name: str) -> List[str]:
     return name_words(normalize_name(name))
-
-
-def _is_levenshtein_plausible(query: str, result: str) -> bool:
-    # Skip results with an overall distance of more than 3 characters:
-    max_edits = min(3, (min(len(query), len(result)) // 3))
-    return dam_levenshtein(query, result) <= max_edits
 
 
 def _align_name_parts(query: List[str], result: List[str]) -> float:
@@ -29,7 +24,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     # compute all pairwise scores for name parts:
     for qn, rn in product(set(query), set(result)):
         score = jaro_winkler(qn, rn)
-        if score > 0.0 and _is_levenshtein_plausible(qn, rn):
+        if score > 0.0 and is_levenshtein_plausible(qn, rn):
             scores[(qn, rn)] = score
     pairs: List[Tuple[str, str]] = []
     # original length of query:
@@ -50,7 +45,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     aligned = pairs[::-1]
     query_aligned = "".join(p[0] for p in aligned)
     result_aligned = "".join(p[1] for p in aligned)
-    if not _is_levenshtein_plausible(query_aligned, result_aligned):
+    if not is_levenshtein_plausible(query_aligned, result_aligned):
         return 0.0
     # return an amped-up jaro-winkler score for the aligned name parts:
     return total_score
@@ -68,7 +63,7 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
     for (qn, rn) in product(query_names, result_names):
         qns = "".join(qn)
         rns = "".join(rn)
-        if _is_levenshtein_plausible(qns, rns):
+        if is_levenshtein_plausible(qns, rns):
             score = max(score, jaro_winkler(qns, rns) ** len(qns))
         score = max(score, _align_name_parts(list(qn), list(rn)))
     return score

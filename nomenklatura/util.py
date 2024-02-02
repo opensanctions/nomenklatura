@@ -4,9 +4,9 @@ from pathlib import Path
 from datetime import datetime, timezone
 from followthemoney import model
 from functools import lru_cache, cache
-from jellyfish import metaphone, soundex
 from normality import collapse_spaces, category_replace
 from normality.constants import WS
+from rigour.text import metaphone, soundex
 from collections.abc import Mapping, Sequence
 from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
 from fingerprints.cleanup import CHARACTERS_REMOVE_RE
@@ -150,7 +150,6 @@ def phonetic_token(token: str) -> str:
     return metaphone_token(token)
 
 
-@lru_cache(maxsize=1024)
 def metaphone_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
         out = metaphone(token)
@@ -160,7 +159,6 @@ def metaphone_token(token: str) -> str:
     return token.upper()
 
 
-@lru_cache(maxsize=1024)
 def soundex_token(token: str) -> str:
     if token.isalpha() and len(token) > 1:
         out = soundex(token)

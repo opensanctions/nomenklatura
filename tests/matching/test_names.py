@@ -82,14 +82,14 @@ def test_duplicative_name_similarity():
 def test_single_name():
     name = e("Person", name="Hannibal")
     other = e("Person", name="Hannibal")
-    assert person_name_phonetic_match(name, other) == 0.5
+    assert person_name_phonetic_match(name, other) == 1.0
     assert person_name_jaro_winkler(name, other) == 1.0
 
     other = e("Person", name="Hanniball")
-    assert person_name_phonetic_match(name, other) == 0.5
+    assert person_name_phonetic_match(name, other) == 1.0
 
     other = e("Person", name="Hannibol")
-    assert person_name_phonetic_match(name, other) == 0.5
+    assert person_name_phonetic_match(name, other) == 1.0
     assert person_name_jaro_winkler(name, other) > 0.8
     assert person_name_jaro_winkler(name, other) < 1.0
 
@@ -143,6 +143,14 @@ def test_person_name_phonetic_match():
     query = e("Person", name="Vita Klave")
     result = e("Person", name="Фуад Гулієв")
     assert person_name_phonetic_match(query, result) < 1.0
+
+    query = e("Person", name="Olga Barynova")
+    result = e("Person", name="Oleg BARANOV")
+    assert person_name_phonetic_match(query, result) < 0.6
+
+    query = e("Person", name="Ginta Boreza")
+    result = e("Person", name="Janett Borez")
+    assert person_name_phonetic_match(query, result) < 0.6
 
     query = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
     result = e("Person", name="Shaikh Isa Bin Tarif Al Bin Ali")
@@ -264,8 +272,8 @@ def test_jaro_lindemann():
 def test_name_alphabets():
     query = e("Person", name="Ротенберг Аркадий")
     result = e("Person", name="Arkadiii Romanovich Rotenberg")
-    assert person_name_phonetic_match(query, result) > 0.0
-    assert person_name_phonetic_match(query, result) < 0.7
+    # assert person_name_phonetic_match(query, result) > 0.0
+    assert person_name_phonetic_match(query, result) > 0.7
     assert person_name_jaro_winkler(query, result) > 0.7
 
     query = e("Person", name="Osama bin Laden")
