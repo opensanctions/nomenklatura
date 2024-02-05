@@ -1,15 +1,16 @@
 from typing import TYPE_CHECKING
 from rigour.names import pick_name
+from followthemoney.types import registry
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CompositeEntity
 
 
 def pick_caption(proxy: "CompositeEntity") -> str:
-    is_thing = proxy.schema.is_a("Thing")
-    for prop in proxy.schema.caption:
-        values = proxy.get(prop)
-        if is_thing and len(values) > 1:
+    for prop_ in proxy.schema.caption:
+        prop = proxy.schema.properties[prop_]
+        values = [s.value for s in proxy.get_statements(prop)]
+        if prop.type == registry.name and len(values) > 1:
             name = pick_name(values)
             if name is not None:
                 return name
