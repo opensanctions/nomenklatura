@@ -1,6 +1,5 @@
 import re
 from typing import List, Set, Union, Iterable, Callable, Optional
-from rigour.text.distance import dam_levenshtein
 
 CleanFunc = Optional[Callable[[str], Optional[str]]]
 FIND_NUM = re.compile(r"\d{1,}")
@@ -50,12 +49,3 @@ def extract_numbers(values: List[str]) -> Set[str]:
     for value in values:
         numbers.update(FIND_NUM.findall(value))
     return numbers
-
-
-def is_levenshtein_plausible(query: str, result: str) -> bool:
-    """A sanity check to post-filter name matching results based on a budget
-    of allowed Levenshtein distance. This basically cuts off results where
-    the Jaro-Winkler or Metaphone comparison was too lenient."""
-    # Skip results with an overall distance of more than 3 characters:
-    max_edits = min(3, (min(len(query), len(result)) // 3))
-    return dam_levenshtein(query, result) <= max_edits

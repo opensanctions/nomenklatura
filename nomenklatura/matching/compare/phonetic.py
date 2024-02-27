@@ -3,11 +3,11 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.scripts import is_modern_alphabet
+from rigour.text.distance import is_levenshtein_plausible
 from rigour.names.part import name_parts, NamePart
 from nomenklatura.util import name_words, list_intersection, fingerprint_name
 from nomenklatura.util import metaphone_token, soundex_token
 from nomenklatura.matching.util import type_pair, has_schema
-from nomenklatura.matching.compare.util import is_levenshtein_plausible
 
 
 def compare_parts_phonetic(left: NamePart, right: NamePart) -> bool:

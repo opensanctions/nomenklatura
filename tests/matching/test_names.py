@@ -314,6 +314,11 @@ def test_name_fingerprint_levenshtein():
     result = e("Company", name="Goodwill Company")
     assert name_fingerprint_levenshtein(query, result) == 1.0
 
+    query = e("Company", name="Government of Estonia")
+    result = e("Company", name="Government of Ethiopia")
+    assert name_fingerprint_levenshtein(query, result) < 0.85
+    assert name_fingerprint_levenshtein(query, result) > 0.5
+
 
 def test_org_name_partial_match():
     query = e("Company", name="CRYSTALORD LIMITED")

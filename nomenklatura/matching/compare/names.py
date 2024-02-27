@@ -4,12 +4,11 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
 from rigour.text.distance import levenshtein_similarity
-from rigour.text.distance import jaro_winkler
+from rigour.text.distance import jaro_winkler, is_levenshtein_plausible
 from nomenklatura.util import names_word_list, name_words
 from nomenklatura.util import fingerprint_name, normalize_name
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
-from nomenklatura.matching.compare.util import is_levenshtein_plausible
 
 
 def _name_parts(name: str) -> List[str]:
@@ -78,23 +77,14 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     query_names, result_names = type_pair(query, result, registry.name)
     max_score = 0.0
     for (qn, rn) in product(query_names, result_names):
-        score = levenshtein_similarity(
-            qn,
-            rn,
-            max_edits=4,
-            max_percent=0.33,
-        )
+        score = levenshtein_similarity(qn, rn)
+        print(qn, rn, score)
         max_score = max(max_score, score)
         qfp = fingerprint_name(qn)
         rfp = fingerprint_name(rn)
         if qfp is None or rfp is None:
             continue
-        score = levenshtein_similarity(
-            qfp.replace(" ", ""),
-            rfp.replace(" ", ""),
-            max_edits=4,
-            max_percent=0.33,
-        )
+        score = levenshtein_similarity(qfp.replace(" ", ""), rfp.replace(" ", ""))
         max_score = max(max_score, score)
         qtokens = name_words(qfp, min_length=2)
         rtokens = name_words(rfp, min_length=2)
@@ -119,12 +109,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
             continue
         qaligned = "".join(p[0] for p in aligned)
         raligned = "".join(p[1] for p in aligned)
-        score = levenshtein_similarity(
-            qaligned,
-            raligned,
-            max_edits=4,
-            max_percent=0.33,
-        )
+        score = levenshtein_similarity(qaligned, raligned)
         max_score = max(max_score, score)
     return max_score
 

@@ -33,7 +33,7 @@ setup(
         "rigour >= 0.4.4, < 1.0.0",
         "click < 9.0.0",
         "lxml > 4.0.0, < 6.0.0",
-        "rigour > 0.1.0, < 1.0.0",
+        "rigour > 0.5.1, < 1.0.0",
     ],
     tests_require=[],
     entry_points={
