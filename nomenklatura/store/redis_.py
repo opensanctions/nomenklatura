@@ -59,15 +59,15 @@ class RedisWriter(Writer[DS, CE]):
             self.flush()
         if self.pipeline is None:
             self.pipeline = self.store.db.pipeline()
-        canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
-        stmt.canonical_id = canonical_id
+        # canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
+        stmt.canonical_id = stmt.entity_id
 
-        self.pipeline.sadd(b(f"ds:{stmt.dataset}"), b(canonical_id))
-        key = f"x:{canonical_id}" if stmt.external else f"s:{canonical_id}"
+        self.pipeline.sadd(b(f"ds:{stmt.dataset}"), b(stmt.entity_id))
+        key = f"x:{stmt.entity_id}" if stmt.external else f"s:{stmt.entity_id}"
         self.pipeline.sadd(b(key), pack_statement(stmt))
         if stmt.prop_type == registry.entity.name:
             vc = self.store.resolver.get_canonical(stmt.value)
-            self.pipeline.sadd(b(f"i:{vc}"), b(canonical_id))
+            self.pipeline.sadd(b(f"i:{vc}"), b(stmt.entity_id))
 
         self.batch_size += 1
 
@@ -85,8 +85,8 @@ class RedisWriter(Writer[DS, CE]):
             datasets.add(stmt.dataset)
 
             if stmt.prop_type == registry.entity.name:
-                vc = self.store.resolver.get_canonical(stmt.value)
-                self.pipeline.srem(b(f"i:{vc}"), b(entity_id))
+                # vc = self.store.resolver.get_canonical(stmt.value)
+                self.pipeline.srem(b(f"i:{stmt.value}"), b(entity_id))
 
         for dataset in datasets:
             self.pipeline.srem(b(f"ds:{dataset}"), b(entity_id))
