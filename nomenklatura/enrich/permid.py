@@ -83,7 +83,12 @@ class PermIDEnricher(Enricher):
             raise ValueError("Not a GeoNames URL: %s" % value)
         url = urljoin(value, "about.rdf")
         res = self.http_get_cached(url, cache_days=120)
-        doc = etree.fromstring(res.encode("utf=8"))
+        try:
+            doc = etree.fromstring(res.encode("utf=8"))
+        except Exception:
+            log.warn("Invalid GeoNames response: %s", url)
+            self.http_remove_cache(url)
+            return None
         for code in doc.findall(".//%scountryCode" % GN):
             return code.text
         for name in doc.findall(".//%sname" % GN):
