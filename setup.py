@@ -29,7 +29,7 @@ setup(
         "rich >= 10.9.0, < 14.0.0",
         "textual >= 0.19.0, < 1.0.0",
         "sqlalchemy >= 2.0.0",
-        "scikit-learn == 1.3.2",
+        "scikit-learn == 1.4.1.post1",
         "pydantic > 2.0.0, < 3.0.0",
         "click < 9.0.0",
         "lxml > 4.0.0, < 6.0.0",
