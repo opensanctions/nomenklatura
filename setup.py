@@ -22,6 +22,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "followthemoney >= 3.5.6, < 4.0.0",
+        "rigour > 0.5.1, < 1.0.0",
         "fingerprints >= 1.2.0, < 2.0.0",
         "shortuuid >= 1.0.11, < 2.0.0",
         "jellyfish >= 1.0.0, < 2.0.0",
@@ -30,10 +31,8 @@ setup(
         "sqlalchemy >= 2.0.0",
         "scikit-learn == 1.3.2",
         "pydantic > 2.0.0, < 3.0.0",
-        "rigour >= 0.4.4, < 1.0.0",
         "click < 9.0.0",
         "lxml > 4.0.0, < 6.0.0",
-        "rigour > 0.5.1, < 1.0.0",
     ],
     tests_require=[],
     entry_points={
