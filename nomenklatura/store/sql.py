@@ -26,6 +26,8 @@ class SQLStore(Store[DS, CE]):
         super().__init__(dataset, resolver)
         if "pool_size" not in engine_kwargs:
             engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
+        # if uri.lower().startswith("sqlite"):
+        #     engine_kwargs.pop("pool_size", None)
         metadata = get_metadata()
         self.engine: Engine = create_engine(uri, **engine_kwargs)
         self.table = make_statement_table(metadata)

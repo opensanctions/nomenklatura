@@ -10,10 +10,10 @@ from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
-from sqlalchemy.exc import OperationalError, PendingRollbackError
+from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
 
-from nomenklatura.dataset import DS
+from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine, get_metadata
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def randomize_cache(days: int) -> timedelta:
 
 class Cache(object):
     def __init__(
-        self, engine: Engine, metadata: MetaData, dataset: DS, create: bool = False
+        self, engine: Engine, metadata: MetaData, dataset: Dataset, create: bool = False
     ) -> None:
         self.dataset = dataset
         self._engine = engine
@@ -74,8 +74,9 @@ class Cache(object):
             values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
             stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
             self.conn.execute(stmt)
-        except OperationalError as exc:
+        except (OperationalError, InvalidRequestError) as exc:
             log.info("Error while saving to cache: %s" % exc)
+            self.reset()
 
     def set_json(self, key: str, value: Any) -> None:
         return self.set(key, json.dumps(value))
@@ -100,8 +101,13 @@ class Cache(object):
             q = q.filter(self._table.c.timestamp > cache_cutoff)
         q = q.order_by(self._table.c.timestamp.desc())
         q = q.limit(1)
-        result = self.conn.execute(q)
-        row = result.fetchone()
+        try:
+            result = self.conn.execute(q)
+            row = result.fetchone()
+        except InvalidRequestError as ire:
+            log.warn("Cache fetch error: %s", ire)
+            self.reset()
+            return None
         if row is not None:
             return cast(Optional[str], row.text)
         return None
@@ -119,7 +125,12 @@ class Cache(object):
         self._preload.pop(key, None)
         pq = delete(self._table)
         pq = pq.where(self._table.c.key == key)
-        self.conn.execute(pq)
+        try:
+            self.conn.execute(pq)
+        except InvalidRequestError as ire:
+            log.warn("Cache delete error: %s", ire)
+            self.reset()
+            return None
 
     def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
         q = select(self._table)
@@ -136,19 +147,27 @@ class Cache(object):
             self._preload[cache.key] = cache
 
     def clear(self) -> None:
-        pq = delete(self._table)
-        pq = pq.where(self._table.c.dataset == self.dataset.name)
-        self.conn.execute(pq)
+        try:
+            pq = delete(self._table)
+            pq = pq.where(self._table.c.dataset == self.dataset.name)
+            self.conn.execute(pq)
+        except InvalidRequestError:
+            self.reset()
+            
+    def reset(self) -> None:
+        if self._conn is not None:
+            self._conn.close()
+        self._conn = None
 
     def flush(self) -> None:
         # log.info("Flushing cache.")
         if self._conn is not None:
             try:
                 self._conn.commit()  # type: ignore
-            except PendingRollbackError:
+            except InvalidRequestError:
                 log.info("Transaction was failed, cannot store cache state.")
             self._conn.close()
-        self._conn = None
+        self.reset()
 
     def close(self) -> None:
         self.flush()
@@ -160,7 +179,7 @@ class Cache(object):
         return hash((self.dataset.name, self._table.name))
 
     @classmethod
-    def make_default(cls, dataset: DS) -> "Cache":
+    def make_default(cls, dataset: Dataset) -> "Cache":
         engine = get_engine()
         metadata = get_metadata()
         return cls(engine, metadata, dataset, create=True)
