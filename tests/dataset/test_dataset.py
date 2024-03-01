@@ -38,6 +38,7 @@ def test_company_dataset(catalog_data: Dict[str, Any]):
     assert "coverage" in ds.to_dict()
     assert ds.coverage.start == "2005"
     assert ds.coverage.end == "2010-01"
+    assert ds.coverage.introduced == "2024-02-20"
     assert "us" in ds.coverage.countries
 
     assert "company_data" in repr(ds)

@@ -19,6 +19,7 @@ class DataCoverage(object):
     )
 
     def __init__(self, data: Dict[str, Any]) -> None:
+        self.introduced = type_check(registry.date, data.get("introduced"))
         self.start = type_check(registry.date, data.get("start"))
         self.end = type_check(registry.date, data.get("end"))
         self.countries: List[str] = []
@@ -30,6 +31,7 @@ class DataCoverage(object):
 
     def to_dict(self) -> Dict[str, Any]:
         data = {
+            "introduced": self.introduced,
             "start": self.start,
             "end": self.end,
             "countries": self.countries,

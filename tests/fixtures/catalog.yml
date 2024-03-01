@@ -22,6 +22,7 @@ datasets:
       country: us
       logo_url: https://placekitten.com/400/400
     coverage:
+      introduced: 2024-02-20
       start: 2005
       end: 2010-01
       frequency: monthly
