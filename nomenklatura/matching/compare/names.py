@@ -59,7 +59,7 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
     query_names = [_name_parts(n) for n in query_names_]
     result_names = [_name_parts(n) for n in result_names_]
     score = 0.0
-    for (qn, rn) in product(query_names, result_names):
+    for qn, rn in product(query_names, result_names):
         qns = "".join(qn)
         rns = "".join(rn)
         if is_levenshtein_plausible(qns, rns):
@@ -76,9 +76,8 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         return 0.0
     query_names, result_names = type_pair(query, result, registry.name)
     max_score = 0.0
-    for (qn, rn) in product(query_names, result_names):
+    for qn, rn in product(query_names, result_names):
         score = levenshtein_similarity(qn, rn)
-        print(qn, rn, score)
         max_score = max(max_score, score)
         qfp = fingerprint_name(qn)
         rfp = fingerprint_name(rn)
