@@ -3,7 +3,7 @@ from functools import cache
 from typing import cast, Generator, Any, Dict, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from rigour.ids.wikidata import is_qid
-from fingerprints.cleanup import clean_brackets
+from fingerprints import clean_brackets
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
