@@ -1,4 +1,4 @@
-from typing import Counter, Dict, Optional, Any
+from typing import Callable, Counter, Dict, Optional, Any
 from followthemoney.types import registry
 
 from nomenklatura.entity import CE
@@ -36,9 +36,13 @@ class LangText(object):
             return "<empty>"
         return f"{self.text!r}@{self.lang or '???'}"
 
-    def apply(self, entity: CE, prop: str) -> None:
-        if self.text is not None:
-            entity.add(prop, self.text, lang=self.lang, original_value=self.original)
+    def apply(self, entity: CE, prop: str, clean: Optional[Callable[[str], str]] = None) -> None:
+        if self.text is None:
+            return
+        clean_text = self.text if clean is None else clean(self.text)
+        if clean_text == "":
+            return
+        entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
 
     def pack(self) -> Dict[str, Optional[str]]:
         return {"t": self.text, "l": self.lang, "o": self.original}
