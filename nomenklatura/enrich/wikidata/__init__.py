@@ -3,6 +3,7 @@ from functools import cache
 from typing import cast, Generator, Any, Dict, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from rigour.ids.wikidata import is_qid
+from fingerprints import clean_brackets
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -22,6 +23,10 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 WD_API = "https://www.wikidata.org/w/api.php"
 LABEL_PREFIX = "wd:lb:"
 log = logging.getLogger(__name__)
+
+
+def clean_name(name: str) -> str:
+    return clean_brackets(name).strip()
 
 
 class WikidataEnricher(Enricher):
@@ -242,10 +247,10 @@ class WikidataEnricher(Enricher):
         proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
         for label in item.labels:
-            label.apply(proxy, "name")
+            label.apply(proxy, "name", clean=clean_name)
         item.description.apply(proxy, "notes")
         for alias in item.aliases:
-            alias.apply(proxy, "alias")
+            alias.apply(proxy, "alias", clean=clean_name)
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
             log.debug("Person is not a Q5 [%s]: %s", item.id, item.labels)
