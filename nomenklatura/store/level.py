@@ -106,7 +106,7 @@ class LevelDBView(View[DS, CE]):
                 return True
         if self.external:
             prefix = b(f"x:{id}:")
-            with self.store.db.iterator(prefix=prefix, include_key=False) as it:
+            with self.store.db.iterator(prefix=prefix, include_key=False, include_value=False) as it:
                 for v in it:
                     return True
         return False
