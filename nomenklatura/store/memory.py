@@ -68,6 +68,13 @@ class MemoryView(View[DS, CE]):
         super().__init__(store, scope, external=external)
         self.store: MemoryStore[DS, CE] = store
 
+    def has_entity(self, id: str) -> bool:
+        for stmt in self.store.stmts.get(id, []):
+            if self.external is False and stmt.external:
+                continue
+            return True
+        return False
+
     def get_entity(self, id: str) -> Optional[CE]:
         if id not in self.store.stmts:
             return None

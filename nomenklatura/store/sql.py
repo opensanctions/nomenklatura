@@ -1,7 +1,7 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
 from followthemoney.property import Property
-from sqlalchemy import Table, delete, select
+from sqlalchemy import Table, delete, func, select
 from sqlalchemy.engine import Engine, Transaction, create_engine
 from sqlalchemy.sql.selectable import Select
 
@@ -155,6 +155,15 @@ class SQLView(View[DS, CE]):
         for proxy in self.store._iterate(q, stream=False):
             return proxy
         return None
+
+    def has_entity(self, id: str) -> bool:
+        table = self.store.table
+        q = select(func.count(table.c.id))
+        q = q.where(table.c.canonical_id == id)
+        q = q.where(table.c.dataset.in_(self.dataset_names))
+        with self.store.engine.connect() as conn:
+            cursor = conn.execute(q)
+            return cursor.scalar() > 0
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         table = self.store.table

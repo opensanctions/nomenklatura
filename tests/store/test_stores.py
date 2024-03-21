@@ -17,6 +17,10 @@ def _run_store_test(
     dataset: Dataset,
     donations_json: List[Dict[str, Any]],
 ):
+    entity_id = "4e0bd810e1fcb49990a2b31709b6140c4c9139c5"
+    view = store.default_view()
+    assert not view.has_entity(entity_id)
+
     with store.writer() as bulk:
         for data in donations_json:
             proxy = CompositeEntity.from_data(dataset, data)
@@ -26,10 +30,11 @@ def _run_store_test(
     proxies = [e for e in view.entities()]
     assert len(proxies) == len(donations_json)
 
-    entity = view.get_entity("4e0bd810e1fcb49990a2b31709b6140c4c9139c5")
+    entity = view.get_entity(entity_id)
     assert entity is not None
     assert entity.id is not None
     assert entity.caption == "Tchibo Holding AG"
+    assert view.has_entity(entity.id)
 
     tested = False
     for prop, value in entity.itervalues():

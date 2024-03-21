@@ -64,8 +64,10 @@ def test_leveldb_graph_query(donations_path: Path, test_dataset: Dataset):
     view = store.default_view()
     entity = view.get_entity("banana")
     assert entity is None, entity
+    assert not view.has_entity("banana")
     entity = view.get_entity(DAIMLER)
     assert entity is not None, entity
+    assert view.has_entity(DAIMLER)
     assert "Daimler" in entity.caption, entity.caption
     assert len(entity.datasets) == 1
     ds = entity.datasets.pop()
@@ -87,8 +89,10 @@ def test_leveldb_graph_query(donations_path: Path, test_dataset: Dataset):
     view = store.view(test_dataset, external=False)
     entity = view.get_entity("john-doe")
     assert entity is None, entity
+    assert not view.has_entity("john-doe")
 
     ext_view = store.view(test_dataset, external=True)
     entity = ext_view.get_entity("john-doe")
     assert entity is not None, entity
+    assert ext_view.has_entity("john-doe")
     assert len(list(entity.statements)) == len(list(ext_entity.statements))
