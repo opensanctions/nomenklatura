@@ -163,7 +163,11 @@ class SQLView(View[DS, CE]):
         q = q.where(table.c.dataset.in_(self.dataset_names))
         with self.store.engine.connect() as conn:
             cursor = conn.execute(q)
-            return cursor.scalar() > 0
+            count = cursor.scalar()
+            if count is not None and count > 0:
+                return True
+            else:
+                return False
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         table = self.store.table
