@@ -101,6 +101,12 @@ class RedisView(View[DS, CE]):
         super().__init__(store, scope, external=external)
         self.store: RedisStore[DS, CE] = store
 
+    def has_entity(self, id: str) -> bool:
+        keys = [b(f"s:{id}")]
+        if self.external:
+            keys.append(b(f"x:{id}"))
+        return self.store.db.exists(*keys) > 0
+
     def get_entity(self, id: str) -> Optional[CE]:
         statements: List[Statement] = []
         keys = [b(f"s:{id}")]

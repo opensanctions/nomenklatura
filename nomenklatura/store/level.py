@@ -99,6 +99,18 @@ class LevelDBView(View[DS, CE]):
         super().__init__(store, scope, external=external)
         self.store: LevelDBStore[DS, CE] = store
 
+    def has_entity(self, id: str) -> bool:
+        prefix = b(f"s:{id}:")
+        with self.store.db.iterator(prefix=prefix, include_key=False, include_value=False) as it:
+            for v in it:
+                return True
+        if self.external:
+            prefix = b(f"x:{id}:")
+            with self.store.db.iterator(prefix=prefix, include_key=False, include_value=False) as it:
+                for v in it:
+                    return True
+        return False
+
     def get_entity(self, id: str) -> Optional[CE]:
         statements: List[Statement] = []
         prefix = b(f"s:{id}:")

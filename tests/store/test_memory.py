@@ -71,3 +71,16 @@ def test_get_entity(dstore: SimpleMemoryStore):
     assert model.get("Payment") in schemata, set(schemata)
     assert model.get("Address") in schemata, set(schemata)
     assert model.get("Company") not in schemata, set(schemata)
+
+
+def test_has_entity(dstore: SimpleMemoryStore, test_dataset: Dataset):
+    view = dstore.default_view()
+    assert not view.has_entity("banana")
+    assert view.has_entity(DAIMLER)
+
+    assert not view.has_entity("john-doe-2")
+    writer = dstore.writer()
+    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    writer.add_entity(entity_ext)
+    writer.flush()
+    assert view.has_entity("john-doe-2")

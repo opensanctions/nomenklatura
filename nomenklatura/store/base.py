@@ -98,6 +98,9 @@ class View(Generic[DS, CE]):
         self.dataset_names = scope.leaf_names
         self.external = external
 
+    def has_entity(self, id: str) -> bool:
+        raise NotImplementedError()
+
     def get_entity(self, id: str) -> Optional[CE]:
         raise NotImplementedError()
 
