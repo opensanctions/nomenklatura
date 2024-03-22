@@ -12,6 +12,8 @@ htmlcov/
 build/
 dist/
 data/
+.vscode/*.json
 textual.log
 .nk_cache.db
 nomenklatura.db
+nomenklatura.db-journal
