@@ -97,6 +97,23 @@ class Index(Generic[DS, CE]):
 
         return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
 
+    def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
+        """Match an entity against the index, returning a list of
+        (entity_id, score) pairs."""
+        scores: Dict[Identifier, float] = {}
+        for field_name, token in self.tokenizer.entity(entity):
+            field = self.fields.get(field_name)
+            if field is None:
+                continue
+            entry = field.tokens.get(token)
+            if entry is None:
+                continue
+            for ident, weight in entry.frequencies(field):
+                if ident not in scores:
+                    scores[ident] = 0.0
+                scores[ident] += weight * self.BOOSTS.get(field_name, 1.0)
+        return sorted(scores.items(), key=lambda s: s[1], reverse=True)
+
     def save(self, path: PathLike) -> None:
         with open(path, "wb") as fh:
             pickle.dump(self.to_dict(), fh)
