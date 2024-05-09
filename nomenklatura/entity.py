@@ -262,10 +262,10 @@ class CompositeEntity(EntityProxy):
         seen: Optional[str] = None,
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Add a statement to the entity, possibly the value."""
         if value is None or len(value) == 0:
-            return
+            return None
 
         # Don't allow setting the reverse properties:
         if prop.stub:
@@ -282,7 +282,7 @@ class CompositeEntity(EntityProxy):
             clean = prop.type.clean_text(value, proxy=self, fuzzy=fuzzy, format=format)
 
         if clean is None:
-            return
+            return None
 
         if original_value is None and clean != value:
             original_value = value
@@ -300,6 +300,7 @@ class CompositeEntity(EntityProxy):
             first_seen=seen,
         )
         self.add_statement(stmt)
+        return clean
 
     def pop(self, prop: P, quiet: bool = True) -> List[str]:
         prop_name = self._prop_name(prop, quiet=quiet)
