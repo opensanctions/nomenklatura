@@ -7,6 +7,8 @@ from tempfile import mkdtemp
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.dataset import Dataset
+from nomenklatura.entity import CompositeEntity
+from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
@@ -40,8 +42,13 @@ def donations_json(donations_path):
 
 
 @pytest.fixture(scope="module")
-def dstore(donations_path) -> SimpleMemoryStore:
-    return load_entity_file_store(donations_path)
+def dresolver():
+    return Resolver[CompositeEntity]()
+
+
+@pytest.fixture(scope="module")
+def dstore(donations_path, dresolver) -> SimpleMemoryStore:
+    return load_entity_file_store(donations_path, dresolver)
 
 
 @pytest.fixture(scope="module")

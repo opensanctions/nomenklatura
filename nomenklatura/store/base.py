@@ -4,7 +4,7 @@ from followthemoney.property import Property
 from followthemoney.types import registry
 
 from nomenklatura.dataset import DS
-from nomenklatura.resolver import Resolver, StrIdent
+from nomenklatura.resolver import Linker, StrIdent
 from nomenklatura.statement import Statement
 from nomenklatura.entity import CE, CompositeEntity
 
@@ -14,9 +14,9 @@ class Store(Generic[DS, CE]):
     Essentially, this is a triple store which can be implemented using various
     backends."""
 
-    def __init__(self, dataset: DS, resolver: Resolver[CE]):
+    def __init__(self, dataset: DS, linker: Linker[CE]):
         self.dataset = dataset
-        self.resolver = resolver
+        self.linker = linker
         self.entity_class = cast(Type[CE], CompositeEntity)
 
     def writer(self) -> "Writer[DS, CE]":
@@ -33,16 +33,16 @@ class Store(Generic[DS, CE]):
             return None
         for stmt in statements:
             if stmt.prop_type == registry.entity.name:
-                stmt.value = self.resolver.get_canonical(stmt.value)
+                stmt.value = self.linker.get_canonical(stmt.value)
         entity = self.entity_class.from_statements(self.dataset, statements)
         if entity.id is not None:
-            entity.extra_referents.update(self.resolver.get_referents(entity.id))
+            entity.extra_referents.update(self.linker.get_referents(entity.id))
         return entity
 
     def update(self, id: StrIdent) -> None:
-        canonical_id = self.resolver.get_canonical(id)
+        canonical_id = self.linker.get_canonical(id)
         with self.writer() as writer:
-            for referent in self.resolver.get_referents(canonical_id):
+            for referent in self.linker.get_referents(canonical_id):
                 for stmt in writer.pop(referent):
                     stmt.canonical_id = canonical_id
                     writer.add_statement(stmt)

@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver, Identifier
+from nomenklatura.resolver import Resolver, Linker, Identifier
 from nomenklatura.statement import Statement
 
 
@@ -71,6 +71,16 @@ def test_resolver():
     assert resolver.get_canonical("a17") == "a17"
     assert resolver.get_judgement(a_canon, "a1") == Judgement.NO_JUDGEMENT
     assert resolver.get_judgement("b1", "b2") == Judgement.POSITIVE
+
+
+def test_linker():
+    resolver = Resolver()
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    linker = resolver.get_linker()
+    assert linker.get_canonical("a1") == canon_a
+    assert len(linker.connected(canon_a)) == 3
+    assert len(linker.connected(canon_b)) == 3
 
 
 def test_resolver_store():

@@ -1,11 +1,15 @@
 from nomenklatura.xref import xref
 from nomenklatura.store import SimpleMemoryStore
+from nomenklatura.resolver import Resolver
+from nomenklatura.entity import CompositeEntity
 
 
-def test_xref_candidates(dstore: SimpleMemoryStore):
-    xref(dstore)
+def test_xref_candidates(
+    dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
+):
+    xref(dresolver, dstore)
     view = dstore.default_view(external=True)
-    candidates = list(dstore.resolver.get_candidates(limit=20))
+    candidates = list(dresolver.get_candidates(limit=20))
     assert len(candidates) == 20
     for left_id, right_id, score in candidates:
         left = view.get_entity(left_id)

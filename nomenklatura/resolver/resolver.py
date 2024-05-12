@@ -3,26 +3,33 @@ from pathlib import Path
 from datetime import datetime
 from functools import lru_cache
 from collections import defaultdict
-from typing import Dict, Generator, Generic, List, Optional, Set, Tuple
-from followthemoney.types import registry
+from typing import Dict, Generator, List, Optional, Set, Tuple
 from rigour.ids.wikidata import is_qid
 
 from nomenklatura.entity import CE
-from nomenklatura.stream import StreamEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
-from nomenklatura.statement.statement import Statement
+from nomenklatura.resolver.linker import Linker
 from nomenklatura.util import PathLike
 
 
-class Resolver(Generic[CE]):
+class Resolver(Linker[CE]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(self, path: Optional[Path] = None) -> None:
         self.path = path
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
+
+    def get_linker(self) -> Linker[CE]:
+        """Return a linker object that can be used to resolve entities.
+        This is less memory-consuming than the full resolver object.
+        """
+        entities: Dict[Identifier, Set[Identifier]] = {}
+        for node in self.nodes.keys():
+            entities[node] = self._traverse(node, set())
+        return Linker(entities)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
         key = Identifier.pair(left_id, right_id)
@@ -44,14 +51,6 @@ class Resolver(Generic[CE]):
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
-    def get_canonical(self, entity_id: StrIdent) -> str:
-        """Return the canonical identifier for the given entity ID."""
-        node = Identifier.get(entity_id)
-        best = max(self.connected(node))
-        if best.canonical:
-            return best.id
-        return node.id
-
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
         for node in self.nodes.keys():
@@ -60,21 +59,6 @@ class Resolver(Generic[CE]):
             canonical = self.get_canonical(node)
             if canonical == node.id:
                 yield node
-
-    def get_referents(
-        self, canonical_id: StrIdent, canonicals: bool = True
-    ) -> Set[str]:
-        """Get all the non-canonical entity identifiers which refer to a given
-        canonical identifier."""
-        node = Identifier.get(canonical_id)
-        referents: Set[str] = set()
-        for connected in self.connected(node):
-            if not canonicals and connected.canonical:
-                continue
-            if connected == node:
-                continue
-            referents.add(connected.id)
-        return referents
 
     def get_resolved_edge(
         self, left_id: StrIdent, right_id: StrIdent
@@ -248,50 +232,6 @@ class Resolver(Generic[CE]):
             if edge.judgement == Judgement.NO_JUDGEMENT:
                 self._remove_edge(edge)
         self.connected.cache_clear()
-
-    def apply(self, proxy: CE) -> CE:
-        """Replace all entity references in a given proxy with their canonical
-        identifiers. This is essentially the harmonisation post de-dupe."""
-        if proxy.id is None:
-            return proxy
-        proxy.id = self.get_canonical(proxy.id)
-        return self.apply_properties(proxy)
-
-    def apply_stream(self, proxy: StreamEntity) -> StreamEntity:
-        if proxy.id is None:
-            return proxy
-        proxy.id = self.get_canonical(proxy.id)
-        for prop in proxy.iterprops():
-            if prop.type == registry.entity:
-                values = proxy.pop(prop)
-                for value in values:
-                    proxy.unsafe_add(prop, self.get_canonical(value), cleaned=True)
-        return proxy
-
-    def apply_properties(self, proxy: CE) -> CE:
-        for stmt in proxy._iter_stmt():
-            if proxy.id is not None:
-                stmt.canonical_id = proxy.id
-            if stmt.prop_type == registry.entity.name:
-                canon_value = self.get_canonical(stmt.value)
-                if canon_value != stmt.value:
-                    if stmt.original_value is None:
-                        stmt.original_value = stmt.value
-                    # NOTE: this means the key is out of whack here now
-                    stmt.value = canon_value
-        return proxy
-
-    def apply_statement(self, stmt: Statement) -> Statement:
-        if stmt.entity_id is not None:
-            stmt.canonical_id = self.get_canonical(stmt.entity_id)
-        if stmt.prop_type == registry.entity.name:
-            canon_value = self.get_canonical(stmt.value)
-            if canon_value != stmt.value:
-                if stmt.original_value is None:
-                    stmt.original_value = stmt.value
-                # NOTE: this means the key is out of whack here now
-                stmt.value = canon_value
-        return stmt
 
     def save(self) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""

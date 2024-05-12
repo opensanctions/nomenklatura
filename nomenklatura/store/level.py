@@ -7,15 +7,15 @@ from followthemoney.types import registry
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Linker
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.store.util import b, pack_statement, unpack_statement
 
 
 class LevelDBStore(Store[DS, CE]):
-    def __init__(self, dataset: DS, resolver: Resolver[CE], path: Path):
-        super().__init__(dataset, resolver)
+    def __init__(self, dataset: DS, linker: Linker[CE], path: Path):
+        super().__init__(dataset, linker)
         self.path = path
         self.db = plyvel.DB(path.as_posix(), create_if_missing=True)
 
@@ -50,7 +50,7 @@ class LevelDBWriter(Writer[DS, CE]):
             self.flush()
         if self.batch is None:
             self.batch = self.store.db.write_batch()
-        canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
+        canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
 
         key = b(f"e:{canonical_id}:{stmt.dataset}")
@@ -61,7 +61,7 @@ class LevelDBWriter(Writer[DS, CE]):
             key = b(f"s:{canonical_id}:{stmt.id}")
         self.batch.put(key, pack_statement(stmt))
         if stmt.prop_type == registry.entity.name:
-            vc = self.store.resolver.get_canonical(stmt.value)
+            vc = self.store.linker.get_canonical(stmt.value)
             key = b(f"i:{vc}:{stmt.canonical_id}")
             self.batch.put(key, b(stmt.canonical_id))
 
@@ -83,7 +83,7 @@ class LevelDBWriter(Writer[DS, CE]):
                     datasets.add(stmt.dataset)
 
                     if stmt.prop_type == registry.entity.name:
-                        vc = self.store.resolver.get_canonical(stmt.value)
+                        vc = self.store.linker.get_canonical(stmt.value)
                         self.batch.delete(b(f"i:{vc}:{entity_id}"))
 
         for dataset in datasets:
@@ -101,12 +101,16 @@ class LevelDBView(View[DS, CE]):
 
     def has_entity(self, id: str) -> bool:
         prefix = b(f"s:{id}:")
-        with self.store.db.iterator(prefix=prefix, include_key=False, include_value=False) as it:
+        with self.store.db.iterator(
+            prefix=prefix, include_key=False, include_value=False
+        ) as it:
             for v in it:
                 return True
         if self.external:
             prefix = b(f"x:{id}:")
-            with self.store.db.iterator(prefix=prefix, include_key=False, include_value=False) as it:
+            with self.store.db.iterator(
+                prefix=prefix, include_key=False, include_value=False
+            ) as it:
                 for v in it:
                     return True
         return False

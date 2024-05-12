@@ -6,12 +6,12 @@ from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.statement import Statement
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Linker
 
 
 class MemoryStore(Store[DS, CE]):
-    def __init__(self, dataset: DS, resolver: Resolver[CE]):
-        super().__init__(dataset, resolver)
+    def __init__(self, dataset: DS, linker: Linker[CE]):
+        super().__init__(dataset, linker)
         self.stmts: Dict[str, Set[Statement]] = {}
         self.inverted: Dict[str, Set[str]] = {}
         self.entities: Dict[str, Set[str]] = {}
@@ -30,7 +30,7 @@ class MemoryWriter(Writer[DS, CE]):
     def add_statement(self, stmt: Statement) -> None:
         if stmt.entity_id is None:
             return
-        canonical_id = stmt.canonical_id or self.store.resolver.get_canonical(
+        canonical_id = stmt.canonical_id or self.store.linker.get_canonical(
             stmt.entity_id
         )
         if canonical_id not in self.store.stmts:
@@ -42,7 +42,7 @@ class MemoryWriter(Writer[DS, CE]):
         self.store.entities[stmt.dataset].add(canonical_id)
 
         if stmt.prop_type == registry.entity.name:
-            inverted_id = self.store.resolver.get_canonical(stmt.value)
+            inverted_id = self.store.linker.get_canonical(stmt.value)
             if inverted_id not in self.store.inverted:
                 self.store.inverted[inverted_id] = set()
             self.store.inverted[inverted_id].add(canonical_id)
@@ -54,7 +54,7 @@ class MemoryWriter(Writer[DS, CE]):
                 self.store.entities[stmt.dataset].discard(entity_id)
 
             if stmt.prop_type == registry.entity.name:
-                inverted_id = self.store.resolver.get_canonical(stmt.value)
+                inverted_id = self.store.linker.get_canonical(stmt.value)
                 if inverted_id in self.store.inverted:
                     self.store.inverted[inverted_id].discard(entity_id)
 
