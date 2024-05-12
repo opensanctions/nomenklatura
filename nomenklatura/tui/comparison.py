@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text
@@ -6,12 +6,12 @@ from followthemoney.types import registry
 from followthemoney.property import Property
 
 from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
+from nomenklatura.entity import CompositeEntity as Entity, CE
 from nomenklatura.store import View
 from nomenklatura.tui.util import comparison_props
 
 
-def render_column(entity: CE) -> Text:
+def render_column(entity: Entity) -> Text:
     return Text.assemble(
         (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
     )
@@ -36,9 +36,9 @@ def render_values(
             caption = f"https://wikidata.org/wiki/{value}"
         style = "default"
         if score > 0.7:
-            style = "yellow"
+            style = "orange1"
         if score > 0.95:
-            style = "green"
+            style = "green1"
         if caption is not None:
             if i > 0:
                 text.append(" · ", "gray")
@@ -53,7 +53,7 @@ def render_comparison(
     score: float,
     latinize: bool = False,
     url_base: Optional[str] = None,
-) -> Table:
+) -> Union[Table, Text]:
     if left is None or right is None:
         return Text("No candidates loaded.", justify="center")
 
