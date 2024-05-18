@@ -3,6 +3,7 @@ import fakeredis
 from pathlib import Path
 from followthemoney import model
 
+from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.versioned import VersionedRedisStore
@@ -111,14 +112,14 @@ def test_versioning(test_dataset: Dataset):
     assert store.get_latest(test_dataset.name) is None
     assert len(store.get_history(test_dataset.name)) == 0
     entity = CompositeEntity.from_data(test_dataset, PERSON)
-    version_a = "A"
+    version_a = Version.new().id
     with store.writer(version=version_a) as writer:
         writer.add_entity(entity)
         writer.flush()
         writer.release()
     assert store.get_latest(test_dataset.name) == version_a
     assert len(store.get_history(test_dataset.name)) == 1
-    version_b = "B"
+    version_b = Version.new().id
     with store.writer(version=version_b) as writer:
         writer.add_entity(entity)
         writer.flush()
