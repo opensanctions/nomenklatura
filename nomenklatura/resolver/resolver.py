@@ -28,7 +28,11 @@ class Resolver(Linker[CE]):
         """
         entities: Dict[Identifier, Set[Identifier]] = {}
         for node in self.nodes.keys():
-            entities[node] = self._traverse(node, set())
+            if node in entities:
+                continue
+            connected = self._traverse(node, set())
+            for c in connected:
+                entities[c] = connected
         return Linker(entities)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:

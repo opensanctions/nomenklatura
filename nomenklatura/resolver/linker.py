@@ -16,7 +16,7 @@ class Linker(Generic[CE]):
         self._entities: Dict[Identifier, Set[Identifier]] = entities
 
     def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._entities.get(node, set())
+        return self._entities.get(node, set([node]))
 
     def get_canonical(self, entity_id: StrIdent) -> str:
         """Return the canonical identifier for the given entity ID."""
