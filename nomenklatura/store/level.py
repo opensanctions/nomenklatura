@@ -10,7 +10,12 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import b, pack_statement, unpack_statement
+from nomenklatura.store.util import pack_statement, unpack_statement
+
+
+def b(s: str) -> bytes:
+    """Encode a string to bytes."""
+    return s.encode("utf-8")
 
 
 class LevelDBStore(Store[DS, CE]):

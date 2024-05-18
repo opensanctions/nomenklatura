@@ -1,11 +1,12 @@
 import redis
+from redis.client import Redis
 from functools import cache
 
 from nomenklatura import settings
 
 
 @cache
-def get_redis() -> redis.Redis[bytes]:
+def get_redis() -> Redis:
     """Return a Redis connection configured from the environment."""
     db = redis.from_url(settings.REDIS_URL, decode_responses=False)
     # for kvrocks:
@@ -14,7 +15,7 @@ def get_redis() -> redis.Redis[bytes]:
     return db
 
 
-def close_redis():
+def close_redis() -> None:
     """Close the Redis connection."""
     get_redis().close()
     get_redis.cache_clear()

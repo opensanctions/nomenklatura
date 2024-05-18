@@ -11,7 +11,7 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, Identifier, StrIdent
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import pack_prop, unpack_prop
+from nomenklatura.util import pack_prop, unpack_prop
 
 
 def _pack_statement(stmt: Statement) -> bytes:
@@ -109,6 +109,9 @@ class VersionedRedisWriter(Writer[DS, CE]):
         self.prev = store.get_latest(dataset.name)
         self.buffer: List[Statement] = []
 
+    def __enter__(self) -> "VersionedRedisWriter[DS, CE]":
+        return self
+
     def flush(self) -> None:
         db = self.store.db
         pipeline = db.pipeline()
@@ -149,6 +152,10 @@ class VersionedRedisWriter(Writer[DS, CE]):
         self.store.db.set(b(f"ds:{ds}:latest"), b(self.version))
         self.store.db.lpush(b(f"ds:{ds}:history"), b(self.version))
 
+    def close(self) -> None:
+        self.release()
+        self.store.close()
+
     def add_statement(self, stmt: Statement) -> None:
         if stmt.entity_id is None:
             return
@@ -179,7 +186,11 @@ class VersionedRedisView(View[DS, CE]):
         return keys
 
     def has_entity(self, id: str) -> bool:
-        return self.store.db.exists(*self._get_stmt_keys(id)) > 0
+        for key in self._get_stmt_keys(id):
+            if self.store.db.scard(key) > 0:
+                return True
+        return False
+        # return self.store.db.exists(*self._get_stmt_keys(id)) > 0
 
     def get_entity(self, id: str) -> Optional[CE]:
         statements: List[Statement] = []
@@ -189,7 +200,7 @@ class VersionedRedisView(View[DS, CE]):
         elif len(keys) == 1:
             stmts = self.store.db.smembers(keys[0])
         else:
-            stmts = self.store.db.sunion(keys)
+            stmts = {bv(s) for s in self.store.db.sunion(keys)}
         for v in stmts:
             stmt = _unpack_statement(bv(v), id)
             if not stmt.external or self.external:
@@ -202,16 +213,16 @@ class VersionedRedisView(View[DS, CE]):
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         keys: List[str] = []
         ident = Identifier.get(id)
-        for entity_id in self.store.linker.connected(ident):
-            keys.extend([f"inv:{d}:{v}:{id}" for d, v in self.vers])
+        for ent_id in self.store.linker.connected(ident):
+            keys.extend([f"inv:{d}:{v}:{ent_id}" for d, v in self.vers])
         entities: Set[str] = set()
         refs = (
-            self.store.db.sunion(keys)
+            {bv(v) for v in self.store.db.sunion(keys)}
             if len(keys) > 0
             else self.store.db.smembers(keys[0])
         )
         for v in refs:
-            entity_id = bv(v).decode("utf-8")
+            entity_id = v.decode("utf-8")
             entities.add(self.store.linker.get_canonical(entity_id))
         for entity_id in entities:
             entity = self.get_entity(entity_id)
