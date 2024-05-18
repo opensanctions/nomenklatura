@@ -75,10 +75,6 @@ class VersionedRedisStore(Store[DS, CE]):
             db = get_redis()
         self.db = db
 
-    def get_latest(self, dataset: str) -> Optional[str]:
-        val = self.db.get(b(f"ds:{dataset}:latest"))
-        return val.decode("utf-8") if val is not None else None
-
     def writer(
         self, dataset: Optional[DS] = None, version: Optional[str] = None
     ) -> "VersionedRedisWriter[DS, CE]":
@@ -93,6 +89,42 @@ class VersionedRedisStore(Store[DS, CE]):
     def update(self, id: StrIdent) -> None:
         # Noop because the VersionedStore is not resolved.
         return
+
+    def get_latest(self, dataset: str) -> Optional[str]:
+        """Get the latest version of a dataset in the store."""
+        val = self.db.get(b(f"ds:{dataset}:latest"))
+        return val.decode("utf-8") if val is not None else None
+
+    def get_history(self, dataset: str) -> List[str]:
+        """List all versions of a dataset present in the store."""
+        values = self.db.lrange(f"ds:{dataset}:history", 0, -1)
+        return [v.decode("utf-8") for v in values]
+
+    def drop_version(self, dataset: str, version: str) -> None:
+        """Delete all data associated with a specific version of a dataset."""
+        pipeline = self.db.pipeline()
+        cmds = 0
+        for prefix in ["stmt", "ents", "inv"]:
+            query = f"{prefix}:{dataset}:{version}:*"
+            for key in self.db.scan_iter(query):
+                pipeline.delete(key)
+                cmds += 1
+                if cmds > 1_000:
+                    pipeline.execute()
+                    pipeline = self.db.pipeline()
+                    cmds = 0
+        if cmds > 0:
+            pipeline.execute()
+
+        # TODO: do we even want to remove the version from the history list?
+        self.db.lrem(f"ds:{dataset}:history", 0, b(version))
+        latest_key = f"ds:{dataset}:latest"
+        if b(version) == self.db.get(latest_key):
+            previous = self.db.lindex(b(f"ds:{dataset}:history"), -1)
+            if previous is not None:
+                self.db.set(latest_key, previous)
+            else:
+                self.db.delete(latest_key)
 
     def close(self) -> None:
         close_redis()
@@ -121,6 +153,9 @@ class VersionedRedisWriter(Writer[DS, CE]):
             if stmt.entity_id not in statements:
                 statements[stmt.entity_id] = set()
             statements[stmt.entity_id].add(stmt)
+
+        if len(statements) == 0:
+            return
 
         # Merge with previous version to get accurate first_seen timestamps
         if self.prev:

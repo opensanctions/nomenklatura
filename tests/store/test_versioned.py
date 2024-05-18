@@ -102,3 +102,30 @@ def test_graph_query(donations_path: Path, test_dataset: Dataset):
     assert entity is not None, entity
     assert ext_view.has_entity("john-doe")
     assert len(list(entity.statements)) == len(list(ext_entity.statements))
+
+
+def test_versioning(test_dataset: Dataset):
+    redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
+    resolver = Resolver[CompositeEntity]()
+    store = VersionedRedisStore(test_dataset, resolver, db=redis)
+    assert store.get_latest(test_dataset.name) is None
+    assert len(store.get_history(test_dataset.name)) == 0
+    entity = CompositeEntity.from_data(test_dataset, PERSON)
+    version_a = "A"
+    with store.writer(version=version_a) as writer:
+        writer.add_entity(entity)
+        writer.flush()
+        writer.release()
+    assert store.get_latest(test_dataset.name) == version_a
+    assert len(store.get_history(test_dataset.name)) == 1
+    version_b = "B"
+    with store.writer(version=version_b) as writer:
+        writer.add_entity(entity)
+        writer.flush()
+        writer.release()
+    assert store.get_latest(test_dataset.name) == version_b
+    assert len(store.get_history(test_dataset.name)) == 2
+
+    store.drop_version(test_dataset.name, version_b)
+    assert store.get_latest(test_dataset.name) == version_a
+    assert len(store.get_history(test_dataset.name)) == 1
