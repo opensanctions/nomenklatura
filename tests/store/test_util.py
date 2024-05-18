@@ -1,7 +1,7 @@
 from followthemoney import model
 
-from nomenklatura.store.util import pack_prop, pack_statement
-from nomenklatura.store.util import unpack_prop, unpack_statement
+from nomenklatura.store.util import pack_prop
+from nomenklatura.store.util import unpack_prop
 
 
 def test_packing_unique():
@@ -10,3 +10,6 @@ def test_packing_unique():
         packed = pack_prop(prop.schema.name, prop.name)
         assert packed not in seen, (packed, prop)
         seen.add(packed)
+        schema, _, prop_name = unpack_prop(packed)
+        assert prop.schema.name == schema, (prop, schema)
+        assert prop.name == prop_name, (prop, prop_name)

@@ -5,7 +5,7 @@ from nomenklatura import settings
 
 
 @cache
-def get_redis() -> redis.Redis:
+def get_redis() -> redis.Redis[bytes]:
     """Return a Redis connection configured from the environment."""
     db = redis.from_url(settings.REDIS_URL, decode_responses=False)
     # for kvrocks:

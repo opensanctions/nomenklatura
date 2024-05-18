@@ -1,15 +1,15 @@
-import redis
 from redis.client import Redis, Pipeline
 from typing import Generator, List, Optional, Set, Tuple
 from followthemoney.property import Property
 from followthemoney.types import registry
 
+from nomenklatura.kv import get_redis, close_redis, b
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import b, pack_statement, unpack_statement
+from nomenklatura.store.util import pack_statement, unpack_statement
 
 
 class RedisStore(Store[DS, CE]):
@@ -17,16 +17,12 @@ class RedisStore(Store[DS, CE]):
         self,
         dataset: DS,
         linker: Linker[CE],
-        url: str,
         db: Optional["Redis[bytes]"] = None,
     ):
         super().__init__(dataset, linker)
-        self.url = url
         if db is None:
-            db = redis.from_url(url, decode_responses=False)
+            db = get_redis()
         self.db = db
-        # for kvrocks:
-        # self.db.config_set("redis-cursor-compatible", "yes")
 
     def writer(self) -> Writer[DS, CE]:
         return RedisWriter(self)
@@ -35,7 +31,7 @@ class RedisStore(Store[DS, CE]):
         return RedisView(self, scope, external=external)
 
     def close(self) -> None:
-        self.db.close()
+        close_redis()
 
 
 class RedisWriter(Writer[DS, CE]):

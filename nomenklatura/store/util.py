@@ -4,10 +4,6 @@ from nomenklatura.statement import Statement
 from nomenklatura.util import pack_prop, unpack_prop
 
 
-def b(s: str) -> bytes:
-    return s.encode("utf-8")
-
-
 def pack_statement(stmt: Statement) -> bytes:
     values = (
         stmt.id,
