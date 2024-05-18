@@ -23,7 +23,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get install -y -qq libicu-dev
-          python -m pip install --upgrade pip wheel pyicu
+          python -m pip install --upgrade pip wheel pyicu setuptools
           pip install -e '.[dev]'
       - name: Check type annotations (strict)
         run: |
