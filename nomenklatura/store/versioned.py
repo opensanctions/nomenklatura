@@ -186,11 +186,10 @@ class VersionedRedisView(View[DS, CE]):
         return keys
 
     def has_entity(self, id: str) -> bool:
-        for key in self._get_stmt_keys(id):
-            if self.store.db.scard(key) > 0:
-                return True
-        return False
-        # return self.store.db.exists(*self._get_stmt_keys(id)) > 0
+        # FIXME: this implementation does not account for the `external` flag
+        # correctly because it does not check the `stmt.external` field for
+        # each statement.
+        return self.store.db.exists(*self._get_stmt_keys(id)) > 0
 
     def get_entity(self, id: str) -> Optional[CE]:
         statements: List[Statement] = []

@@ -1,5 +1,6 @@
 import redis
 from redis.client import Redis
+from typing import Union
 from functools import cache
 
 from nomenklatura import settings
@@ -26,6 +27,6 @@ def b(s: str) -> bytes:
     return s.encode("utf-8")
 
 
-def bv(s: bytes | str | int | float) -> bytes:
+def bv(s: Union[bytes, str, int, float]) -> bytes:
     """Decode bytes to a string."""
     return s  # type: ignore
