@@ -31,9 +31,7 @@ def _pack_statement(stmt: Statement) -> bytes:
         1 if stmt.target else 0,
         1 if stmt.external else 0,
     )
-    x = orjson.dumps(values)
-    print(x)
-    return x
+    return orjson.dumps(values)
 
 
 def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statement:
