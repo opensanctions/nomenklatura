@@ -1,4 +1,5 @@
 import orjson
+import logging
 from redis.client import Redis
 from datetime import datetime, timezone
 from typing import Generator, List, Optional, Set, Tuple, Dict
@@ -13,6 +14,8 @@ from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.util import pack_prop, unpack_prop
 
+log = logging.getLogger(__name__)
+
 
 def _pack_statement(stmt: Statement) -> bytes:
     values = (
@@ -21,14 +24,16 @@ def _pack_statement(stmt: Statement) -> bytes:
         stmt.dataset,
         pack_prop(stmt.schema, stmt.prop),
         stmt.value,
-        stmt.lang,
-        stmt.original_value,
+        stmt.lang or 0,
+        stmt.original_value or 0,
         stmt.first_seen,
         stmt.last_seen,
-        stmt.target,
-        stmt.external,
+        1 if stmt.target else 0,
+        1 if stmt.external else 0,
     )
-    return orjson.dumps(values)
+    x = orjson.dumps(values)
+    print(x)
+    return x
 
 
 def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statement:
@@ -52,14 +57,14 @@ def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statem
         prop=prop,
         schema=schema,
         value=value,
-        lang=lang,
+        lang=None if lang == 0 else lang,
         dataset=dataset,
-        original_value=original_value,
+        original_value=None if original_value == 0 else original_value,
         first_seen=first_seen,
         last_seen=last_seen,
-        target=target,
+        target=target == 1,
         canonical_id=canonical_id or entity_id,
-        external=external,
+        external=external == 1,
     )
 
 
@@ -125,6 +130,7 @@ class VersionedRedisStore(Store[DS, CE]):
                 self.db.set(latest_key, previous)
             else:
                 self.db.delete(latest_key)
+        log.info("Dropped store version: %s (%s)", dataset, version)
 
     def close(self) -> None:
         close_redis()
@@ -186,6 +192,11 @@ class VersionedRedisWriter(Writer[DS, CE]):
         ds = self.dataset.name
         self.store.db.set(b(f"ds:{ds}:latest"), b(self.version))
         self.store.db.lpush(b(f"ds:{ds}:history"), b(self.version))
+        log.info("Released store version: %s (%s)", ds, self.version)
+        # try:
+        #     self.store.db.execute_command("COMPACT")
+        # except Exception as ex:
+        #     print(ex)
 
     def close(self) -> None:
         self.release()
