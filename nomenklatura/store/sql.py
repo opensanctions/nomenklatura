@@ -9,7 +9,7 @@ from nomenklatura import settings
 from nomenklatura.dataset import DS
 from nomenklatura.db import get_metadata, get_upsert_func
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Linker, Identifier
 from nomenklatura.statement import Statement
 from nomenklatura.statement.db import make_statement_table
 from nomenklatura.store import Store, View, Writer
@@ -19,11 +19,11 @@ class SQLStore(Store[DS, CE]):
     def __init__(
         self,
         dataset: DS,
-        resolver: Resolver[CE],
+        linker: Linker[CE],
         uri: str = settings.DB_URL,
         **engine_kwargs: Any,
     ):
-        super().__init__(dataset, resolver)
+        super().__init__(dataset, linker)
         if "pool_size" not in engine_kwargs:
             engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
         # if uri.lower().startswith("sqlite"):
@@ -116,7 +116,7 @@ class SQLWriter(Writer[DS, CE]):
     def add_statement(self, stmt: Statement) -> None:
         if stmt.entity_id is None:
             return
-        canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
+        canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
         self.batch.add(stmt)
         if len(self.batch) >= self.BATCH_STATEMENTS:
@@ -171,7 +171,8 @@ class SQLView(View[DS, CE]):
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         table = self.store.table
-        ids = [i.id for i in self.store.resolver.connected(id)]
+        id_ = Identifier.get(id)
+        ids = [i.id for i in self.store.linker.connected(id_)]
         q = select(table.c.canonical_id)
         q = q.where(table.c.prop_type == "entity")
         q = q.where(table.c.value.in_(ids))

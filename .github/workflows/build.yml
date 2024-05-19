@@ -8,9 +8,10 @@ jobs:
     strategy:
       matrix:
         python:
-          - "3.9"
+          # - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -22,7 +23,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get install -y -qq libicu-dev
-          python -m pip install --upgrade pip wheel pyicu
+          python -m pip install --upgrade pip wheel pyicu setuptools
           pip install -e '.[dev]'
       - name: Check type annotations (strict)
         run: |

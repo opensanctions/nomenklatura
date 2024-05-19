@@ -1,32 +1,28 @@
-import redis
 from redis.client import Redis, Pipeline
 from typing import Generator, List, Optional, Set, Tuple
 from followthemoney.property import Property
 from followthemoney.types import registry
 
+from nomenklatura.kv import get_redis, close_redis, b
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Linker
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.store.util import b, pack_statement, unpack_statement
+from nomenklatura.store.util import pack_statement, unpack_statement
 
 
 class RedisStore(Store[DS, CE]):
     def __init__(
         self,
         dataset: DS,
-        resolver: Resolver[CE],
-        url: str,
+        linker: Linker[CE],
         db: Optional["Redis[bytes]"] = None,
     ):
-        super().__init__(dataset, resolver)
-        self.url = url
+        super().__init__(dataset, linker)
         if db is None:
-            db = redis.from_url(url, decode_responses=False)
+            db = get_redis()
         self.db = db
-        # for kvrocks:
-        # self.db.config_set("redis-cursor-compatible", "yes")
 
     def writer(self) -> Writer[DS, CE]:
         return RedisWriter(self)
@@ -35,7 +31,7 @@ class RedisStore(Store[DS, CE]):
         return RedisView(self, scope, external=external)
 
     def close(self) -> None:
-        self.db.close()
+        close_redis()
 
 
 class RedisWriter(Writer[DS, CE]):
@@ -59,14 +55,14 @@ class RedisWriter(Writer[DS, CE]):
             self.flush()
         if self.pipeline is None:
             self.pipeline = self.store.db.pipeline()
-        canonical_id = self.store.resolver.get_canonical(stmt.entity_id)
+        canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
 
         self.pipeline.sadd(b(f"ds:{stmt.dataset}"), b(canonical_id))
         key = f"x:{canonical_id}" if stmt.external else f"s:{canonical_id}"
         self.pipeline.sadd(b(key), pack_statement(stmt))
         if stmt.prop_type == registry.entity.name:
-            vc = self.store.resolver.get_canonical(stmt.value)
+            vc = self.store.linker.get_canonical(stmt.value)
             self.pipeline.sadd(b(f"i:{vc}"), b(canonical_id))
 
         self.batch_size += 1
@@ -85,7 +81,7 @@ class RedisWriter(Writer[DS, CE]):
             datasets.add(stmt.dataset)
 
             if stmt.prop_type == registry.entity.name:
-                vc = self.store.resolver.get_canonical(stmt.value)
+                vc = self.store.linker.get_canonical(stmt.value)
                 self.pipeline.srem(b(f"i:{vc}"), b(entity_id))
 
         for dataset in datasets:

@@ -73,6 +73,7 @@ def xref_file(
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
     run_xref(
+        resolver_,
         store,
         auto_threshold=auto_threshold,
         algorithm=algorithm_type,
@@ -138,9 +139,9 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
     resolver_ = _get_resolver(path, resolver)
     store = load_entity_file_store(path, resolver=resolver_)
     if xref:
-        run_xref(store)
+        run_xref(resolver_, store)
 
-    dedupe_ui(store)
+    dedupe_ui(resolver_, store)
     resolver_.save()
 
 

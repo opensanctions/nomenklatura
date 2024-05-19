@@ -8,6 +8,7 @@ from textual.widgets import Footer
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.store import Store
+from nomenklatura.resolver import Resolver
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.tui.comparison import render_comparison
@@ -16,11 +17,12 @@ from nomenklatura.tui.comparison import render_comparison
 class DedupeState(object):
     def __init__(
         self,
+        resolver: Resolver[CE],
         store: Store[DS, CE],
         url_base: Optional[str] = None,
     ):
         self.store = store
-        self.resolver = store.resolver
+        self.resolver = resolver
         self.view = store.default_view(external=True)
         self.url_base = url_base
         self.latinize = False
