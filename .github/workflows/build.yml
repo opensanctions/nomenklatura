@@ -2,6 +2,9 @@ name: package
 
 on: [push]
 
+permissions:
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
