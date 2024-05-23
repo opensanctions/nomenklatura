@@ -81,6 +81,8 @@ def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
     assert DAIMLER in dindex.entities
     assert DAIMLER not in match_identifiers
 
+    assert False
+
 
 def test_top_match_matches_strong_pairs(dstore: SimpleMemoryStore, dindex: Index):
     """Pairs with high scores are each others' top matches"""

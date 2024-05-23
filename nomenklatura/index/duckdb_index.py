@@ -42,7 +42,9 @@ class DuckDBIndex(Index):
             if idx % 10000 == 0:
                 log.info("Indexing entity %s", idx)
             self.index(entity)
+        log.info("Committing index...")
         self.con.execute("COMMIT")
+        log.info("Index built.")
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         scores: Dict[str, float] = {}
@@ -52,28 +54,32 @@ class DuckDBIndex(Index):
                     scores[id] = 0.0
                 scores[id] += weight * self.BOOSTS.get(field_name, 1.0)
         scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        for id, score in scores.items():
-            yield Identifier.get(id), score
+        return [(Identifier.get(i), w) for i, w in scores]
 
     def frequencies(
         self, field: str, token: str
     ) -> Generator[Tuple[str, float], None, None]:
-        # This can probably done with relational query in DuckDB instead of
-        # a select per id per token
+
         mentions_query = """
             SELECT id, count(*) as mentions
             FROM entries
             WHERE field = ? AND token = ?
             GROUP BY id
-            """
+        """
+        mentions_rel = self.con.sql(
+            mentions_query, alias="mentions", params=[field, token]
+        )
         field_len_query = """
-            SELECT count(*) from entries WHERE field = ? and id = ?
-            """
-        mentions_result = self.con.execute(mentions_query, [field, token])
-        for id, mentions in mentions_result.fetchall():
-            (field_len,) = self.con.execute(field_len_query, [field, id]).fetchone()
-            field_len = max(1, field_len)
-            yield id, mentions / field_len
+            SELECT id, count(*) as field_len from entries
+            WHERE field = ?
+            GROUP BY id
+        """
+        field_len_rel = self.con.sql(field_len_query, alias="field_len", params=[field])
+        joined = mentions_rel.join(
+            field_len_rel, "mentions.id = field_len.id"
+        ).set_alias("joined")
+        weights = self.con.sql("SELECT id, mentions / field_len from joined")
+        yield from weights.fetchall()
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (
