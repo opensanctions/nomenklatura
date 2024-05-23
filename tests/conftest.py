@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 from nomenklatura import settings
+from nomenklatura.index.duckdb_index import DuckDBIndex
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
@@ -60,5 +61,13 @@ def test_dataset() -> Dataset:
 @pytest.fixture(scope="module")
 def dindex(dstore: SimpleMemoryStore):
     index = Index(dstore.default_view())
+    index.build()
+    return index
+
+
+@pytest.fixture(scope="module")
+def duckdb_index(dstore: SimpleMemoryStore):
+    path = Path(WORK_PATH) / "duckdb_index.db"
+    index = DuckDBIndex(dstore.default_view(), path)
     index.build()
     return index
