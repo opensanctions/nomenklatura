@@ -3,6 +3,8 @@ from typing import Dict, Generator, List, Tuple
 from nomenklatura.index.index import Index
 import duckdb
 import logging
+import csv
+from functools import lru_cache
 
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
@@ -19,31 +21,34 @@ class DuckDBIndex(Index):
     def __init__(self, view: View[DS, CE], path: Path):
         self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
-        self.con = duckdb.connect(path.as_posix())
+        self.con = duckdb.connect((path / "duckdb_index.db").as_posix())
         self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
+        self.path = path
 
-    def index(self, entity: CE) -> None:
+    def dump(self, writer, entity: CE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
 
         if not entity.schema.matchable or entity.id is None:
             return
-        rows = []
 
         for field, token in self.tokenizer.entity(entity):
-            rows.append([entity.id, field, token])
-        self.con.executemany("INSERT INTO entries VALUES (?, ?, ?)", rows)
+            writer.writerow([entity.id, field, token])
 
     def build(self) -> None:
         """Index all entities in the dataset."""
         log.info("Building index from: %r...", self.view)
-        self.con.execute("BEGIN TRANSACTION")
-        for idx, entity in enumerate(self.view.entities()):
-            if idx % 10000 == 0:
-                log.info("Indexing entity %s", idx)
-            self.index(entity)
-        log.info("Committing index...")
-        self.con.execute("COMMIT")
+        csv_path = self.path / "mentions.csv"
+        with open(csv_path, "w") as fh:
+            writer = csv.writer(fh)
+            writer.writerow(["id", "field", "token"])
+            for idx, entity in enumerate(self.view.entities()):
+                self.dump(writer, entity)
+                if idx % 10000 == 0:
+                    log.info("Dumped %s entities" % idx)
+
+        log.info("Loading data...")
+        self.con.execute(f"COPY entries from '{csv_path}'")
         log.info("Index built.")
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
@@ -56,9 +61,8 @@ class DuckDBIndex(Index):
         scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         return [(Identifier.get(i), w) for i, w in scores]
 
-    def frequencies(
-        self, field: str, token: str
-    ) -> Generator[Tuple[str, float], None, None]:
+    @lru_cache(maxsize=10000)
+    def frequencies(self, field: str, token: str) -> List[Tuple[str, float]]:
 
         mentions_query = """
             SELECT id, count(*) as mentions
@@ -80,7 +84,7 @@ class DuckDBIndex(Index):
         ).set_alias("joined")
         # TODO: Do I really need the max(1, field_len) here?
         weights = self.con.sql("SELECT id, mentions / field_len from joined")
-        yield from weights.fetchall()
+        return list(weights.fetchall())
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (
