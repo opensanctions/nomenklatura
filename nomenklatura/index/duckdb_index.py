@@ -78,6 +78,7 @@ class DuckDBIndex(Index):
         joined = mentions_rel.join(
             field_len_rel, "mentions.id = field_len.id"
         ).set_alias("joined")
+        # TODO: Do I really need the max(1, field_len) here?
         weights = self.con.sql("SELECT id, mentions / field_len from joined")
         yield from weights.fetchall()
 
