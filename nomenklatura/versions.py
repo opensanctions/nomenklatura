@@ -58,7 +58,7 @@ class Version(object):
 class VersionHistory(object):
     """A class to represent a history of dataset versions."""
 
-    LENGTH = 300
+    LENGTH = 100
 
     def __init__(self, items: List[Version], max_length: int = LENGTH) -> None:
         self.items = items

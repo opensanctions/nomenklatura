@@ -275,6 +275,24 @@ class VersionedRedisView(View[DS, CE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
+    def statements(self, resolve: bool = False) -> Generator[Statement, None, None]:
+        """Iterate over all statements in the view. If `resolve` is set to `True`,
+        canonical IDs are applied to the statement and its value.
+
+        NOTE: The `external` flag of the view will be used to filter statements, too.
+        """
+        for ds, ver in self.vers:
+            for id in self.store.db.sscan_iter(b(f"ents:{ds}:{ver}")):
+                entity_id = id.decode("utf-8")
+                stmt_key = f"stmt:{ds}:{ver}:{entity_id}"
+                for stmt_text in self.store.db.smembers(b(stmt_key)):
+                    stmt = _unpack_statement(stmt_text, entity_id)
+                    if stmt.external and not self.external:
+                        continue
+                    if resolve:
+                        stmt = self.store.linker.apply_statement(stmt)
+                    yield stmt
+
     def entities(self) -> Generator[CE, None, None]:
         if len(self.vers) == 0:
             return

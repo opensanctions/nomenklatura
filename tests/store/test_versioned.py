@@ -28,6 +28,7 @@ def test_store_basics(test_dataset: Dataset):
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     resolver = Resolver[CompositeEntity]()
     store = VersionedRedisStore(test_dataset, resolver, db=redis)
+    assert len(list(store.view(test_dataset).statements())) == 0
     entity = CompositeEntity.from_data(test_dataset, PERSON)
     entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
@@ -36,9 +37,11 @@ def test_store_basics(test_dataset: Dataset):
     writer.flush()
     writer.release()
     assert len(list(store.view(test_dataset).entities())) == 1
+    assert len(list(store.view(test_dataset).statements())) == 3
     writer.add_entity(entity_ext)
     writer.flush()
     assert len(list(store.view(test_dataset).entities())) == 2
+    assert len(list(store.view(test_dataset).statements())) == 5
 
     merged_id = resolver.decide(
         "john-doe",
@@ -48,6 +51,8 @@ def test_store_basics(test_dataset: Dataset):
     )
     store.update(merged_id)
     assert len(list(store.view(test_dataset).entities())) == 1
+
+    assert len(list(store.view(test_dataset).statements())) == 5
 
 
 def test_graph_query(donations_path: Path, test_dataset: Dataset):
