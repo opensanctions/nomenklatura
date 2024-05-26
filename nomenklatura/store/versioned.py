@@ -1,7 +1,6 @@
 import orjson
 import logging
 from redis.client import Redis
-from datetime import datetime, timezone
 from typing import Generator, List, Optional, Set, Tuple, Dict
 from followthemoney.property import Property
 from followthemoney.types import registry
@@ -9,6 +8,7 @@ from followthemoney.types import registry
 from nomenklatura.kv import b, bv, get_redis, close_redis
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
+from nomenklatura.versions import Version
 from nomenklatura.resolver import Linker, Identifier, StrIdent
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
@@ -82,7 +82,7 @@ class VersionedRedisStore(Store[DS, CE]):
         self, dataset: Optional[DS] = None, version: Optional[str] = None
     ) -> "VersionedRedisWriter[DS, CE]":
         if version is None:
-            version = datetime.now().replace(tzinfo=timezone.utc).isoformat()
+            version = Version.new().id
         dataset = dataset or self.dataset
         return VersionedRedisWriter(self, dataset=dataset, version=version)
 
@@ -123,7 +123,7 @@ class VersionedRedisStore(Store[DS, CE]):
         self.db.lrem(f"ds:{dataset}:history", 0, b(version))
         latest_key = f"ds:{dataset}:latest"
         if b(version) == self.db.get(latest_key):
-            previous = self.db.lindex(b(f"ds:{dataset}:history"), -1)
+            previous = self.db.lindex(b(f"ds:{dataset}:history"), 0)
             if previous is not None:
                 self.db.set(latest_key, previous)
             else:
@@ -188,13 +188,14 @@ class VersionedRedisWriter(Writer[DS, CE]):
         """Release the current version of the dataset (i.e. tag it as the latest
         version in the relevant lookup key)."""
         ds = self.dataset.name
-        self.store.db.set(b(f"ds:{ds}:latest"), b(self.version))
-        self.store.db.lpush(b(f"ds:{ds}:history"), b(self.version))
+        history_key = b(f"ds:{ds}:history")
+        idx = self.store.db.lpos(history_key, b(self.version))
+        if idx is None:
+            self.store.db.lpush(history_key, b(self.version))
+        previous = self.store.db.lindex(history_key, 0)
+        if previous is not None:
+            self.store.db.set(b(f"ds:{ds}:latest"), previous)
         log.info("Released store version: %s (%s)", ds, self.version)
-        # try:
-        #     self.store.db.execute_command("COMPACT")
-        # except Exception as ex:
-        #     print(ex)
 
     def close(self) -> None:
         self.release()
