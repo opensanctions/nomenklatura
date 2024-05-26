@@ -165,7 +165,7 @@ def load_enricher():
 
 def test_permid_match():
     enricher = load_enricher()
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.post("/permid/match", json=MATCH_ROSNEFT)
         m.get("https://permid.org/1-4295887083", json=ROSNEFT)
         m.get("http://sws.geonames.org/2017370/about.rdf", text=GEONAME)
@@ -182,7 +182,7 @@ def test_permid_match():
             assert res.has("leiCode")
             assert res.has("name")
 
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.post("/permid/match", json=MATCH_FAIL)
         data = {
             "schema": "Company",
@@ -196,7 +196,7 @@ def test_permid_match():
 
 def test_permid_enrich():
     enricher = load_enricher()
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.post("/permid/match", json=MATCH_ROSNEFT)
         m.get("https://permid.org/1-4295887083", json=ROSNEFT)
         m.get("http://sws.geonames.org/2017370/about.rdf", text=GEONAME)

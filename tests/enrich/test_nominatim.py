@@ -66,6 +66,7 @@ RESPONSE = [
 
 def load_enricher():
     enricher_cls = get_enricher(PATH)
+    assert enricher_cls is not None, PATH
     assert issubclass(enricher_cls, Enricher)
     cache = Cache.make_default(dataset)
     return enricher_cls(dataset, cache, {})
@@ -73,7 +74,7 @@ def load_enricher():
 
 def test_nominatim_match():
     enricher = load_enricher()
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         full = "Kopenhagener Str. 47, Berlin"
         data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
@@ -99,7 +100,7 @@ def test_nominatim_match_list():
 
     resolver = Resolver()
     assert len(resolver.edges) == 0, resolver.edges
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         results = list(match(enricher, resolver, [ent]))
     assert len(results) == 2, results
@@ -112,7 +113,7 @@ def test_nominatim_enrich():
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
     ent = CompositeEntity.from_data(dataset, data)
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         adjacent = list(enricher.expand(ent, ent))
     assert len(adjacent) == 1, adjacent
@@ -124,8 +125,9 @@ def test_nominatim_enrich_list():
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
     ent = CompositeEntity.from_data(dataset, data)
+    assert ent.id is not None, ent.id
 
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         resolver = Resolver()
         results = list(enrich(enricher, resolver, [ent]))

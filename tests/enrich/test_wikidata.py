@@ -1,4 +1,3 @@
-from followthemoney import model
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import get_enricher
@@ -10,8 +9,10 @@ from nomenklatura.entity import CompositeEntity
 PATH = "nomenklatura.enrich.wikidata:WikidataEnricher"
 dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
 
+
 def load_enricher():
     enricher_cls = get_enricher(PATH)
+    assert enricher_cls is not None, PATH
     assert issubclass(enricher_cls, Enricher)
     cache = Cache.make_default(dataset)
     return enricher_cls(dataset, cache, {})

@@ -50,7 +50,7 @@ def load_enricher():
 
 def test_figi_match():
     enricher = load_enricher()
-    with requests_mock.Mocker() as m:
+    with requests_mock.Mocker(real_http=False) as m:
         m.post("/v3/search", json=RESPONSE)
 
         data = {
