@@ -16,6 +16,8 @@ Connish = Optional[Connection]
 
 @cache
 def get_engine(url: str = settings.DB_URL) -> Engine:
+    if settings.TESTING:
+        url = "sqlite:///:memory:"
     # if url.lower().startswith('sqlite'):
     #     return create_engine(url)
     return create_engine(url, pool_size=settings.DB_POOL_SIZE)

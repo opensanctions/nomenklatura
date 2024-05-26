@@ -14,7 +14,6 @@ from nomenklatura.index import Index
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
 WORK_PATH = mkdtemp()
 settings.TESTING = True
-settings.DB_URL = f"sqlite:///{WORK_PATH}/nk.sqlite3"
 
 
 @pytest.fixture(scope="module")
