@@ -1,3 +1,4 @@
 from nomenklatura.index.index import Index
+from nomenklatura.index.common import BaseIndex
 
-__all__ = ["Index"]
+__all__ = ["BaseIndex", "Index"]

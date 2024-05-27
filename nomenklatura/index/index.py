@@ -5,6 +5,7 @@ from itertools import combinations
 from typing import Any, Dict, Generic, List, Set, Tuple
 from followthemoney.types import registry
 
+from nomenklatura.index.common import BaseIndex
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
@@ -15,30 +16,29 @@ from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 
 log = logging.getLogger(__name__)
 
+BOOSTS = {
+    NAME_PART_FIELD: 2.0,
+    WORD_FIELD: 0.5,
+    registry.name.name: 10.0,
+    # registry.country.name: 1.5,
+    # registry.date.name: 1.5,
+    # registry.language: 0.7,
+    # registry.iban.name: 3.0,
+    registry.phone.name: 3.0,
+    registry.email.name: 3.0,
+    # registry.entity: 0.0,
+    # registry.topic: 2.1,
+    registry.address.name: 2.5,
+    registry.identifier.name: 3.0,
+}
 
-class Index(Generic[DS, CE]):
+class Index(BaseIndex):
     """An in-memory search index to match entities against a given dataset."""
-
-    BOOSTS = {
-        NAME_PART_FIELD: 2.0,
-        WORD_FIELD: 0.5,
-        registry.name.name: 10.0,
-        # registry.country.name: 1.5,
-        # registry.date.name: 1.5,
-        # registry.language: 0.7,
-        # registry.iban.name: 3.0,
-        registry.phone.name: 3.0,
-        registry.email.name: 3.0,
-        # registry.entity: 0.0,
-        # registry.topic: 2.1,
-        registry.address.name: 2.5,
-        registry.identifier.name: 3.0,
-    }
 
     __slots__ = "view", "fields", "tokenizer", "entities"
 
     def __init__(self, view: View[DS, CE]):
-        self.view = view
+        super().__init__(view)
         self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
         self.entities: Set[Identifier] = set()
@@ -76,7 +76,7 @@ class Index(Generic[DS, CE]):
         pairs: Dict[Pair, float] = {}
         log.info("Building index blocking pairs...")
         for field_name, field in self.fields.items():
-            boost = self.BOOSTS.get(field_name, 1.0)
+            boost = BOOSTS.get(field_name, 1.0)
             for idx, entry in enumerate(field.tokens.values()):
                 if idx % 10000 == 0:
                     log.info("Pairwise xref [%s]: %d" % (field_name, idx))
@@ -111,7 +111,7 @@ class Index(Generic[DS, CE]):
             for ident, weight in entry.frequencies(field):
                 if ident not in scores:
                     scores[ident] = 0.0
-                scores[ident] += weight * self.BOOSTS.get(field_name, 1.0)
+                scores[ident] += weight * BOOSTS.get(field_name, 1.0)
         return sorted(scores.items(), key=lambda s: s[1], reverse=True)
 
     def save(self, path: PathLike) -> None:

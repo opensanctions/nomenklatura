@@ -1,10 +1,12 @@
 from pathlib import Path
 from typing import Dict, Generator, List, Tuple
+from nomenklatura.index.common import BaseIndex
 from nomenklatura.index.index import Index
 import duckdb
 import logging
 import csv
 from functools import lru_cache
+from tempfile import mkdtemp
 
 from nomenklatura.util import PathLike
 from nomenklatura.resolver import Pair, Identifier
@@ -12,18 +14,19 @@ from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.index.entry import Field
+from nomenklatura.index.index import BOOSTS
 from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 
 log = logging.getLogger(__name__)
 
 
-class DuckDBIndex(Index):
-    def __init__(self, view: View[DS, CE], path: Path):
+class DuckDBIndex(BaseIndex):
+    def __init__(self, view: View[DS, CE]):
         self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
-        self.con = duckdb.connect((path / "duckdb_index.db").as_posix())
+        self.path = Path(mkdtemp())
+        self.con = duckdb.connect((self.path / "duckdb_index.db").as_posix())
         self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
-        self.path = path
 
     def dump(self, writer, entity: CE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
@@ -52,17 +55,31 @@ class DuckDBIndex(Index):
         log.info("Index built.")
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
+        """
+        for each type, token in the entity
+            field_len is the num of tokens in the field in each entity
+            mentions is the number of times the token appears in that field of each entity
+            freq = mentions / field_len
+            score for each entity = sum(freq for each token * boost for that type)
+        
+        I want the entities that match, ranked by the sum of scores for their matching tokens.
+
+
+        """
         scores: Dict[str, float] = {}
         for field_name, token in self.tokenizer.entity(entity):
             for id, weight in self.frequencies(field_name, token):
                 if id not in scores:
                     scores[id] = 0.0
-                scores[id] += weight * self.BOOSTS.get(field_name, 1.0)
+                scores[id] += weight * BOOSTS.get(field_name, 1.0)
         scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         return [(Identifier.get(i), w) for i, w in scores]
 
     @lru_cache(maxsize=10000)
     def frequencies(self, field: str, token: str) -> List[Tuple[str, float]]:
+        """
+
+        """
 
         mentions_query = """
             SELECT id, count(*) as mentions
