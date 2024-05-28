@@ -5,10 +5,12 @@ import random
 from typing import Any, List, Iterator, Optional
 from datetime import datetime, timezone
 
+ALPHABET = string.digits + string.ascii_lowercase
+
 
 class Version(object):
     """A class to represent a dataset version, which consists of a timestamp
-    and a random tag."""
+    and a string tag."""
 
     def __init__(self, dt: datetime, tag: str) -> None:
         self.dt: datetime = dt
@@ -18,9 +20,13 @@ class Version(object):
     def new(cls) -> "Version":
         now = datetime.now().astimezone(timezone.utc)
         now = now.replace(tzinfo=None)
+
+        # This keeps the tag sortable but short
+        tag_num = ((now.microsecond // 1000) * 10) + random.randint(0, 9)
+        tag = cls._tag_encode(int(tag_num))
+
         now = now.replace(microsecond=0)
-        key = "".join(random.sample(string.ascii_uppercase, 3))
-        return cls(now, key)
+        return cls(now, tag)
 
     @classmethod
     def from_string(cls, id: str) -> "Version":
@@ -30,6 +36,19 @@ class Version(object):
         dt = datetime.strptime(ts, "%Y%m%d%H%M%S")
         dt = dt.replace(tzinfo=None)
         return cls(dt, tag)
+
+    @classmethod
+    def _tag_encode(cls, number: int, alphabet: str = ALPHABET) -> str:
+        """Converts an integer to a base36 string."""
+        assert number >= 0, "number must be positive"
+        if 0 <= number < len(alphabet):
+            return alphabet[number]
+
+        encoded = ""
+        while number != 0:
+            number, i = divmod(number, len(alphabet))
+            encoded = alphabet[i] + encoded
+        return encoded
 
     @classmethod
     def from_env(cls, name: str) -> "Version":
