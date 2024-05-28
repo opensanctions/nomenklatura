@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Tuple
 from followthemoney.types import registry
 from followthemoney.property import Property
 
@@ -25,8 +25,10 @@ def comparison_props(left: CE, right: CE) -> Generator[Property, None, None]:
             if prop.name in schema.featured:
                 weights[prop.name] -= 10
 
-    key = lambda p: (weights[p.name], p.label)
-    for prop in sorted(props, key=key):
+    def sort_props(prop: Property) -> Tuple[int, str]:
+        return (weights[prop.name], prop.label)
+
+    for prop in sorted(props, key=sort_props):
         if prop.hidden:
             continue
         if prop.type.matchable and not prop.matchable:
