@@ -9,7 +9,7 @@ from functools import lru_cache
 from tempfile import mkdtemp
 import tantivy
 
-from nomenklatura.util import PathLike
+from nomenklatura.util import PathLike, fingerprint_name
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -38,15 +38,22 @@ class TantivyIndex(BaseIndex):
         for entity in self.view.entities():
             if not entity.schema.matchable:
                 continue
-            writer.add_document(tantivy.Document(entity_id=entity.id, name=entity.get("name")))
+            names = [fingerprint_name(n) for n in entity.get("name")]
+            names = [n for n in names if n is not None]
+            if names:
+                writer.add_document(tantivy.Document(entity_id=entity.id, name=names))
         writer.commit()
         self.index.reload()
         self.searcher = self.index.searcher()
     
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
-        results = []
-        name = " ".join(entity.get("name"))
+        names = [fingerprint_name(n) for n in entity.get("name")]
+        names = [n for n in names if n is not None]
+        name = " ".join(names)
+        if not name:
+            return []
         query = self.index.parse_query(name, ["name"])
+        results = []
         for (score, address) in self.searcher.search(query, 10).hits:
             doc = self.searcher.doc(address)
             results.append((Identifier.get(doc["entity_id"][0]), score))
