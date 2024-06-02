@@ -1,7 +1,7 @@
 from followthemoney.types import registry
 from pathlib import Path
 from tantivy import Query, Occur
-from typing import Any, Dict, List, Tuple, Generic
+from typing import Any, Dict, List, Set, Tuple, Generic
 import logging
 import shutil
 import tantivy
@@ -59,9 +59,10 @@ class TantivyIndex(Generic[DS, CE]):
         schema_builder.add_text_field(WORD_FIELD)
         self.schema = schema_builder.build()
         self.index = tantivy.Index(self.schema, path=self.data_dir.as_posix())
-        self.indexed_fields = set()
+        self.index_writer = self.index.writer(self.memory_budget)
+        self.indexed_fields: Set[str] = set()
 
-    def index_entity(self, writer, entity: CE) -> None:
+    def index_entity(self, entity: CE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable or entity.id is None:
@@ -70,20 +71,13 @@ class TantivyIndex(Generic[DS, CE]):
         for field, token in self.tokenizer.entity(entity):
             document.add_text(field, token)
             self.indexed_fields.add(field)
-        writer.add_document(document)
+        self.index_writer.add_document(document)
 
     def build(self) -> None:
-        log.info(
-            "Building index from: %r... (memory budget %d bytes)",
-            self.view,
-            self.memory_budget,
-        )
-        writer = self.index.writer(self.memory_budget)
-
         for entity in self.view.entities():
-            self.index_entity(writer, entity)
+            self.index_entity(entity)
 
-        writer.commit()
+        self.index_writer.commit()
         self.index.reload()
         self.searcher = self.index.searcher()
 
@@ -101,5 +95,6 @@ class TantivyIndex(Generic[DS, CE]):
             boolean_query, self.max_candidates
         ).hits:
             doc = self.searcher.doc(address)
-            results.append((Identifier.get(doc["entity_id"][0]), score))
+            # Value of type "Document" is not indexable
+            results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
         return results
