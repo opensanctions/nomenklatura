@@ -65,5 +65,8 @@ setup(
         "redis": [
             "redis > 5.0.0, < 6.0.0",
         ],
+        "tantivy": [
+            "tantivy < 1.0.0",
+        ]
     },
 )
