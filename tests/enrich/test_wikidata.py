@@ -1,6 +1,5 @@
 import json
 import requests_mock
-from pathlib import Path
 from normality import slugify
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
