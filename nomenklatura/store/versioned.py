@@ -108,7 +108,7 @@ class VersionedRedisStore(Store[DS, CE]):
         pipeline = self.db.pipeline()
         cmds = 0
         for prefix in ["stmt", "ents", "inv"]:
-            query = f"{prefix}:{dataset}:{version}:*"
+            query = f"{prefix}:{dataset}:{version}*"
             for key in self.db.scan_iter(query):
                 pipeline.delete(key)
                 cmds += 1
@@ -192,9 +192,9 @@ class VersionedRedisWriter(Writer[DS, CE]):
         idx = self.store.db.lpos(history_key, b(self.version))
         if idx is None:
             self.store.db.lpush(history_key, b(self.version))
-        previous = self.store.db.lindex(history_key, 0)
-        if previous is not None:
-            self.store.db.set(b(f"ds:{ds}:latest"), previous)
+        latest = self.store.db.lindex(history_key, 0)
+        if latest is not None:
+            self.store.db.set(b(f"ds:{ds}:latest"), latest)
         log.info("Released store version: %s (%s)", ds, self.version)
 
     def close(self) -> None:
