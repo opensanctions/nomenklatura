@@ -24,8 +24,6 @@ BOOSTS = {
     # registry.iban.name: 3.0,
     registry.phone.name: 3.0,
     registry.email.name: 3.0,
-    # registry.entity: 0.0,
-    # registry.topic: 2.1,
     registry.address.name: 2.5,
     registry.identifier.name: 3.0,
 }
@@ -40,11 +38,6 @@ class TantivyIndex(Generic[DS, CE]):
         self.memory_budget = int(options.get("memory_budget", 1024) * 1024 * 1024)
         self.max_candidates = int(options.get("max_candidates", 100))
 
-        self.data_dir = data_dir / "tantivy-index"
-        if self.data_dir.exists():
-            shutil.rmtree(self.data_dir, ignore_errors=True)
-        self.data_dir.mkdir(parents=True)
-
         schema_builder = tantivy.SchemaBuilder()
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
         schema_builder.add_text_field(registry.name.name)
@@ -58,9 +51,16 @@ class TantivyIndex(Generic[DS, CE]):
         schema_builder.add_text_field(NAME_PART_FIELD)
         schema_builder.add_text_field(WORD_FIELD)
         self.schema = schema_builder.build()
-        self.index = tantivy.Index(self.schema, path=self.data_dir.as_posix())
-        self.index_writer = self.index.writer(self.memory_budget)
-        self.indexed_fields: Set[str] = set()
+
+        self.index_dir = data_dir / "tantivy-index"
+        if self.index_dir.exists():
+            self.exists = True
+            self.index = tantivy.Index.open(self.index_dir.as_posix())
+        else:
+            self.exists = False
+            self.index_dir.mkdir(parents=True)
+            self.index = tantivy.Index(self.schema, path=self.index_dir.as_posix())
+            self.index_writer = self.index.writer(self.memory_budget)
 
     def index_entity(self, entity: CE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
@@ -70,22 +70,24 @@ class TantivyIndex(Generic[DS, CE]):
         document = tantivy.Document(entity_id=entity.id)
         for field, token in self.tokenizer.entity(entity):
             document.add_text(field, token)
-            self.indexed_fields.add(field)
         self.index_writer.add_document(document)
 
     def build(self) -> None:
-        for entity in self.view.entities():
-            self.index_entity(entity)
+        if self.exists:
+            log.info("Using existing index at %s", self.index_dir)
+        else:
+            log.info("Building index from: %r...", self.view)
 
-        self.index_writer.commit()
-        self.index.reload()
+            for entity in self.view.entities():
+                self.index_entity(entity)
+
+            self.index_writer.commit()
+            self.index.reload()
         self.searcher = self.index.searcher()
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         queries = []
         for field, token in self.tokenizer.entity(entity):
-            if field not in self.indexed_fields:
-                continue
             term_query = Query.term_query(self.schema, field, token)
             boost_query = Query.boost_query(term_query, BOOSTS.get(field, 1.0))
             queries.append((Occur.Should, boost_query))
