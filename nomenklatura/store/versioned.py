@@ -307,12 +307,12 @@ class VersionedRedisView(View[DS, CE]):
         ident = Identifier.get(id)
         for ent_id in self.store.linker.connected(ident):
             keys.extend([f"inv:{d}:{v}:{ent_id}" for d, v in self.vers])
-        entities: Set[str] = set()
         refs = (
             {bv(v) for v in self.store.db.sunion(keys)}
             if len(keys) > 0
             else self.store.db.smembers(keys[0])
         )
+        entities: Set[str] = set()
         for v in refs:
             entity_id = v.decode("utf-8")
             entities.add(self.store.linker.get_canonical(entity_id))
@@ -348,7 +348,7 @@ class VersionedRedisView(View[DS, CE]):
         if len(self.vers) == 1:
             scope_name = b(f"ents:{self.vers[0][0]}:{self.vers[0][1]}")
         if len(self.vers) > 1:
-            version = max((v for _, v in self.vers), default="latest")
+            version = Version.new().id + ":iter"
             scope_name = b(f"ents:{self.scope.name}:{version}")
             parts = [b(f"ents:{d}:{v}") for d, v in self.vers]
             self.store.db.sunionstore(scope_name, parts)
@@ -357,6 +357,7 @@ class VersionedRedisView(View[DS, CE]):
         # de-duplicated entity multiple times. This intrinsically leaks
         # memory, so we're being careful to only record entity IDs
         # that are part of a cluster with more than one ID.
+        try:
         seen: Set[str] = set()
         for id in self.store.db.sscan_iter(scope_name):
             entity_id = id.decode("utf-8")
@@ -370,3 +371,6 @@ class VersionedRedisView(View[DS, CE]):
             entity = self.get_entity(entity_id)
             if entity is not None:
                 yield entity
+        finally:
+            if len(self.vers) > 1:
+                self.store.db.delete(scope_name)
