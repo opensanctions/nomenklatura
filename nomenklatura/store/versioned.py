@@ -94,8 +94,10 @@ class VersionedRedisStore(Store[DS, CE]):
             timestamps=timestamps,
         )
 
-    def view(self, scope: DS, external: bool = False) -> "VersionedRedisView[DS, CE]":
-        return VersionedRedisView(self, scope, external=external)
+    def view(
+        self, scope: DS, external: bool = False, versions: Dict[str, str] = {}
+    ) -> "VersionedRedisView[DS, CE]":
+        return VersionedRedisView(self, scope, external=external, versions=versions)
 
     def update(self, id: StrIdent) -> None:
         # Noop because the VersionedStore is not resolved.
@@ -110,6 +112,22 @@ class VersionedRedisStore(Store[DS, CE]):
         """List all versions of a dataset present in the store."""
         values = self.db.lrange(f"ds:{dataset}:history", 0, -1)
         return [v.decode("utf-8") for v in values]
+
+    def has_version(self, dataset: str, version: str) -> bool:
+        """Check if a specific version of a dataset exists in the store."""
+        return self.db.exists(f"ents:{dataset}:{version}") > 0
+
+    def release_version(self, dataset: str, version: str) -> None:
+        """Release the given version of the dataset (i.e. tag it as the latest
+        version in the relevant lookup key)."""
+        history_key = b(f"ds:{dataset}:history")
+        idx = self.db.lpos(history_key, b(version))
+        if idx is None:
+            self.db.lpush(history_key, b(version))
+        latest = self.db.lindex(history_key, 0)
+        if latest is not None:
+            self.db.set(b(f"ds:{dataset}:latest"), latest)
+        log.info("Released store version: %s (%s)", dataset, version)
 
     def drop_version(self, dataset: str, version: str) -> None:
         """Delete all data associated with a specific version of a dataset."""
@@ -202,15 +220,7 @@ class VersionedRedisWriter(Writer[DS, CE]):
     def release(self) -> None:
         """Release the current version of the dataset (i.e. tag it as the latest
         version in the relevant lookup key)."""
-        ds = self.dataset.name
-        history_key = b(f"ds:{ds}:history")
-        idx = self.store.db.lpos(history_key, b(self.version))
-        if idx is None:
-            self.store.db.lpush(history_key, b(self.version))
-        latest = self.store.db.lindex(history_key, 0)
-        if latest is not None:
-            self.store.db.set(b(f"ds:{ds}:latest"), latest)
-        log.info("Released store version: %s (%s)", ds, self.version)
+        self.store.release_version(self.dataset.name, self.version)
 
     def close(self) -> None:
         self.release()
@@ -229,14 +239,21 @@ class VersionedRedisWriter(Writer[DS, CE]):
 
 class VersionedRedisView(View[DS, CE]):
     def __init__(
-        self, store: VersionedRedisStore[DS, CE], scope: DS, external: bool = False
+        self,
+        store: VersionedRedisStore[DS, CE],
+        scope: DS,
+        external: bool = False,
+        versions: Dict[str, str] = {},
     ) -> None:
         super().__init__(store, scope, external=external)
         self.store: VersionedRedisStore[DS, CE] = store
 
         # Get the latest version for each dataset in the scope
-        vers = [(d, self.store.get_latest(d)) for d in scope.leaf_names]
-        self.vers: List[Tuple[str, str]] = [(d, v) for d, v in vers if v is not None]
+        self.vers: List[Tuple[str, str]] = []
+        for ds in scope.leaf_names:
+            version = versions.get(ds, self.store.get_latest(ds))
+            if version is not None:
+                self.vers.append((ds, version))
 
     def _get_stmt_keys(self, entity_id: str) -> List[str]:
         keys: List[str] = []

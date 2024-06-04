@@ -124,10 +124,14 @@ def test_versioning(test_dataset: Dataset):
     assert len(store.get_history(test_dataset.name)) == 0
     entity = CompositeEntity.from_data(test_dataset, PERSON)
     version_a = Version.new().id
+    assert not store.has_version(test_dataset.name, version_a)
     with store.writer(version=version_a) as writer:
         writer.add_entity(entity)
         writer.flush()
-        writer.release()
+        assert store.has_version(test_dataset.name, version_a)
+    assert store.get_latest(test_dataset.name) is None
+    store.release_version(test_dataset.name, version_a)
+    assert store.has_version(test_dataset.name, version_a)
     assert store.get_latest(test_dataset.name) == version_a
     assert len(store.get_history(test_dataset.name)) == 1
     version_b = Version.new().id
