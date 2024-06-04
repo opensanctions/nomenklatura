@@ -58,6 +58,7 @@ setup(
             "fakeredis",
             "plyvel < 2.0.0",
             "redis > 5.0.0, < 6.0.0",
+            "tantivy < 1.0.0",
         ],
         "leveldb": [
             "plyvel < 2.0.0",
