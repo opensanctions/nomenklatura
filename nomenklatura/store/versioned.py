@@ -79,12 +79,20 @@ class VersionedRedisStore(Store[DS, CE]):
         self.db = db
 
     def writer(
-        self, dataset: Optional[DS] = None, version: Optional[str] = None
+        self,
+        dataset: Optional[DS] = None,
+        version: Optional[str] = None,
+        timestamps: bool = False,
     ) -> "VersionedRedisWriter[DS, CE]":
         if version is None:
             version = Version.new().id
         dataset = dataset or self.dataset
-        return VersionedRedisWriter(self, dataset=dataset, version=version)
+        return VersionedRedisWriter(
+            self,
+            dataset=dataset,
+            version=version,
+            timestamps=timestamps,
+        )
 
     def view(self, scope: DS, external: bool = False) -> "VersionedRedisView[DS, CE]":
         return VersionedRedisView(self, scope, external=external)
@@ -137,9 +145,16 @@ class VersionedRedisStore(Store[DS, CE]):
 class VersionedRedisWriter(Writer[DS, CE]):
     BATCH_STATEMENTS = 2_000
 
-    def __init__(self, store: VersionedRedisStore[DS, CE], dataset: DS, version: str):
+    def __init__(
+        self,
+        store: VersionedRedisStore[DS, CE],
+        dataset: DS,
+        version: str,
+        timestamps: bool = False,
+    ):
         self.version = version
         self.dataset = dataset
+        self.timestamps = timestamps
         self.ver = f"{dataset.name}:{version}"
         self.store: VersionedRedisStore[DS, CE] = store
         self.prev = store.get_latest(dataset.name)
@@ -162,7 +177,7 @@ class VersionedRedisWriter(Writer[DS, CE]):
             return
 
         # Merge with previous version to get accurate first_seen timestamps
-        if self.prev:
+        if self.timestamps and self.prev:
             keys = [b(f"stmt:{self.prev}:{e}") for e in statements.keys()]
             for v in db.sunion(keys):
                 pstmt = _unpack_statement(bv(v))
@@ -236,8 +251,7 @@ class VersionedRedisView(View[DS, CE]):
         # each statement.
         return self.store.db.exists(*self._get_stmt_keys(id)) > 0
 
-    def get_entity(self, id: str) -> Optional[CE]:
-        statements: List[Statement] = []
+    def _get_statements(self, id: str) -> Generator[Statement, None, None]:
         keys = self._get_stmt_keys(id)
         if len(keys) == 0:
             return None
@@ -247,6 +261,23 @@ class VersionedRedisView(View[DS, CE]):
             stmts = {bv(s) for s in self.store.db.sunion(keys)}
         for v in stmts:
             stmt = _unpack_statement(bv(v), id)
+            yield stmt
+
+    def get_timestamps(self, id: str) -> Dict[str, str]:
+        """Get the first seen timestamps associated with all statements of an entity.
+
+        Returns a dictionary mapping statement IDs to their first seen timestamps.
+        This can be used by an ETL to generate continuous entity histories.
+        """
+        timestamps: Dict[str, str] = {}
+        for stmt in self._get_statements(id):
+            if stmt.id is not None and stmt.first_seen is not None:
+                timestamps[stmt.id] = stmt.first_seen
+        return timestamps
+
+    def get_entity(self, id: str) -> Optional[CE]:
+        statements: List[Statement] = []
+        for stmt in self._get_statements(id):
             if not stmt.external or self.external:
                 stmt.canonical_id = self.store.linker.get_canonical(stmt.entity_id)
                 if stmt.prop_type == registry.entity.name:

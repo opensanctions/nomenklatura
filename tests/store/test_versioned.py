@@ -2,6 +2,7 @@ import orjson
 import fakeredis
 from pathlib import Path
 from followthemoney import model
+from datetime import datetime
 
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
@@ -9,6 +10,7 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.store.versioned import VersionedRedisStore
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
+from nomenklatura.util import datetime_iso
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 PERSON = {
@@ -33,11 +35,17 @@ def test_store_basics(test_dataset: Dataset):
     entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
-    writer.add_entity(entity)
+    ts = datetime_iso(datetime.now())
+    for stmt in entity.statements:
+        stmt.first_seen = ts
+        stmt.last_seen = ts
+        writer.add_statement(stmt)
     writer.flush()
     writer.release()
-    assert len(list(store.view(test_dataset).entities())) == 1
-    assert len(list(store.view(test_dataset).statements())) == 3
+    view = store.view(test_dataset)
+    assert len(list(view.entities())) == 1
+    assert len(list(view.statements())) == 3
+    assert len(view.get_timestamps("john-doe")) == 3
     writer.add_entity(entity_ext)
     writer.flush()
     assert len(list(store.view(test_dataset).entities())) == 2
@@ -51,7 +59,6 @@ def test_store_basics(test_dataset: Dataset):
     )
     store.update(merged_id)
     assert len(list(store.view(test_dataset).entities())) == 1
-
     assert len(list(store.view(test_dataset).statements())) == 5
 
 
@@ -111,9 +118,8 @@ def test_graph_query(donations_path: Path, test_dataset: Dataset):
 
 
 def test_versioning(test_dataset: Dataset):
-    redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     resolver = Resolver[CompositeEntity]()
-    store = VersionedRedisStore(test_dataset, resolver, db=redis)
+    store = VersionedRedisStore(test_dataset, resolver)
     assert store.get_latest(test_dataset.name) is None
     assert len(store.get_history(test_dataset.name)) == 0
     entity = CompositeEntity.from_data(test_dataset, PERSON)
