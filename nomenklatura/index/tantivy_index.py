@@ -1,16 +1,19 @@
+from followthemoney.property import Property
 from followthemoney.types import registry
+from normality import WS
 from pathlib import Path
+from rigour.ids import StrictFormat
 from tantivy import Query, Occur
-from typing import Any, Dict, List, Set, Tuple, Generic
+from typing import Any, Dict, List, Tuple, Generator
 import logging
-import shutil
 import tantivy
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
+from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, SKIP_FULL, TEXT_TYPES
 from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
+from nomenklatura.util import name_words, clean_text_basic, fingerprint_name
 
 log = logging.getLogger(__name__)
 
@@ -29,12 +32,53 @@ BOOSTS = {
 }
 
 
-class TantivyIndex(Generic[DS, CE]):
+class Tokenizer():
+    def value(
+        self, prop: Property, value: str
+    ) -> Generator[Tuple[str, str], None, None]:
+        """Perform type-specific token generation for a property value."""
+        type = prop.type
+        if not prop.matchable:
+            return
+        if type in (registry.url, registry.topic, registry.entity):
+            return
+        if type not in SKIP_FULL:
+            token_value = value[:100].lower()
+            yield type.name, token_value
+        if type == registry.date:
+            if len(value) > 4:
+                yield type.name, value[:4]
+            yield type.name, value[:10]
+            return
+        if type == registry.name:
+            norm = fingerprint_name(value)
+            if norm is not None:
+                yield type.name, norm
+                for token in norm.split(WS):
+                    if len(token) > 2 and len(token) < 30:
+                        yield NAME_PART_FIELD, token
+            return
+        if type == registry.identifier:
+            clean_id = StrictFormat.normalize(value)
+            if clean_id is not None:
+                yield type.name, clean_id
+            return
+        if type in TEXT_TYPES:
+            for word in name_words(clean_text_basic(value), min_length=3):
+                yield WORD_FIELD, word
+
+    def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
+        for prop, value in entity.itervalues():
+            for field, token in self.value(prop, value):
+                yield field, token
+
+
+class TantivyIndex():
     def __init__(
         self, view: View[DS, CE], data_dir: Path, options: Dict[str, Any] = {}
     ):
         self.view = view
-        self.tokenizer = Tokenizer[DS, CE]()
+        self.tokenizer = Tokenizer()
         self.memory_budget = int(options.get("memory_budget", 1024) * 1024 * 1024)
         self.max_candidates = int(options.get("max_candidates", 100))
 
