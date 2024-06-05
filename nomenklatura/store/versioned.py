@@ -358,19 +358,19 @@ class VersionedRedisView(View[DS, CE]):
         # memory, so we're being careful to only record entity IDs
         # that are part of a cluster with more than one ID.
         try:
-        seen: Set[str] = set()
-        for id in self.store.db.sscan_iter(scope_name):
-            entity_id = id.decode("utf-8")
-            ident = Identifier.get(entity_id)
-            connected = self.store.linker.connected(ident)
-            if len(connected) > 1:
-                canonical_id = max(connected).id
-                if canonical_id in seen:
-                    continue
-                seen.add(canonical_id)
-            entity = self.get_entity(entity_id)
-            if entity is not None:
-                yield entity
+            seen: Set[str] = set()
+            for id in self.store.db.sscan_iter(scope_name):
+                entity_id = id.decode("utf-8")
+                ident = Identifier.get(entity_id)
+                connected = self.store.linker.connected(ident)
+                if len(connected) > 1:
+                    canonical_id = max(connected).id
+                    if canonical_id in seen:
+                        continue
+                    seen.add(canonical_id)
+                entity = self.get_entity(entity_id)
+                if entity is not None:
+                    yield entity
         finally:
             if len(self.vers) > 1:
                 self.store.db.delete(scope_name)
