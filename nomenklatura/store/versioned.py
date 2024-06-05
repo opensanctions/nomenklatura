@@ -79,15 +79,25 @@ class VersionedRedisStore(Store[DS, CE]):
         self.db = db
 
     def writer(
-        self, dataset: Optional[DS] = None, version: Optional[str] = None
+        self,
+        dataset: Optional[DS] = None,
+        version: Optional[str] = None,
+        timestamps: bool = False,
     ) -> "VersionedRedisWriter[DS, CE]":
         if version is None:
             version = Version.new().id
         dataset = dataset or self.dataset
-        return VersionedRedisWriter(self, dataset=dataset, version=version)
+        return VersionedRedisWriter(
+            self,
+            dataset=dataset,
+            version=version,
+            timestamps=timestamps,
+        )
 
-    def view(self, scope: DS, external: bool = False) -> "VersionedRedisView[DS, CE]":
-        return VersionedRedisView(self, scope, external=external)
+    def view(
+        self, scope: DS, external: bool = False, versions: Dict[str, str] = {}
+    ) -> "VersionedRedisView[DS, CE]":
+        return VersionedRedisView(self, scope, external=external, versions=versions)
 
     def update(self, id: StrIdent) -> None:
         # Noop because the VersionedStore is not resolved.
@@ -103,12 +113,28 @@ class VersionedRedisStore(Store[DS, CE]):
         values = self.db.lrange(f"ds:{dataset}:history", 0, -1)
         return [v.decode("utf-8") for v in values]
 
+    def has_version(self, dataset: str, version: str) -> bool:
+        """Check if a specific version of a dataset exists in the store."""
+        return self.db.exists(f"ents:{dataset}:{version}") > 0
+
+    def release_version(self, dataset: str, version: str) -> None:
+        """Release the given version of the dataset (i.e. tag it as the latest
+        version in the relevant lookup key)."""
+        history_key = b(f"ds:{dataset}:history")
+        idx = self.db.lpos(history_key, b(version))
+        if idx is None:
+            self.db.lpush(history_key, b(version))
+        latest = self.db.lindex(history_key, 0)
+        if latest is not None:
+            self.db.set(b(f"ds:{dataset}:latest"), latest)
+        log.info("Released store version: %s (%s)", dataset, version)
+
     def drop_version(self, dataset: str, version: str) -> None:
         """Delete all data associated with a specific version of a dataset."""
         pipeline = self.db.pipeline()
         cmds = 0
         for prefix in ["stmt", "ents", "inv"]:
-            query = f"{prefix}:{dataset}:{version}:*"
+            query = f"{prefix}:{dataset}:{version}*"
             for key in self.db.scan_iter(query):
                 pipeline.delete(key)
                 cmds += 1
@@ -137,9 +163,16 @@ class VersionedRedisStore(Store[DS, CE]):
 class VersionedRedisWriter(Writer[DS, CE]):
     BATCH_STATEMENTS = 2_000
 
-    def __init__(self, store: VersionedRedisStore[DS, CE], dataset: DS, version: str):
+    def __init__(
+        self,
+        store: VersionedRedisStore[DS, CE],
+        dataset: DS,
+        version: str,
+        timestamps: bool = False,
+    ):
         self.version = version
         self.dataset = dataset
+        self.timestamps = timestamps
         self.ver = f"{dataset.name}:{version}"
         self.store: VersionedRedisStore[DS, CE] = store
         self.prev = store.get_latest(dataset.name)
@@ -162,7 +195,7 @@ class VersionedRedisWriter(Writer[DS, CE]):
             return
 
         # Merge with previous version to get accurate first_seen timestamps
-        if self.prev:
+        if self.timestamps and self.prev:
             keys = [b(f"stmt:{self.prev}:{e}") for e in statements.keys()]
             for v in db.sunion(keys):
                 pstmt = _unpack_statement(bv(v))
@@ -187,15 +220,7 @@ class VersionedRedisWriter(Writer[DS, CE]):
     def release(self) -> None:
         """Release the current version of the dataset (i.e. tag it as the latest
         version in the relevant lookup key)."""
-        ds = self.dataset.name
-        history_key = b(f"ds:{ds}:history")
-        idx = self.store.db.lpos(history_key, b(self.version))
-        if idx is None:
-            self.store.db.lpush(history_key, b(self.version))
-        previous = self.store.db.lindex(history_key, 0)
-        if previous is not None:
-            self.store.db.set(b(f"ds:{ds}:latest"), previous)
-        log.info("Released store version: %s (%s)", ds, self.version)
+        self.store.release_version(self.dataset.name, self.version)
 
     def close(self) -> None:
         self.release()
@@ -214,14 +239,21 @@ class VersionedRedisWriter(Writer[DS, CE]):
 
 class VersionedRedisView(View[DS, CE]):
     def __init__(
-        self, store: VersionedRedisStore[DS, CE], scope: DS, external: bool = False
+        self,
+        store: VersionedRedisStore[DS, CE],
+        scope: DS,
+        external: bool = False,
+        versions: Dict[str, str] = {},
     ) -> None:
         super().__init__(store, scope, external=external)
         self.store: VersionedRedisStore[DS, CE] = store
 
         # Get the latest version for each dataset in the scope
-        vers = [(d, self.store.get_latest(d)) for d in scope.leaf_names]
-        self.vers: List[Tuple[str, str]] = [(d, v) for d, v in vers if v is not None]
+        self.vers: List[Tuple[str, str]] = []
+        for ds in scope.leaf_names:
+            version = versions.get(ds, self.store.get_latest(ds))
+            if version is not None:
+                self.vers.append((ds, version))
 
     def _get_stmt_keys(self, entity_id: str) -> List[str]:
         keys: List[str] = []
@@ -236,8 +268,7 @@ class VersionedRedisView(View[DS, CE]):
         # each statement.
         return self.store.db.exists(*self._get_stmt_keys(id)) > 0
 
-    def get_entity(self, id: str) -> Optional[CE]:
-        statements: List[Statement] = []
+    def _get_statements(self, id: str) -> Generator[Statement, None, None]:
         keys = self._get_stmt_keys(id)
         if len(keys) == 0:
             return None
@@ -247,6 +278,23 @@ class VersionedRedisView(View[DS, CE]):
             stmts = {bv(s) for s in self.store.db.sunion(keys)}
         for v in stmts:
             stmt = _unpack_statement(bv(v), id)
+            yield stmt
+
+    def get_timestamps(self, id: str) -> Dict[str, str]:
+        """Get the first seen timestamps associated with all statements of an entity.
+
+        Returns a dictionary mapping statement IDs to their first seen timestamps.
+        This can be used by an ETL to generate continuous entity histories.
+        """
+        timestamps: Dict[str, str] = {}
+        for stmt in self._get_statements(id):
+            if stmt.id is not None and stmt.first_seen is not None:
+                timestamps[stmt.id] = stmt.first_seen
+        return timestamps
+
+    def get_entity(self, id: str) -> Optional[CE]:
+        statements: List[Statement] = []
+        for stmt in self._get_statements(id):
             if not stmt.external or self.external:
                 stmt.canonical_id = self.store.linker.get_canonical(stmt.entity_id)
                 if stmt.prop_type == registry.entity.name:
@@ -259,12 +307,12 @@ class VersionedRedisView(View[DS, CE]):
         ident = Identifier.get(id)
         for ent_id in self.store.linker.connected(ident):
             keys.extend([f"inv:{d}:{v}:{ent_id}" for d, v in self.vers])
-        entities: Set[str] = set()
         refs = (
             {bv(v) for v in self.store.db.sunion(keys)}
             if len(keys) > 0
             else self.store.db.smembers(keys[0])
         )
+        entities: Set[str] = set()
         for v in refs:
             entity_id = v.decode("utf-8")
             entities.add(self.store.linker.get_canonical(entity_id))
@@ -300,7 +348,7 @@ class VersionedRedisView(View[DS, CE]):
         if len(self.vers) == 1:
             scope_name = b(f"ents:{self.vers[0][0]}:{self.vers[0][1]}")
         if len(self.vers) > 1:
-            version = max((v for _, v in self.vers), default="latest")
+            version = Version.new().id + ":iter"
             scope_name = b(f"ents:{self.scope.name}:{version}")
             parts = [b(f"ents:{d}:{v}") for d, v in self.vers]
             self.store.db.sunionstore(scope_name, parts)
@@ -309,16 +357,20 @@ class VersionedRedisView(View[DS, CE]):
         # de-duplicated entity multiple times. This intrinsically leaks
         # memory, so we're being careful to only record entity IDs
         # that are part of a cluster with more than one ID.
-        seen: Set[str] = set()
-        for id in self.store.db.sscan_iter(scope_name):
-            entity_id = id.decode("utf-8")
-            ident = Identifier.get(entity_id)
-            connected = self.store.linker.connected(ident)
-            if len(connected) > 1:
-                canonical_id = max(connected).id
-                if canonical_id in seen:
-                    continue
-                seen.add(canonical_id)
-            entity = self.get_entity(entity_id)
-            if entity is not None:
-                yield entity
+        try:
+            seen: Set[str] = set()
+            for id in self.store.db.sscan_iter(scope_name):
+                entity_id = id.decode("utf-8")
+                ident = Identifier.get(entity_id)
+                connected = self.store.linker.connected(ident)
+                if len(connected) > 1:
+                    canonical_id = max(connected).id
+                    if canonical_id in seen:
+                        continue
+                    seen.add(canonical_id)
+                entity = self.get_entity(entity_id)
+                if entity is not None:
+                    yield entity
+        finally:
+            if len(self.vers) > 1:
+                self.store.db.delete(scope_name)

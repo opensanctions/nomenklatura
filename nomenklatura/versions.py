@@ -17,13 +17,14 @@ class Version(object):
         self.tag: str = tag
 
     @classmethod
-    def new(cls) -> "Version":
+    def new(cls, tag: Optional[str] = None) -> "Version":
         now = datetime.now().astimezone(timezone.utc)
         now = now.replace(tzinfo=None)
 
-        # This keeps the tag sortable but short
-        tag_num = ((now.microsecond // 1000) * 10) + random.randint(0, 9)
-        tag = cls._tag_encode(int(tag_num))
+        if tag is None:
+            # This keeps the tag sortable but short.
+            tag_num = ((now.microsecond // 1000) * 10) + random.randint(0, 9)
+            tag = cls._tag_encode(int(tag_num))
 
         now = now.replace(microsecond=0)
         return cls(now, tag)

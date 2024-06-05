@@ -4,13 +4,13 @@ from nomenklatura.versions import Version, VersionHistory
 
 
 def test_version():
-    runid = Version.new()
+    runid = Version.new("aaa")
     assert runid.id.startswith(runid.dt.strftime("%Y%m%d%H%M%S"))
     assert len(runid.tag) == 3
     assert len(runid.id) == 18
     assert str(runid) == runid.id
     assert repr(runid) == f"Version({runid.id})"
-    runid2 = Version.new()
+    runid2 = Version.new("bbb")
     assert runid2.id != runid.id
     assert hash(runid2) == hash(runid2.id)
 
