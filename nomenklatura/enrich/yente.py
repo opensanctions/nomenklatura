@@ -75,6 +75,7 @@ class YenteEnricher(Enricher):
                     if self._ns is not None:
                         proxy = self._ns.apply(proxy)
                     yield proxy
+                return
             except EnrichmentException as exc:
                 log.info("Error matching %r: %s", entity, exc)
                 if retry == 3:
