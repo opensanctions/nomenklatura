@@ -1,9 +1,10 @@
 import os
 import pytest
+from typing import Optional
 from nomenklatura.versions import Version, VersionHistory
 
 
-def test_version():
+def test_version() -> None:
     runid = Version.new("aaa")
     assert runid.id.startswith(runid.dt.strftime("%Y%m%d%H%M%S"))
     assert len(runid.tag) == 3
@@ -23,6 +24,13 @@ def test_version():
 
     runid4 = Version.from_env("NK_RUN2222_ID")
     assert runid4.id != runid2.id
+
+    prev_id: Optional[Version] = None
+    for i in range(100):
+        next_id = Version.new()
+        if prev_id is not None:
+            assert next_id.dt >= prev_id.dt, (next_id, prev_id)
+        prev_id = next_id
 
 
 def test_run_history():
