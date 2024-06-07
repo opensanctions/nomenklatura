@@ -1,5 +1,5 @@
-from pathlib import Path
 from tempfile import NamedTemporaryFile
+from pprint import pprint
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
@@ -14,9 +14,31 @@ VERBAND_BADEN_DATA = {
     "id": "bla",
     "schema": "Company",
     "properties": {
-        "name": ["VERBAND DER METALL UND ELEKTROINDUSTRIE BADEN WURTTEMBERG"]
+        "name": ["VERBAND DER METALL UND ELEKTROINDUSTRIE BADEN WURTTEMBERG"],
+        "country": ["de"],
+        "address": ["Lautenschlagerstr. 20, 70173 Stuttgart"],
+        "addressEntity": ["f5b4c7b1"],
+        "registrationNumber": ["AA.:123456789"],
+        "incorporationDate": ["2020-01-01"],
+        "topics": ["corp.public"],
+        "sourceUrl": ["https://www.somewhere.com"],
     },
 }
+
+
+def test_entity_fields(dstore: SimpleMemoryStore):
+    verband = dstore.default_view().get_entity(VERBAND_ID)
+    field_values = list(TantivyIndex.entity_fields(verband))
+    assert len(field_values) == 2, field_values
+    assert (
+        "name",
+        "verband der bayerischen metall und elektroindustrie ev",
+    ) in field_values, field_values
+    assert ("country", "de") in field_values, field_values
+    assert ("address", "lautenschlagerstr, 20, 70173 stuttgart") in field_values, field_values
+    assert ("registrationNumber", "aa123456789") in field_values, field_values
+    assert ("incorporationDate", "2020") in field_values, field_values
+    assert ("incorporationDate", "2020-01-01") in field_values, field_values
 
 
 def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
@@ -30,6 +52,9 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
 
     top_result = matches[0]
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
+    from pprint import pprint
+
+    pprint(matches)
     assert 17 < top_result[1] < 22, matches
 
     next_result = matches[1]
