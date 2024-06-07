@@ -61,12 +61,11 @@ class TantivyIndex:
     def entity_fields(cls, entity: CE) -> Generator[Tuple[str, str], None, None]:
         for prop, value in entity.itervalues():
             type = prop.type
-            print(f"prop: {prop}, value: {value}, type: {type}, matchable: {prop.matchable}")
 
             if not prop.matchable:
                 continue
 
-            if type in (registry.entity):
+            if type == registry.entity:
                 continue
 
             if type == registry.date:

@@ -22,23 +22,24 @@ VERBAND_BADEN_DATA = {
         "incorporationDate": ["2020-01-01"],
         "topics": ["corp.public"],
         "sourceUrl": ["https://www.somewhere.com"],
+        "foo": ["bar"],
     },
 }
 
 
-def test_entity_fields(dstore: SimpleMemoryStore):
-    verband = dstore.default_view().get_entity(VERBAND_ID)
-    field_values = list(TantivyIndex.entity_fields(verband))
-    assert len(field_values) == 2, field_values
+def test_entity_fields(test_dataset: Dataset):
+    verband_baden = CompositeEntity.from_data(test_dataset, VERBAND_BADEN_DATA)
+    field_values = list(TantivyIndex.entity_fields(verband_baden))
+    assert len(field_values) == 6, field_values
     assert (
         "name",
-        "verband der bayerischen metall und elektroindustrie ev",
+        "verband der metall und elektroindustrie baden wurttemberg",
     ) in field_values, field_values
     assert ("country", "de") in field_values, field_values
-    assert ("address", "lautenschlagerstr, 20, 70173 stuttgart") in field_values, field_values
-    assert ("registrationNumber", "aa123456789") in field_values, field_values
-    assert ("incorporationDate", "2020") in field_values, field_values
-    assert ("incorporationDate", "2020-01-01") in field_values, field_values
+    assert ("address", "lautenschlagerstr 20  70173 stuttgart") in field_values, field_values
+    assert ("identifier", "AA123456789") in field_values, field_values
+    assert ("date", "2020") in field_values, field_values
+    assert ("date", "2020-01-01") in field_values, field_values
 
 
 def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
