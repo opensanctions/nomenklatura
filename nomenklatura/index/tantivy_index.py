@@ -87,14 +87,18 @@ class TantivyIndex:
                     yield type.name, clean_id
                 continue
 
-            yield type.name, clean_text_basic(value[:100])
+            length_limited = clean_text_basic(value[:100])
+            if length_limited is not None:
+                yield type.name, length_limited
 
     def field_queries(self, field: str, value: str) -> Generator[Query, None, None]:
         words = value.split(WS)
         if field == registry.name.name:
             if len(words) > 2:
                 slop = 1
-                yield Query.phrase_query(self.schema, field, words, slop)
+                # Argument 3 to "phrase_query" of "Query" has incompatible
+                # type "list[str]"; expected "list[str | tuple[int, str]]"
+                yield Query.phrase_query(self.schema, field, words, slop)  # type: ignore
 
         if field in {registry.address.name, registry.name.name}:
             # TermSetQuery doesn't seem to behave so just use multiple term queries
