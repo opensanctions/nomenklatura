@@ -1,4 +1,3 @@
-from followthemoney.property import Property
 from followthemoney.types import registry
 from normality import WS
 from pathlib import Path
@@ -7,10 +6,11 @@ from tantivy import Query, Occur
 from typing import Any, Dict, List, Tuple, Generator
 import logging
 import tantivy
+from collections import defaultdict
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Identifier
+from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
 from nomenklatura.util import clean_text_basic, fingerprint_name
 
@@ -148,3 +148,28 @@ class TantivyIndex:
             # Value of type "Document" is not indexable
             results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
         return results
+
+    def pairs(self) -> List[Tuple[Pair, float]]:
+        """
+        Compare all matchable entities in the index and return pairs in order of
+        similarity.
+        """
+        pairs: Dict[Pair, float] = defaultdict(lambda: 1.0)
+
+        for entity in self.view.entities():
+            if not entity.schema.matchable or entity.id is None:
+                continue
+
+            query = self.entity_query(entity)
+            ident = Identifier(entity.id)
+            for score, address in self.searcher.search(query, self.max_candidates).hits:
+                if score < self.threshold:
+                    break
+                # Value of type "Document" is not indexable
+                doc = self.searcher.doc(address)
+                other_ident = Identifier(doc["entity_id"][0])  # type: ignore
+                if ident == other_ident:
+                    continue
+                pair = (max(ident, other_ident), min(ident, other_ident))
+                pairs[pair] *= score
+        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)

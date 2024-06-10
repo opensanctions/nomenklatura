@@ -1,11 +1,9 @@
-from tempfile import NamedTemporaryFile
-from pprint import pprint
-
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.index.tantivy_index import TantivyIndex
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.store import SimpleMemoryStore
+from nomenklatura.util import clean_text_basic
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 VERBAND_ID = "62ad0fe6f56dbbf6fee57ce3da76e88c437024d5"
@@ -70,3 +68,46 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     # Daimler is in the index but not in the matches
     assert DAIMLER in {e.id for e in dstore.default_view().entities()}
     assert DAIMLER not in top_10, top_10
+
+
+def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
+    view = dstore.default_view()
+    pairs = tantivy_index.pairs()
+    assert 474 < len(pairs) < 474*474, pairs
+
+    schemata = set()
+    for (left, right), score in pairs[:20]:
+        entity0 = view.get_entity(left.id)
+        entity1 = view.get_entity(right.id)
+        tokens0 = set(clean_text_basic(entity0.caption).split(" "))
+        tokens1 = set(clean_text_basic(entity1.caption).split(" "))
+        overlap = tokens0.intersection(tokens1)
+        # Matches should have some overlap. Coincidentally on fields used in the caption.
+        assert len(overlap) > 0, overlap
+        schemata.add(entity0.schema.name)
+        assert left.id != right.id
+
+    assert "Person" in schemata
+    assert "Company" in schemata
+    assert "Address" in schemata
+
+    top_5 = {p[0] for p in pairs[:5]}
+    assert (
+        Identifier("72fd7df14e87678c9c6dcebb3ef045d11343d64c"),
+        Identifier("152da487401ef4547baf2d2bc95f884dc5f8bba0"),
+    ) in top_5, top_5
+    assert (
+        Identifier("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
+        Identifier("12570ee94b8dc23bcc080e887539d3742b2a5237"),
+    ) in top_5, top_5
+
+    top_10 = {p[0] for p in pairs[:10]}
+    verband_baden = (
+        Identifier("cf9133952825afac1e654542a70ae7ed20dbfa7a"),
+        Identifier("69401823a9f0a97cfdc37afa7c3158374e007669"),
+    )
+    assert verband_baden in top_10, top_10
+    assert verband_baden not in top_5, top_5
+
+    assert sorted(pairs, key=lambda p: p[1], reverse=True) == pairs
+
