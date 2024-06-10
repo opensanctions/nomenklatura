@@ -66,7 +66,7 @@ class TantivyIndex:
             if not prop.matchable:
                 continue
 
-            if type == registry.entity:
+            if type in {registry.entity, registry.url}:
                 continue
 
             if type == registry.date:
