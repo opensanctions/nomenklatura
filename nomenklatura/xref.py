@@ -1,13 +1,16 @@
 import logging
 from typing import List, Optional, Type
 from followthemoney.schema import Schema
+from tempfile import mkdtemp
+from pathlib import Path
+import shutil
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import Index
+from nomenklatura.index import TantivyIndex
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 
 log = logging.getLogger(__name__)
@@ -39,7 +42,8 @@ def xref(
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
     view = store.default_view(external=external)
-    index = Index(view)
+    working_dir = Path(mkdtemp())
+    index = TantivyIndex(view, working_dir)
     index.build()
     try:
         scores: List[float] = []
@@ -94,3 +98,5 @@ def xref(
 
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
+    finally:
+        shutil.rmtree(working_dir, ignore_errors=True)

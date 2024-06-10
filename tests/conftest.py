@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 from nomenklatura import settings
-from nomenklatura.index.tantivy_index import TantivyIndex
+from nomenklatura.index import TantivyIndex
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
 from nomenklatura.db import get_engine, get_metadata
