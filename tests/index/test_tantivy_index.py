@@ -36,7 +36,10 @@ def test_entity_fields(test_dataset: Dataset):
         "verband der metall und elektroindustrie baden wurttemberg",
     ) in field_values, field_values
     assert ("country", "de") in field_values, field_values
-    assert ("address", "lautenschlagerstr 20  70173 stuttgart") in field_values, field_values
+    assert (
+        "address",
+        "lautenschlagerstr 20  70173 stuttgart",
+    ) in field_values, field_values
     assert ("identifier", "AA123456789") in field_values, field_values
     assert ("date", "2020") in field_values, field_values
     assert ("date", "2020-01-01") in field_values, field_values
@@ -47,24 +50,23 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     dx = Dataset.make({"name": "test", "title": "Test"})
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
-    # 9 entities in the index where some token in the query entity matches some
-    # token in the index.
-    assert len(matches) == 9, matches
+
+    assert len(matches) == 18, matches
 
     top_result = matches[0]
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
-    from pprint import pprint
 
-    pprint(matches)
-    assert 17 < top_result[1] < 22, matches
+    # Terms and phrase match
+    assert 200 < top_result[1] < 300, matches
+    # Terms but not phrase match
+    assert 50 < matches[1][1] < 100, matches
+    # lowest > threshold
+    assert matches[-1][1] > 1, matches
 
-    next_result = matches[1]
-    assert next_result[0] == Identifier(VERBAND_ID), next_result
-    assert 15 < next_result[1] < 17, matches
+    top_3 = {m[0] for m in matches[:3]}
+    assert Identifier(VERBAND_ID) in top_3, matches
 
-    match_identifiers = set(str(m[0]) for m in matches)
-    assert VERBAND_ID in match_identifiers
-
+    top_10 = {m[0] for m in matches[:10]}
     # Daimler is in the index but not in the matches
     assert DAIMLER in {e.id for e in dstore.default_view().entities()}
-    assert DAIMLER not in match_identifiers
+    assert DAIMLER not in top_10, top_10

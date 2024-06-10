@@ -34,6 +34,7 @@ class TantivyIndex:
         self.view = view
         self.memory_budget = int(options.get("memory_budget", 100) * 1024 * 1024)
         self.max_candidates = int(options.get("max_candidates", 100))
+        self.threshold = float(options.get("threshold", 1.0))
 
         schema_builder = tantivy.SchemaBuilder()
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
@@ -87,18 +88,19 @@ class TantivyIndex:
                 continue
 
             yield type.name, clean_text_basic(value[:100])
-            
 
     def field_queries(self, field: str, value: str) -> Generator[Query, None, None]:
+        words = value.split(WS)
         if field == registry.name.name:
-            words = value.split(WS)
-            yield Query.phrase_query(self.schema, field, words, 1)
-            yield Query.term_set_query(self.schema, field, words)
-            return
+            if len(words) > 2:
+                slop = 1
+                yield Query.phrase_query(self.schema, field, words, slop)
 
-        if field == registry.address.name:
-            words = value.split(WS)
-            yield Query.term_set_query(self.schema, field, words)
+        if field in {registry.address.name, registry.name.name}:
+            # TermSetQuery doesn't seem to behave so just use multiple term queries
+            # as the parser does.
+            for word in words:
+                yield Query.term_query(self.schema, field, word)
             return
 
         yield Query.term_query(self.schema, field, value)
@@ -136,6 +138,8 @@ class TantivyIndex:
         query = self.entity_query(entity)
         results = []
         for score, address in self.searcher.search(query, self.max_candidates).hits:
+            if score < self.threshold:
+                break
             doc = self.searcher.doc(address)
             # Value of type "Document" is not indexable
             results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
