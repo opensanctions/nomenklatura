@@ -1,10 +1,12 @@
 import logging
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Dict, Set
 from followthemoney.schema import Schema
+from itertools import combinations
+from collections import defaultdict
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.store import Store
+from nomenklatura.store import Store, View
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
@@ -25,6 +27,23 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
     )
 
 
+def report_potential_conflicts(
+    view: View[DS, CE],
+    negative_check_matches: Dict[str, Set[str]],
+    resolver: Resolver[CE],
+) -> None:
+    for candidate_id, matches in negative_check_matches.items():
+        for left_id, right_id in combinations(matches, 2):
+            judgement = resolver.get_judgement(left_id, right_id)
+            if judgement == Judgement.NEGATIVE:
+                log.info(
+                    "Potential conflict: %s <> %s for %s",
+                    left_id,
+                    right_id,
+                    candidate_id,
+                )
+
+
 def xref(
     resolver: Resolver[CE],
     store: Store[DS, CE],
@@ -33,6 +52,7 @@ def xref(
     external: bool = True,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
+    negative_check_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     user: Optional[str] = None,
@@ -41,6 +61,8 @@ def xref(
     view = store.default_view(external=external)
     index = Index(view)
     index.build()
+    negative_check_threshold = negative_check_threshold or auto_threshold or 0.98
+    negative_check_matches: Dict[str, Set[str]] = defaultdict(set)
     try:
         scores: List[float] = []
         suggested = 0
@@ -67,11 +89,16 @@ def xref(
             if scored:
                 result = algorithm.compare(left, right)
                 score = result.score
+
             scores.append(score)
 
             # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:
                 score = score * 0.7
+
+            if score > negative_check_threshold:
+                negative_check_matches[left_id.id].add(right_id.id)
+                negative_check_matches[right_id.id].add(left_id.id)
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
@@ -91,6 +118,8 @@ def xref(
                 break
             suggested += 1
         _print_stats(idx, suggested, scores)
+
+        report_potential_conflicts(view, negative_check_matches, resolver)
 
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
