@@ -3,6 +3,7 @@ from typing import List, Optional, Type, Dict, Set
 from followthemoney.schema import Schema
 from itertools import combinations
 from collections import defaultdict
+from pprint import pprint
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -27,11 +28,22 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
     )
 
 
+def print_name_sources(entity: CE) -> None:
+    tuples = []
+    for stmt in entity.statements:
+        if stmt.prop != "name":
+            continue
+        tuples.append((stmt.dataset, stmt.entity_id, stmt.lang, stmt.value))
+    for dataset, entity_id, lang, value in sorted(tuples):
+        print(f"    {dataset[:18].ljust(18)}  {entity_id[:30].ljust(30)}  {(lang or "").rjust(3)}  {value}")
+
+
 def report_potential_conflicts(
     view: View[DS, CE],
     negative_check_matches: Dict[str, Set[str]],
     resolver: Resolver[CE],
 ) -> None:
+    #pprint(negative_check_matches)
     for candidate_id, matches in negative_check_matches.items():
         for left_id, right_id in combinations(matches, 2):
             judgement = resolver.get_judgement(left_id, right_id)
@@ -42,6 +54,15 @@ def report_potential_conflicts(
                     right_id,
                     candidate_id,
                 )
+                left = view.get_entity(left_id)
+                right = view.get_entity(right_id)
+                candidate = view.get_entity(candidate_id)
+                print(f"\nCandidate https://www.opensanctions.org/entities/{candidate_id}/:")
+                print_name_sources(candidate)
+                print(f"\nLeft https://www.opensanctions.org/entities/{left_id}/:")
+                print_name_sources(left)
+                print(f"\nRight https://www.opensanctions.org/entities/{right_id}/:")
+                print_name_sources(right)
 
 
 def xref(
@@ -92,13 +113,13 @@ def xref(
 
             scores.append(score)
 
-            # Not sure this is globally a good idea.
-            if len(left.datasets.intersection(right.datasets)) > 0:
-                score = score * 0.7
-
             if score > negative_check_threshold:
                 negative_check_matches[left_id.id].add(right_id.id)
                 negative_check_matches[right_id.id].add(left_id.id)
+
+            # Not sure this is globally a good idea.
+            if len(left.datasets.intersection(right.datasets)) > 0:
+                score = score * 0.7
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
