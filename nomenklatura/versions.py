@@ -5,12 +5,14 @@ import random
 from typing import Any, List, Iterator, Optional
 from datetime import datetime, timezone
 
-ALPHABET = string.digits + string.ascii_lowercase
+ALPHABET = string.ascii_lowercase
 
 
 class Version(object):
     """A class to represent a dataset version, which consists of a timestamp
     and a string tag."""
+
+    __slots__ = ["dt", "tag"]
 
     def __init__(self, dt: datetime, tag: str) -> None:
         self.dt: datetime = dt
@@ -23,9 +25,11 @@ class Version(object):
 
         if tag is None:
             # This keeps the tag sortable but short.
-            tag_num = ((now.microsecond // 1000) * 10) + random.randint(0, 9)
-            tag = cls._tag_encode(int(tag_num))
+            tag_num = (now.microsecond // 1000) * 10
+            tag_num_ = tag_num + random.randint(0, 9)
+            tag = cls._tag_encode(int(tag_num_))
 
+        tag = tag.ljust(3, "x")[:3]
         now = now.replace(microsecond=0)
         return cls(now, tag)
 
