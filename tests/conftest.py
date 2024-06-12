@@ -67,17 +67,22 @@ def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
 
 
-@pytest.fixture(scope="module")
-def dindex(dstore: SimpleMemoryStore):
-    index = Index(dstore.default_view())
+@pytest.fixture(scope="function")
+def dindex(index_path: Path, dstore: SimpleMemoryStore):
+    index = Index(dstore.default_view(), index_path)
     index.build()
     return index
 
 
-@pytest.fixture(scope="module")
-def tantivy_index(dstore: SimpleMemoryStore):
-    state_path = Path(mkdtemp())
-    index = TantivyIndex(dstore.default_view(), state_path)
+@pytest.fixture(scope="function")
+def tantivy_index(index_path: Path, dstore: SimpleMemoryStore):
+    index = TantivyIndex(dstore.default_view(), index_path)
     index.build()
     yield index
-    shutil.rmtree(state_path, ignore_errors=True)
+
+
+@pytest.fixture(scope="function")
+def index_path():
+    index_path = Path(mkdtemp()) / "index-dir"
+    yield index_path
+    shutil.rmtree(index_path, ignore_errors=True)

@@ -21,6 +21,7 @@ from nomenklatura.stream import StreamEntity
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
 
+INDEX_SEGMENT = "index-data"
 
 log = logging.getLogger(__name__)
 
@@ -75,6 +76,7 @@ def xref_file(
     run_xref(
         resolver_,
         store,
+        path.parent / INDEX_SEGMENT,
         auto_threshold=auto_threshold,
         algorithm=algorithm_type,
         scored=scored,
@@ -139,7 +141,8 @@ def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> N
     resolver_ = _get_resolver(path, resolver)
     store = load_entity_file_store(path, resolver=resolver_)
     if xref:
-        run_xref(resolver_, store)
+        index_dir = path.parent / INDEX_SEGMENT
+        run_xref(resolver_, store, index_dir)
 
     dedupe_ui(resolver_, store)
     resolver_.save()

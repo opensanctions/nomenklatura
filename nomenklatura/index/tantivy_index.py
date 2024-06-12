@@ -13,6 +13,7 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
 from nomenklatura.util import clean_text_basic, fingerprint_name
+from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +28,9 @@ BOOSTS = {
 }
 
 
-class TantivyIndex:
+class TantivyIndex(BaseIndex[DS, CE]):
+    name = "tantivy"
+
     def __init__(
         self, view: View[DS, CE], data_dir: Path, options: Dict[str, Any] = {}
     ):
@@ -48,7 +51,7 @@ class TantivyIndex:
         schema_builder.add_text_field(registry.date.name, tokenizer_name="raw")
         self.schema = schema_builder.build()
 
-        self.index_dir = data_dir / "tantivy-index"
+        self.index_dir = data_dir
         if self.index_dir.exists():
             self.exists = True
             self.index = tantivy.Index.open(self.index_dir.as_posix())
