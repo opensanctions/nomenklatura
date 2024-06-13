@@ -12,6 +12,7 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import TantivyIndex, Index, BaseIndex
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
+from nomenklatura.conflicting_match import ConflictingMatchReporter
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ def xref(
     external: bool = True,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
+    conflicting_match_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     user: Optional[str] = None,
@@ -46,6 +48,12 @@ def xref(
     view = store.default_view(external=external)
     index = index_class(view, index_dir)
     index.build()
+    conflict_reporter = None
+    if conflicting_match_threshold is not None:
+        conflict_reporter = ConflictingMatchReporter(
+            view, resolver, conflicting_match_threshold
+        )
+
     try:
         scores: List[float] = []
         suggested = 0
@@ -72,7 +80,11 @@ def xref(
             if scored:
                 result = algorithm.compare(left, right)
                 score = result.score
+
             scores.append(score)
+
+            if conflict_reporter is not None:
+                conflict_reporter.check_match(result.score, left_id.id, right_id.id)
 
             # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:
@@ -96,6 +108,9 @@ def xref(
                 break
             suggested += 1
         _print_stats(idx, suggested, scores)
+
+        if conflict_reporter is not None:
+            conflict_reporter.report()
 
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
