@@ -1,5 +1,5 @@
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
@@ -19,8 +19,8 @@ VERBAND_BADEN_DATA = {
 }
 
 
-def test_index_build(dstore: SimpleMemoryStore):
-    index = Index(dstore.default_view())
+def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
+    index = Index(dstore.default_view(), index_path)
     assert len(index) == 0, index.fields
     assert len(index.fields) == 0, index.fields
     index.build()
@@ -29,16 +29,18 @@ def test_index_build(dstore: SimpleMemoryStore):
 
 def test_index_persist(dstore: SimpleMemoryStore, dindex):
     view = dstore.default_view()
-    with NamedTemporaryFile("w") as fh:
-        path = Path(fh.name)
-        dindex.save(path)
-        loaded = Index.load(dstore.default_view(), path)
+    with TemporaryDirectory() as tmpdir:
+        with NamedTemporaryFile("w") as fh:
+            path = Path(fh.name)
+            dindex.save(path)
+            loaded = Index.load(dstore.default_view(), path, tmpdir)
     assert len(dindex.entities) == len(loaded.entities), (dindex, loaded)
     assert len(dindex) == len(loaded), (dindex, loaded)
 
     path.unlink(missing_ok=True)
-    empty = Index.load(view, path)
-    assert len(empty) == len(loaded), (empty, loaded)
+    with TemporaryDirectory() as tmpdir:
+        empty = Index.load(view, path, tmpdir)
+        assert len(empty) == len(loaded), (empty, loaded)
 
 
 def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):

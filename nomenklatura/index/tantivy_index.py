@@ -1,4 +1,3 @@
-from followthemoney.property import Property
 from followthemoney.types import registry
 from normality import WS
 from pathlib import Path
@@ -7,12 +6,14 @@ from tantivy import Query, Occur
 from typing import Any, Dict, List, Tuple, Generator
 import logging
 import tantivy
+from collections import defaultdict
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Identifier
+from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
 from nomenklatura.util import clean_text_basic, fingerprint_name
+from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +28,9 @@ BOOSTS = {
 }
 
 
-class TantivyIndex:
+class TantivyIndex(BaseIndex[DS, CE]):
+    name = "tantivy"
+
     def __init__(
         self, view: View[DS, CE], data_dir: Path, options: Dict[str, Any] = {}
     ):
@@ -48,7 +51,7 @@ class TantivyIndex:
         schema_builder.add_text_field(registry.date.name, tokenizer_name="raw")
         self.schema = schema_builder.build()
 
-        self.index_dir = data_dir / "tantivy-index"
+        self.index_dir = data_dir
         if self.index_dir.exists():
             self.exists = True
             self.index = tantivy.Index.open(self.index_dir.as_posix())
@@ -148,3 +151,28 @@ class TantivyIndex:
             # Value of type "Document" is not indexable
             results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
         return results
+
+    def pairs(self) -> List[Tuple[Pair, float]]:
+        """
+        Compare all matchable entities in the index and return pairs in order of
+        similarity.
+        """
+        pairs: Dict[Pair, float] = defaultdict(lambda: 1.0)
+
+        for entity in self.view.entities():
+            if not entity.schema.matchable or entity.id is None:
+                continue
+
+            query = self.entity_query(entity)
+            ident = Identifier(entity.id)
+            for score, address in self.searcher.search(query, self.max_candidates).hits:
+                if score < self.threshold:
+                    break
+                # Value of type "Document" is not indexable
+                doc = self.searcher.doc(address)
+                other_ident = Identifier(doc["entity_id"][0])  # type: ignore
+                if ident == other_ident:
+                    continue
+                pair = (max(ident, other_ident), min(ident, other_ident))
+                pairs[pair] *= score
+        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)

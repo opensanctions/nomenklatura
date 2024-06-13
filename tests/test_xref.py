@@ -1,3 +1,4 @@
+from pathlib import Path
 from nomenklatura.xref import xref
 from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.resolver import Resolver
@@ -5,9 +6,9 @@ from nomenklatura.entity import CompositeEntity
 
 
 def test_xref_candidates(
-    dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
+    index_path: Path, dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
 ):
-    xref(dresolver, dstore)
+    xref(dresolver, dstore, index_path)
     view = dstore.default_view(external=True)
     candidates = list(dresolver.get_candidates(limit=20))
     assert len(candidates) == 20
