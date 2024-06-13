@@ -4,6 +4,9 @@ from followthemoney.schema import Schema
 from itertools import combinations
 from collections import defaultdict
 from pprint import pprint
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -28,14 +31,33 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
     )
 
 
-def print_name_sources(entity: CE) -> None:
+def print_name_sources(title: str, entity: CE) -> None:
     tuples = []
+    sorted_tuples = []
     for stmt in entity.statements:
         if stmt.prop != "name":
             continue
-        tuples.append((stmt.dataset, stmt.entity_id, stmt.lang, stmt.value))
-    for dataset, entity_id, lang, value in sorted(tuples):
-        print(f"    {dataset[:18].ljust(18)}  {entity_id[:30].ljust(30)}  {(lang or "").rjust(3)}  {value}")
+        tuples.append((stmt.dataset, stmt.entity_id, stmt.prop, stmt.lang, stmt.value))
+    sorted_tuples.extend(sorted(tuples))
+    tuples = []
+    for stmt in entity.statements:
+        if stmt.prop != "alias":
+            continue
+        tuples.append((stmt.dataset, stmt.entity_id, stmt.prop, stmt.lang, stmt.value))
+    sorted_tuples.extend(sorted(tuples))
+
+    table = Table(title=title + "\n" + entity.id, box=box.SIMPLE, expand=True)
+    table.add_column("Dataset", style="cyan", max_width=20)
+    table.add_column("Entity ID", style="magenta", max_width=30)
+    table.add_column("Prop", style="blue")
+    table.add_column("Lang", style="green")
+    table.add_column("Name", style="yellow")
+
+    for dataset, entity_id, prop, lang, value in sorted_tuples:
+        table.add_row(dataset, entity_id, prop, lang, "• " + value)
+
+    console = Console()
+    console.print(table)
 
 
 def report_potential_conflicts(
@@ -43,7 +65,7 @@ def report_potential_conflicts(
     negative_check_matches: Dict[str, Set[str]],
     resolver: Resolver[CE],
 ) -> None:
-    #pprint(negative_check_matches)
+    # pprint(negative_check_matches)
     for candidate_id, matches in negative_check_matches.items():
         for left_id, right_id in combinations(matches, 2):
             judgement = resolver.get_judgement(left_id, right_id)
@@ -57,12 +79,9 @@ def report_potential_conflicts(
                 left = view.get_entity(left_id)
                 right = view.get_entity(right_id)
                 candidate = view.get_entity(candidate_id)
-                print(f"\nCandidate https://www.opensanctions.org/entities/{candidate_id}/:")
-                print_name_sources(candidate)
-                print(f"\nLeft https://www.opensanctions.org/entities/{left_id}/:")
-                print_name_sources(left)
-                print(f"\nRight https://www.opensanctions.org/entities/{right_id}/:")
-                print_name_sources(right)
+                print_name_sources("Candidate", candidate)
+                print_name_sources("Left side of negative decision", left)
+                print_name_sources("Right side of negative decision", right)
 
 
 def xref(
