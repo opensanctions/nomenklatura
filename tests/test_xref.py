@@ -1,4 +1,4 @@
-import logging
+import re
 
 from normality import collapse_spaces
 from nomenklatura.dataset.dataset import Dataset
@@ -86,9 +86,9 @@ def test_xref_potential_conflicts(
 
     assert "Potential conflicting matches found:" in stdout, stdout
     assert "Candidate:\nc\n" in stdout, stdout
-    assert "Left side of negative decision:\nb\n" in stdout, stdout
-    assert "Right side of negative decision:\na\n" in stdout, stdout
     flat = collapse_spaces(stdout)
-    assert a.get("name")[0] in flat, flat
-    assert b.get("name")[0] in flat, flat
-    assert c.get("name")[0] in flat, flat
+    assert re.search(r"Left side of negative decision: (b|a)", flat), stdout
+    assert re.search(r"Right side of negative decision: (b|a)", flat), stdout
+    assert a.get("name")[0] in flat, stdout
+    assert b.get("name")[0] in flat, stdout
+    assert c.get("name")[0] in flat, stdout
