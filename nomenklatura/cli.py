@@ -1,13 +1,16 @@
+import os
+import shutil
 import yaml
 import click
 import logging
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional, Tuple
+from typing import Generator, Iterable, List, Optional, Tuple, Type
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
+from nomenklatura.index import Index, TantivyIndex, BaseIndex
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
@@ -21,7 +24,7 @@ from nomenklatura.stream import StreamEntity
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
 
-INDEX_SEGMENT = "index-data"
+INDEX_SEGMENT = "xref-index"
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +63,19 @@ def cli() -> None:
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
+@click.option(
+    "-i",
+    "--index",
+    type=click.Choice([Index.name, TantivyIndex.name]),
+    default=Index.name,
+)
+@click.option(
+    "-c",
+    "--clear",
+    is_flag=True,
+    default=False,
+    help="Clear the index directory, if it exists.",
+)
 def xref_file(
     path: Path,
     resolver: Optional[Path] = None,
@@ -67,20 +83,38 @@ def xref_file(
     algorithm: str = DefaultAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
+    index: str = Index.name,
+    clear: bool = False,
 ) -> None:
     resolver_ = _get_resolver(path, resolver)
     store = load_entity_file_store(path, resolver=resolver_)
     algorithm_type = get_algorithm(algorithm)
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
+
+    index_dir = Path(
+        os.environ.get("NOMENKLATURA_INDEX_PATH", path.parent / INDEX_SEGMENT)
+    )
+    if clear and index_dir.exists():
+        log.info("Clearing index: %s", index_dir)
+        shutil.rmtree(index_dir, ignore_errors=True)
+
+    if index == TantivyIndex.name:
+        index_class: Type[BaseIndex[Dataset, Entity]] = TantivyIndex
+    elif index == Index.name:
+        index_class = Index
+    else:
+        raise ValueError("Invalid index: %s" % index)
+
     run_xref(
         resolver_,
         store,
-        path.parent / INDEX_SEGMENT,
+        index_dir,
         auto_threshold=auto_threshold,
         algorithm=algorithm_type,
         scored=scored,
         limit=limit,
+        index_class=index_class,
     )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
