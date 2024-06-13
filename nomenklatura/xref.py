@@ -1,13 +1,16 @@
 import logging
 from typing import List, Optional, Type
 from followthemoney.schema import Schema
+from tempfile import mkdtemp
+from pathlib import Path
+import shutil
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import Index
+from nomenklatura.index import TantivyIndex, Index, BaseIndex
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
@@ -29,6 +32,7 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
 def xref(
     resolver: Resolver[CE],
     store: Store[DS, CE],
+    index_dir: Path,
     limit: int = 5000,
     scored: bool = True,
     external: bool = True,
@@ -38,10 +42,11 @@ def xref(
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     user: Optional[str] = None,
+    index_class: Type[BaseIndex[DS, CE]] = TantivyIndex,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
     view = store.default_view(external=external)
-    index = Index(view)
+    index = index_class(view, index_dir)
     index.build()
     conflict_reporter = None
     if conflicting_match_threshold is not None:

@@ -39,6 +39,7 @@ The command-line use of `nomenklatura` is targeted at small datasets which need 
 * `nomenklatura.Dataset` - implements a basic dataset for describing a set of entities.
 * `nomenklatura.Store` - a general purpose access mechanism for entities. By default, a store is used to access entity data stored in files as an in-memory cache, but the store can be subclassed to work with entities from a database system.
 * `nomenklatura.Index` - a full-text in-memory search index for FtM entities. In the application, this is used to block de-duplication candidates, but the index can also be used to drive an API etc.
+* `nomenklatura.index.TantivyIndex` - a wrapper around Tantivy for indexing and matching FtM entities.
 * `nomenklatura.Resolver` - the core of the de-duplication process, the resolver is essentially a graph with edges made out of entity judgements. The resolver can be used to store judgements or get the canonical ID for a given entity.
 
 All of the API classes have extensive type annotations, which should make their integration in any modern Python API simpler.

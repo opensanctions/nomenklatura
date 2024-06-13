@@ -12,12 +12,15 @@ from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
+from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
 
 
-class Index(Generic[DS, CE]):
+class Index(BaseIndex[DS, CE]):
     """An in-memory search index to match entities against a given dataset."""
+
+    name = "memory"
 
     BOOSTS = {
         NAME_PART_FIELD: 2.0,
@@ -37,7 +40,7 @@ class Index(Generic[DS, CE]):
 
     __slots__ = "view", "fields", "tokenizer", "entities"
 
-    def __init__(self, view: View[DS, CE]):
+    def __init__(self, view: View[DS, CE], data_dir: Path):
         self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
         self.fields: Dict[str, Field] = {}
@@ -119,8 +122,8 @@ class Index(Generic[DS, CE]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, view: View[DS, CE], path: Path) -> "Index[DS, CE]":
-        index = Index(view)
+    def load(cls, view: View[DS, CE], path: Path, data_dir: Path) -> "Index[DS, CE]":
+        index = Index(view, data_dir)
         if not path.exists():
             log.debug("Cannot load: %r", index)
             index.build()

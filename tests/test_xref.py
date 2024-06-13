@@ -1,20 +1,20 @@
 import re
-
 from normality import collapse_spaces
+from pathlib import Path
+
 from nomenklatura.dataset.dataset import Dataset
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1
-from nomenklatura.store.memory import MemoryStore
-from nomenklatura.xref import xref
-from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.resolver import Resolver
-from nomenklatura.entity import CompositeEntity
+from nomenklatura.store import SimpleMemoryStore
+from nomenklatura.xref import xref
 
 
 def test_xref_candidates(
-    dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
+    index_path: Path, dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
 ):
-    xref(dresolver, dstore)
+    xref(dresolver, dstore, index_path)
     view = dstore.default_view(external=True)
     candidates = list(dresolver.get_candidates(limit=20))
     assert len(candidates) == 20
@@ -30,11 +30,12 @@ def test_xref_candidates(
 
 
 def test_xref_potential_conflicts(
+    index_path: Path,
     test_dataset: Dataset,
     capsys,
 ):
     resolver = Resolver[CompositeEntity]()
-    store = MemoryStore(test_dataset, resolver)
+    store = SimpleMemoryStore(test_dataset, resolver)
     a = CompositeEntity.from_data(
         test_dataset,
         {
@@ -79,6 +80,7 @@ def test_xref_potential_conflicts(
     xref(
         resolver,
         store,
+        index_path,
         algorithm=RegressionV1,
         conflicting_match_threshold=0.9,
     )
