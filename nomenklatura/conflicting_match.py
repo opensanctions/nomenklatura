@@ -64,10 +64,16 @@ class ConflictingMatchReporter(Generic[CE]):
         self.console.print(table)
 
     def report(self) -> None:
+        conflicts = list(self.get_conflicting_matches())
+        if not conflicts:
+            return
+
+        self.console.print("[bold]Potential conflicting matches found:\n[/bold]")
         for candidate_id, left_id, right_id in self.get_conflicting_matches():
             left = self.view.get_entity(left_id)
             right = self.view.get_entity(right_id)
             candidate = self.view.get_entity(candidate_id)
+
             if candidate:
                 self.report_conflicting_match("Candidate", candidate)
             if left:

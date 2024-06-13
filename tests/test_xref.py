@@ -1,4 +1,6 @@
 import logging
+
+from normality import collapse_spaces
 from nomenklatura.dataset.dataset import Dataset
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1
@@ -80,6 +82,13 @@ def test_xref_potential_conflicts(
         algorithm=RegressionV1,
         conflicting_match_threshold=0.9,
     )
-    logs = {r.message for r in caplog.records}
+    stdout = capsys.readouterr().out
 
-    assert "Potential conflict: b <> a for c" in logs
+    assert "Potential conflicting matches found:" in stdout, stdout
+    assert "Candidate:\nc\n" in stdout, stdout
+    assert "Left side of negative decision:\nb\n" in stdout, stdout
+    assert "Right side of negative decision:\na\n" in stdout, stdout
+    flat = collapse_spaces(stdout)
+    assert a.get("name")[0] in flat, flat
+    assert b.get("name")[0] in flat, flat
+    assert c.get("name")[0] in flat, flat
