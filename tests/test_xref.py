@@ -29,19 +29,18 @@ def test_xref_candidates(
 
 def test_xref_potential_conflicts(
     test_dataset: Dataset,
-    caplog,
+    capsys,
 ):
     resolver = Resolver[CompositeEntity]()
     store = MemoryStore(test_dataset, resolver)
-    algorithm = RegressionV1()
     a = CompositeEntity.from_data(
         test_dataset,
         {
             "id": "a",
             "schema": "Company",
             "properties": {
-                "name": "The AAA Weapons and Munitions Factory Joint Stock Company",
-                "address": "Moscow",
+                "name": ["The AAA Weapons and Munitions Factory Joint Stock Company"],
+                "address": ["Moscow"],
             },
         },
     )
@@ -51,8 +50,8 @@ def test_xref_potential_conflicts(
             "id": "b",
             "schema": "Company",
             "properties": {
-                "name": "The BBB Weapons and Munitions Factory Joint Stock Company",
-                "address": "Moscow",
+                "name": ["The BBB Weapons and Munitions Factory Joint Stock Company"],
+                "address": ["Moscow"],
             },
         },
     )
@@ -62,8 +61,8 @@ def test_xref_potential_conflicts(
             "id": "c",
             "schema": "Company",
             "properties": {
-                "name": "The AAA Weapons and Ammunition Factory Joint Stock Company",
-                "address": "Moscow",
+                "name": ["The AAA Weapons and Ammunition Factory Joint Stock Company"],
+                "address": ["Moscow"],
             },
         },
     )
@@ -75,15 +74,12 @@ def test_xref_potential_conflicts(
 
     resolver.decide("a", "b", Judgement.NEGATIVE, user="test")
 
-    with caplog.at_level(logging.INFO):
-        xref(
-            resolver,
-            store,
-            # Not the default, but easily gets the scores where this is a problem
-            algorithm=RegressionV1,
-            # Lower than usual just because we're testing with one dataset
-            negative_check_threshold=0.6
-        )
+    xref(
+        resolver,
+        store,
+        algorithm=RegressionV1,
+        conflicting_match_threshold=0.9,
+    )
     logs = {r.message for r in caplog.records}
 
     assert "Potential conflict: b <> a for c" in logs

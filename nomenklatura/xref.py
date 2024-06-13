@@ -1,20 +1,15 @@
 import logging
-from typing import List, Optional, Type, Dict, Set
+from typing import List, Optional, Type
 from followthemoney.schema import Schema
-from itertools import combinations
-from collections import defaultdict
-from pprint import pprint
-from rich.console import Console
-from rich.table import Table
-from rich import box
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.store import Store, View
+from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
+from nomenklatura.conflicting_match import ConflictingMatchReporter
 
 log = logging.getLogger(__name__)
 
@@ -31,59 +26,6 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
     )
 
 
-def print_name_sources(title: str, entity: CE) -> None:
-    tuples = []
-    sorted_tuples = []
-    for stmt in entity.statements:
-        if stmt.prop != "name":
-            continue
-        tuples.append((stmt.dataset, stmt.entity_id, stmt.prop, stmt.lang, stmt.value))
-    sorted_tuples.extend(sorted(tuples))
-    tuples = []
-    for stmt in entity.statements:
-        if stmt.prop != "alias":
-            continue
-        tuples.append((stmt.dataset, stmt.entity_id, stmt.prop, stmt.lang, stmt.value))
-    sorted_tuples.extend(sorted(tuples))
-
-    table = Table(title=title + "\n" + entity.id, box=box.SIMPLE, expand=True)
-    table.add_column("Dataset", style="cyan", max_width=20)
-    table.add_column("Entity ID", style="magenta", max_width=30)
-    table.add_column("Prop", style="blue")
-    table.add_column("Lang", style="green")
-    table.add_column("Name", style="yellow")
-
-    for dataset, entity_id, prop, lang, value in sorted_tuples:
-        table.add_row(dataset, entity_id, prop, lang, "• " + value)
-
-    console = Console()
-    console.print(table)
-
-
-def report_potential_conflicts(
-    view: View[DS, CE],
-    negative_check_matches: Dict[str, Set[str]],
-    resolver: Resolver[CE],
-) -> None:
-    # pprint(negative_check_matches)
-    for candidate_id, matches in negative_check_matches.items():
-        for left_id, right_id in combinations(matches, 2):
-            judgement = resolver.get_judgement(left_id, right_id)
-            if judgement == Judgement.NEGATIVE:
-                log.info(
-                    "Potential conflict: %s <> %s for %s",
-                    left_id,
-                    right_id,
-                    candidate_id,
-                )
-                left = view.get_entity(left_id)
-                right = view.get_entity(right_id)
-                candidate = view.get_entity(candidate_id)
-                print_name_sources("Candidate", candidate)
-                print_name_sources("Left side of negative decision", left)
-                print_name_sources("Right side of negative decision", right)
-
-
 def xref(
     resolver: Resolver[CE],
     store: Store[DS, CE],
@@ -92,7 +34,7 @@ def xref(
     external: bool = True,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
-    negative_check_threshold: Optional[float] = None,
+    conflicting_match_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     user: Optional[str] = None,
@@ -101,8 +43,12 @@ def xref(
     view = store.default_view(external=external)
     index = Index(view)
     index.build()
-    negative_check_threshold = negative_check_threshold or auto_threshold or 0.98
-    negative_check_matches: Dict[str, Set[str]] = defaultdict(set)
+    conflict_reporter = None
+    if conflicting_match_threshold is not None:
+        conflict_reporter = ConflictingMatchReporter(
+            view, resolver, conflicting_match_threshold
+        )
+
     try:
         scores: List[float] = []
         suggested = 0
@@ -132,9 +78,8 @@ def xref(
 
             scores.append(score)
 
-            if score > negative_check_threshold:
-                negative_check_matches[left_id.id].add(right_id.id)
-                negative_check_matches[right_id.id].add(left_id.id)
+            if conflict_reporter is not None:
+                conflict_reporter.check_match(result.score, left_id.id, right_id.id)
 
             # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:
@@ -159,7 +104,8 @@ def xref(
             suggested += 1
         _print_stats(idx, suggested, scores)
 
-        report_potential_conflicts(view, negative_check_matches, resolver)
+        if conflict_reporter is not None:
+            conflict_reporter.report()
 
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
