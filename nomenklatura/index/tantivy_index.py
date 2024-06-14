@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Tuple, Generator
 import logging
 import tantivy
 from collections import defaultdict
+from sys import intern
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -139,6 +140,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
             self.index_writer.commit()
             self.index.reload()
+            log.info("Finished building index.")
         self.searcher = self.index.searcher()
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
@@ -158,21 +160,39 @@ class TantivyIndex(BaseIndex[DS, CE]):
         similarity.
         """
         pairs: Dict[Pair, float] = defaultdict(lambda: 1.0)
+        interned_identifiers: Dict[Identifier, Identifier] = dict()
 
-        for entity in self.view.entities():
+        for idx, entity in enumerate(self.view.entities()):
+            if idx % 1000 == 0 and idx > 0:
+                log.info("Searched %d entities for matches.", idx)
+
             if not entity.schema.matchable or entity.id is None:
                 continue
 
             query = self.entity_query(entity)
             ident = Identifier(entity.id)
+
             for score, address in self.searcher.search(query, self.max_candidates).hits:
                 if score < self.threshold:
                     break
-                # Value of type "Document" is not indexable
+
                 doc = self.searcher.doc(address)
-                other_ident = Identifier(doc["entity_id"][0])  # type: ignore
-                if ident == other_ident:
+                other_id = doc.get_first("entity_id")
+                if other_id is None:
                     continue
+                other_id = intern(other_id)
+
+                if other_id == entity.id:
+                    continue
+
+                # Intern the identifiers to save memory
+                other_ident = Identifier(other_id)
+                if other_ident in interned_identifiers:
+                    other_ident = interned_identifiers[other_ident]
+                else:
+                    interned_identifiers[other_ident] = other_ident
+
                 pair = (max(ident, other_ident), min(ident, other_ident))
                 pairs[pair] *= score
+
         return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
