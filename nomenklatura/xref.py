@@ -1,16 +1,14 @@
 import logging
 from typing import List, Optional, Type
 from followthemoney.schema import Schema
-from tempfile import mkdtemp
 from pathlib import Path
-import shutil
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import TantivyIndex, Index, BaseIndex
+from nomenklatura.index import TantivyIndex, BaseIndex
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
@@ -34,6 +32,7 @@ def xref(
     store: Store[DS, CE],
     index_dir: Path,
     limit: int = 5000,
+    limit_factor: int = 10,
     scored: bool = True,
     external: bool = True,
     range: Optional[Schema] = None,
@@ -58,7 +57,8 @@ def xref(
         scores: List[float] = []
         suggested = 0
         idx = 0
-        for idx, ((left_id, right_id), score) in enumerate(index.pairs()):
+        pairs = index.pairs(max_pairs=limit * limit_factor)
+        for idx, ((left_id, right_id), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
 
