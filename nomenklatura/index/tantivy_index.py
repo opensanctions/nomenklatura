@@ -1,11 +1,10 @@
+import logging
 from followthemoney.types import registry
 from normality import WS
 from pathlib import Path
 from rigour.ids import StrictFormat
-from tantivy import Query, Occur
+from tantivy import Query, Occur, Index, SchemaBuilder, Document
 from typing import Any, Dict, List, Tuple, Generator
-import logging
-import tantivy
 from collections import defaultdict
 
 from nomenklatura.dataset import DS
@@ -39,7 +38,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.max_candidates = int(options.get("max_candidates", 100))
         self.threshold = float(options.get("threshold", 1.0))
 
-        schema_builder = tantivy.SchemaBuilder()
+        schema_builder = SchemaBuilder()
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
         schema_builder.add_text_field(registry.name.name)
         schema_builder.add_text_field(registry.email.name)
@@ -54,12 +53,11 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.index_dir = data_dir
         if self.index_dir.exists():
             self.exists = True
-            self.index = tantivy.Index.open(self.index_dir.as_posix())
+            self.index = Index.open(self.index_dir.as_posix())
         else:
             self.exists = False
             self.index_dir.mkdir(parents=True)
-            self.index = tantivy.Index(self.schema, path=self.index_dir.as_posix())
-            self.index_writer = self.index.writer(self.memory_budget)
+            self.index = Index(self.schema, path=self.index_dir.as_posix())
 
     @classmethod
     def entity_fields(cls, entity: CE) -> Generator[Tuple[str, str], None, None]:
@@ -120,34 +118,37 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 queries.append((Occur.Should, boost_query))
         return Query.boolean_query(queries)
 
-    def index_entity(self, entity: CE) -> None:
+    def index_entity(self, writer: Any, entity: CE) -> None:
         if not entity.schema.matchable or entity.id is None:
             return
-        document = tantivy.Document(entity_id=entity.id)
+        document = Document(entity_id=entity.id)
         for field, value in self.entity_fields(entity):
             document.add_text(field, value)
-        self.index_writer.add_document(document)
+        writer.add_document(document)
 
     def build(self) -> None:
         if self.exists:
             log.info("Using existing index at %s", self.index_dir)
         else:
             log.info("Building index from: %r...", self.view)
-
-            for entity in self.view.entities():
-                self.index_entity(entity)
-
-            self.index_writer.commit()
+            writer = self.index.writer(self.memory_budget)
+            writer.delete_all_documents()
+            for idx, entity in enumerate(self.view.entities()):
+                if idx > 0 and idx % 50_000 == 0:
+                    log.info("Indexing entity: %s..." % idx)
+                self.index_entity(writer, entity)
+            writer.commit()
             self.index.reload()
-        self.searcher = self.index.searcher()
+            log.info("Index is built.")
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         query = self.entity_query(entity)
         results = []
-        for score, address in self.searcher.search(query, self.max_candidates).hits:
+        searcher = self.index.searcher()
+        for score, address in searcher.search(query, self.max_candidates).hits:
             if score < self.threshold:
                 break
-            doc = self.searcher.doc(address)
+            doc = searcher.doc(address)
             # Value of type "Document" is not indexable
             results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
         return results
@@ -165,11 +166,12 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
             query = self.entity_query(entity)
             ident = Identifier(entity.id)
-            for score, address in self.searcher.search(query, self.max_candidates).hits:
+            searcher = self.index.searcher()
+            for score, address in searcher.search(query, self.max_candidates).hits:
                 if score < self.threshold:
                     break
                 # Value of type "Document" is not indexable
-                doc = self.searcher.doc(address)
+                doc = searcher.doc(address)
                 other_ident = Identifier(doc["entity_id"][0])  # type: ignore
                 if ident == other_ident:
                     continue
