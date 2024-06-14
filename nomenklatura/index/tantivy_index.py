@@ -52,10 +52,8 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
         self.index_dir = data_dir
         if self.index_dir.exists():
-            self.exists = True
             self.index = Index.open(self.index_dir.as_posix())
         else:
-            self.exists = False
             self.index_dir.mkdir(parents=True)
             self.index = Index(self.schema, path=self.index_dir.as_posix())
 
@@ -118,28 +116,22 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 queries.append((Occur.Should, boost_query))
         return Query.boolean_query(queries)
 
-    def index_entity(self, writer: Any, entity: CE) -> None:
-        if not entity.schema.matchable or entity.id is None:
-            return
-        document = Document(entity_id=entity.id)
-        for field, value in self.entity_fields(entity):
-            document.add_text(field, value)
-        writer.add_document(document)
-
     def build(self) -> None:
-        if self.exists:
-            log.info("Using existing index at %s", self.index_dir)
-        else:
-            log.info("Building index from: %r...", self.view)
-            writer = self.index.writer(self.memory_budget)
-            writer.delete_all_documents()
-            for idx, entity in enumerate(self.view.entities()):
-                if idx > 0 and idx % 50_000 == 0:
-                    log.info("Indexing entity: %s..." % idx)
-                self.index_entity(writer, entity)
-            writer.commit()
-            self.index.reload()
-            log.info("Index is built.")
+        log.info("Building index from: %r...", self.view)
+        writer = self.index.writer(self.memory_budget)
+        writer.delete_all_documents()
+        for idx, entity in enumerate(self.view.entities()):
+            if not entity.schema.matchable or entity.id is None:
+                continue
+            if idx > 0 and idx % 50_000 == 0:
+                log.info("Indexing entity: %s..." % idx)
+            document = Document(entity_id=entity.id)
+            for field, value in self.entity_fields(entity):
+                document.add_text(field, value)
+            writer.add_document(document)
+        writer.commit()
+        self.index.reload()
+        log.info("Index is built.")
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         query = self.entity_query(entity)

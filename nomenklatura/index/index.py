@@ -2,7 +2,7 @@ from pathlib import Path
 import pickle
 import logging
 from itertools import combinations
-from typing import Any, Dict, Generic, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 from followthemoney.types import registry
 
 from nomenklatura.util import PathLike
