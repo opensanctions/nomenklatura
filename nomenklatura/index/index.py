@@ -72,7 +72,7 @@ class Index(BaseIndex[DS, CE]):
         for field in self.fields.values():
             field.compute()
 
-    def pairs(self) -> List[Tuple[Pair, float]]:
+    def pairs(self, max_pairs: int = BaseIndex.MAX_PAIRS) -> List[Tuple[Pair, float]]:
         """A second method of doing xref: summing up the pairwise match value
         for all entities lineraly. This uses a lot of memory but is really
         fast."""
@@ -98,7 +98,7 @@ class Index(BaseIndex[DS, CE]):
                     score = (lw + rw) * boost
                     pairs[pair] += score
 
-        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
+        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)[:max_pairs]
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         """Match an entity against the index, returning a list of

@@ -1,11 +1,10 @@
 import logging
-from followthemoney.types import registry
 from normality import WS
 from pathlib import Path
 from rigour.ids import StrictFormat
-from tantivy import Query, Occur, Index, SchemaBuilder, Document
+from followthemoney.types import registry
 from typing import Any, Dict, List, Tuple, Generator
-from collections import defaultdict
+from tantivy import Query, Occur, Index, SchemaBuilder, Document
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -145,28 +144,39 @@ class TantivyIndex(BaseIndex[DS, CE]):
             results.append((Identifier.get(doc["entity_id"][0]), score))  # type: ignore
         return results
 
-    def pairs(self) -> List[Tuple[Pair, float]]:
+    def pairs(self, max_pairs: int = BaseIndex.MAX_PAIRS) -> List[Tuple[Pair, float]]:
         """
         Compare all matchable entities in the index and return pairs in order of
         similarity.
         """
-        pairs: Dict[Pair, float] = defaultdict(lambda: 1.0)
+        pairs: Dict[Tuple[str, str], float] = {}
+        threshold = float(self.threshold)
 
-        for entity in self.view.entities():
+        for idx, entity in enumerate(self.view.entities()):
             if not entity.schema.matchable or entity.id is None:
                 continue
+            if idx > 0 and idx % 50_000 == 0:
+                log.info("Generating blocking pairs: %s..." % idx)
 
             query = self.entity_query(entity)
-            ident = Identifier(entity.id)
             searcher = self.index.searcher()
             for score, address in searcher.search(query, self.max_candidates).hits:
-                if score < self.threshold:
+                if score < threshold:
                     break
                 # Value of type "Document" is not indexable
                 doc = searcher.doc(address)
-                other_ident = Identifier(doc["entity_id"][0])  # type: ignore
-                if ident == other_ident:
+                other_id: str = doc["entity_id"][0]  # type: ignore
+                if entity.id == other_id:
                     continue
-                pair = (max(ident, other_ident), min(ident, other_ident))
-                pairs[pair] *= score
-        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)
+                if (other_id, entity.id) in pairs:
+                    score = max(score, pairs.pop((other_id, entity.id)))
+                pairs[(entity.id, other_id)] = score
+
+                if len(pairs) > (max_pairs * 2):
+                    _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
+                    _pairs = _pairs[:max_pairs]
+                    threshold = _pairs[-1][1]
+                    pairs = dict(_pairs)
+        _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
+        _pairs = _pairs[:max_pairs]
+        return [(Identifier.pair(e, r), score) for (e, r), score in _pairs]
