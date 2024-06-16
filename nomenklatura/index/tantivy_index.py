@@ -140,11 +140,13 @@ class TantivyIndex(BaseIndex[DS, CE]):
     def entity_query(self, entity: CE) -> Query:
         schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
         queries: List[Tuple[Occur, Query]] = [(Occur.Must, schema_query)]
+        if entity.id is not None:
+            id_query = Query.term_query(self.schema, "entity_id", entity.id)
+            queries.append((Occur.MustNot, id_query))
         for field, value in self.entity_fields(entity):
             for query in self.field_queries(field, value):
                 boost_query = Query.boost_query(query, BOOSTS.get(field, 1.0))
                 queries.append((Occur.Should, boost_query))
-        print(queries)
         return Query.boolean_query(queries)
 
     def build(self) -> None:
