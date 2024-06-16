@@ -28,12 +28,12 @@ INDEX_IGNORE = (
     registry.topic,
 )
 FULL_TEXT = {
-    registry.text,
+    # registry.text,
     registry.string,
     registry.name,
     registry.address,
     registry.identifier,
-    registry.email,
+    # registry.email,
 }
 BOOSTS = {
     registry.name.name: 10.0,
@@ -51,14 +51,13 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self, view: View[DS, CE], data_dir: Path, options: Dict[str, Any] = {}
     ):
         self.view = view
-        self.memory_budget = int(options.get("memory_budget", 100) * 1024 * 1024)
-        self.max_candidates = int(options.get("max_candidates", 100))
+        self.memory_budget = int(options.get("memory_budget", 500) * 1024 * 1024)
+        self.max_candidates = int(options.get("max_candidates", 50))
         self.threshold = float(options.get("threshold", 1.0))
 
         schema_builder = SchemaBuilder()
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
-        schema_builder.add_text_field("schema", tokenizer_name="raw", stored=True)
-        schema_builder.add_text_field("schemata", tokenizer_name="raw", stored=True)
+        schema_builder.add_text_field("schemata", tokenizer_name="raw")
         schema_builder.add_text_field(registry.name.name)
         schema_builder.add_text_field(registry.email.name)
         schema_builder.add_text_field(registry.address.name)
@@ -160,11 +159,8 @@ class TantivyIndex(BaseIndex[DS, CE]):
             if idx > 0 and idx % 50_000 == 0:
                 log.info("Indexing entity: %s..." % idx)
             idx += 1
-            document = Document(
-                entity_id=entity.id,
-                schema=entity.schema.name,
-                schemata=[s.name for s in entity.schema.matchable_schemata],
-            )
+            schemata = [s.name for s in entity.schema.matchable_schemata]
+            document = Document(entity_id=entity.id, schemata=schemata)
             for field, value in self.entity_fields(entity):
                 document.add_text(field, value)
             writer.add_document(document)
@@ -193,16 +189,18 @@ class TantivyIndex(BaseIndex[DS, CE]):
         threshold = float(self.threshold)
 
         idx = 0
+        candidates = 0
         for entity in self.view.entities():
             if not entity.schema.matchable or entity.id is None:
                 continue
-            if idx > 0 and idx % 50_000 == 0:
-                log.info("Generating blocking pairs: %s..." % idx)
+            if idx > 0 and idx % 10_000 == 0:
+                log.info("Blocking pairs: %s (%s candidates)..." % (idx, candidates))
             idx += 1
 
             query = self.entity_query(entity)
             searcher = self.index.searcher()
             for score, address in searcher.search(query, self.max_candidates).hits:
+                candidates += 1
                 if score < threshold:
                     break
                 # Value of type "Document" is not indexable
@@ -214,7 +212,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
                     score = max(score, pairs.pop((other_id, entity.id)))
                 pairs[(entity.id, other_id)] = score
 
-                if len(pairs) > (max_pairs * 2):
+                if len(pairs) > (max_pairs * 5):
                     _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
                     _pairs = _pairs[:max_pairs]
                     threshold = _pairs[-1][1]
@@ -222,4 +220,5 @@ class TantivyIndex(BaseIndex[DS, CE]):
                     pairs = dict(_pairs)
         _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
         _pairs = _pairs[:max_pairs]
+        log.info("Blocked %s entities, picked from %s candidates." % (idx, candidates))
         return [(Identifier.pair(e, r), score) for (e, r), score in _pairs]
