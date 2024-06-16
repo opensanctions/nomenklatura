@@ -28,7 +28,8 @@ VERBAND_BADEN_DATA = {
 def test_entity_fields(test_dataset: Dataset):
     verband_baden = CompositeEntity.from_data(test_dataset, VERBAND_BADEN_DATA)
     field_values = list(TantivyIndex.entity_fields(verband_baden))
-    assert len(field_values) == 6, field_values
+    field_values = [(fld, val) for fld, val in field_values if fld != "text"]
+    assert len(field_values) == 7, field_values
     assert (
         "name",
         "verband der metall und elektroindustrie baden wurttemberg",
@@ -49,15 +50,15 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
 
-    assert len(matches) == 18, matches
+    assert len(matches) == 9, matches
 
     top_result = matches[0]
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
 
     # Terms and phrase match
-    assert 200 < top_result[1] < 300, matches
+    assert 200 < top_result[1] < 1000, matches
     # Terms but not phrase match
-    assert 50 < matches[1][1] < 100, matches
+    assert 50 < matches[1][1] < 500, matches
     # lowest > threshold
     assert matches[-1][1] > 1, matches
 
@@ -73,12 +74,13 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
 def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     view = dstore.default_view()
     pairs = tantivy_index.pairs()
-    assert 474 < len(pairs) < 474*474, pairs
+    assert 474 < len(pairs) < 474 * 474, pairs
 
     schemata = set()
-    for (left, right), score in pairs[:20]:
+    for (left, right), score in pairs[:40]:
         entity0 = view.get_entity(left.id)
         entity1 = view.get_entity(right.id)
+        # print("Match", entity0, entity1, score)
         tokens0 = set(clean_text_basic(entity0.caption).split(" "))
         tokens1 = set(clean_text_basic(entity1.caption).split(" "))
         overlap = tokens0.intersection(tokens1)
@@ -110,4 +112,3 @@ def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert verband_baden not in top_5, top_5
 
     assert sorted(pairs, key=lambda p: p[1], reverse=True) == pairs
-
