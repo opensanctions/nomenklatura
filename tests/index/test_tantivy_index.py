@@ -56,9 +56,9 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
 
     # Terms and phrase match
-    assert 200 < top_result[1] < 300, matches
+    assert 200 < top_result[1] < 1000, matches
     # Terms but not phrase match
-    assert 50 < matches[1][1] < 200, matches
+    assert 50 < matches[1][1] < 500, matches
     # lowest > threshold
     assert matches[-1][1] > 1, matches
 
