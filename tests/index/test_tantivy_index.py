@@ -50,7 +50,7 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
 
-    assert len(matches) == 18, matches
+    assert len(matches) == 9, matches
 
     top_result = matches[0]
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result

@@ -57,6 +57,8 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
         schema_builder = SchemaBuilder()
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
+        schema_builder.add_text_field("schema", tokenizer_name="raw", stored=True)
+        schema_builder.add_text_field("schemata", tokenizer_name="raw", stored=True)
         schema_builder.add_text_field(registry.name.name)
         schema_builder.add_text_field(registry.email.name)
         schema_builder.add_text_field(registry.address.name)
@@ -83,19 +85,19 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 continue
 
             if type in FULL_TEXT:
-                yield registry.text.name, value
+                yield registry.text.name, value.lower()
+
+            if type == registry.name:
+                yield type.name, value.lower()
+                norm = fingerprint_name(value)
+                if norm is not None:
+                    yield type.name, norm
+                continue
 
             if type == registry.date and prop.matchable:
                 if len(value) > 4:
                     yield type.name, value[:4]
                 yield type.name, value[:10]
-                continue
-
-            if type == registry.name:
-                yield type.name, value
-                norm = fingerprint_name(value)
-                if norm is not None:
-                    yield type.name, norm
                 continue
 
             if type == registry.identifier and prop.matchable:
@@ -104,15 +106,18 @@ class TantivyIndex(BaseIndex[DS, CE]):
                     yield type.name, clean_id
                 continue
 
+            if type == registry.address and prop.matchable:
+                cleaned = clean_text_basic(value)
+                if cleaned is not None:
+                    yield type.name, cleaned
+                continue
+
             if prop.matchable and type in (
-                registry.address,
                 registry.phone,
                 registry.email,
                 registry.country,
             ):
-                cleaned = clean_text_basic(value[:100])
-                if cleaned is not None:
-                    yield type.name, cleaned
+                yield type.name, value
 
     def field_queries(self, field: str, value: str) -> Generator[Query, None, None]:
         words = value.split(WS)
@@ -133,11 +138,13 @@ class TantivyIndex(BaseIndex[DS, CE]):
         yield Query.term_query(self.schema, field, value)
 
     def entity_query(self, entity: CE) -> Query:
-        queries = []
+        schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
+        queries: List[Tuple[Occur, Query]] = [(Occur.Must, schema_query)]
         for field, value in self.entity_fields(entity):
             for query in self.field_queries(field, value):
                 boost_query = Query.boost_query(query, BOOSTS.get(field, 1.0))
                 queries.append((Occur.Should, boost_query))
+        print(queries)
         return Query.boolean_query(queries)
 
     def build(self) -> None:
@@ -151,7 +158,11 @@ class TantivyIndex(BaseIndex[DS, CE]):
             if idx > 0 and idx % 50_000 == 0:
                 log.info("Indexing entity: %s..." % idx)
             idx += 1
-            document = Document(entity_id=entity.id)
+            document = Document(
+                entity_id=entity.id,
+                schema=entity.schema.name,
+                schemata=[s.name for s in entity.schema.matchable_schemata],
+            )
             for field, value in self.entity_fields(entity):
                 document.add_text(field, value)
             writer.add_document(document)
