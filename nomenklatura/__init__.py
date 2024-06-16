@@ -5,7 +5,7 @@ from nomenklatura.store import Store, View
 from nomenklatura.index import Index
 from nomenklatura.index import TantivyIndex
 
-__version__ = "3.12.0"
+__version__ = "3.12.1"
 __all__ = [
     "Dataset",
     "CompositeEntity",
