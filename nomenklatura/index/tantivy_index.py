@@ -15,6 +15,7 @@ from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
 
+
 INDEX_IGNORE = (
     registry.entity,
     registry.url,
@@ -56,6 +57,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.threshold = float(options.get("threshold", 1.0))
 
         schema_builder = SchemaBuilder()
+        # NB: If you change the schema, make sure to delete the index directory
         schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
         schema_builder.add_text_field("schemata", tokenizer_name="raw")
         schema_builder.add_text_field(registry.name.name)
@@ -139,9 +141,6 @@ class TantivyIndex(BaseIndex[DS, CE]):
     def entity_query(self, entity: CE) -> Query:
         schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
         queries: List[Tuple[Occur, Query]] = [(Occur.Must, schema_query)]
-        if entity.id is not None:
-            id_query = Query.term_query(self.schema, "entity_id", entity.id)
-            queries.append((Occur.MustNot, id_query))
         for field, value in self.entity_fields(entity):
             for query in self.field_queries(field, value):
                 boost_query = Query.boost_query(query, BOOSTS.get(field, 1.0))
