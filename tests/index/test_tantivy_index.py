@@ -1,8 +1,11 @@
+from pathlib import Path
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.index.tantivy_index import TantivyIndex
-from nomenklatura.resolver.identifier import Identifier
-from nomenklatura.store import SimpleMemoryStore
+from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Identifier
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import SimpleMemoryStore, load_entity_file_store
 from nomenklatura.util import clean_text_basic
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -44,19 +47,31 @@ def test_entity_fields(test_dataset: Dataset):
     assert ("date", "2020-01-01") in field_values, field_values
 
 
-def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
-    """Match an entity that isn't itself in the index"""
+def test_match_score(dresolver: Resolver, index_path: Path, dstore: SimpleMemoryStore):
+    """
+    Match an entity that isn't itself in the index but has been positively matched
+    to one in the index.
+    """
     dx = Dataset.make({"name": "test", "title": "Test"})
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
-    matches = tantivy_index.match(entity)
+    # Decision from an earlier dedupe session
+    merged_ident = dresolver.decide(VERBAND_BADEN_ID, entity.id, Judgement.POSITIVE)
+    # Cheat to have the store know about VERBAND_BADEN_ID's canonical ID
+    dstore.update(merged_ident)
+    index = TantivyIndex(dstore.default_view(), index_path)
+    index.build()
+
+    # No query with the entity which now also has the canonical ID
+    entity.id = merged_ident.id
+    matches = index.match(entity)
 
     assert len(matches) == 9, matches
 
     top_result = matches[0]
-    assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
+    assert top_result[0] == merged_ident, top_result
 
     # Terms and phrase match
-    assert 200 < top_result[1] < 1000, matches
+    assert 500 < top_result[1] < 1000, matches
     # Terms but not phrase match
     assert 50 < matches[1][1] < 500, matches
     # lowest > threshold

@@ -38,12 +38,12 @@ def catalog_data(catalog_path):
         return yaml.safe_load(fh)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def donations_path() -> Path:
     return FIXTURES_PATH.joinpath("donations.ijson")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def donations_json(donations_path):
     data = []
     with open(donations_path, "r") as fh:
@@ -52,17 +52,17 @@ def donations_json(donations_path):
     return data
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def dresolver():
     return Resolver[CompositeEntity]()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def dstore(donations_path, dresolver) -> SimpleMemoryStore:
     return load_entity_file_store(donations_path, dresolver)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
 
