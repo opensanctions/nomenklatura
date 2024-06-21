@@ -1,7 +1,7 @@
 import yaml
 import logging
 from functools import cached_property
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
 
@@ -68,7 +68,7 @@ class Dataset(Named):
                 continue
             if child == self:
                 continue
-            children.add(cast(DS, child))
+            children.add(child)  # type: ignore
         return children
 
     @cached_property

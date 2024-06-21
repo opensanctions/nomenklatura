@@ -12,6 +12,7 @@ class DataPublisher(Named):
     def __init__(self, data: Dict[str, Any]):
         name = type_require(registry.string, data.get("name"))
         super().__init__(name)
+        self.name_en = type_require(registry.string, data.get("name_en"))
         self.url = type_require(registry.url, data.get("url"))
         self.acronym = type_check(registry.string, data.get("acronym"))
         self.description = type_check(registry.string, data.get("description"))
@@ -29,6 +30,7 @@ class DataPublisher(Named):
     def to_dict(self) -> Dict[str, Any]:
         data = {
             "name": self.name,
+            "name_en": self.name_en,
             "acronym": self.acronym,
             "url": self.url,
             "description": self.description,
