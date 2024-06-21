@@ -13,10 +13,12 @@ class DataPublisher(Named):
         name = type_require(registry.string, data.get("name"))
         super().__init__(name)
         self.url = type_require(registry.url, data.get("url"))
+        self.acronym = type_check(registry.string, data.get("acronym"))
         self.description = type_check(registry.string, data.get("description"))
         self.country = type_check(registry.country, data.get("country"))
         self.official = as_bool(data.get("official", False))
         self.logo_url = type_check(registry.url, data.get("logo_url"))
+        self.issuer_id = type_check(registry.string, data.get("issuer_id"))
 
     @property
     def country_label(self) -> Optional[str]:
@@ -27,11 +29,13 @@ class DataPublisher(Named):
     def to_dict(self) -> Dict[str, Any]:
         data = {
             "name": self.name,
+            "acronym": self.acronym,
             "url": self.url,
             "description": self.description,
             "country": self.country,
             "country_label": self.country_label,
             "official": self.official,
             "logo_url": self.logo_url,
+            "issuer_id": self.issuer_id,
         }
         return cleanup(data)

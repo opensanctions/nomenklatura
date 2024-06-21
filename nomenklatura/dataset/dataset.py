@@ -1,7 +1,8 @@
 import yaml
 import logging
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, TypeVar
+from typing import TYPE_CHECKING, cast
+from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
 
 from nomenklatura.dataset.coverage import DataCoverage
@@ -67,11 +68,11 @@ class Dataset(Named):
                 continue
             if child == self:
                 continue
-            children.add(child)
+            children.add(cast(DS, child))
         return children
 
     @cached_property
-    def is_collection(self: DS) -> bool:
+    def is_collection(self: "Dataset") -> bool:
         return len(self._children) > 0
 
     @property
@@ -82,7 +83,7 @@ class Dataset(Named):
         return current
 
     @property
-    def dataset_names(self: DS) -> List[str]:
+    def dataset_names(self: "Dataset") -> List[str]:
         return [d.name for d in self.datasets]
 
     @property
@@ -91,7 +92,7 @@ class Dataset(Named):
         return set([d for d in self.datasets if not d.is_collection])
 
     @property
-    def leaf_names(self: DS) -> Set[str]:
+    def leaf_names(self: "Dataset") -> Set[str]:
         return {d.name for d in self.leaves}
 
     def __eq__(self, other: Any) -> bool:
@@ -112,7 +113,7 @@ class Dataset(Named):
     def __repr__(self) -> str:
         return f"<Dataset({self.name})>"  # pragma: no cover
 
-    def to_dict(self: DS) -> Dict[str, Any]:
+    def to_dict(self: "Dataset") -> Dict[str, Any]:
         data: Dict[str, Any] = {
             "name": self.name,
             "title": self.title,
