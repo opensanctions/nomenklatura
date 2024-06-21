@@ -68,7 +68,7 @@ class Dataset(Named):
                 continue
             if child == self:
                 continue
-            children.add(child)  # type: ignore
+            children.add(child)
         return children
 
     @cached_property
