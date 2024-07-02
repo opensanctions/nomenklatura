@@ -8,7 +8,7 @@ from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import TantivyIndex, BaseIndex
+from nomenklatura.index import get_index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
@@ -40,13 +40,12 @@ def xref(
     conflicting_match_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
+    index_type: Optional[str] = None,
     user: Optional[str] = None,
-    index_class: Type[BaseIndex[DS, CE]] = TantivyIndex,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
     view = store.default_view(external=external)
-    index = index_class(view, index_dir)
-    index.build()
+    index = get_index(view, index_dir, index_type)
     conflict_reporter = None
     if conflicting_match_threshold is not None:
         conflict_reporter = ConflictingMatchReporter(

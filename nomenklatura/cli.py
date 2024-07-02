@@ -4,13 +4,13 @@ import yaml
 import click
 import logging
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional, Tuple, Type
+from typing import Generator, Iterable, List, Optional, Tuple
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.index import Index, TantivyIndex, BaseIndex
+from nomenklatura.index import Index, INDEX_TYPES
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
@@ -63,12 +63,7 @@ def cli() -> None:
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
-@click.option(
-    "-i",
-    "--index",
-    type=click.Choice([Index.name, TantivyIndex.name]),
-    default=Index.name,
-)
+@click.option("-i", "--index", type=click.Choice(INDEX_TYPES))
 @click.option(
     "-c",
     "--clear",
@@ -99,13 +94,6 @@ def xref_file(
         log.info("Clearing index: %s", index_dir)
         shutil.rmtree(index_dir, ignore_errors=True)
 
-    if index == TantivyIndex.name:
-        index_class: Type[BaseIndex[Dataset, Entity]] = TantivyIndex
-    elif index == Index.name:
-        index_class = Index
-    else:
-        raise ValueError("Invalid index: %s" % index)
-
     run_xref(
         resolver_,
         store,
@@ -114,7 +102,7 @@ def xref_file(
         algorithm=algorithm_type,
         scored=scored,
         limit=limit,
-        index_class=index_class,
+        index_type=index,
     )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)
