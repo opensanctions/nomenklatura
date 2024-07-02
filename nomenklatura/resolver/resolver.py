@@ -262,18 +262,39 @@ class Resolver(Linker[CE]):
                 )
 
     @classmethod
-    def load(cls, path: Path) -> "Resolver[CE]":
-        resolver = cls(path=path)
+    def _load_edges(cls, path: Path) -> Generator[Edge, None, None]:
         if not path.exists():
-            return resolver
+            return
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
                 if not line:
                     break
-                edge = Edge.from_line(line)
-                resolver._register(edge)
+                yield Edge.from_line(line)
+
+    @classmethod
+    def load(cls, path: Path) -> "Resolver[CE]":
+        resolver = cls(path=path)
+        for edge in cls._load_edges(path):
+            resolver._register(edge)
         return resolver
+
+    @classmethod
+    def load_linker(cls, path: Path) -> Linker[CE]:
+        """Load a resolver file and return a linker object, without ever instantiating
+        a full resolver object."""
+        clusters: Dict[Identifier, Set[Identifier]] = {}
+        for edge in cls._load_edges(path):
+            if edge.judgement != Judgement.POSITIVE:
+                continue
+            cluster = clusters.get(edge.source, set([edge.source]))
+            if edge.target in cluster:
+                cluster.update(clusters[edge.target])
+            else:
+                cluster.add(edge.target)
+            for node in cluster:
+                clusters[node] = cluster
+        return Linker(clusters)
 
     def __repr__(self) -> str:
         path = self.path.name if self.path is not None else ":memory:"
