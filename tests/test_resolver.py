@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver, Linker, Identifier
+from nomenklatura.resolver import Resolver, Identifier
 from nomenklatura.statement import Statement
 
 
@@ -87,14 +87,22 @@ def test_resolver_store():
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
         resolver = Resolver(path)
-        resolver.decide("a1", "a2", Judgement.POSITIVE)
+        can = resolver.decide("a1", "a2", Judgement.POSITIVE)
         resolver.decide("a2", "b2", Judgement.NEGATIVE)
         resolver.suggest("a1", "c1", 7.0)
         resolver.save()
 
         other = Resolver.load(path)
         assert len(other.edges) == len(resolver.edges)
-        assert resolver.get_edge("a1", "c1").score == 7.0
+        edge = resolver.get_edge("a1", "c1")
+        assert edge is not None, edge
+        assert edge.score == 7.0
+
+        linker = Resolver.load_linker(path)
+        assert len(linker._entities) == 3
+        assert linker.get_canonical("a1") == can.id
+        assert linker.get_canonical("b2") == "b2"
+        assert linker.get_canonical("x1") == "x1"
 
 
 def test_resolver_candidates():
