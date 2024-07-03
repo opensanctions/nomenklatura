@@ -1,3 +1,4 @@
+import logging
 import getpass
 from pathlib import Path
 from datetime import datetime
@@ -12,6 +13,8 @@ from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.linker import Linker
 from nomenklatura.util import PathLike
+
+log = logging.getLogger(__name__)
 
 
 class Resolver(Linker[CE]):
@@ -292,6 +295,7 @@ class Resolver(Linker[CE]):
             cluster.add(edge.target)
             for node in cluster:
                 clusters[node] = cluster
+        log.info("Loaded %s clusters from: %s", len(clusters), path.as_posix())
         return Linker(clusters)
 
     def __repr__(self) -> str:
