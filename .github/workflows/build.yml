@@ -11,7 +11,6 @@ jobs:
     strategy:
       matrix:
         python:
-          # - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
@@ -38,7 +37,8 @@ jobs:
         run: |
           python setup.py sdist bdist_wheel
       - name: Publish a Python distribution to PyPI
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && matrix.python == '3.12'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
+          verbose: true
