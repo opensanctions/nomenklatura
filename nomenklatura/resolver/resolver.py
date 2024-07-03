@@ -287,11 +287,9 @@ class Resolver(Linker[CE]):
         for edge in cls._load_edges(path):
             if edge.judgement != Judgement.POSITIVE:
                 continue
-            cluster = clusters.get(edge.source, set([edge.source]))
-            if edge.target in cluster:
-                cluster.update(clusters[edge.target])
-            else:
-                cluster.add(edge.target)
+            cluster = clusters.get(edge.target, set())
+            cluster.update(clusters.get(edge.source, [edge.source]))
+            cluster.add(edge.target)
             for node in cluster:
                 clusters[node] = cluster
         return Linker(clusters)

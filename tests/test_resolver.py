@@ -98,9 +98,16 @@ def test_resolver_store():
         assert edge is not None, edge
         assert edge.score == 7.0
 
+        resolver.decide("a1", "Q123", Judgement.POSITIVE)
+        resolver.save()
+
         linker = Resolver.load_linker(path)
-        assert len(linker._entities) == 3
-        assert linker.get_canonical("a1") == can.id
+        assert len(linker._entities) == 4
+        assert linker.get_canonical("a1") == "Q123"
+        assert "a1" in linker.get_referents("Q123")
+        assert "a2" in linker.get_referents("Q123")
+        assert can.id in linker.get_referents("Q123")
+        assert "Q123" not in linker.get_referents("Q123")
         assert linker.get_canonical("b2") == "b2"
         assert linker.get_canonical("x1") == "x1"
 
