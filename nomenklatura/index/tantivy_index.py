@@ -72,9 +72,11 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.index_dir = data_dir
         if self.index_dir.exists():
             self.index = Index.open(self.index_dir.as_posix())
+            self.build_index = False
         else:
             self.index_dir.mkdir(parents=True)
             self.index = Index(self.schema, path=self.index_dir.as_posix())
+            self.build_index = True
 
     @classmethod
     def entity_fields(cls, entity: CE) -> Generator[Tuple[str, str], None, None]:
@@ -149,6 +151,10 @@ class TantivyIndex(BaseIndex[DS, CE]):
         return Query.boolean_query(queries)
 
     def build(self) -> None:
+        if not self.build_index:
+            log.info("Using existing index at %s", self.index_dir)
+            return
+
         log.info("Building index from: %r...", self.view)
         writer = self.index.writer(self.memory_budget)
         writer.delete_all_documents()
