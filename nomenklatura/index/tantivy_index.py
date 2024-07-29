@@ -35,12 +35,13 @@ FULL_TEXT = {
     registry.identifier,
     # registry.email,
 }
+BOOST_NAME_PHRASE = 4.0
 BOOSTS = {
-    registry.name.name: 10.0,
+    registry.name.name: 1.0,
     registry.phone.name: 3.0,
     registry.email.name: 3.0,
     registry.address.name: 2.5,
-    registry.identifier.name: 3.0,
+    registry.identifier.name: 4.0,
 }
 
 
@@ -125,16 +126,25 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 slop = 1
                 # Argument 3 to "phrase_query" of "Query" has incompatible
                 # type "list[str]"; expected "list[str | tuple[int, str]]"
-                yield Query.phrase_query(self.schema, field, words, slop)  # type: ignore
+                yield Query.boost_query(
+                    Query.phrase_query(self.schema, field, words, slop),  # type: ignore
+                    BOOST_NAME_PHRASE,
+                )
 
         if field in {registry.address.name, registry.name.name, registry.text.name}:
             # TermSetQuery doesn't seem to behave so just use multiple term queries
             # as the parser does.
             for word in words:
-                yield Query.term_query(self.schema, field, word)
+                yield Query.boost_query(
+                    Query.term_query(self.schema, field, word),
+                    BOOSTS.get(field, 1.0),
+                )
             return
 
-        yield Query.term_query(self.schema, field, value)
+        yield Query.boost_query(
+            Query.term_query(self.schema, field, value),
+            BOOSTS.get(field, 1.0),
+        )
 
     def entity_query(self, entity: CE) -> Query:
         schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
@@ -144,8 +154,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
             queries.append((Occur.MustNot, id_query))
         for field, value in self.entity_fields(entity):
             for query in self.field_queries(field, value):
-                boost_query = Query.boost_query(query, BOOSTS.get(field, 1.0))
-                queries.append((Occur.Should, boost_query))
+                queries.append((Occur.Should, query))
         return Query.boolean_query(queries)
 
     def build(self) -> None:
@@ -170,6 +179,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         query = self.entity_query(entity)
+
         results = []
         searcher = self.index.searcher()
         for score, address in searcher.search(query, self.max_candidates).hits:
