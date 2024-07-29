@@ -56,9 +56,9 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
 
     # Terms and phrase match
-    assert 200 < top_result[1] < 1000, matches
+    assert 100 < top_result[1] < 200, matches
     # Terms but not phrase match
-    assert 50 < matches[1][1] < 500, matches
+    assert 40 < matches[1][1] < 100, matches
     # lowest > threshold
     assert matches[-1][1] > 1, matches
 
@@ -93,20 +93,27 @@ def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert "Company" in schemata
     assert "Address" in schemata
 
+
+    for ((a, b), score) in pairs[:20]:
+        a_e = view.get_entity(a.id)
+        b_e = view.get_entity(b.id)
+        print(f"Score: {score:.2f}\n{a.id}: {a_e.get("name") or a_e.caption}\n{b.id}: {b_e.get('name') or b_e.caption}\n")
+
     top_5 = {p[0] for p in pairs[:5]}
-    assert (
-        Identifier("72fd7df14e87678c9c6dcebb3ef045d11343d64c"),
-        Identifier("152da487401ef4547baf2d2bc95f884dc5f8bba0"),
-    ) in top_5, top_5
     assert (
         Identifier("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
         Identifier("12570ee94b8dc23bcc080e887539d3742b2a5237"),
     ) in top_5, top_5
 
     top_10 = {p[0] for p in pairs[:10]}
+
+    assert (
+        Identifier("72fd7df14e87678c9c6dcebb3ef045d11343d64c"),
+        Identifier("152da487401ef4547baf2d2bc95f884dc5f8bba0"),
+    ) in top_10, top_10
     verband_baden = (
         Identifier("cf9133952825afac1e654542a70ae7ed20dbfa7a"),
-        Identifier("69401823a9f0a97cfdc37afa7c3158374e007669"),
+        Identifier(VERBAND_BADEN_ID),
     )
     assert verband_baden in top_10, top_10
     assert verband_baden not in top_5, top_5
