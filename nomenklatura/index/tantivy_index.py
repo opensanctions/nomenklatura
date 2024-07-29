@@ -5,6 +5,7 @@ from rigour.ids import StrictFormat
 from followthemoney.types import registry
 from typing import Any, Dict, List, Tuple, Generator
 from tantivy import Query, Occur, Index, SchemaBuilder, Document
+import math
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -37,7 +38,7 @@ FULL_TEXT = {
 }
 BOOST_NAME_PHRASE = 4.0
 BOOSTS = {
-    registry.name.name: 1.0,
+    registry.name.name: 2.0,
     registry.phone.name: 3.0,
     registry.email.name: 3.0,
     registry.address.name: 2.5,
@@ -121,9 +122,10 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
     def field_queries(self, field: str, value: str) -> Generator[Query, None, None]:
         words = value.split(WS)
+        word_count = len(words)
         if field == registry.name.name:
-            if len(words) > 2:
-                slop = 1
+            if word_count >= 2:
+                slop = 2 * math.ceil(math.log(word_count))
                 # Argument 3 to "phrase_query" of "Query" has incompatible
                 # type "list[str]"; expected "list[str | tuple[int, str]]"
                 yield Query.boost_query(
