@@ -29,19 +29,18 @@ def test_entity_fields(test_dataset: Dataset):
     verband_baden = CompositeEntity.from_data(test_dataset, VERBAND_BADEN_DATA)
     field_values = list(TantivyIndex.entity_fields(verband_baden))
     field_values = [(fld, val) for fld, val in field_values if fld != "text"]
-    assert len(field_values) == 7, field_values
+    assert len(field_values) == 5, field_values
     assert (
         "name",
-        "verband der metall und elektroindustrie baden wurttemberg",
+        {"verband der metall und elektroindustrie baden wurttemberg"},
     ) in field_values, field_values
-    assert ("country", "de") in field_values, field_values
+    assert ("country", {"de"}) in field_values, field_values
     assert (
         "address",
-        "lautenschlagerstr 20  70173 stuttgart",
+        {"lautenschlagerstr 20  70173 stuttgart"},
     ) in field_values, field_values
-    assert ("identifier", "AA123456789") in field_values, field_values
-    assert ("date", "2020") in field_values, field_values
-    assert ("date", "2020-01-01") in field_values, field_values
+    assert ("identifier", {"AA123456789"}) in field_values, field_values
+    assert ("date", {"2020", "2020-01-01"}) in field_values, field_values
 
 
 def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
@@ -49,6 +48,10 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     dx = Dataset.make({"name": "test", "title": "Test"})
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
+    view = dstore.default_view()
+    for ident, score in matches:
+        match = view.get_entity(ident.id)
+        print(f"Score: {score:.2f}\n{ident.id}: {match.caption}\n{match.to_dict()}\n")
 
     assert len(matches) == 9, matches
 
@@ -56,9 +59,9 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
 
     # Terms and phrase match
-    assert 100 < top_result[1] < 200, matches
+    assert 75 < top_result[1] < 125, matches
     # Terms but not phrase match
-    assert 40 < matches[1][1] < 100, matches
+    assert 25 < matches[1][1] < 75, matches
     # lowest > threshold
     assert matches[-1][1] > 1, matches
 
@@ -93,29 +96,37 @@ def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert "Company" in schemata
     assert "Address" in schemata
 
-
-    for ((a, b), score) in pairs[:20]:
+    for rank, ((a, b), score) in enumerate(pairs[:40]):
         a_e = view.get_entity(a.id)
         b_e = view.get_entity(b.id)
-        print(f"Score: {score:.2f}\n{a.id}: {a_e.get("name") or a_e.caption}\n{b.id}: {b_e.get('name') or b_e.caption}\n")
+        print(
+            f"Rank: {rank} Score: {score:.2f}\n{a.id}: {a_e.get("name") or a_e.caption}\n{b.id}: {b_e.get('name') or b_e.caption}\n"
+        )
 
     top_5 = {p[0] for p in pairs[:5]}
+
+    # These score higher than VME, despite having 3 and 4 matching tokens
+    # similarly to VME, because their matching tokens are rarer in the corpus
+    # than VME's.
+
+    # Bayerische Motorenwerke (BMW) AG
     assert (
         Identifier("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
         Identifier("12570ee94b8dc23bcc080e887539d3742b2a5237"),
     ) in top_5, top_5
-
-    top_10 = {p[0] for p in pairs[:10]}
-
+    # Herr Prof. Dr. Schnabel
     assert (
         Identifier("72fd7df14e87678c9c6dcebb3ef045d11343d64c"),
         Identifier("152da487401ef4547baf2d2bc95f884dc5f8bba0"),
-    ) in top_10, top_10
+    ) in top_5, top_5
+
+    top_20 = {p[0] for p in pairs[:20]}
+    # Verband der Metallindustrie Baden-Württemberg
     verband_baden = (
         Identifier("cf9133952825afac1e654542a70ae7ed20dbfa7a"),
         Identifier(VERBAND_BADEN_ID),
     )
-    assert verband_baden in top_10, top_10
+    assert verband_baden in top_20, top_20
     assert verband_baden not in top_5, top_5
 
     assert sorted(pairs, key=lambda p: p[1], reverse=True) == pairs
