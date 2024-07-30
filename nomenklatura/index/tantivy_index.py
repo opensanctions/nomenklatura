@@ -38,11 +38,11 @@ FULL_TEXT = {
 }
 BOOST_NAME_PHRASE = 4.0
 BOOSTS = {
-    registry.name.name: 2.0,
+    registry.name.name: 1.0,
     registry.phone.name: 3.0,
     registry.email.name: 3.0,
     registry.address.name: 2.5,
-    registry.identifier.name: 4.0,
+    registry.identifier.name: 15.0,
 }
 
 
@@ -128,11 +128,13 @@ class TantivyIndex(BaseIndex[DS, CE]):
         if field == registry.name.name:
             if word_count >= 2:
                 slop = 2 * math.ceil(math.log(word_count))
+                factor = 1 + (word_count / 4)
+                name_phrase_boost = BOOST_NAME_PHRASE * factor
                 # Argument 3 to "phrase_query" of "Query" has incompatible
                 # type "list[str]"; expected "list[str | tuple[int, str]]"
                 yield Query.boost_query(
                     Query.phrase_query(self.schema, field, words, slop),  # type: ignore
-                    BOOST_NAME_PHRASE,
+                    name_phrase_boost,
                 )
 
         if field in {registry.address.name, registry.name.name, registry.text.name}:
