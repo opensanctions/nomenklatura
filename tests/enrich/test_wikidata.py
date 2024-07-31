@@ -3,8 +3,7 @@ import requests_mock
 from normality import slugify
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
-from nomenklatura.enrich import get_enricher
-from nomenklatura.enrich.common import Enricher
+from nomenklatura.enrich import make_enricher, Enricher
 from nomenklatura.enrich.wikidata import clean_name
 from nomenklatura.enrich.wikidata.lang import LangText
 from nomenklatura.entity import CompositeEntity
@@ -37,12 +36,9 @@ def wd_read_response(request, context):
         return json.load(fh)
 
 
-def load_enricher():
-    enricher_cls = get_enricher(PATH)
-    assert enricher_cls is not None, PATH
-    assert issubclass(enricher_cls, Enricher)
+def load_enricher() -> Enricher[Dataset]:
     cache = Cache.make_default(dataset)
-    return enricher_cls(dataset, cache, {})
+    return make_enricher(dataset, cache, {"type": PATH})
 
 
 def test_wikidata_match():

@@ -1,8 +1,7 @@
 import requests_mock
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
-from nomenklatura.enrich import get_enricher, enrich, match
-from nomenklatura.enrich.common import Enricher
+from nomenklatura.enrich import make_enricher, enrich, match, Enricher
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -64,12 +63,9 @@ RESPONSE = [
 ]
 
 
-def load_enricher():
-    enricher_cls = get_enricher(PATH)
-    assert enricher_cls is not None, PATH
-    assert issubclass(enricher_cls, Enricher)
+def load_enricher() -> Enricher[Dataset]:
     cache = Cache.make_default(dataset)
-    return enricher_cls(dataset, cache, {})
+    return make_enricher(dataset, cache, {"type": PATH})
 
 
 def test_nominatim_match():

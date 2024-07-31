@@ -1,6 +1,7 @@
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
+from nomenklatura.dataset import DS
 from nomenklatura.enrich.wikidata.value import snak_value_to_string
 from nomenklatura.enrich.wikidata.lang import pick_obj_lang, LangText
 
@@ -21,7 +22,7 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, enricher: "WikidataEnricher") -> LangText:
+    def property_label(self, enricher: "WikidataEnricher[DS]") -> LangText:
         return enricher.get_label(self.property)
 
     @property
@@ -30,7 +31,7 @@ class Snak(object):
             return stringify(self._value.get("id"))
         return None
 
-    def text(self, enricher: "WikidataEnricher") -> LangText:
+    def text(self, enricher: "WikidataEnricher[DS]") -> LangText:
         return snak_value_to_string(enricher, self.value_type, self._value)
 
 

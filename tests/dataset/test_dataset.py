@@ -82,4 +82,4 @@ def test_dataset_aleph_metadata(catalog_data: Dict[str, Any]):
             "title": "Invalid metadata",
             "coverage": {"frequency": "foo"},
         }
-        ds = Dataset(catalog, meta)
+        ds = Dataset(meta)

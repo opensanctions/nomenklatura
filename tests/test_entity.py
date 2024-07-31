@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from rigour.time import utc_now
 from typing import Any, Dict, List
 from followthemoney.types import registry
 from followthemoney.exc import InvalidData
@@ -132,7 +132,7 @@ def test_other_entity():
     assert "test" in sp.datasets
     assert sp.first_seen is None
 
-    dt = datetime.utcnow()
+    dt = utc_now()
     smt2 = Statement(
         entity_id="gnaa",
         prop="birthDate",

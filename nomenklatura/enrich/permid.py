@@ -28,7 +28,7 @@ STATUS = {
 }
 
 
-class PermIDEnricher(Enricher):
+class PermIDEnricher(Enricher[DS]):
     MATCHING_API = "https://api-eit.refinitiv.com/permid/match"
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
@@ -55,7 +55,7 @@ class PermIDEnricher(Enricher):
             fp = fingerprint_name(entity.caption)
             if fp is not None and fp not in names:
                 names.append(fp)
-        for name in entity.get('name', quiet=True):
+        for name in entity.get("name", quiet=True):
             if len(names) * len(country_set) >= 999:
                 break
             fp = fingerprint_name(entity.caption)
@@ -161,7 +161,7 @@ class PermIDEnricher(Enricher):
         if not entity.schema.is_a("Organization"):
             return
         try:
-            for permid in entity.get('permId', quiet=True):
+            for permid in entity.get("permId", quiet=True):
                 permid_url = f"https://permid.org/1-{permid}"
                 match = self.fetch_perm_org(entity, permid_url)
                 if match is not None:
