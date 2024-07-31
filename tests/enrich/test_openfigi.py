@@ -1,8 +1,7 @@
 import requests_mock
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
-from nomenklatura.enrich import get_enricher
-from nomenklatura.enrich.common import Enricher
+from nomenklatura.enrich import make_enricher, Enricher
 from nomenklatura.entity import CompositeEntity
 
 
@@ -40,12 +39,9 @@ RESPONSE = {
 dataset = Dataset.make({"name": "ext_open_figi", "title": "OpenFIGI"})
 
 
-def load_enricher():
-    enricher_cls = get_enricher(PATH)
-    assert enricher_cls is not None
-    assert issubclass(enricher_cls, Enricher)
+def load_enricher() -> Enricher[Dataset]:
     cache = Cache.make_default(dataset)
-    return enricher_cls(dataset, cache, {})
+    return make_enricher(dataset, cache, {"type": PATH})
 
 
 def test_figi_match():

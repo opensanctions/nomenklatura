@@ -1,11 +1,11 @@
 import logging
 import getpass
 from pathlib import Path
-from datetime import datetime
 from functools import lru_cache
 from collections import defaultdict
 from typing import Dict, Generator, List, Optional, Set, Tuple
 from rigour.ids.wikidata import is_qid
+from rigour.time import utc_now
 
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
@@ -183,7 +183,7 @@ class Resolver(Linker[CE]):
                 return canonical
 
         edge.judgement = judgement
-        edge.timestamp = datetime.utcnow().isoformat()[:16]
+        edge.timestamp = utc_now().isoformat()[:16]
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)

@@ -3,6 +3,7 @@ from prefixdate import Precision
 from typing import TYPE_CHECKING, cast, Any, Dict, Optional
 from rigour.ids.wikidata import is_qid
 
+from nomenklatura.dataset import DS
 from nomenklatura.enrich.wikidata.lang import LangText
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ PRECISION = {
 
 
 def snak_value_to_string(
-    enricher: "WikidataEnricher", value_type: Optional[str], value: Dict[str, Any]
+    enricher: "WikidataEnricher[DS]", value_type: Optional[str], value: Dict[str, Any]
 ) -> LangText:
     if value_type is None:
         return LangText(None)

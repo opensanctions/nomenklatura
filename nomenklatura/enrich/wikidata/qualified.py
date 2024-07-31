@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Set
 from followthemoney.helpers import dates_years
 
+from nomenklatura.dataset import DS
 from nomenklatura.enrich.wikidata.model import Claim
 from nomenklatura.enrich.wikidata.lang import LangText
 
@@ -32,7 +33,7 @@ def post_summary(
 
 
 def qualify_value(
-    enricher: "WikidataEnricher", value: LangText, claim: Claim
+    enricher: "WikidataEnricher[DS]", value: LangText, claim: Claim
 ) -> LangText:
     if value.text is None:
         return value

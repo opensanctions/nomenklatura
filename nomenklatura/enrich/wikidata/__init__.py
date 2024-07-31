@@ -29,7 +29,7 @@ def clean_name(name: str) -> str:
     return clean_brackets(name).strip()
 
 
-class WikidataEnricher(Enricher):
+class WikidataEnricher(Enricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self.depth = self.get_config_int("depth", 1)

@@ -22,7 +22,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "followthemoney >= 3.5.6, < 4.0.0",
-        "rigour >= 0.5.1, < 1.0.0",
+        "rigour >= 0.5.3, < 1.0.0",
         "fingerprints >= 1.2.0, < 2.0.0",
         "shortuuid >= 1.0.11, < 2.0.0",
         "jellyfish >= 1.0.0, < 2.0.0",
@@ -68,6 +68,6 @@ setup(
         ],
         "tantivy": [
             "tantivy < 1.0.0",
-        ]
+        ],
     },
 )

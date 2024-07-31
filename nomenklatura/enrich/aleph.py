@@ -17,7 +17,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 log = logging.getLogger(__name__)
 
 
-class AlephEnricher(Enricher):
+class AlephEnricher(Enricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self._host: str = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")

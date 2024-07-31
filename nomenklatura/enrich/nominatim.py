@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 NOMINATIM = "https://nominatim.openstreetmap.org/search.php"
 
 
-class NominatimEnricher(Enricher):
+class NominatimEnricher(Enricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self.cache.preload(f"{NOMINATIM}%")

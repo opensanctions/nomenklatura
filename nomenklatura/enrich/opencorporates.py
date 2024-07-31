@@ -22,7 +22,7 @@ def parse_date(raw: Any) -> Optional[str]:
     return registry.date.clean(raw)
 
 
-class OpenCorporatesEnricher(Enricher):
+class OpenCorporatesEnricher(Enricher[DS]):
     COMPANY_SEARCH_API = "https://api.opencorporates.com/v0.4/companies/search"
     OFFICER_SEARCH_API = "https://api.opencorporates.com/v0.4/officers/search"
     UI_PART = "://opencorporates.com/"

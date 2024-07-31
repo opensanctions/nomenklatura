@@ -11,7 +11,7 @@ from nomenklatura.enrich.common import Enricher, EnricherConfig
 log = logging.getLogger(__name__)
 
 
-class OpenFIGIEnricher(Enricher):
+class OpenFIGIEnricher(Enricher[DS]):
     """Uses the `OpenFIGI` search API to look up FIGIs by company name."""
 
     SEARCH_URL = "https://api.openfigi.com/v3/search"
