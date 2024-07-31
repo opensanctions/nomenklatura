@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from banal import as_bool
-from typing import Union, Any, Dict, Optional, Generator
+from typing import Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException
@@ -29,7 +29,7 @@ class EnrichmentAbort(Exception):
     pass
 
 
-class Enricher(ABC):
+class Enricher(Generic[DS], ABC):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         self.dataset = dataset
         self.cache = cache
@@ -158,7 +158,7 @@ class Enricher(ABC):
     def make_entity(self, entity: CE, schema: str) -> CE:
         """Create a new entity of the given schema."""
         return self._make_data_entity(entity, {"schema": schema})
-    
+
     def _filter_entity(self, entity: CompositeEntity) -> bool:
         """Check if the given entity should be filtered out. Filters
         can be applied by schema or by topic."""
@@ -166,7 +166,7 @@ class Enricher(ABC):
             if entity.schema.name not in self._filter_schemata:
                 return False
         _filter_topics = set(self._filter_topics)
-        if 'all' in _filter_topics:
+        if "all" in _filter_topics:
             assert isinstance(registry.topic, TopicType)
             _filter_topics.update(registry.topic.names.keys())
         if len(_filter_topics):

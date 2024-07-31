@@ -17,7 +17,7 @@ from nomenklatura.enrich.common import EnrichmentException
 log = logging.getLogger(__name__)
 
 
-class YenteEnricher(Enricher):
+class YenteEnricher(Enricher[DS]):
     """Uses the `yente` match API to look up entities in a specific dataset."""
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
