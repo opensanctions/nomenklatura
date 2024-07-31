@@ -153,11 +153,11 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
         # Any of set of tokens in all values of type
         if field in {registry.address.name, registry.name.name, registry.text.name}:
-            words: Set[str] = set()
+            word_set: Set[str] = set()
             for value in values:
-                words.update(value.split(WS))
-            term_queries: Query = []
-            for word in words:
+                word_set.update(value.split(WS))
+            term_queries: List[Query] = []
+            for word in word_set:
                 term_queries.append(Query.term_query(self.schema, field, word))
             yield Query.boost_query(
                 Query.boolean_query([(Occur.Should, q) for q in term_queries]),
