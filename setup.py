@@ -68,6 +68,6 @@ setup(
         ],
         "tantivy": [
             "tantivy < 1.0.0",
-        ]
+        ],
     },
 )
