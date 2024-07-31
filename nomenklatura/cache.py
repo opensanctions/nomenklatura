@@ -12,9 +12,11 @@ from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
 from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
+from rigour.time import utc_now
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine, get_metadata
+
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -64,7 +66,7 @@ class Cache(object):
     def set(self, key: str, value: Value) -> None:
         self._preload.pop(key, None)
         cache = {
-            "timestamp": datetime.utcnow(),
+            "timestamp": utc_now(),
             "key": key,
             "dataset": self.dataset.name,
             "text": value,
@@ -153,7 +155,7 @@ class Cache(object):
             self.conn.execute(pq)
         except InvalidRequestError:
             self.reset()
-            
+
     def reset(self) -> None:
         if self._conn is not None:
             self._conn.close()
