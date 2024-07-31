@@ -1,10 +1,11 @@
 import yaml
 import logging
 from functools import cached_property
-from typing import TYPE_CHECKING, Self
+from typing import Self
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
 
+from nomenklatura.dataset import DataCatalog
 from nomenklatura.dataset.coverage import DataCoverage
 from nomenklatura.dataset.publisher import DataPublisher
 from nomenklatura.dataset.resource import DataResource
@@ -17,9 +18,6 @@ from nomenklatura.dataset.util import (
 )
 from nomenklatura.util import PathLike, iso_to_version
 
-if TYPE_CHECKING:
-    from nomenklatura.dataset.catalog import DataCatalog
-
 DS = TypeVar("DS", bound="Dataset")
 log = logging.getLogger(__name__)
 
@@ -27,8 +25,7 @@ log = logging.getLogger(__name__)
 class Dataset(Named):
     """A unit of entities. A dataset is a set of data, sez W3C."""
 
-    def __init__(self: DS, catalog: "DataCatalog[DS]", data: Dict[str, Any]) -> None:
-        self.catalog = catalog
+    def __init__(self: Self, data: Dict[str, Any]) -> None:
         name = type_require(registry.string, data["name"])
         super().__init__(name)
         self.title = type_require(registry.string, data["title"])
@@ -57,27 +54,15 @@ class Dataset(Named):
 
         # FIXME: get rid of this
         self._children.update(string_list(data.get("scopes", [])))
-
-    @cached_property
-    def children(self: Self) -> Set[Self]:
-        children: Set[Self] = set()
-        for child_name in self._children:
-            child = self.catalog.get(child_name)
-            if child is None:
-                log.error("Missing child dataset: %r (in %r)", child_name, self.name)
-                continue
-            if child == self:
-                continue
-            children.add(child)  # type: ignore
-        return children
+        self.children: Set[Self] = set()
 
     @cached_property
     def is_collection(self: "Dataset") -> bool:
         return len(self._children) > 0
 
     @property
-    def datasets(self: DS) -> Set[DS]:
-        current: Set[DS] = set([self])
+    def datasets(self: Self) -> Set[Self]:
+        current: Set[Self] = set([self])
         for child in self.children:
             current.update(child.datasets)
         return current
@@ -87,7 +72,7 @@ class Dataset(Named):
         return [d.name for d in self.datasets]
 
     @property
-    def leaves(self: DS) -> Set[DS]:
+    def leaves(self: Self) -> Set[Self]:
         """All contained datasets which are not collections (can be 'self')."""
         return set([d for d in self.datasets if not d.is_collection])
 
@@ -148,8 +133,6 @@ class Dataset(Named):
     def from_path(
         cls: Type[DS], path: PathLike, catalog: Optional["DataCatalog[DS]"] = None
     ) -> DS:
-        from nomenklatura.dataset import DataCatalog
-
         with open(path, "r") as fh:
             data = yaml.safe_load(fh)
             if catalog is None:

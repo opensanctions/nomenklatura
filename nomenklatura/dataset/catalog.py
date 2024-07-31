@@ -1,13 +1,11 @@
 import yaml
-from typing import TYPE_CHECKING, Optional, Dict, Any, Generic, Set, Type, List
+from typing import Optional, Dict, Any, Generic, Set, Type, List
 from followthemoney.types import registry
 
+from nomenklatura.dataset.dataset import DS
 from nomenklatura.exceptions import MetadataException
 from nomenklatura.dataset.util import type_check
 from nomenklatura.util import PathLike
-
-if TYPE_CHECKING:
-    from nomenklatura.dataset.dataset import DS
 
 
 class DataCatalog(Generic[DS]):
@@ -18,21 +16,26 @@ class DataCatalog(Generic[DS]):
             self.make_dataset(ddata)
         self.updated_at = type_check(registry.date, data.get("updated_at"))
 
-    def add(self, dataset: DS) -> None:
+    def add(self, dataset: "DS") -> None:
+        for existing in self.datasets:
+            if existing.name in dataset._children:
+                dataset.children.add(existing)
+            if dataset.name in existing._children:
+                existing.children.add(dataset)
         self.datasets.append(dataset)
 
-    def make_dataset(self, data: Dict[str, Any]) -> DS:
-        dataset = self.dataset_type(self, data)  # type: ignore
+    def make_dataset(self, data: Dict[str, Any]) -> "DS":
+        dataset = self.dataset_type(data)
         self.add(dataset)
         return dataset
 
-    def get(self, name: str) -> Optional[DS]:
+    def get(self, name: str) -> Optional["DS"]:
         for ds in self.datasets:
             if ds.name == name:
                 return ds
         return None
 
-    def require(self, name: str) -> DS:
+    def require(self, name: str) -> "DS":
         dataset = self.get(name)
         if dataset is None:
             raise MetadataException("No such dataset: %s" % name)
