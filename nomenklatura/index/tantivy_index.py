@@ -145,7 +145,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 words = value.split(WS)
                 word_count = len(words)
                 if word_count > 1:
-                    slop = 2 * math.ceil(math.log(word_count))
+                    slop = math.ceil(2 * math.log(word_count))
                     yield Query.boost_query(
                         Query.phrase_query(self.schema, field, words, slop),  # type: ignore
                         BOOST_NAME_PHRASE,
