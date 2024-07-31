@@ -1,7 +1,7 @@
 import re
 import os
 from pathlib import Path
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from followthemoney import model
 from functools import lru_cache, cache
 from normality import collapse_spaces, category_replace
@@ -60,7 +60,7 @@ def iso_datetime(value: Optional[str]) -> Optional[datetime]:
         return None
     value = value[:19].replace(" ", "T")
     dt = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
-    return dt.replace(tzinfo=UTC)
+    return dt.replace(tzinfo=timezone.utc)
 
 
 def datetime_iso(dt: Optional[Union[str, datetime]]) -> Optional[str]:

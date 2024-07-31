@@ -1,5 +1,5 @@
 import yaml
-from typing import TYPE_CHECKING, Optional, Dict, Any, Generic, Set, Type, List, TypeVar
+from typing import TYPE_CHECKING, Optional, Dict, Any, Generic, Set, Type, List
 from followthemoney.types import registry
 
 from nomenklatura.exceptions import MetadataException
