@@ -10,6 +10,8 @@ from requests.exceptions import RequestException
 from followthemoney.types import registry
 from followthemoney.types.topic import TopicType
 from rigour.urls import build_url, ParamsType
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 from nomenklatura import __version__
 from nomenklatura.entity import CE, CompositeEntity
@@ -58,6 +60,12 @@ class Enricher(Generic[DS], ABC):
         if self._session is None:
             self._session = Session()
             self._session.headers["User-Agent"] = f"nomenklatura/{__version__}"
+            retries = Retry(
+                total=4,
+                backoff_factor=1,
+                allowed_methods=["GET", "POST"],
+            )
+            self._session.mount("https://", HTTPAdapter(max_retries=retries))
         return self._session
 
     def http_get_cached(
