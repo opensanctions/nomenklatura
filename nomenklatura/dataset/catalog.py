@@ -1,11 +1,13 @@
 import yaml
-from typing import Optional, Dict, Any, Generic, Set, Type, List
+from typing import TYPE_CHECKING, Optional, Dict, Any, Generic, Set, Type, List, TypeVar
 from followthemoney.types import registry
 
-from nomenklatura.dataset.dataset import DS
 from nomenklatura.exceptions import MetadataException
 from nomenklatura.dataset.util import type_check
 from nomenklatura.util import PathLike
+
+if TYPE_CHECKING:
+    from nomenklatura.dataset.dataset import DS
 
 
 class DataCatalog(Generic[DS]):

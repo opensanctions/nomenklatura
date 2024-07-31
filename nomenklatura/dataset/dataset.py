@@ -1,7 +1,7 @@
 import yaml
 import logging
 from functools import cached_property
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
 
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class Dataset(Named):
     """A unit of entities. A dataset is a set of data, sez W3C."""
 
-    def __init__(self, catalog: "DataCatalog[DS]", data: Dict[str, Any]) -> None:
+    def __init__(self: DS, catalog: "DataCatalog[DS]", data: Dict[str, Any]) -> None:
         self.catalog = catalog
         name = type_require(registry.string, data["name"])
         super().__init__(name)
@@ -59,8 +59,8 @@ class Dataset(Named):
         self._children.update(string_list(data.get("scopes", [])))
 
     @cached_property
-    def children(self: DS) -> Set[DS]:
-        children: Set[DS] = set()
+    def children(self: Self) -> Set[Self]:
+        children: Set[Self] = set()
         for child_name in self._children:
             child = self.catalog.get(child_name)
             if child is None:
@@ -68,7 +68,7 @@ class Dataset(Named):
                 continue
             if child == self:
                 continue
-            children.add(child)
+            children.add(child)  # type: ignore
         return children
 
     @cached_property
