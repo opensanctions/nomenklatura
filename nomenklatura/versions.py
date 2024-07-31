@@ -2,8 +2,9 @@ import os
 import json
 import string
 import random
+from rigour.time import utc_now
 from typing import Any, List, Iterator, Optional
-from datetime import datetime, timezone
+from datetime import datetime
 
 ALPHABET = string.ascii_lowercase
 
@@ -20,8 +21,7 @@ class Version(object):
 
     @classmethod
     def new(cls, tag: Optional[str] = None) -> "Version":
-        now = datetime.now().astimezone(timezone.utc)
-        now = now.replace(tzinfo=None)
+        now = utc_now().replace(tzinfo=None)
 
         if tag is None:
             # This keeps the tag sortable but short.
