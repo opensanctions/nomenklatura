@@ -130,3 +130,27 @@ def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert verband_baden not in top_5, top_5
 
     assert sorted(pairs, key=lambda p: p[1], reverse=True) == pairs
+
+
+def test_name_variations(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
+    """
+    More variations of the same name doesn't increase the score
+
+    This is to make sure that entities where many similar but not identical
+    names have been merged in don't end up bumping up scores of less relevant
+    entities with similar names.
+    """
+    dx = Dataset.make({"name": "test", "title": "Test"})
+    verband_baden = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
+    more_verband = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
+    names = more_verband.get("name")
+    assert len(names) == 1
+    name = names[0]
+    more_verband.add("name", name.title())
+    more_verband.add("name", [f"{name} {n}" for n in range(1, 10)])
+
+    matches = tantivy_index.match(verband_baden)
+    matches_more = tantivy_index.match(more_verband)
+
+    assert len(matches) > 1, matches
+    assert matches == matches_more, (matches, matches_more)
