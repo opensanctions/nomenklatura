@@ -1,11 +1,10 @@
 import yaml
 import logging
 from functools import cached_property
-from typing import Self
+from typing import TYPE_CHECKING, Self
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
 
-from nomenklatura.dataset import DataCatalog
 from nomenklatura.dataset.coverage import DataCoverage
 from nomenklatura.dataset.publisher import DataPublisher
 from nomenklatura.dataset.resource import DataResource
@@ -17,6 +16,9 @@ from nomenklatura.dataset.util import (
     type_require,
 )
 from nomenklatura.util import PathLike, iso_to_version
+
+if TYPE_CHECKING:
+    from nomenklatura.dataset.catalog import DataCatalog
 
 DS = TypeVar("DS", bound="Dataset")
 log = logging.getLogger(__name__)
@@ -133,6 +135,8 @@ class Dataset(Named):
     def from_path(
         cls: Type[DS], path: PathLike, catalog: Optional["DataCatalog[DS]"] = None
     ) -> DS:
+        from nomenklatura.dataset.catalog import DataCatalog
+
         with open(path, "r") as fh:
             data = yaml.safe_load(fh)
             if catalog is None:
@@ -141,7 +145,7 @@ class Dataset(Named):
 
     @classmethod
     def make(cls: Type[DS], data: Dict[str, Any]) -> DS:
-        from nomenklatura.dataset import DataCatalog
+        from nomenklatura.dataset.catalog import DataCatalog
 
         catalog = DataCatalog(cls, {})
         return catalog.make_dataset(data)
