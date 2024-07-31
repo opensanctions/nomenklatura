@@ -151,7 +151,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
                         BOOST_NAME_PHRASE,
                     )
 
-        # Any of set of tokens in all values of type
+        # Any of set of tokens in all values of the field
         if field in {registry.address.name, registry.name.name, registry.text.name}:
             word_set: Set[str] = set()
             for value in values:

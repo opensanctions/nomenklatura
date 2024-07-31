@@ -49,9 +49,6 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
     view = dstore.default_view()
-    for ident, score in matches:
-        match = view.get_entity(ident.id)
-        print(f"Score: {score:.2f}\n{ident.id}: {match.caption}\n{match.to_dict()}\n")
 
     assert len(matches) == 9, matches
 
@@ -96,28 +93,21 @@ def test_index_pairs(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     assert "Company" in schemata
     assert "Address" in schemata
 
-    for rank, ((a, b), score) in enumerate(pairs[:40]):
-        a_e = view.get_entity(a.id)
-        b_e = view.get_entity(b.id)
-        print(
-            f"Rank: {rank} Score: {score:.2f}\n{a.id}: {a_e.get("name") or a_e.caption}\n{b.id}: {b_e.get('name') or b_e.caption}\n"
-        )
-
     top_5 = {p[0] for p in pairs[:5]}
 
     # These score higher than VME, despite having 3 and 4 matching tokens
     # similarly to VME, because their matching tokens are rarer in the corpus
     # than VME's.
 
-    # Bayerische Motorenwerke (BMW) AG
-    assert (
-        Identifier("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
-        Identifier("12570ee94b8dc23bcc080e887539d3742b2a5237"),
-    ) in top_5, top_5
     # Herr Prof. Dr. Schnabel
     assert (
         Identifier("72fd7df14e87678c9c6dcebb3ef045d11343d64c"),
         Identifier("152da487401ef4547baf2d2bc95f884dc5f8bba0"),
+    ) in top_5, top_5
+    # Bayerische Motorenwerke (BMW) AG
+    assert (
+        Identifier("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
+        Identifier("12570ee94b8dc23bcc080e887539d3742b2a5237"),
     ) in top_5, top_5
 
     top_20 = {p[0] for p in pairs[:20]}
