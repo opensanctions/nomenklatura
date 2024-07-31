@@ -12,7 +12,7 @@ from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
 from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
-from rigour.time import utc_now
+from rigour.time import naive_now
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine, get_metadata
@@ -66,7 +66,7 @@ class Cache(object):
     def set(self, key: str, value: Value) -> None:
         self._preload.pop(key, None)
         cache = {
-            "timestamp": utc_now(),
+            "timestamp": naive_now(),
             "key": key,
             "dataset": self.dataset.name,
             "text": value,
@@ -89,7 +89,7 @@ class Cache(object):
 
         cache_cutoff = None
         if max_age is not None:
-            cache_cutoff = datetime.utcnow() - randomize_cache(max_age)
+            cache_cutoff = naive_now() - randomize_cache(max_age)
 
         cache = self._preload.get(key)
         if cache is not None:

@@ -25,10 +25,16 @@ __all__ = [
 def make_enricher(
     dataset: DS, cache: Cache, config: EnricherConfig
 ) -> Optional[Enricher[DS]]:
-    enricher = get_enricher(dataset, config.pop("type"))
-    if enricher is not None:
-        return enricher(dataset, cache, config)
-    return None
+    enricher_type = config.pop("type")
+    if ":" not in enricher_type:
+        raise RuntimeError("Invalid import path: %r" % enricher_type)
+    module_name, clazz_name = enricher_type.split(":", 1)
+    module = import_module(module_name)
+    clazz = getattr(module, clazz_name)
+    if clazz is None or not issubclass(clazz, Enricher):
+        raise RuntimeError("Invalid enricher: %r" % enricher_type)
+    enr_clazz = cast(Type[Enricher[DS]], clazz)
+    return enr_clazz(dataset, cache, config)
 
 
 # nk match -i entities.json -o entities-with-matches.json -r resolver.json
@@ -77,14 +83,3 @@ def enrich(
                     yield adjacent
         except EnrichmentException:
             log.exception("Failed to enrich: %r" % entity)
-
-
-def get_enricher(dataset: DS, import_path: str) -> Optional[Type[Enricher[DS]]]:
-    if ":" not in import_path:
-        raise RuntimeError("Invalid import path: %r" % import_path)
-    module_name, clazz_name = import_path.split(":", 1)
-    module = import_module(module_name)
-    clazz = getattr(module, clazz_name)
-    if clazz is None or not issubclass(clazz, Enricher):
-        raise RuntimeError("Invalid enricher: %r" % import_path)
-    return cast(Type[Enricher[DS]], clazz)
