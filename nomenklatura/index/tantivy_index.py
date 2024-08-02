@@ -152,7 +152,12 @@ class TantivyIndex(BaseIndex[DS, CE]):
                     )
 
         # Any of set of tokens in all values of the field
-        if field in {registry.address.name, registry.name.name, registry.text.name}:
+        if field in {
+            registry.address.name,
+            registry.name.name,
+            registry.text.name,
+            registry.string.name,
+        }:
             word_set: Set[str] = set()
             for value in values:
                 word_set.update(value.split(WS))
