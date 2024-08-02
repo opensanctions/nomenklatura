@@ -9,3 +9,9 @@ def country_mismatch(query: E, result: E) -> float:
     """Both entities are linked to different countries."""
     qv, rv = type_pair(query, result, registry.country)
     return 1.0 if is_disjoint(qv, rv) else 0.0
+
+
+def country_overlap(query: E, result: E) -> float:
+    """Both entities are linked to the same country."""
+    qv, rv = type_pair(query, result, registry.country)
+    return 1.0 if has_overlap(qv, rv) else 0.0
