@@ -21,7 +21,7 @@ def has_overlap(
     right: Union[Set[str], List[str]],
 ) -> bool:
     """Returns true if both sequences are non-empty and have common values."""
-    if len(set(left).intersection(right)) > 0:
+    if not set(left).isdisjoint(right):
         return True
     return False
 
