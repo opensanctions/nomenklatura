@@ -3,8 +3,10 @@ from normality import WS
 from pathlib import Path
 from rigour.ids import StrictFormat
 from followthemoney.types import registry
-from typing import Any, Dict, List, Tuple, Generator
+from typing import Any, Dict, List, Tuple, Generator, Set
 from tantivy import Query, Occur, Index, SchemaBuilder, Document
+import math
+from collections import defaultdict
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
@@ -30,17 +32,17 @@ INDEX_IGNORE = (
 FULL_TEXT = {
     # registry.text,
     registry.string,
-    registry.name,
     registry.address,
     registry.identifier,
     # registry.email,
 }
+BOOST_NAME_PHRASE = 4.0
 BOOSTS = {
-    registry.name.name: 10.0,
+    registry.name.name: 4.0,
     registry.phone.name: 3.0,
     registry.email.name: 3.0,
-    registry.address.name: 2.5,
-    registry.identifier.name: 3.0,
+    registry.address.name: 3.0,
+    registry.identifier.name: 5.0,
 }
 
 
@@ -72,43 +74,55 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.index_dir = data_dir
         if self.index_dir.exists():
             self.index = Index.open(self.index_dir.as_posix())
+            self.build_index = False
         else:
             self.index_dir.mkdir(parents=True)
             self.index = Index(self.schema, path=self.index_dir.as_posix())
+            self.build_index = True
 
     @classmethod
-    def entity_fields(cls, entity: CE) -> Generator[Tuple[str, str], None, None]:
+    def entity_fields(cls, entity: CE) -> Generator[Tuple[str, Set[str]], None, None]:
+        """
+        A generator of each
+
+        - index field name and
+        -  the set of normalised but not tokenised values for that field
+
+        for the given entity.
+        """
+        fields: Dict[str, Set[str]] = defaultdict(set)
+
         for prop, value in entity.itervalues():
             type = prop.type
             if type in INDEX_IGNORE:
                 continue
 
             if type in FULL_TEXT:
-                yield registry.text.name, value.lower()
+                fields[registry.text.name].add(value.lower())
 
             if type == registry.name:
-                yield type.name, value.lower()
+                fields[type.name].add(value.lower())
                 norm = fingerprint_name(value)
                 if norm is not None:
-                    yield type.name, norm
+                    fields[type.name].add(norm)
                 continue
 
             if type == registry.date and prop.matchable:
                 if len(value) > 4:
-                    yield type.name, value[:4]
-                yield type.name, value[:10]
+                    fields[type.name].add(value[:4])
+                fields[type.name].add(value[:10])
                 continue
 
             if type == registry.identifier and prop.matchable:
                 clean_id = StrictFormat.normalize(value)
                 if clean_id is not None:
-                    yield type.name, clean_id
+                    fields[type.name].add(clean_id)
                 continue
 
             if type == registry.address and prop.matchable:
                 cleaned = clean_text_basic(value)
                 if cleaned is not None:
-                    yield type.name, cleaned
+                    fields[type.name].add(cleaned)
                 continue
 
             if prop.matchable and type in (
@@ -116,25 +130,52 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 registry.email,
                 registry.country,
             ):
-                yield type.name, value
+                fields[type.name].add(value)
+        yield from fields.items()
 
-    def field_queries(self, field: str, value: str) -> Generator[Query, None, None]:
-        words = value.split(WS)
+    def field_queries(
+        self, field: str, values: Set[str]
+    ) -> Generator[Query, None, None]:
+        """
+        A generator of queries for the given index field and set of values.
+        """
+        # Name phrase
         if field == registry.name.name:
-            if len(words) > 2:
-                slop = 1
-                # Argument 3 to "phrase_query" of "Query" has incompatible
-                # type "list[str]"; expected "list[str | tuple[int, str]]"
-                yield Query.phrase_query(self.schema, field, words, slop)  # type: ignore
+            for value in values:
+                words = value.split(WS)
+                word_count = len(words)
+                if word_count > 1:
+                    slop = math.ceil(2 * math.log(word_count))
+                    yield Query.boost_query(
+                        Query.phrase_query(self.schema, field, words, slop),  # type: ignore
+                        BOOST_NAME_PHRASE,
+                    )
 
-        if field in {registry.address.name, registry.name.name, registry.text.name}:
-            # TermSetQuery doesn't seem to behave so just use multiple term queries
-            # as the parser does.
-            for word in words:
-                yield Query.term_query(self.schema, field, word)
+        # Any of set of tokens in all values of the field
+        if field in {
+            registry.address.name,
+            registry.name.name,
+            registry.text.name,
+            registry.string.name,
+        }:
+            word_set: Set[str] = set()
+            for value in values:
+                word_set.update(value.split(WS))
+            term_queries: List[Query] = []
+            for word in word_set:
+                term_queries.append(Query.term_query(self.schema, field, word))
+            yield Query.boost_query(
+                Query.boolean_query([(Occur.Should, q) for q in term_queries]),
+                BOOSTS.get(field, 1.0),
+            )
             return
 
-        yield Query.term_query(self.schema, field, value)
+        # entire value as a term
+        for value in values:
+            yield Query.boost_query(
+                Query.term_query(self.schema, field, value),
+                BOOSTS.get(field, 1.0),
+            )
 
     def entity_query(self, entity: CE) -> Query:
         schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
@@ -144,11 +185,14 @@ class TantivyIndex(BaseIndex[DS, CE]):
             queries.append((Occur.MustNot, id_query))
         for field, value in self.entity_fields(entity):
             for query in self.field_queries(field, value):
-                boost_query = Query.boost_query(query, BOOSTS.get(field, 1.0))
-                queries.append((Occur.Should, boost_query))
+                queries.append((Occur.Should, query))
         return Query.boolean_query(queries)
 
     def build(self) -> None:
+        if not self.build_index:
+            log.info("Using existing index at %s", self.index_dir)
+            return
+
         log.info("Building index from: %r...", self.view)
         writer = self.index.writer(self.memory_budget)
         writer.delete_all_documents()
@@ -161,8 +205,9 @@ class TantivyIndex(BaseIndex[DS, CE]):
             idx += 1
             schemata = [s.name for s in entity.schema.matchable_schemata]
             document = Document(entity_id=entity.id, schemata=schemata)
-            for field, value in self.entity_fields(entity):
-                document.add_text(field, value)
+            for field, values in self.entity_fields(entity):
+                for value in values:
+                    document.add_text(field, value)
             writer.add_document(document)
         writer.commit()
         self.index.reload()
@@ -170,6 +215,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
         query = self.entity_query(entity)
+
         results = []
         searcher = self.index.searcher()
         for score, address in searcher.search(query, self.max_candidates).hits:
