@@ -3,7 +3,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.distance import levenshtein
 
-from nomenklatura.matching.util import type_pair, props_pair, has_schema, compare_sets
+from nomenklatura.matching.util import type_pair, props_pair, has_schema, max_in_sets
 from nomenklatura.matching.compare.util import has_overlap, clean_map, CleanFunc
 
 
@@ -99,7 +99,7 @@ def orgid_disjoint(query: E, result: E) -> float:
         return 0.0
     if len(query_ids.intersection(result_ids)) > 0:
         return 0.0
-    return 1 - compare_sets(query_ids, result_ids, _nq_compare_identifiers)
+    return 1 - max_in_sets(query_ids, result_ids, _nq_compare_identifiers)
 
 
 def identifier_match(query: E, result: E) -> float:
