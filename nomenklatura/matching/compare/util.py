@@ -3,6 +3,7 @@ from typing import List, Set, Union, Iterable, Callable, Optional
 
 CleanFunc = Optional[Callable[[str], Optional[str]]]
 FIND_NUM = re.compile(r"\d{1,}")
+FIND_MEDIUM_NUM_PUNCT = re.compile(r"[\d/\\:\.,_-]{6,}")
 
 
 def is_disjoint(
@@ -49,3 +50,12 @@ def extract_numbers(values: List[str]) -> Set[str]:
     for value in values:
         numbers.update(FIND_NUM.findall(value))
     return numbers
+
+
+def extract_punct_numbers(values: List[str]) -> Set[str]:
+    """Extract all numbers from a list of strings."""
+    numbers: Set[str] = set()
+    for value in values:
+        numbers.update(FIND_MEDIUM_NUM_PUNCT.findall(value))
+    return numbers
+

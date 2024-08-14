@@ -5,14 +5,14 @@ from functools import cache
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney.proxy import E
 
-from nomenklatura.matching.regression_v1.names import first_name_match
-from nomenklatura.matching.regression_v1.names import family_name_match
-from nomenklatura.matching.regression_v1.names import name_levenshtein, name_match
-from nomenklatura.matching.regression_v1.names import name_token_overlap, name_numbers
-from nomenklatura.matching.regression_v1.misc import phone_match, email_match
-from nomenklatura.matching.regression_v1.misc import address_match, address_numbers
-from nomenklatura.matching.regression_v1.misc import identifier_match, birth_place
-from nomenklatura.matching.regression_v1.misc import org_identifier_match
+from nomenklatura.matching.regression_v3.names import first_name_match
+from nomenklatura.matching.regression_v3.names import family_name_match
+from nomenklatura.matching.regression_v3.names import name_levenshtein, name_match
+from nomenklatura.matching.regression_v3.names import name_token_overlap, name_numbers
+from nomenklatura.matching.regression_v3.misc import phone_match, email_match
+from nomenklatura.matching.regression_v3.misc import address_match, address_numbers
+from nomenklatura.matching.regression_v3.misc import identifier_match, birth_place
+from nomenklatura.matching.regression_v3.misc import org_identifier_match
 from nomenklatura.matching.compare.countries import country_mismatch, country_overlap
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
@@ -43,7 +43,7 @@ class RegressionV3(ScoringAlgorithm):
         family_name_match,
         birth_place,
         gender_mismatch,
-        country_mismatch,
+        #country_mismatch,
         country_overlap,
         org_identifier_match,
         address_match,
