@@ -63,21 +63,26 @@ def train_matcher(pairs_file: PathLike) -> None:
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
     X, y = pairs_to_arrays(pairs)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    rfc = RandomForestClassifier(n_estimators=100)
+    rfc = RandomForestClassifier(n_estimators=10)
 
     log.info("Training model...")
     pipe = make_pipeline(StandardScaler(), rfc)
     pipe.fit(X_train, y_train)
 
     print("Feature importance:")
-    feature_scores = zip(rfc.feature_importances_, RandomForestV1.FEATURES)
-    for score, feature in sorted(feature_scores, reverse=True):
-        print(f"  {score:.6f} {feature.__name__}")
+    scores = dict(
+        zip(
+            [f.__name__ for f in RandomForestV1.FEATURES],
+            rfc.feature_importances_,
+        )
+    )
+    for feature, score in sorted(scores.items(), reverse=True, key=lambda x: x[1]):
+        print(f"  {score:.6f} {feature}")
 
-    #RegressionV1.save(pipe, coefficients)
+    RandomForestV1.save(pipe, scores)
+
     y_pred = pipe.predict(X_test)
     cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
-
     print("Confusion matrix:\n", cnf_matrix)
     print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
     print("Precision:", metrics.precision_score(y_test, y_pred))

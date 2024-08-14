@@ -56,7 +56,7 @@ class RandomForestV1(ScoringAlgorithm):
         with open(cls.MODEL_PATH, "wb") as fh:
             fh.write(mdl)
         cls.load.cache_clear()
-        cls.explain.cache_clear()
+        #cls.explain.cache_clear()
 
     @classmethod
     @cache
@@ -68,23 +68,26 @@ class RandomForestV1(ScoringAlgorithm):
         coefficients = cast(Dict[str, float], matcher["coefficients"])
         current = [f.__name__ for f in cls.FEATURES]
         if list(coefficients.keys()) != current:
+            print("stored", coefficients.keys())
+            print("current", current)
             raise RuntimeError("Model was not trained on identical features!")
         return pipe, coefficients
 
-    @classmethod
-    @cache
-    def explain(cls) -> FeatureDocs:
-        """Return an explanation of the features and their coefficients."""
-        features: FeatureDocs = {}
-        _, coefficients = cls.load()
-        for func in cls.FEATURES:
-            name = func.__name__
-            features[name] = FeatureDoc(
-                description=func.__doc__,
-                coefficient=float(coefficients[name]),
-                url=make_github_url(func),
-            )
-        return features
+
+    #@classmethod
+    #@cache
+    #def explain(cls) -> FeatureDocs:
+    #    """Return an explanation of the features and their coefficients."""
+    #    features: FeatureDocs = {}
+    #    _, coefficients = cls.load()
+    #    for func in cls.FEATURES:
+    #        name = func.__name__
+    #        features[name] = FeatureDoc(
+    #            description=func.__doc__,
+    #            coefficient=float(coefficients[name]),
+    #            url=make_github_url(func),
+    #        )
+    #    return features
 
     @classmethod
     def compare(
