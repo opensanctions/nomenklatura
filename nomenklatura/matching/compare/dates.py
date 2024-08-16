@@ -70,3 +70,10 @@ def dob_year_disjoint(query: E, result: E) -> float:
     if is_disjoint(query_years, result_years):
         return 1.0
     return 0.0
+
+def both_have_dob(query: E, result: E) -> float:
+    """Both entities have a birth date."""
+    query_dates, result_dates = props_pair(query, result, ["birthDate"])
+    if query_dates and result_dates:
+        return 1.0
+    return 0.0

@@ -70,3 +70,23 @@ def test_compare_features():
     bela.set("nationality", "by")
     bela_match = RandomForestV1.compare(cand, bela)
     assert ref_score > bela_match.score
+
+
+def test_address_false_positive():
+    #perhaps a numbers mismatch feature?
+    "addr-42fd874ecd49693a2e5e05a2e7f838ad71da7fd3"
+    "addr-462d5a3550e86077a5bbf88d09e2ffbeac7092be"
+    assert False, "These addresses differ by street number"
+
+
+# 100 trees reduced the number of persons matching with only a name and no dob 
+def test_name_only_match():
+    # has name
+    # has dob
+    # has address
+    # address number of tokens
+
+    # with 10 trees we got these two matching:
+    "NK-2QdZaCz27fa4J9EXubJsz2"
+    "ca-sema-a62c923f848843de44146ddb99f89844743d8da8"
+    assert False, "One of these entities only have a name, no dob or address"

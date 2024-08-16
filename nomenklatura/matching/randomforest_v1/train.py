@@ -63,7 +63,7 @@ def train_matcher(pairs_file: PathLike) -> None:
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
     X, y = pairs_to_arrays(pairs)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    rfc = RandomForestClassifier(n_estimators=10)
+    rfc = RandomForestClassifier(n_estimators=100)
 
     log.info("Training model...")
     pipe = make_pipeline(StandardScaler(), rfc)

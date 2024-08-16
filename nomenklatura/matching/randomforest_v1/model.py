@@ -15,7 +15,7 @@ from nomenklatura.matching.randomforest_v1.misc import identifier_match, birth_p
 from nomenklatura.matching.randomforest_v1.misc import org_identifier_match
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
+from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches, both_have_dob
 from nomenklatura.matching.compare.dates import dob_year_disjoint
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
@@ -39,6 +39,7 @@ class RandomForestV1(ScoringAlgorithm):
         dob_matches,
         dob_year_matches,
         dob_year_disjoint,
+        both_have_dob,
         first_name_match,
         family_name_match,
         birth_place,
