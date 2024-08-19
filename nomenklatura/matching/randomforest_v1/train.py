@@ -10,8 +10,10 @@ from sklearn.model_selection import train_test_split  # type: ignore
 from sklearn.ensemble import RandomForestClassifier  # type: ignore
 from sklearn import metrics  # type: ignore
 from concurrent.futures import ThreadPoolExecutor
+from random import shuffle
 
 from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.randomforest_v1.model import RandomForestV1
 from nomenklatura.util import PathLike
@@ -48,16 +50,11 @@ def pairs_to_arrays(
 def train_matcher(pairs_file: PathLike) -> None:
     pairs = []
     for pair in read_pairs(pairs_file):
-        # HACK: support more eventually:
-        # if not pair.left.schema.is_a("LegalEntity"):
-        #     continue
         if pair.judgement == Judgement.UNSURE:
             pair.judgement = Judgement.NEGATIVE
-        # randomize_entity(pair.left)
-        # randomize_entity(pair.right)
         pairs.append(pair)
-    # random.shuffle(pairs)
-    # pairs = pairs[:30000]
+    resolver = Resolver.load("../operations/etl/data/resolve.ijson")
+    pairs = shuffle(pairs)
     positive = len([p for p in pairs if p.judgement == Judgement.POSITIVE])
     negative = len([p for p in pairs if p.judgement == Judgement.NEGATIVE])
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)

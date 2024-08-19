@@ -27,6 +27,9 @@ class JudgedPair(object):
             "judgement": self.judgement.value,
         }
 
+    def __hash__(self):
+        return hash((self.left.id, self.right.id, self.judgement.value))
+
 
 def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
     """Read judgement pairs (training data) from a JSON file."""
@@ -39,3 +42,19 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue
             yield JudgedPair(left_entity, right_entity, judgement)
+
+
+def read_pair_sets(pairs_file: PathLike) -> Generator[Set[JudgedPair], None, None]:
+    with open(pairs_file, "r") as fh:
+        while line := fh.readline():
+            pair_array = json.loads(line)
+            pair_set: Set[JudgedPair] = set()
+            for pair_dict in data:
+                left_entity = EntityProxy.from_dict(model, pair_dict["left"])
+                right_entity = EntityProxy.from_dict(model, pair_dict["right"])
+                judgement = Judgement(pair_dict["judgement"])
+                if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
+                    continue
+                pair_set.add(JudgedPair(left_entity, right_entity, judgement))
+            yield pair_set
+    
