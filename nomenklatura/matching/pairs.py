@@ -1,15 +1,18 @@
 import json
-from typing import Generator, Dict, Any
+from typing import Generator, Dict, Any, Set, List
 from followthemoney import model
 from followthemoney.proxy import EntityProxy
+from functools import cache
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.util import PathLike
 
 
 class JudgedPair(object):
-    """A pair of two entities which have been judged to be the same
-    (or not) by a user."""
+    """
+    A pair of two entities which have been judged to be the same
+    (or not) by a user.
+    """
 
     __slots__ = ("left", "right", "judgement")
 
@@ -44,17 +47,19 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
             yield JudgedPair(left_entity, right_entity, judgement)
 
 
-def read_pair_sets(pairs_file: PathLike) -> Generator[Set[JudgedPair], None, None]:
+def read_pair_sets(pairs_file: PathLike) -> List[Set[JudgedPair]]:
+    sets: List[Set[JudgedPair]] = []
     with open(pairs_file, "r") as fh:
         while line := fh.readline():
             pair_array = json.loads(line)
             pair_set: Set[JudgedPair] = set()
-            for pair_dict in data:
+            for pair_dict in pair_array:
                 left_entity = EntityProxy.from_dict(model, pair_dict["left"])
                 right_entity = EntityProxy.from_dict(model, pair_dict["right"])
                 judgement = Judgement(pair_dict["judgement"])
                 if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                     continue
                 pair_set.add(JudgedPair(left_entity, right_entity, judgement))
-            yield pair_set
+            sets.append(pair_set)
+    return sets
     

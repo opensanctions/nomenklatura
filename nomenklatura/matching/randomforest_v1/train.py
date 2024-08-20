@@ -14,7 +14,7 @@ from random import shuffle
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.matching.pairs import read_pairs, JudgedPair
+from nomenklatura.matching.pairs import read_pair_sets, JudgedPair
 from nomenklatura.matching.randomforest_v1.model import RandomForestV1
 from nomenklatura.util import PathLike
 
@@ -48,18 +48,23 @@ def pairs_to_arrays(
 
 
 def train_matcher(pairs_file: PathLike) -> None:
-    pairs = []
-    for pair in read_pairs(pairs_file):
-        if pair.judgement == Judgement.UNSURE:
-            pair.judgement = Judgement.NEGATIVE
-        pairs.append(pair)
-    resolver = Resolver.load("../operations/etl/data/resolve.ijson")
-    pairs = shuffle(pairs)
-    positive = len([p for p in pairs if p.judgement == Judgement.POSITIVE])
-    negative = len([p for p in pairs if p.judgement == Judgement.NEGATIVE])
-    log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
-    X, y = pairs_to_arrays(pairs)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+    pair_sets = read_pair_sets(pairs_file)
+    
+    positive = sum([len([p for p in s if p.judgement == Judgement.POSITIVE]) for s in pair_sets])
+    negative = sum([len([p for p in s if p.judgement == Judgement.NEGATIVE]) for s in pair_sets])
+
+    log.info("Total pairs loaded: %d (%d pos/%d neg)", positive+negative, positive, negative)
+    log.info("Total independent sets loaded: %d", len(pair_sets))
+
+    train_sets, test_sets = train_test_split(pair_sets, test_size=0.33)
+    log.info("Training sets: %d, Test sets: %d - test is %d%%", len(train_sets), len(test_sets), 100*len(test_sets)/(len(pair_sets)))
+    train_pairs = [p for s in train_sets for p in s]
+    test_pairs = [p for s in test_sets for p in s]
+    log.info("Training pairs: %d, Test pairs: %d, test is %d%%", len(train_pairs), len(test_pairs), 100*len(test_pairs)/(len(train_pairs)+len(test_pairs)))
+
+    X_train, y_train = pairs_to_arrays(train_pairs)
+    X_test, y_test = pairs_to_arrays(test_pairs)
+
     rfc = RandomForestClassifier(n_estimators=100)
 
     log.info("Training model...")
