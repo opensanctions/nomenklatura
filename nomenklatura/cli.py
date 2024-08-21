@@ -23,6 +23,7 @@ from nomenklatura.statement import write_statements, read_path_statements
 from nomenklatura.stream import StreamEntity
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
+from nomenklatura.matching.bench import bench_matcher
 
 INDEX_SEGMENT = "xref-index"
 
@@ -306,6 +307,14 @@ def statements_aggregate(
         if len(statements):
             entity = Entity.from_statements(dataset_, statements)
             write_entity(outfh, entity)
+
+
+@cli.command("bench", help="Benchmark a matching algorithm")
+@click.argument("name", type=str)
+@click.argument("pairs_file", type=InPath)
+@click.option("-n", "--number", type=int, default=1000)
+def bench(name: str, pairs_file: Path, number: int = 1000) -> None:
+    bench_matcher(name, pairs_file, number)
 
 
 if __name__ == "__main__":
