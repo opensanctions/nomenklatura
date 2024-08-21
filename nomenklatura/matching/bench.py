@@ -21,7 +21,7 @@ def bench_matcher(name: str, pairs_file: PathLike, number: int) -> None:
     log.info("Loaded %s", matcher.NAME)
     infinite_pairs = cycle(pairs)
 
-    def compare_one_pair():
+    def compare_one_pair() -> None:
         pair = next(infinite_pairs)
         matcher.compare(pair.left, pair.right)
 
