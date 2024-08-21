@@ -21,8 +21,8 @@ def normalize_names(raws: Iterable[str]) -> Set[str]:
 def name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
-    if has_schema(left, right, "Security"):
-        return 0.0
+    #if has_schema(left, right, "Security"):
+    #    return 0.0
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
     return compare_sets(lvn, rvn, compare_levenshtein)
@@ -42,8 +42,8 @@ def family_name_match(left: E, right: E) -> float:
 
 def name_match(left: E, right: E) -> float:
     """Check for exact name matches between the two entities."""
-    if has_schema(left, right, "Security"):
-        return 0.0
+    #if has_schema(left, right, "Security"):
+    #    return 0.0
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
     common = [len(n) for n in lvn.intersection(rvn)]
@@ -55,8 +55,8 @@ def name_match(left: E, right: E) -> float:
 
 def name_token_overlap(left: E, right: E) -> float:
     """Evaluate the proportion of identical words in each name."""
-    if has_schema(left, right, "Security"):
-        return 0.0
+    #if has_schema(left, right, "Security"):
+    #    return 0.0
     lv, rv = tokenize_pair(type_pair(left, right, registry.name))
     common = lv.intersection(rv)
     tokens = min(len(lv), len(rv))
@@ -66,8 +66,8 @@ def name_token_overlap(left: E, right: E) -> float:
 def name_numbers(left: E, right: E) -> float:
     """Find if names contain numbers, score if the numbers are different."""
     lv, rv = type_pair(left, right, registry.name)
-    if has_schema(left, right, "Security"):
-        num_func = extract_punct_numbers
-    else:
-        num_func = extract_numbers
+    #if has_schema(left, right, "Security"):
+    #    num_func = extract_punct_numbers
+    #else:
+    #    num_func = extract_numbers
     return 1.0 if is_disjoint(extract_numbers(lv), extract_numbers(rv)) else 0.0
