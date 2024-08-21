@@ -35,15 +35,35 @@ def type_pair(left: E, right: E, type_: PropertyType) -> Tuple[List[str], List[s
     return left_values, right_values
 
 
+def max_in_sets(
+    left: Iterable[Optional[V]],
+    right: Iterable[Optional[V]],
+    compare_func: Callable[[V, V], float],
+    max_res: float = 1.0,
+) -> float:
+    """Compare two sets of values pair-wise and select the highest-scored result."""
+    res: float = 0.0
+    for le, ri in product(left, right):
+        if le is None or ri is None:
+            continue
+        v = compare_func(le, ri)
+        if v <= res:
+            continue
+        res = v
+        if res >= max_res:
+            return res
+    return res
+
+
 def compare_sets(
     left: Iterable[Optional[V]],
     right: Iterable[Optional[V]],
     compare_func: Callable[[V, V], float],
     select_func: Callable[[Iterable[float]], float] = max,
 ) -> float:
-    """Compare two sets of values pair-wise and select the highest-scored result."""
+    """Compare two sets of values pair-wise and select a return value from select_func."""
     results: List[float] = []
-    for (le, ri) in product(left, right):
+    for le, ri in product(left, right):
         if le is None or ri is None:
             continue
         results.append(compare_func(le, ri))

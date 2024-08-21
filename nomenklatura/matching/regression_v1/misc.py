@@ -4,7 +4,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import has_overlap, extract_numbers
 from nomenklatura.matching.util import props_pair, type_pair
-from nomenklatura.matching.util import compare_sets, has_schema
+from nomenklatura.matching.util import max_in_sets, has_schema
 from nomenklatura.util import normalize_name
 
 
@@ -20,7 +20,7 @@ def address_match(query: E, result: E) -> float:
     lv, rv = type_pair(query, result, registry.address)
     lvn = [normalize_name(v) for v in lv]
     rvn = [normalize_name(v) for v in rv]
-    return compare_sets(lvn, rvn, compare_levenshtein)
+    return max_in_sets(lvn, rvn, compare_levenshtein)
 
 
 def address_numbers(query: E, result: E) -> float:
