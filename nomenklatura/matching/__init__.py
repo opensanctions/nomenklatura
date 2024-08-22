@@ -17,6 +17,7 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     NameQualifiedMatcher,
     RegressionV1,
     RegressionV2,
+    RegressionV3,
     RandomForestV1,
 ]
 
