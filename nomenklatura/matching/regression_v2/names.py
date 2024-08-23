@@ -2,7 +2,7 @@ from typing import Iterable, List, Set
 from normality import WS
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.distance import levenshtein
+from fxkk import levenshtein
 
 from nomenklatura.matching.util import max_in_sets, props_pair, type_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
@@ -29,7 +29,7 @@ def _name_norms(names: Iterable[str]) -> List[str]:
 
 
 def _compare_levenshtein(left: str, right: str) -> float:
-    distance = levenshtein(left, right)
+    distance = int(levenshtein(left, right))
     base = max((1, len(left), len(right)))
     return 1.0 - (distance / float(base))
     # return math.sqrt(distance)
