@@ -14,24 +14,23 @@ class JudgedPair(object):
     (or not) by a user.
     """
 
-    __slots__ = ("left", "right", "judgement")
+    __slots__ = ("left", "right", "judgement", "group")
 
     def __init__(
-        self, left: EntityProxy, right: EntityProxy, judgement: Judgement
+        self, left: EntityProxy, right: EntityProxy, judgement: Judgement, group: int
     ) -> None:
         self.left = left
         self.right = right
         self.judgement = judgement
+        self.group = group
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "left": self.left.to_dict(),
             "right": self.right.to_dict(),
             "judgement": self.judgement.value,
+            "group": self.group,
         }
-
-    def __hash__(self):
-        return hash((self.left.id, self.right.id, self.judgement.value))
 
 
 def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
@@ -44,7 +43,7 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
             judgement = Judgement(data["judgement"])
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue
-            yield JudgedPair(left_entity, right_entity, judgement)
+            yield JudgedPair(left_entity, right_entity, judgement, data["group"])
 
 
 def read_pair_sets(pairs_file: PathLike) -> List[Set[JudgedPair]]:
