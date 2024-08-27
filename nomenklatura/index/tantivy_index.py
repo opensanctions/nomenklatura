@@ -15,7 +15,6 @@ from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
-from nomenklatura.util import fingerprint_name, clean_text_basic
 from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
