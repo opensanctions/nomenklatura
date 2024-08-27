@@ -16,6 +16,7 @@ from nomenklatura.entity import CE
 from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
 from nomenklatura.index.common import BaseIndex
+from nomenklatura.util import clean_text_basic
 
 log = logging.getLogger(__name__)
 
@@ -53,12 +54,12 @@ BOOSTS = {
 }
 
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=20000)
 def _ascii_word(word: str) -> Optional[str]:
     return ascii_text(word)
 
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=20000)
 def _phonetic_word(word: str) -> Optional[str]:
     if not is_modern_alphabet(word) or len(word) < 3:
         return None
@@ -116,7 +117,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
 
         for prop, value in entity.itervalues():
             type = prop.type
-            if type in INDEX_IGNORE:
+            if type in INDEX_IGNORE or not prop.matchable:
                 continue
 
             if type in FULL_TEXT:
@@ -136,19 +137,19 @@ class TantivyIndex(BaseIndex[DS, CE]):
                         fields[FIELD_PHONETIC].add(phonetic)
                 continue
 
-            if type == registry.date and prop.matchable:
+            if type == registry.date:
                 fields[type.name].add(value[:4])
                 if len(value) > 9:
                     fields[type.name].add(value[:10])
                 continue
 
-            if type == registry.identifier and prop.matchable:
+            if type == registry.identifier:
                 clean_id = _identifier_clean(value)
                 if clean_id is not None:
                     fields[type.name].add(clean_id)
                 continue
 
-            if prop.matchable and type in (
+            if type in (
                 registry.phone,
                 registry.email,
                 registry.country,
@@ -163,32 +164,32 @@ class TantivyIndex(BaseIndex[DS, CE]):
         """
         A generator of queries for the given index field and set of values.
         """
-        names: Set[str] = set()
-        phonetics: Set[str] = set()
+        fields: Dict[str, Set[str]] = defaultdict(set)
 
         for prop, value in entity.itervalues():
             type = prop.type
-            if type in INDEX_IGNORE:
+            if type in INDEX_IGNORE or not prop.matchable:
                 continue
 
-            if prop.matchable and type in (
+            if type in (
                 registry.phone,
                 registry.email,
                 registry.country,
             ):
-                yield Query.boost_query(
-                    Query.term_query(self.schema, type.name, value),
-                    BOOSTS.get(type.name, 1.0),
-                )
+                fields[type.name].add(value)
+                continue
 
-            if type == registry.identifier and prop.matchable:
+            if type == registry.identifier:
                 clean_id = _identifier_clean(value)
                 if clean_id is not None:
-                    yield Query.boost_query(
-                        Query.term_query(self.schema, type.name, clean_id),
-                        BOOSTS.get(type.name, 1.0),
-                    )
-                yield Query.term_query(self.schema, FIELD_TEXT, value)
+                    fields[type.name].add(clean_id)
+                fields[FIELD_TEXT].add(value)
+                continue
+
+            if type == registry.date:
+                fields[type.name].add(value[:4])
+                if len(value) > 9:
+                    fields[type.name].add(value[:10])
                 continue
 
             if type == registry.name:
@@ -196,35 +197,42 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 if clean is None:
                     continue
                 for word in clean.split(WS):
-                    names.add(word)
+                    fields[type.name].add(word)
                     phonetic = _phonetic_word(word)
                     if phonetic is not None:
-                        phonetics.add(phonetic)
-                    ascii = _ascii_word(word)
-                    if ascii is not None:
-                        names.add(ascii)
+                        fields[FIELD_PHONETIC].add(phonetic)
+                    ascii_word = _ascii_word(word)
+                    if ascii_word is not None:
+                        fields[type.name].add(ascii_word)
                 continue
+
+            if type == registry.address:
+                cleaned = clean_text_basic(value)
+                if cleaned:
+                    for token in cleaned.split(WS):
+                        if len(token) > 1:
+                            fields[FIELD_TEXT].update(token)
 
             # TODO: not doing addresses at all for the moment.
 
-        for name in names:
-            yield Query.boost_query(
-                Query.term_query(self.schema, registry.name.name, name),
-                BOOSTS.get(registry.name.name, 1.0),
-            )
-            yield Query.term_query(self.schema, FIELD_TEXT, name)
-
-        for phonetic in phonetics:
-            yield Query.term_query(self.schema, FIELD_PHONETIC, phonetic)
+        for field, values in fields.items():
+            if len(values) > 1:
+                query = Query.term_set_query(self.schema, field, list(values))
+            else:
+                query = Query.term_query(self.schema, field, list(values)[0])
+            if field in BOOSTS:
+                query = Query.boost_query(query, BOOSTS[field])
+            yield query
 
     def entity_query(self, entity: CE) -> Query:
         schema_query = Query.term_query(self.schema, FIELD_SCHEMA, entity.schema.name)
         queries: List[Tuple[Occur, Query]] = [(Occur.Must, schema_query)]
-        if entity.id is not None:
-            id_query = Query.term_query(self.schema, FIELD_ID, entity.id)
-            queries.append((Occur.MustNot, id_query))
+        # if entity.id is not None:
+        #     id_query = Query.term_query(self.schema, FIELD_ID, entity.id)
+        #     queries.append((Occur.MustNot, id_query))
         for query in self.field_queries(entity):
             queries.append((Occur.Should, query))
+        # print(queries)
         return Query.boolean_query(queries)
 
     def build(self) -> None:
@@ -285,7 +293,6 @@ class TantivyIndex(BaseIndex[DS, CE]):
             query = self.entity_query(entity)
             searcher = self.index.searcher()
             for score, address in searcher.search(query, self.max_candidates).hits:
-                candidates += 1
                 if score < threshold:
                     break
                 # Value of type "Document" is not indexable
@@ -293,11 +300,12 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 other_id: str = doc["entity_id"][0]  # type: ignore
                 if entity.id == other_id:
                     continue
-                if (other_id, entity.id) in pairs:
-                    score = max(score, pairs.pop((other_id, entity.id)))
+                candidates += 1
+                inverted = pairs.pop((other_id, entity.id), 0.0)
+                score = max(score, inverted)
                 pairs[(entity.id, other_id)] = score
 
-                if len(pairs) > (max_pairs * 5):
+                if len(pairs) > (max_pairs * 10):
                     _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
                     _pairs = _pairs[:max_pairs]
                     threshold = _pairs[-1][1]
