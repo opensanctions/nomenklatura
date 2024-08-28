@@ -20,7 +20,13 @@ def address_match(query: E, result: E) -> float:
     lv, rv = type_pair(query, result, registry.address)
     lvn = [normalize_name(v) for v in lv]
     rvn = [normalize_name(v) for v in rv]
-    return compare_sets(lvn, rvn, compare_levenshtein)
+    score = compare_sets(lvn, rvn, compare_levenshtein)
+    # Penalise address when they're both LegalEntity because
+    # if it's really a Person and a Company, they shouldn't
+    # be considered matches based on a perfect address match. 
+    if query.schema.is_a("LegalEntity") and result.schema.is_a("LegalEntity"):
+        return 0.8 * score
+    return score
 
 
 def address_numbers(query: E, result: E) -> float:

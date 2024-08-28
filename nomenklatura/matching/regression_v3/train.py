@@ -6,7 +6,7 @@ from pprint import pprint
 from numpy.typing import NDArray
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
-from sklearn.model_selection import GroupShuffleSplit, train_test_split  # type: ignore
+from sklearn.model_selection import GroupShuffleSplit  # type: ignore
 from sklearn.linear_model import LogisticRegression  # type: ignore
 from sklearn import metrics  # type: ignore
 from concurrent.futures import ThreadPoolExecutor
