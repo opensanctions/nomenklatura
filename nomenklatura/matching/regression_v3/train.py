@@ -48,19 +48,13 @@ def pairs_to_arrays(
 def train_matcher(pairs_file: PathLike) -> None:
     pairs = []
     for pair in read_pairs(pairs_file):
-        # HACK: support more eventually:
-        # if not pair.left.schema.is_a("LegalEntity"):
-        #     continue
         if pair.judgement == Judgement.UNSURE:
             pair.judgement = Judgement.NEGATIVE
-        # randomize_entity(pair.left)
-        # randomize_entity(pair.right)
-        pairs.append(pair)
-    # random.shuffle(pairs)
-    # pairs = pairs[:30000]
+        pairs.append(pair)    
     positive = len([p for p in pairs if p.judgement == Judgement.POSITIVE])
     negative = len([p for p in pairs if p.judgement == Judgement.NEGATIVE])
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
+
     X, y = pairs_to_arrays(pairs)
     groups = [p.group for p in pairs]
     gss = GroupShuffleSplit(test_size=.33)
@@ -69,20 +63,19 @@ def train_matcher(pairs_file: PathLike) -> None:
     X_test = [X[i] for i in test_indices]
     y_train = [y[i] for i in train_indices]
     y_test = [y[i] for i in test_indices]
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
-    # logreg = LogisticRegression(penalty="l1", solver="liblinear")
-    logreg = LogisticRegression(penalty="l2")
+
     log.info("Training model...")
+    logreg = LogisticRegression(penalty="l2")
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
     coefficients = {n.__name__: c for n, c in zip(RegressionV3.FEATURES, coef)}
     RegressionV3.save(pipe, coefficients)
+
     print("Coefficients:")
     pprint(coefficients)
     y_pred = pipe.predict(X_test)
-    cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+    cnf_matrix = metrics.confusion_matrix(y_test, y_pred, normalize="all")
     print("Confusion matrix:\n", cnf_matrix)
     print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
     print("Precision:", metrics.precision_score(y_test, y_pred))
