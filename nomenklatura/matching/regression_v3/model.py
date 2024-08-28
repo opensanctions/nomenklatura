@@ -5,9 +5,10 @@ from functools import cache
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney.proxy import E
 
+from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.regression_v3.names import first_name_match
 from nomenklatura.matching.regression_v3.names import family_name_match
-from nomenklatura.matching.regression_v3.names import name_levenshtein, name_match
+from nomenklatura.matching.regression_v3.names import name_match
 from nomenklatura.matching.regression_v3.names import name_token_overlap, name_numbers
 from nomenklatura.matching.regression_v3.misc import phone_match, email_match
 from nomenklatura.matching.regression_v3.misc import address_match, address_numbers
@@ -32,7 +33,7 @@ class RegressionV3(ScoringAlgorithm):
         name_match,
         name_token_overlap,
         name_numbers,
-        name_levenshtein,
+        name_fingerprint_levenshtein,
         phone_match,
         email_match,
         identifier_match,
