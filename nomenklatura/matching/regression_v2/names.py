@@ -4,7 +4,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.distance import levenshtein
 
-from nomenklatura.matching.util import compare_sets, props_pair, type_pair
+from nomenklatura.matching.util import max_in_sets, props_pair, type_pair
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap
 from nomenklatura.matching.compare.util import extract_numbers
 from nomenklatura.util import fingerprint_name, names_word_list, soundex_token
@@ -40,7 +40,7 @@ def name_levenshtein(left: E, right: E) -> float:
     lv, rv = type_pair(left, right, registry.name)
     lvp = _name_norms(lv)
     rvp = _name_norms(rv)
-    return compare_sets(lvp, rvp, _compare_levenshtein)
+    return max_in_sets(lvp, rvp, _compare_levenshtein)
 
 
 def first_name_match(left: E, right: E) -> float:
