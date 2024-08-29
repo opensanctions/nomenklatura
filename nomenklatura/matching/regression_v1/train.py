@@ -75,8 +75,8 @@ def train_matcher(pairs_file: PathLike) -> None:
     print("Coefficients:")
     pprint(coefficients)
     y_pred = pipe.predict(X_test)
-    cnf_matrix = metrics.confusion_matrix(y_test, y_pred, normalize="all")
-    print("Confusion matrix:\n", cnf_matrix)
+    cnf_matrix = metrics.confusion_matrix(y_test, y_pred, normalize="all") * 100
+    print("Confusion matrix (% of all):\n", cnf_matrix)
     print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
     print("Precision:", metrics.precision_score(y_test, y_pred))
     print("Recall:", metrics.recall_score(y_test, y_pred))
