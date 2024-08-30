@@ -319,6 +319,16 @@ def test_name_fingerprint_levenshtein():
     assert name_fingerprint_levenshtein(query, result) < 0.85
     assert name_fingerprint_levenshtein(query, result) > 0.5
 
+    query = e("Company", name="Malva")
+    result = e("Company", name="Alva Group Limited")
+    assert name_fingerprint_levenshtein(query, result) < 0.5
+
+    query = e("Company", name="Malva")
+    result = e("Company", name="Alva Armatures Limited")
+    assert name_fingerprint_levenshtein(query, result) < 0.5
+    
+
+
 
 def test_org_name_partial_match():
     query = e("Company", name="CRYSTALORD LIMITED")
