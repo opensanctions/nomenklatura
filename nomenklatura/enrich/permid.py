@@ -99,11 +99,12 @@ class PermIDEnricher(Enricher[DS]):
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden, cache_days=90)
-        if not len(res_raw):
+        try:
+            return cast(Dict[str, Any], json.loads(res_raw))
+        except Exception:
+            log.info("Invalid response from PermID: %s", url)
             self.http_remove_cache(url, params=params)
-            log.info("Empty response from PermID: %s", url)
             return None
-        return cast(Dict[str, Any], json.loads(res_raw))
 
     def fetch_perm_org(self, entity: CE, url: str) -> Optional[CE]:
         res = self.fetch_permid(url)
