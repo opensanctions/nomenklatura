@@ -1,4 +1,5 @@
 import hashlib
+import warnings
 from sqlalchemy.engine import Row
 from typing import cast, TYPE_CHECKING
 from typing import Any, Dict, Generator, Optional, Type, TypeVar
@@ -126,7 +127,10 @@ class Statement(object):
 
     def __hash__(self) -> int:
         if self.id is None:
-            raise ValueError("Cannot hash statement without ID!")
+            warnings.warn(
+                "Hashing a statement without an ID results in undefined behaviour",
+                RuntimeWarning,
+            )
         return hash(self.id)
 
     def __repr__(self) -> str:
