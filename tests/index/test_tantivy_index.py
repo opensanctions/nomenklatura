@@ -25,10 +25,10 @@ VERBAND_BADEN_DATA = {
 }
 
 
-def test_entity_fields(test_dataset: Dataset):
+def test_index_entity(test_dataset: Dataset):
     verband_baden = CompositeEntity.from_data(test_dataset, VERBAND_BADEN_DATA)
-    field_values = list(TantivyIndex.entity_fields(verband_baden))
-    field_values = [(fld, val) for fld, val in field_values if fld != "text"]
+    fields = TantivyIndex.index_entity(verband_baden)
+    field_values = [(fld, val) for fld, val in fields.items() if fld != "text"]
     assert len(field_values) == 5, field_values
     assert (
         "name",
@@ -36,7 +36,7 @@ def test_entity_fields(test_dataset: Dataset):
     ) in field_values, field_values
     assert ("country", {"de"}) in field_values, field_values
     assert (
-        "address",
+        "text",
         {"lautenschlagerstr 20  70173 stuttgart"},
     ) in field_values, field_values
     assert ("identifier", {"AA123456789"}) in field_values, field_values
