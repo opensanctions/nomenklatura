@@ -1,4 +1,5 @@
 import orjson
+import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Tuple
 from followthemoney.property import Property
@@ -7,12 +8,17 @@ from followthemoney.types import registry
 from nomenklatura.kv import get_redis, close_redis, b
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.resolver import Linker
+from nomenklatura.resolver import Linker, StrIdent
 from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 
+log = logging.getLogger(__name__)
+
 
 class ResolvedStore(Store[DS, CE]):
+    """A store implementation which is built to store fully resolved entities. This
+    implementation is not designed to be updated, and cannot store individual statements."""
+
     def __init__(
         self,
         dataset: DS,
@@ -34,7 +40,7 @@ class ResolvedStore(Store[DS, CE]):
             raise NotImplementedError("External views not supported!")
         return ResolvedView(self, scope, external=external)
 
-    def update(self, id: str) -> None:
+    def update(self, id: StrIdent) -> None:
         raise NotImplementedError("Entity store cannot update entities")
 
     def assemble(self, statements: List[Statement]) -> Optional[CE]:
@@ -44,7 +50,7 @@ class ResolvedStore(Store[DS, CE]):
         return self.entity_class.from_statements(self.dataset, statements)
 
     def drop(self, prefix: Optional[str]) -> None:
-        """Delete all data associated with a specific version of a dataset."""
+        """Delete all data associated with a prefix of the store."""
         pipeline = self.db.pipeline()
         prefix = f"xre:{prefix}" if prefix else self.prefix
         cmds = 0
@@ -57,6 +63,16 @@ class ResolvedStore(Store[DS, CE]):
                 cmds = 0
         if cmds > 0:
             pipeline.execute()
+
+    def derive(self, store: Store[DS, CE]) -> None:
+        """Copy all data from another store into this one."""
+        writer = self.writer()
+        view = store.default_view()
+        for idx, entity in enumerate(view.entities()):
+            if idx > 0 and idx % 10_000 == 0:
+                log.info("Deriving resolved store %s: %s...", store.dataset.name, idx)
+            writer.add_entity(entity)
+        writer.flush()
 
     def close(self) -> None:
         close_redis()
@@ -182,9 +198,9 @@ class ResolvedView(View[DS, CE]):
     def entities(self) -> Generator[CE, None, None]:
         prefix = f"{self.store.prefix}:e:*"
         batch: List[bytes] = []
-        for id in self.store.db.scan_iter(prefix, count=100_000):
+        for id in self.store.db.scan_iter(prefix, count=50_000):
             batch.append(id)
-            if len(batch) >= 1000:
+            if len(batch) >= 1_000:
                 datas = self.store.db.mget(batch)
                 for data in datas:
                     if data is None:
