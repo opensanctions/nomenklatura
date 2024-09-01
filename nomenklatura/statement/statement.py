@@ -125,9 +125,9 @@ class Statement(object):
         return data
 
     def __hash__(self) -> int:
-        if self.id is not None:
-            return hash(self.id)
-        return hash(self.generate_key())
+        if self.id is None:
+            raise ValueError("Cannot hash statement without ID!")
+        return hash(self.id)
 
     def __repr__(self) -> str:
         return "<Statement(%r, %r, %r)>" % (self.entity_id, self.prop, self.value)
