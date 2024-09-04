@@ -34,6 +34,9 @@ class Snak(object):
     def text(self, enricher: "WikidataEnricher[DS]") -> LangText:
         return snak_value_to_string(enricher, self.value_type, self._value)
 
+    def __repr__(self) -> str:
+        return f"<Snak({self.qid}, {self.property}, {self.value_type})>"
+
 
 class Reference(object):
     def __init__(self, data: Dict[str, Any]) -> None:
@@ -59,6 +62,9 @@ class Claim(Snak):
 
     def get_qualifier(self, prop: str) -> List[Snak]:
         return self.qualifiers.get(prop, [])
+
+    def __repr__(self) -> str:
+        return f"<Claim({self.qid}, {self.property}, {self.value_type})>"
 
 
 class Item(object):
@@ -96,3 +102,9 @@ class Item(object):
             if claim.property == "P31" and claim.qid == qid:
                 return True
         return False
+
+    def __repr__(self) -> str:
+        return f"<Item({self.id})>"
+
+    def __hash__(self) -> int:
+        return hash(self.__repr__())
