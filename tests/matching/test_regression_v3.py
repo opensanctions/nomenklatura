@@ -202,3 +202,72 @@ def test_name_address():
     assert 0.5 < ac.score < 0.9
     ab = RegressionV3.compare(a, b)
     assert 0.5 < ab.score < 0.9
+
+
+def test_isin():
+    """name and country together shouldn't be too strong"""
+
+    data = {
+        "id": "isin-123456789",
+        "schema": "Security",
+        "properties": {
+            "name": ["Foobar Exo Something EXC A"],
+            "isin": ["123456789"],
+        },
+    }
+    e1 = Entity.from_dict(model, data)
+    data["properties"]["name"] = ["Foobar Exo Something EXC B"]
+    e2 = Entity.from_dict(model, data)
+    data["id"] = "isin-987654321"
+    data["properties"]["isin"] = ["987654321"]
+    e3 = Entity.from_dict(model, data)
+    res_e1_e2 = RegressionV3.compare(e1, e2)
+    res_e2_e3 = RegressionV3.compare(e2, e3)
+    assert res_e1_e2.score > res_e2_e3.score, (res_e1_e2, res_e2_e3)
+    assert res_e1_e2.score > 0.5, res_e1_e2
+    assert res_e2_e3.score < 0.5, res_e2_e3
+
+
+def test_false_positive():
+    """
+    Regression test for false positive where last name differs
+    """
+    data1 = {
+        "id": "mike1",
+        "schema": "Person",
+        "properties": {
+            "name": [
+                "CHUDAKOV, Vladimir Vladimirovich",
+                "Vladimir Vladimirovich Chudakov",
+            ],
+            "alias": [
+                "Uladzimiravich Uladzimir Chudakou",
+                "Уладзіміравіч Уладзімір Чудакоў",
+            ],
+            "firstName": ["Uladzimiravich", "Vladimir", "Владимир", "Уладзіміравіч"],
+            "lastName": ["Chudakou", "Chudakov", "Чудаков", "Чудакоў"],
+            "country": ["by"],
+        },
+    }
+    data2 = {
+        "id": "mike2",
+        "schema": "Person",
+        "properties": {
+            "name": ["Kachanau Uladzimir Uladzimiravich"],
+            "alias": [
+                "Kachanov Vladimir Vladimirovich",
+                "КАЧАНАУ Уладзімір Уладзіміравіч",
+                "КАЧАНОВ Владимир Владимирович",
+            ],
+            "firstName": ["Uladzimir", "Vladimir", "Владимир", "Уладзімір"],
+            "lastName": ["Kachanau", "Kachanov", "КАЧАНАУ", "КАЧАНОВ"],
+            "fatherName": [
+                "Uladzimiravic", "Vladimirovich", "Владимирович", "Уладзіміравіч",
+            ],
+            "country": ["by"],
+        },
+    }
+    e1 = Entity.from_dict(model, data1)
+    e2 = Entity.from_dict(model, data2)
+    res = RegressionV3.compare(e1, e2)
+    assert res.score < 0.9, res

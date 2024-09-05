@@ -45,12 +45,16 @@ def name_levenshtein(left: E, right: E) -> float:
 def first_name_match(left: E, right: E) -> float:
     """Matching first/given name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["firstName"]))
+    if not (lv and rv):
+        return np.nan
     return 1.0 if has_overlap(lv, rv) else 0.0
 
 
 def family_name_match(left: E, right: E) -> float:
     """Matching family name between the two entities."""
     lv, rv = tokenize_pair(props_pair(left, right, ["lastName"]))
+    if not (lv and rv):
+        return np.nan
     return 1.0 if has_overlap(lv, rv) else 0.0
 
 
@@ -95,10 +99,10 @@ def name_numbers(left: E, right: E) -> float:
 
 def name_similarity(left: E, right: E) -> float:
     """Compute the similarity between the names of two entities."""
-    return mean(
+    return max(
         [
             name_match(left, right),
-            name_token_overlap(left, right),
+            0.5 * name_token_overlap(left, right),
             name_levenshtein(left, right),
         ]
     )

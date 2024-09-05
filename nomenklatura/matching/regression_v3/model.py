@@ -14,10 +14,11 @@ from nomenklatura.matching.regression_v3.misc import phone_match, email_match, p
 from nomenklatura.matching.regression_v3.misc import address_match, address_numbers
 from nomenklatura.matching.regression_v3.misc import identifier_match, birth_place
 from nomenklatura.matching.regression_v3.misc import org_identifier_match
-from nomenklatura.matching.regression_v3.misc import country_mismatch
+from nomenklatura.matching.regression_v3.misc import security_isin_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_year_disjoint, dob_similarity
+from nomenklatura.matching.compare.countries import country_match
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
@@ -30,10 +31,7 @@ class RegressionV3(ScoringAlgorithm):
     NAME = "regression-v3"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
     FEATURES: List[CompareFunction] = [
-        #name_match,
-        #name_token_overlap,
         name_numbers,
-        #name_levenshtein,
         name_similarity,
         phone_match,
         email_match,
@@ -43,11 +41,12 @@ class RegressionV3(ScoringAlgorithm):
         family_name_match,
         birth_place,
         gender_mismatch,
-        country_mismatch,
+        country_match,
         position_country_mismatch,
         org_identifier_match,
         address_match,
         address_numbers,
+        security_isin_mismatch,
     ]
 
     @classmethod
