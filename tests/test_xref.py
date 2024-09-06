@@ -6,6 +6,7 @@ from nomenklatura.dataset.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1
+from nomenklatura.matching.regression_v3.model import RegressionV3
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.xref import xref
@@ -81,7 +82,7 @@ def test_xref_potential_conflicts(
         resolver,
         store,
         index_path,
-        algorithm=RegressionV1,
+        algorithm=RegressionV3,
         conflicting_match_threshold=0.9,
     )
     stdout = capsys.readouterr().out

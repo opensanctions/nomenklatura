@@ -36,7 +36,7 @@ def test_dob_matches():
     assert dob_year_matches(left, right) == 0.0
     assert dob_day_disjoint(left, right) == 1.0
     assert dob_year_disjoint(left, right) == 1.0
-    assert dob_similarity(left, right) == -1.0
+    assert dob_similarity(left, right) == -0.3
     none = e("Person", name="Harry")
     assert dob_matches(left, none) == 0.0
     assert dob_year_matches(left, none) == 0.0

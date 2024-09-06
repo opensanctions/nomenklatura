@@ -101,14 +101,14 @@ def dob_similarity(query: E, result: E) -> float:
     if has_overlap(query_days, result_days):
         return 1.0
 
-    # precise dates available but have no common values
-    if is_disjoint(query_days, result_days):
-        return -0.3
-
     # clerical errors on precise dates
     for qd, rd in product(query_days, result_days):
         if dam_levenshtein(qd, rd) <= 1:
             return 0.5
+
+    # precise dates available but have no common values
+    if is_disjoint(query_days, result_days):
+        return -0.3
 
     # years overlap
     query_years = _dates_precision(query_dates, Precision.YEAR)
