@@ -16,7 +16,7 @@ from nomenklatura.matching.regression_v3.misc import org_identifier_match
 from nomenklatura.matching.compare.countries import country_match
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
-from nomenklatura.matching.compare.dates import dob_year_disjoint
+from nomenklatura.matching.compare.dates import dob_year_disjoint, dob_similarity
 from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
 from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
@@ -36,9 +36,7 @@ class RegressionV3(ScoringAlgorithm):
         phone_match,
         email_match,
         identifier_match,
-        dob_matches,
-        dob_year_matches,
-        dob_year_disjoint,
+        dob_similarity,
         first_name_match,
         family_name_match,
         birth_place,
