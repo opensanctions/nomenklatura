@@ -6,7 +6,7 @@ from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney.proxy import E
 
 
-from nomenklatura.matching.regression_v3.names import first_name_match
+from nomenklatura.matching.regression_v3.names import first_name_match, name_similarity
 from nomenklatura.matching.regression_v3.names import family_name_match
 from nomenklatura.matching.regression_v3.names import name_levenshtein, name_match
 from nomenklatura.matching.regression_v3.names import name_token_overlap, name_numbers
@@ -30,10 +30,11 @@ class RegressionV3(ScoringAlgorithm):
     NAME = "regression-v3"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
     FEATURES: List[CompareFunction] = [
-        name_match,
-        name_token_overlap,
+        #name_match,
+        #name_token_overlap,
         name_numbers,
-        name_levenshtein,
+        #name_levenshtein,
+        name_similarity,
         phone_match,
         email_match,
         identifier_match,

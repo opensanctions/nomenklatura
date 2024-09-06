@@ -2,6 +2,7 @@ from followthemoney import model
 
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import RegressionV3
+from nomenklatura.matching.regression_v3.names import name_match
 
 candidate = {
     "id": "left-putin",
@@ -123,7 +124,7 @@ def test_name_country():
         "id": "mike1",
         "schema": "Person",
         "properties": {
-            "name": ["Mykhailov Hlib Leonidovych", "Михайлов Гліб Леонідович"],
+            "name": ["Mykhailov Hlib Leonidovych"],
             "country": ["ru"],
         },
     }
@@ -131,4 +132,32 @@ def test_name_country():
     data["id"] = "mike2"
     e2 = Entity.from_dict(model, data)
     res = RegressionV3.compare(e1, e2)
-    assert 0.91 < res.score < 0.93, res
+    assert 0.92 < res.score < 0.93, res
+
+
+def test_name_match():
+    data = {
+        "id": "mike1",
+        "schema": "Person",
+        "properties": {
+            "name": [
+                "John",
+            ],
+        },
+    }
+    e1 = Entity.from_dict(model, data)
+    data["id"] = "mike2"
+    e2 = Entity.from_dict(model, data)
+    assert 0.72 < name_match(e1, e2) < 0.73
+
+    e1.set("name", ["a" * 100])
+    e2.set("name", ["a" * 100])
+    assert 0.86 < name_match(e1, e2) < 0.87
+
+    e1.set("name", [])
+    e2.set("name", [])
+    for i in range(10):
+        char = chr(65 + i)
+        e1.add("name", char * 100)
+        e2.add("name", char * 100)
+    assert 1.0 == name_match(e1, e2)
