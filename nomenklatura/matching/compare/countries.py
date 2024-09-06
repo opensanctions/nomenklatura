@@ -5,7 +5,12 @@ from nomenklatura.matching.util import type_pair
 from nomenklatura.matching.compare.util import is_disjoint
 
 
-def country_mismatch(query: E, result: E) -> float:
-    """Both entities are linked to different countries."""
+def country_match(query: E, result: E) -> float:
+    """Both entities are linked to the same country."""
     qv, rv = type_pair(query, result, registry.country)
-    return 1.0 if is_disjoint(qv, rv) else 0.0
+    if qv and rv:
+        if has_overlap(qv, rv):
+            return 1.0
+        elif is_disjoint(qv, rv):
+            return -1.0
+    return 0.0
