@@ -2,8 +2,9 @@ from typing import Iterable, Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
+from nomenklatura.matching.regression_v3.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
+from nomenklatura.matching.compare.names import aligned_levenshtein
 from nomenklatura.matching.util import has_schema, props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets
 from nomenklatura.util import fingerprint_name
@@ -30,7 +31,13 @@ def name_levenshtein(left: E, right: E) -> float:
     similar names linked to both entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
-    return max_in_sets(lvn, rvn, compare_levenshtein)
+    if has_schema(left, right, "Person"):
+        return max_in_sets(lvn, rvn, compare_levenshtein)
+    else:
+        return max(
+            max_in_sets(lv, rv, aligned_levenshtein),
+            max_in_sets(rv, lv, aligned_levenshtein),
+        )
 
 
 def first_name_match(left: E, right: E) -> float:
