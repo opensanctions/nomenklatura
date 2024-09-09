@@ -82,7 +82,7 @@ def test_xref_potential_conflicts(
         resolver,
         store,
         index_path,
-        algorithm=RegressionV1,
+        algorithm=RegressionV3,
         conflicting_match_threshold=0.9,
     )
     stdout = capsys.readouterr().out

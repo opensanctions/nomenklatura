@@ -1,6 +1,7 @@
 from typing import Iterable, Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
+import numpy as np
 
 from nomenklatura.matching.regression_v3.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
@@ -58,10 +59,13 @@ def name_match(left: E, right: E) -> float:
 
 def name_token_overlap(left: E, right: E) -> float:
     """Evaluate the proportion of identical words in each name."""
-    lv, rv = tokenize_pair(type_pair(left, right, registry.name))
-    common = lv.intersection(rv)
-    tokens = min(len(lv), len(rv))
-    return float(len(common)) / float(max(2.0, tokens))
+    lv, rv = type_pair(left, right, registry.name)
+    lvt, rvt = tokenize_pair((lv, rv))
+    common = lvt.intersection(rvt)
+    num_names = max(len(lv), len(rv))
+    if min(len(lv), len(rv)) == 0:
+        return np.nan
+    return float(len(common)) / num_names
 
 
 def name_numbers(left: E, right: E) -> float:
