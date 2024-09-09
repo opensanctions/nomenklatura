@@ -101,6 +101,10 @@ def test_compare_features():
 
 
 def test_position_country():
+    """
+    Two names matching with country mismatch should score better than two countries
+    matching with name mismatch
+    """
     et1 = Entity.from_dict(model, POS_ET)
     et2 = Entity.from_dict(model, POS_ET2)
     vu1 = Entity.from_dict(model, POS_VU)
@@ -108,8 +112,8 @@ def test_position_country():
     res_et1_et2 = RegressionV3.compare(et1, et2)
     res_et1_vu1 = RegressionV3.compare(et1, vu1)
     assert res_et1_et2.score > res_et1_vu1.score, (res_et1_et2, res_et1_vu1)
-    assert res_et1_et2.score > 0.5, res_et1_et2
-    assert res_et1_vu1.score < 0.5, res_et1_vu1
+    assert res_et1_et2.score > 0.3, res_et1_et2
+    assert res_et1_vu1.score < 0.2, res_et1_vu1
 
 
 def test_name_country():
@@ -127,5 +131,4 @@ def test_name_country():
     data["id"] = "mike2"
     e2 = Entity.from_dict(model, data)
     res = RegressionV3.compare(e1, e2)
-    assert 0.8 < res.score < 0.96, res
-
+    assert 0.91 < res.score < 0.93, res

@@ -1,8 +1,9 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
+import numpy as np
 
 from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import has_overlap, extract_numbers
+from nomenklatura.matching.compare.util import has_overlap, extract_numbers, is_disjoint
 from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets, has_schema
 from nomenklatura.util import normalize_name
@@ -61,3 +62,11 @@ def org_identifier_match(query: E, result: E) -> float:
         return 0.0
     lv, rv = type_pair(query, result, registry.identifier)
     return 1.0 if has_overlap(lv, rv) else 0.0
+
+
+def country_mismatch(query: E, result: E) -> float:
+    """Both entities are linked to different countries. Treat missing data blank."""
+    qv, rv = type_pair(query, result, registry.country)
+    if len(qv) == 0 or len(rv) == 0:
+        return np.nan
+    return 1.0 if is_disjoint(qv, rv) else 0.0

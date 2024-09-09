@@ -78,6 +78,7 @@ def xref(
 
             if scored:
                 result = algorithm.compare(left, right)
+                print("xref", result)
                 score = result.score
 
             scores.append(score)

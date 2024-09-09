@@ -6,6 +6,7 @@ from nomenklatura.dataset.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1
+from nomenklatura.matching.regression_v3.model import RegressionV3
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.xref import xref
@@ -94,3 +95,5 @@ def test_xref_potential_conflicts(
     assert a.get("name")[0] in flat, stdout
     assert b.get("name")[0] in flat, stdout
     assert c.get("name")[0] in flat, stdout
+    print(stdout)
+    assert False
