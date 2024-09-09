@@ -8,6 +8,7 @@ from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
 from sklearn.model_selection import GroupShuffleSplit  # type: ignore
 from sklearn.linear_model import LogisticRegression  # type: ignore
+from sklearn.impute import SimpleImputer  # type: ignore
 from sklearn import metrics  # type: ignore
 from concurrent.futures import ProcessPoolExecutor
 
@@ -69,7 +70,11 @@ def train_matcher(pairs_file: PathLike, splits: int = 1) -> None:
         print()
         log.info("Training model...(split %d)" % split)
         logreg = LogisticRegression(penalty="l2")
-        pipe = make_pipeline(StandardScaler(), logreg)
+        pipe = make_pipeline(
+            SimpleImputer(strategy="mean"),
+            StandardScaler(),
+            logreg,
+        )
         pipe.fit(X_train, y_train)
         coef = logreg.coef_[0]
         coefficients = {n.__name__: c for n, c in zip(RegressionV3.FEATURES, coef)}
