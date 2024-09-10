@@ -161,3 +161,44 @@ def test_name_match():
         e1.add("name", char * 100)
         e2.add("name", char * 100)
     assert 1.0 == name_match(e1, e2)
+
+
+def test_name_address():
+
+    a = Entity.from_dict(
+        model,
+        {
+            "id": "a",
+            "schema": "Company",
+            "properties": {
+                "name": ["The AAA Weapons and Munitions Factory Joint Stock Company"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    b = Entity.from_dict(
+        model,
+        {
+            "id": "b",
+            "schema": "Company",
+            "properties": {
+                "name": ["The BBB Weapons and Munitions Factory Joint Stock Company"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    c = Entity.from_dict(
+        model,
+        {
+            "id": "c",
+            "schema": "Company",
+            "properties": {
+                "name": ["The AAA Weapons and Ammunition Factory Joint Stock Company"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    ac = RegressionV3.compare(a, c)
+    assert 0.5 < ac.score < 0.9
+    ab = RegressionV3.compare(a, b)
+    assert 0.5 < ab.score < 0.9

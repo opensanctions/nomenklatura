@@ -19,6 +19,8 @@ def birth_place(query: E, result: E) -> float:
 def address_match(query: E, result: E) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(query, result, registry.address)
+    if not (lv and rv):
+        return np.nan
     lvn = [normalize_name(v) for v in lv]
     rvn = [normalize_name(v) for v in rv]
     return max_in_sets(lvn, rvn, compare_levenshtein)
