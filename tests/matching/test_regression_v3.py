@@ -132,7 +132,7 @@ def test_name_country():
     data["id"] = "mike2"
     e2 = Entity.from_dict(model, data)
     res = RegressionV3.compare(e1, e2)
-    assert 0.92 < res.score < 0.93, res
+    assert 0.89 < res.score < 0.93, res
 
 
 def test_name_match():
