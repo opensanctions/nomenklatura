@@ -10,7 +10,7 @@ from nomenklatura.matching.regression_v3.names import first_name_match, name_sim
 from nomenklatura.matching.regression_v3.names import family_name_match
 from nomenklatura.matching.regression_v3.names import name_levenshtein, name_match
 from nomenklatura.matching.regression_v3.names import name_token_overlap, name_numbers
-from nomenklatura.matching.regression_v3.misc import phone_match, email_match
+from nomenklatura.matching.regression_v3.misc import phone_match, email_match, position_country_mismatch
 from nomenklatura.matching.regression_v3.misc import address_match, address_numbers
 from nomenklatura.matching.regression_v3.misc import identifier_match, birth_place
 from nomenklatura.matching.regression_v3.misc import org_identifier_match
@@ -44,6 +44,7 @@ class RegressionV3(ScoringAlgorithm):
         birth_place,
         gender_mismatch,
         country_mismatch,
+        position_country_mismatch,
         org_identifier_match,
         address_match,
         address_numbers,

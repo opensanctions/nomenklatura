@@ -68,7 +68,17 @@ def org_identifier_match(query: E, result: E) -> float:
 
 def country_mismatch(query: E, result: E) -> float:
     """Both entities are linked to different countries. Treat missing data blank."""
+    if has_schema(query, result, "Position"):
+        return np.nan
     qv, rv = type_pair(query, result, registry.country)
     if len(qv) == 0 or len(rv) == 0:
         return np.nan
     return 1.0 if is_disjoint(qv, rv) else 0.0
+
+
+def position_country_mismatch(query: E, result: E) -> float:
+    """Whether positions have the same country or not"""
+    if not has_schema(query, result, "Position"):
+        return np.nan
+    lv, rv = type_pair(query, result, registry.country)
+    return 1.0 if is_disjoint(lv, rv) else 0
