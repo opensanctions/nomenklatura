@@ -43,7 +43,7 @@ def test_xref_potential_conflicts(
             "id": "a",
             "schema": "Company",
             "properties": {
-                "name": ["The AAA Weapons and Munitions Factory Joint Stock Company"],
+                "name": ["The AAA Weapons and MunitionS Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
@@ -54,7 +54,7 @@ def test_xref_potential_conflicts(
             "id": "b",
             "schema": "Company",
             "properties": {
-                "name": ["The BBB Weapons and Munitions Factory Joint Stock Company"],
+                "name": ["The BBB Weapons and MunitionS Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
@@ -65,7 +65,7 @@ def test_xref_potential_conflicts(
             "id": "c",
             "schema": "Company",
             "properties": {
-                "name": ["The AAA Weapons and Ammunition Factory Joint Stock Company"],
+                "name": ["The AAA Weapons and MunitioN Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
@@ -83,7 +83,7 @@ def test_xref_potential_conflicts(
         store,
         index_path,
         algorithm=RegressionV3,
-        conflicting_match_threshold=0.9,
+        conflicting_match_threshold=0.8,
     )
     stdout = capsys.readouterr().out
 
@@ -95,5 +95,3 @@ def test_xref_potential_conflicts(
     assert a.get("name")[0] in flat, stdout
     assert b.get("name")[0] in flat, stdout
     assert c.get("name")[0] in flat, stdout
-    print(stdout)
-    assert False

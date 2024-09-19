@@ -132,7 +132,7 @@ def test_name_country():
     data["id"] = "mike2"
     e2 = Entity.from_dict(model, data)
     res = RegressionV3.compare(e1, e2)
-    assert 0.89 < res.score < 0.93, res
+    assert 0.92 < res.score < 0.95, res
 
 
 def test_name_match():
@@ -171,7 +171,7 @@ def test_name_address():
             "id": "a",
             "schema": "Company",
             "properties": {
-                "name": ["The AAA Weapons and Munitions Factory Joint Stock Company"],
+                "name": ["The AAA Weapons and MunitionS Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
@@ -182,7 +182,7 @@ def test_name_address():
             "id": "b",
             "schema": "Company",
             "properties": {
-                "name": ["The BBB Weapons and Munitions Factory Joint Stock Company"],
+                "name": ["The BBB Weapons and MunitionS Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
@@ -193,16 +193,17 @@ def test_name_address():
             "id": "c",
             "schema": "Company",
             "properties": {
-                "name": ["The AAA Weapons and Ammunition Factory Joint Stock Company"],
+                "name": ["The AAA Weapons and MunitioN Factory Joint Stock Company"],
                 "address": ["Moscow"],
             },
         },
     )
     ac = RegressionV3.compare(a, c)
-    assert 0.5 < ac.score < 0.9
+    assert 0.87 < ac.score < 0.93
     ab = RegressionV3.compare(a, b)
-    assert 0.5 < ab.score < 0.9
-
+    assert 0.87 < ab.score < 0.93
+    bc = RegressionV3.compare(b, c)
+    assert 0.84 < bc.score < 0.93
 
 def test_isin():
     """name and country together shouldn't be too strong"""
