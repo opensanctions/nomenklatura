@@ -6,7 +6,7 @@ import numpy as np
 
 from nomenklatura.matching.regression_v3.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
-from nomenklatura.matching.compare.names import aligned_levenshtein
+from nomenklatura.matching.compare.names import aligned_levenshtein, name_fingerprint_levenshtein, symmetric_aligned_levenshtein
 from nomenklatura.matching.util import has_schema, props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets
 from nomenklatura.util import fingerprint_name
@@ -31,15 +31,12 @@ def normalize_names(raws: Iterable[str]) -> Set[str]:
 def name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
-    lv, rv = type_pair(left, right, registry.name)
-    lvn, rvn = normalize_names(lv), normalize_names(rv)
     if has_schema(left, right, "Person"):
+        lv, rv = type_pair(left, right, registry.name)
+        lvn, rvn = normalize_names(lv), normalize_names(rv)
         return max_in_sets(lvn, rvn, compare_levenshtein)
     else:
-        return max(
-            max_in_sets(lv, rv, aligned_levenshtein),
-            max_in_sets(rv, lv, aligned_levenshtein),
-        )
+        return name_fingerprint_levenshtein(left, right, symmetric_aligned_levenshtein)
 
 
 def first_name_match(left: E, right: E) -> float:
@@ -98,7 +95,9 @@ def name_numbers(left: E, right: E) -> float:
 
 
 def name_similarity(left: E, right: E) -> float:
-    """Compute the similarity between the names of two entities."""
+    """Compute the similarity between the names of two entities, picking the max from
+    a full string match, token overlap-based score, and levenshtein distance-based
+    score."""
     return max(
         [
             name_match(left, right),

@@ -95,7 +95,37 @@ def aligned_levenshtein(qfp: str, rfp: str) -> float:
     return levenshtein_similarity(qaligned, raligned)
 
 
-def name_fingerprint_levenshtein(query: E, result: E) -> float:
+def symmetric_aligned_levenshtein(qfp: str, rfp: str) -> float:
+    qtokens = name_words(qfp, min_length=2)
+    rtokens = name_words(rfp, min_length=2)
+    qlen = len(qtokens)
+    rlen = len(rtokens)
+    for part in name_words(clean_name_ascii(rfp), min_length=2):
+        if part not in rtokens:
+            rtokens.append(part)
+
+    scores: Dict[Tuple[str, str], float] = {}
+    # compute all pairwise scores for name parts:
+    for q, r in product(set(qtokens), set(rtokens)):
+        scores[(q, r)] = levenshtein_similarity(q, r)
+    aligned: List[Tuple[str, str, float]] = []
+    # find the best pairing for each name part by score:
+    for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
+        # one name part can only be used once, but can show up multiple times:
+        while q in qtokens and r in rtokens:
+            qtokens.remove(q)
+            rtokens.remove(r)
+            aligned.append((q, r, score))
+
+    qfactor = (qlen - len(qtokens)) / qlen
+    rfactor = (rlen - len(rtokens)) / rlen
+    qaligned = "".join(p[0] for p in aligned)
+    raligned = "".join(p[1] for p in aligned)
+    score = levenshtein_similarity(qaligned, raligned)
+    return score * max(qfactor, rfactor)
+
+
+def name_fingerprint_levenshtein(query: E, result: E, lev=aligned_levenshtein) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
@@ -112,7 +142,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
             continue
         score = levenshtein_similarity(qfp.replace(" ", ""), rfp.replace(" ", ""))
         max_score = max(max_score, score)
-        score = aligned_levenshtein(qfp, rfp)
+        score = lev(qfp, rfp)
         max_score = max(max_score, score)
     return max_score
 
