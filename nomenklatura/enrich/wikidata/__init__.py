@@ -1,5 +1,5 @@
 import logging
-from functools import cache
+from functools import lru_cache
 from typing import cast, Generator, Any, Dict, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from rigour.ids.wikidata import is_qid
@@ -115,7 +115,7 @@ class WikidataEnricher(Enricher[DS]):
             return None
         return Item(entity)
 
-    @cache
+    @lru_cache(maxsize=100000)
     def get_label(self, qid: str) -> LangText:
         cache_key = f"{LABEL_PREFIX}{qid}"
         cached = self.cache.get_json(cache_key, max_age=self.label_cache_days)
