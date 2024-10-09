@@ -1,22 +1,29 @@
-import logging
-from normality import WS
-from pathlib import Path
-from rigour.ids import StrictFormat
-from followthemoney.types import registry
-from typing import Any, Dict, List, Tuple, Generator, Set
-from tantivy import Query, Occur, Index, SchemaBuilder, Document
 import math
+import logging
+from pathlib import Path
+from functools import lru_cache
+from normality import WS, ascii_text
+from followthemoney.types import registry
+from typing import Any, Dict, List, Tuple, Generator, Set, Optional
+from tantivy import Query, Occur, Index, SchemaBuilder, Document
 from collections import defaultdict
+from rigour.text import metaphone
+from rigour.text.scripts import is_modern_alphabet
+from fingerprints.cleanup import clean_name_light
 
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Identifier, Pair
 from nomenklatura.store import View
-from nomenklatura.util import fingerprint_name, clean_text_basic
 from nomenklatura.index.common import BaseIndex
+from nomenklatura.util import clean_text_basic
 
 log = logging.getLogger(__name__)
 
+FIELD_ID = "entity_id"
+FIELD_SCHEMA = "schemata"
+FIELD_PHONETIC = "phonetic_name"
+FIELD_TEXT = registry.text.name
 INDEX_IGNORE = (
     registry.entity,
     registry.url,
@@ -30,20 +37,43 @@ INDEX_IGNORE = (
     registry.topic,
 )
 FULL_TEXT = {
-    # registry.text,
+    registry.text,
     registry.string,
     registry.address,
     registry.identifier,
+    registry.name,
     # registry.email,
 }
 BOOST_NAME_PHRASE = 4.0
 BOOSTS = {
     registry.name.name: 4.0,
-    registry.phone.name: 3.0,
-    registry.email.name: 3.0,
-    registry.address.name: 3.0,
-    registry.identifier.name: 5.0,
+    registry.phone.name: 5.0,
+    registry.email.name: 5.0,
+    # registry.address.name: 3.0,
+    registry.identifier.name: 7.0,
 }
+
+
+@lru_cache(maxsize=20000)
+def _ascii_word(word: str) -> Optional[str]:
+    return ascii_text(word)
+
+
+@lru_cache(maxsize=20000)
+def _phonetic_word(word: str) -> Optional[str]:
+    if not is_modern_alphabet(word) or len(word) < 3:
+        return None
+    phon = metaphone(_ascii_word(word))
+    if not len(phon):
+        return None
+    return phon
+
+
+def _identifier_clean(value: str) -> Optional[str]:
+    chars = [c for c in value if c.isalnum()]
+    if len(chars) < 4:
+        return None
+    return "".join(chars).upper()
 
 
 class TantivyIndex(BaseIndex[DS, CE]):
@@ -58,14 +88,14 @@ class TantivyIndex(BaseIndex[DS, CE]):
         self.threshold = float(options.get("threshold", 1.0))
 
         schema_builder = SchemaBuilder()
-        schema_builder.add_text_field("entity_id", tokenizer_name="raw", stored=True)
-        schema_builder.add_text_field("schemata", tokenizer_name="raw")
-        schema_builder.add_text_field(registry.name.name)
+        schema_builder.add_text_field(FIELD_ID, tokenizer_name="raw", stored=True)
+        schema_builder.add_text_field(FIELD_SCHEMA, tokenizer_name="raw")
+        schema_builder.add_text_field(FIELD_PHONETIC, tokenizer_name="raw")
+        schema_builder.add_text_field(FIELD_TEXT)
+        schema_builder.add_text_field(registry.name.name, tokenizer_name="raw")
         schema_builder.add_text_field(registry.email.name)
-        schema_builder.add_text_field(registry.address.name)
-        schema_builder.add_text_field(registry.text.name)
+        # schema_builder.add_text_field(registry.address.name)
         schema_builder.add_text_field(registry.identifier.name, tokenizer_name="raw")
-        schema_builder.add_text_field(registry.iban.name, tokenizer_name="raw")
         schema_builder.add_text_field(registry.phone.name, tokenizer_name="raw")
         schema_builder.add_text_field(registry.country.name, tokenizer_name="raw")
         schema_builder.add_text_field(registry.date.name, tokenizer_name="raw")
@@ -81,111 +111,128 @@ class TantivyIndex(BaseIndex[DS, CE]):
             self.build_index = True
 
     @classmethod
-    def entity_fields(cls, entity: CE) -> Generator[Tuple[str, Set[str]], None, None]:
+    def index_entity(cls, entity: CE) -> Dict[str, Set[str]]:
+        """Convert the given entity's properties into fields in a format suitable for indexing."""
+        fields: Dict[str, Set[str]] = defaultdict(set)
+
+        for prop, value in entity.itervalues():
+            type = prop.type
+            if type in INDEX_IGNORE or not prop.matchable:
+                continue
+
+            if type in FULL_TEXT:
+                fields[FIELD_TEXT].add(value)
+
+            if type == registry.name:
+                clean = clean_name_light(value)
+                if clean is None:
+                    continue
+                for word in clean.split(WS):
+                    fields[type.name].add(word)
+                    ascii = _ascii_word(word)
+                    if ascii is not None:
+                        fields[type.name].add(ascii)
+                    phonetic = _phonetic_word(word)
+                    if phonetic is not None:
+                        fields[FIELD_PHONETIC].add(phonetic)
+                continue
+
+            if type == registry.date:
+                fields[type.name].add(value[:4])
+                if len(value) > 9:
+                    fields[type.name].add(value[:10])
+                continue
+
+            if type == registry.identifier:
+                clean_id = _identifier_clean(value)
+                if clean_id is not None:
+                    fields[type.name].add(clean_id)
+                continue
+
+            if type in (
+                registry.phone,
+                registry.email,
+                registry.country,
+                # registry.address,
+            ):
+                fields[type.name].add(value)
+
+        # print(dict(fields))
+        return fields
+
+    def field_queries(self, entity: CE) -> Generator[Query, None, None]:
         """
-        A generator of each
-
-        - index field name and
-        -  the set of normalised but not tokenised values for that field
-
-        for the given entity.
+        A generator of queries for the given index field and set of values.
         """
         fields: Dict[str, Set[str]] = defaultdict(set)
 
         for prop, value in entity.itervalues():
             type = prop.type
-            if type in INDEX_IGNORE:
+            if type in INDEX_IGNORE or not prop.matchable:
                 continue
 
-            if type in FULL_TEXT:
-                fields[registry.text.name].add(value.lower())
-
-            if type == registry.name:
-                fields[type.name].add(value.lower())
-                norm = fingerprint_name(value)
-                if norm is not None:
-                    fields[type.name].add(norm)
-                continue
-
-            if type == registry.date and prop.matchable:
-                if len(value) > 4:
-                    fields[type.name].add(value[:4])
-                fields[type.name].add(value[:10])
-                continue
-
-            if type == registry.identifier and prop.matchable:
-                clean_id = StrictFormat.normalize(value)
-                if clean_id is not None:
-                    fields[type.name].add(clean_id)
-                continue
-
-            if type == registry.address and prop.matchable:
-                cleaned = clean_text_basic(value)
-                if cleaned is not None:
-                    fields[type.name].add(cleaned)
-                continue
-
-            if prop.matchable and type in (
+            if type in (
                 registry.phone,
                 registry.email,
                 registry.country,
             ):
                 fields[type.name].add(value)
-        yield from fields.items()
+                continue
 
-    def field_queries(
-        self, field: str, values: Set[str]
-    ) -> Generator[Query, None, None]:
-        """
-        A generator of queries for the given index field and set of values.
-        """
-        # Name phrase
-        if field == registry.name.name:
-            for value in values:
-                words = value.split(WS)
-                word_count = len(words)
-                if word_count > 1:
-                    slop = math.ceil(2 * math.log(word_count))
-                    yield Query.boost_query(
-                        Query.phrase_query(self.schema, field, words, slop),  # type: ignore
-                        BOOST_NAME_PHRASE,
-                    )
+            if type == registry.identifier:
+                clean_id = _identifier_clean(value)
+                if clean_id is not None:
+                    fields[type.name].add(clean_id)
+                fields[FIELD_TEXT].add(value)
+                continue
 
-        # Any of set of tokens in all values of the field
-        if field in {
-            registry.address.name,
-            registry.name.name,
-            registry.text.name,
-            registry.string.name,
-        }:
-            word_set: Set[str] = set()
-            for value in values:
-                word_set.update(value.split(WS))
-            term_queries: List[Query] = []
-            for word in word_set:
-                term_queries.append(Query.term_query(self.schema, field, word))
-            yield Query.boost_query(
-                Query.boolean_query([(Occur.Should, q) for q in term_queries]),
-                BOOSTS.get(field, 1.0),
-            )
-            return
+            if type == registry.date:
+                fields[type.name].add(value[:4])
+                if len(value) > 9:
+                    fields[type.name].add(value[:10])
+                continue
 
-        # entire value as a term
-        for value in values:
-            yield Query.boost_query(
-                Query.term_query(self.schema, field, value),
-                BOOSTS.get(field, 1.0),
-            )
+            if type == registry.name:
+                clean = clean_name_light(value)
+                if clean is None:
+                    continue
+                for word in clean.split(WS):
+                    fields[type.name].add(word)
+                    phonetic = _phonetic_word(word)
+                    if phonetic is not None:
+                        fields[FIELD_PHONETIC].add(phonetic)
+                    ascii_word = _ascii_word(word)
+                    if ascii_word is not None:
+                        fields[type.name].add(ascii_word)
+                continue
+
+            if type == registry.address:
+                cleaned = clean_text_basic(value)
+                if cleaned:
+                    for token in cleaned.split(WS):
+                        if len(token) > 1:
+                            fields[FIELD_TEXT].update(token)
+
+            # TODO: not doing addresses at all for the moment.
+
+        for field, values in fields.items():
+            if len(values) > 1:
+                query = Query.term_set_query(self.schema, field, list(values))
+            else:
+                query = Query.term_query(self.schema, field, list(values)[0])
+            if field in BOOSTS:
+                query = Query.boost_query(query, BOOSTS[field])
+            yield query
 
     def entity_query(self, entity: CE) -> Query:
-        schema_query = Query.term_query(self.schema, "schemata", entity.schema.name)
+        schema_query = Query.term_query(self.schema, FIELD_SCHEMA, entity.schema.name)
         queries: List[Tuple[Occur, Query]] = [(Occur.Must, schema_query)]
-        if entity.id is not None:
-            id_query = Query.term_query(self.schema, "entity_id", entity.id)
-            queries.append((Occur.MustNot, id_query))
-        for field, value in self.entity_fields(entity):
-            for query in self.field_queries(field, value):
-                queries.append((Occur.Should, query))
+        # if entity.id is not None:
+        #     id_query = Query.term_query(self.schema, FIELD_ID, entity.id)
+        #     queries.append((Occur.MustNot, id_query))
+        for query in self.field_queries(entity):
+            queries.append((Occur.Should, query))
+        # print(queries)
         return Query.boolean_query(queries)
 
     def build(self) -> None:
@@ -205,7 +252,7 @@ class TantivyIndex(BaseIndex[DS, CE]):
             idx += 1
             schemata = [s.name for s in entity.schema.matchable_schemata]
             document = Document(entity_id=entity.id, schemata=schemata)
-            for field, values in self.entity_fields(entity):
+            for field, values in self.index_entity(entity).items():
                 for value in values:
                     document.add_text(field, value)
             writer.add_document(document)
@@ -246,7 +293,6 @@ class TantivyIndex(BaseIndex[DS, CE]):
             query = self.entity_query(entity)
             searcher = self.index.searcher()
             for score, address in searcher.search(query, self.max_candidates).hits:
-                candidates += 1
                 if score < threshold:
                     break
                 # Value of type "Document" is not indexable
@@ -254,11 +300,12 @@ class TantivyIndex(BaseIndex[DS, CE]):
                 other_id: str = doc["entity_id"][0]  # type: ignore
                 if entity.id == other_id:
                     continue
-                if (other_id, entity.id) in pairs:
-                    score = max(score, pairs.pop((other_id, entity.id)))
+                candidates += 1
+                inverted = pairs.pop((other_id, entity.id), 0.0)
+                score = max(score, inverted)
                 pairs[(entity.id, other_id)] = score
 
-                if len(pairs) > (max_pairs * 5):
+                if len(pairs) > (max_pairs * 10):
                     _pairs = sorted(pairs.items(), key=lambda p: p[1], reverse=True)
                     _pairs = _pairs[:max_pairs]
                     threshold = _pairs[-1][1]
