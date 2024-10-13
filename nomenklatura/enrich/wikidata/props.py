@@ -43,7 +43,7 @@ PROPS_DIRECT = {
     "P856": "website",
     "P512": "education",
     "P69": "education",
-    "P27": "nationality",
+    "P27": "citizenship",
     "P742": "weakAlias",
     "P172": "ethnicity",
     "P973": "sourceUrl",
