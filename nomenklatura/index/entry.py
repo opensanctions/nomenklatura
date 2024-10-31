@@ -10,7 +10,6 @@ class Entry(object):
     __slots__ = "idf", "entities"
 
     def __init__(self) -> None:
-        self.idf: float = 0.0
         self.entities: Dict[Identifier, int] = dict()
 
     def add(self, entity_id: Identifier) -> None:
@@ -21,13 +20,15 @@ class Entry(object):
         except KeyError:
             self.entities[entity_id] = 1
 
-    def compute(self, field: "Field") -> None:
-        """Compute weighted term frequency for scoring."""
-        self.idf = math.log(field.len / len(self.entities))
-
     def frequencies(
         self, field: "Field"
     ) -> Generator[Tuple[Identifier, float], None, None]:
+        """
+        Term Frequency (TF) for each entity in this entry.
+
+        TF being the number of occurrences of this token in the entity divided
+        by the total number of tokens in the entity (scoped to this field).
+        """
         for entity_id, mentions in self.entities.items():
             field_len = max(1, field.entities[entity_id])
             yield entity_id, (mentions / field_len)
@@ -68,9 +69,6 @@ class Field(object):
     def compute(self) -> None:
         self.len = max(1, len(self.entities))
         self.avg_len = sum(self.entities.values()) / self.len
-
-        for entry in self.tokens.values():
-            entry.compute(self)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
