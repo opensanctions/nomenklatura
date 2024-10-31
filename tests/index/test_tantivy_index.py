@@ -48,7 +48,7 @@ def test_match_score(dstore: SimpleMemoryStore, tantivy_index: TantivyIndex):
     dx = Dataset.make({"name": "test", "title": "Test"})
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = tantivy_index.match(entity)
-    view = dstore.default_view()
+    # view = dstore.default_view()
 
     assert len(matches) == 9, matches
 
