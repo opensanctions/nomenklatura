@@ -98,12 +98,7 @@ class Index(BaseIndex[DS, CE]):
 
                 if len(entry.entities) == 1 or len(entry.entities) > 100:
                     continue
-                entities = entry.frequencies(field)
-                if field_name == "country":
-                    for id, freq in entities:
-                        if id.id == "NK-cVfXUNMeCpGWyQVFLkQCe7":
-                            print(id, token, freq)
-                for (left, lw), (right, rw) in combinations(entities, 2):
+                for (left, lw), (right, rw) in combinations(entry.frequencies(field), 2):
                     if lw == 0.0 or rw == 0.0:
                         continue
                     pair = (max(left, right), min(left, right))
