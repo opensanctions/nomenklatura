@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 from nomenklatura import settings
+from nomenklatura.index.duckdb_index import DuckDBIndex
 from nomenklatura.index.tantivy_index import TantivyIndex
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
@@ -77,6 +78,13 @@ def dindex(index_path: Path, dstore: SimpleMemoryStore):
 @pytest.fixture(scope="function")
 def tantivy_index(index_path: Path, dstore: SimpleMemoryStore):
     index = TantivyIndex(dstore.default_view(), index_path)
+    index.build()
+    yield index
+
+
+@pytest.fixture(scope="function")
+def duckdb_index(index_path: Path, dstore: SimpleMemoryStore):
+    index = DuckDBIndex(dstore.default_view(), index_path)
     index.build()
     yield index
 

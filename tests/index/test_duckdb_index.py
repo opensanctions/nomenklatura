@@ -59,6 +59,22 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
     assert "de" in field_tokens["country"], field_tokens["country"]
     assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
+    assert "word" in field_tokens["word"], field_tokens["word"]
+
+
+def test_id_grouped_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
+    ids = set()
+    field_tokens = defaultdict(set)
+    for field_name, id, field_len, mentions in duckdb_index.id_grouped_mentions():
+        ids.add(id)
+        for token, count in mentions:
+            field_tokens[field_name].add(token)
+
+    assert len(ids) == 184, len(ids)
+    assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
+    assert "de" in field_tokens["country"], field_tokens["country"]
+    print(field_tokens["name"])
+    assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
 
 
 def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):

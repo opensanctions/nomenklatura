@@ -107,7 +107,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             row = field_len_rel.fetchone()
 
     def mentions(self) -> Generator[Tuple[str, str, str, int], None, None]:
-        """Yields tuples of [field_name, entity_id, token, mention_count]"""
+        """Yields tuples of (field_name, entity_id, token, mention_count)"""
 
         mentions_query = """
             SELECT field, id, token, count(*) as mentions
@@ -121,34 +121,43 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             yield row
             row = mentions_rel.fetchone()
 
+    def id_grouped_mentions(
+        self,
+    ) -> Generator[Tuple[str, str, int, List[Tuple[str, int]]], None, None]:
+        """
+        Yields tuples of (field_name, entity_id, field_len, [(token, mention_count)])
+        """
+        mentions_gen = self.mentions()
+        mention_row = None
+        # Read all field lengths into memory because the concurrent iteration
+        # sees to be exiting the outer loop early and giving partial results.
+        for field_name, id, field_len in list(self.field_lengths()):
+            mentions = []
+            try:
+                if mention_row is None:  # first iteration
+                    mention_field_name, mention_id, token, mention_count = next(
+                        mentions_gen
+                    )
+
+                while mention_field_name == field_name and mention_id == id:
+                    mentions.append((token, mention_count))
+                    mention_field_name, mention_id, token, mention_count = next(
+                        mentions_gen
+                    )
+                yield field_name, id, field_len, mentions
+            except StopIteration:
+                yield field_name, id, field_len, mentions
+                break
+
     def calculate_frequencies(self) -> None:
         csv_path = self.path / "frequencies.csv"
         with open(csv_path, "w") as fh:
             writer = csv.writer(fh)
             writer.writerow(["field", "id", "token", "frequency"])
 
-            mentions_gen = self.mentions()
-            mention_row = None
-            for field_name, id, field_len in self.field_lengths():
-                print(field_name, id, field_len)
-                if mention_row is None:  # first iteration
-                    mention_row = next(mentions_gen)
-                if mention_row is None:
-                    # If there's at least one field length, there should be at least one mention
-                    raise Exception("Unexpected empty mentions.")
-                frequencies = []
-                (mention_field_name, mention_id, token, mention_count) = mention_row
-
-                # For all the tokens in this field for this entity ID
-                while mention_field_name == field_name and mention_id == id:
-                    frequencies.append((token, mention_count / field_len))
-                    mention_row = next(mentions_gen)
-                    if mention_row is None:
-                        break
-                    (mention_field_name, mention_id, token, mention_count) = mention_row
-
-                for token, freq in frequencies:
-                    writer.writerow([field_name, id, token, freq])
+            for field_name, id, field_len, mentions in self.id_grouped_mentions():
+                for token, freq in mentions:
+                    writer.writerow([field_name, id, token, freq / field_len])
 
         log.info(f"Loading frequencies data... ({csv_path})")
         self.con.execute(
