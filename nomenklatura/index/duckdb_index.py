@@ -106,7 +106,9 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             yield row
             row = field_len_rel.fetchone()
 
-    def mentions(self):
+    def mentions(self) -> Generator[Tuple[str, str, str, int], None, None]:
+        """Yields tuples of [field_name, entity_id, token, mention_count]"""
+
         mentions_query = """
             SELECT field, id, token, count(*) as mentions
             FROM entries
@@ -128,6 +130,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             mentions_gen = self.mentions()
             mention_row = None
             for field_name, id, field_len in self.field_lengths():
+                print(field_name, id, field_len)
                 if mention_row is None:  # first iteration
                     mention_row = next(mentions_gen)
                 if mention_row is None:

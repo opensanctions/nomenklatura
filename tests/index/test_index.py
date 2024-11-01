@@ -27,6 +27,17 @@ def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
     assert len(index) == 184, len(index)
 
 
+def test_frequencies(dstore: SimpleMemoryStore, dindex: Index):
+    view = dstore.default_view()
+
+    for field_name, field in dindex.fields.items():
+        for token, entry in field.tokens.items():
+            print(field_name, token)
+            for ident, tf in entry.frequencies(field):
+                    print("    ", ident.id, tf)
+    assert False
+
+
 def test_index_persist(dstore: SimpleMemoryStore, dindex):
     view = dstore.default_view()
     with TemporaryDirectory() as tmpdir:
