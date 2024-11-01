@@ -9,7 +9,7 @@ from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 
 log = logging.getLogger(__name__)
-INDEX_TYPES = ["tantivy", Index.name]
+INDEX_TYPES = ["tantivy", "duckdb", Index.name]
 
 
 def get_index(
@@ -24,10 +24,17 @@ def get_index(
             clazz = TantivyIndex[DS, CE]
         except ImportError:
             log.warning("`tantivy` is not available, falling back to in-memory index.")
+    if type_ == "duckdb":
+        try:
+            from nomenklatura.index.duckdb_index import DuckDBIndex
+
+            clazz = DuckDBIndex[DS, CE]
+        except ImportError:
+            log.warning("`tantivy` is not available, falling back to in-memory index.")
 
     index = clazz(view, path)
     index.build()
     return index
 
 
-__all__ = ["BaseIndex", "Index", "TantivyIndex", "get_index"]
+__all__ = ["BaseIndex", "Index", "TantivyIndex", "DuckDBIndex", "get_index"]
