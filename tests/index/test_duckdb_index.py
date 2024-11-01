@@ -59,7 +59,7 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
     assert "de" in field_tokens["country"], field_tokens["country"]
     assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
-    assert "word" in field_tokens["word"], field_tokens["word"]
+    assert "dortmund" in field_tokens["word"], field_tokens["word"]
 
 
 def test_id_grouped_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
@@ -73,14 +73,23 @@ def test_id_grouped_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBInde
     assert len(ids) == 184, len(ids)
     assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
     assert "de" in field_tokens["country"], field_tokens["country"]
-    print(field_tokens["name"])
     assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
+    assert "dortmund" in field_tokens["word"], field_tokens["word"]
 
 
 def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     view = dstore.default_view()
-    for field_name, token, entities in duckdb_index.frequencies():
-        print(field_name, token)
-        for entity_id, tf in entities:
-            print("    ", entity_id, tf)
-    assert False
+    pairs = duckdb_index.pairs()
+    assert len(pairs) > 0, pairs
+    tokenizer = duckdb_index.tokenizer
+    pair, score = pairs[0]
+    entity0 = view.get_entity(str(pair[0]))
+    tokens0 = set(tokenizer.entity(entity0))
+    entity1 = view.get_entity(str(pair[1]))
+    tokens1 = set(tokenizer.entity(entity1))
+    overlap = tokens0.intersection(tokens1)
+    assert len(overlap) > 0, overlap
+    # assert "Schnabel" in (overlap, tokens0, tokens1)
+    # assert "Schnabel" in (entity0.caption, entity1.caption)
+    assert score > 0
+    # assert False

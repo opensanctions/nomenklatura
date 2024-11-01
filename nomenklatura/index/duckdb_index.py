@@ -100,7 +100,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             GROUP BY field, id
             ORDER by field, id
         """
-        field_len_rel = self.con.sql(field_len_query, alias="field_len")
+        field_len_rel = self.con.sql(field_len_query)
         row = field_len_rel.fetchone()
         while row is not None:
             yield row
@@ -115,7 +115,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             GROUP BY field, id, token
             ORDER by field, id, token
         """
-        mentions_rel = self.con.sql(mentions_query, alias="mentions")
+        mentions_rel = self.con.sql(mentions_query)
         row = mentions_rel.fetchone()
         while row is not None:
             yield row
@@ -129,9 +129,10 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             GROUP BY field, token
         """
         token_counts_rel = self.con.sql(query)
-        common_tokens_rel = self.con.sql("SELECT * from token_counts_rel where frequency > 100")
+        filter_query = "SELECT * from token_counts_rel where frequency > 100 and field != 'country'"
+        common_tokens_rel = self.con.sql(filter_query)
         tokens: Set[Tuple[str, str]] = set()
-        for (field_name, token, freq) in common_tokens_rel.fetchall():
+        for field_name, token, freq in common_tokens_rel.fetchall():
             tokens.add((field_name, token))
         return tokens
 
@@ -150,17 +151,18 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             mentions = []
             try:
                 if mention_row is None:  # first iteration
-                    mention_field_name, mention_id, token, mention_count = next(
-                        mentions_gen
-                    )
+                    mention_row = next(mentions_gen)
+                    mention_field_name, mention_id, token, mention_count = mention_row
 
                 while mention_field_name == field_name and mention_id == id:
                     if (mention_field_name, token) not in common_tokens:
                         mentions.append((token, mention_count))
-                    mention_field_name, mention_id, token, mention_count = next(
-                        mentions_gen
-                    )
+
+                    mention_row = next(mentions_gen)
+                    mention_field_name, mention_id, token, mention_count = mention_row
+
                 yield field_name, id, field_len, mentions
+
             except StopIteration:
                 yield field_name, id, field_len, mentions
                 break
