@@ -57,7 +57,7 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
 
     assert len(ids) == 184, len(ids)
     assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
-    assert "de" in field_tokens["country"], field_tokens["country"]
+    assert "gb" in field_tokens["country"], field_tokens["country"]
     assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
     assert "dortmund" in field_tokens["word"], field_tokens["word"]
 
@@ -72,7 +72,7 @@ def test_id_grouped_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBInde
 
     assert len(ids) == 184, len(ids)
     assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
-    assert "de" in field_tokens["country"], field_tokens["country"]
+    assert "gb" in field_tokens["country"], field_tokens["country"]
     assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
     assert "dortmund" in field_tokens["word"], field_tokens["word"]
 

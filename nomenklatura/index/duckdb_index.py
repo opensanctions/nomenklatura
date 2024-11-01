@@ -129,7 +129,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             GROUP BY field, token
         """
         token_counts_rel = self.con.sql(query)
-        filter_query = "SELECT * from token_counts_rel where frequency > 100 and field != 'country'"
+        filter_query = "SELECT * from token_counts_rel where frequency > 100"
         common_tokens_rel = self.con.sql(filter_query)
         tokens: Set[Tuple[str, str]] = set()
         for field_name, token, freq in common_tokens_rel.fetchall():
