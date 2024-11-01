@@ -30,7 +30,7 @@ def get_index(
 
             clazz = DuckDBIndex[DS, CE]
         except ImportError:
-            log.warning("`tantivy` is not available, falling back to in-memory index.")
+            log.warning("`duckdb` is not available, falling back to in-memory index.")
 
     index = clazz(view, path)
     index.build()

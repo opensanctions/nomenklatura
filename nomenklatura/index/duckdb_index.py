@@ -3,7 +3,7 @@ from pathlib import Path
 import logging
 from itertools import combinations
 from tempfile import mkdtemp
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, Generator, List, Set, Tuple
 from followthemoney.types import registry
 import duckdb
 
@@ -17,7 +17,6 @@ from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 from nomenklatura.index.common import BaseIndex
 
 log = logging.getLogger(__name__)
-
 
 
 class DuckDBIndex(BaseIndex[DS, CE]):
@@ -77,33 +76,109 @@ class DuckDBIndex(BaseIndex[DS, CE]):
 
         log.info("Loading data...")
         self.con.execute(f"COPY entries from '{csv_path}'")
-        log.info("Index built.")
-        
-    def frequencies(self, field: str, token: str) -> List[Tuple[str, float]]:
-        """
-        """
 
-        mentions_query = """
-            SELECT id, count(*) as mentions
-            FROM entries
-            WHERE field = ? AND token = ?
-            GROUP BY id
-        """
-        mentions_rel = self.con.sql(
-            mentions_query, alias="mentions", params=[field, token]
-        )
+        self.calculate_frequencies()
+        log.info("Index built.")
+
+    def pairs(self, max_pairs: int = BaseIndex.MAX_PAIRS):
+        pairs: Dict[Pair, float] = {}
+        for field_name, token, entities in self.frequencies():
+            boost = self.BOOSTS.get(field_name, 1.0)
+            for (left, lw), (right, rw) in combinations(entities, 2):
+                if lw == 0.0 or rw == 0.0:
+                    continue
+                pair = (max(left, right), min(left, right))
+                if pair not in pairs:
+                    pairs[pair] = 0
+                score = (lw + rw) * boost
+                pairs[pair] += score
+        return sorted(pairs.items(), key=lambda p: p[1], reverse=True)[:max_pairs]
+
+    def field_lengths(self):
         field_len_query = """
-            SELECT id, count(*) as field_len from entries
-            WHERE field = ?
-            GROUP BY id
+            SELECT field, id, count(*) as field_len from entries
+            GROUP BY field, id
+            ORDER by field, id
         """
-        field_len_rel = self.con.sql(field_len_query, alias="field_len", params=[field])
-        joined = mentions_rel.join(
-            field_len_rel, "mentions.id = field_len.id"
-        ).set_alias("joined")
-        # TODO: Do I really need the max(1, field_len) here?
-        weights = self.con.sql("SELECT id, mentions / field_len from joined")
-        return list(weights.fetchall())
+        field_len_rel = self.con.sql(field_len_query, alias="field_len")
+        row = field_len_rel.fetchone()
+        while row is not None:
+            yield row
+            row = field_len_rel.fetchone()
+
+    def mentions(self):
+        mentions_query = """
+            SELECT field, id, token, count(*) as mentions
+            FROM entries
+            GROUP BY field, id, token
+            ORDER by field, id, token
+        """
+        mentions_rel = self.con.sql(mentions_query, alias="mentions")
+        row = mentions_rel.fetchone()
+        while row is not None:
+            yield row
+            row = mentions_rel.fetchone()
+
+    def calculate_frequencies(self) -> None:
+        csv_path = self.path / "frequencies.csv"
+        with open(csv_path, "w") as fh:
+            writer = csv.writer(fh)
+            writer.writerow(["field", "id", "token", "frequency"])
+
+            mentions_gen = self.mentions()
+            mention_row = None
+            for field_name, id, field_len in self.field_lengths():
+                if mention_row is None:  # first iteration
+                    mention_row = next(mentions_gen)
+                if mention_row is None:
+                    # If there's at least one field length, there should be at least one mention
+                    raise Exception("Unexpected empty mentions.")
+                frequencies = []
+                (mention_field_name, mention_id, token, mention_count) = mention_row
+
+                # For all the tokens in this field for this entity ID
+                while mention_field_name == field_name and mention_id == id:
+                    frequencies.append((token, mention_count / field_len))
+                    mention_row = next(mentions_gen)
+                    if mention_row is None:
+                        break
+                    (mention_field_name, mention_id, token, mention_count) = mention_row
+
+                for token, freq in frequencies:
+                    writer.writerow([field_name, id, token, freq])
+
+        log.info(f"Loading frequencies data... ({csv_path})")
+        self.con.execute(
+            "CREATE TABLE frequencies (field TEXT, id TEXT, token TEXT, frequency FLOAT)"
+        )
+        self.con.execute(f"COPY frequencies from '{csv_path}'")
+        log.info("Frequencies are loaded")
+
+    def frequencies(
+        self,
+    ) -> Generator[Tuple[str, str, List[Tuple[Identifier, float]]], None, None]:
+        query = """
+            SELECT field, token, id, frequency
+            FROM frequencies
+            ORDER by field, token
+        """
+        rel = self.con.sql(query, alias="mentions")
+        row = rel.fetchone()
+        entities = []  # the entities in this field, token group
+        field_name = None
+        token = None
+        while row is not None:
+            field_name, token, id, freq = row
+            entities.append((Identifier.get(id), freq))
+
+            row = rel.fetchone()
+            if row is None:
+                yield field_name, token, entities
+                break
+            new_field_name, new_token, _, _ = row
+            if new_field_name != field_name or new_token != token:
+                yield field_name, token, entities
+                entities = []
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (

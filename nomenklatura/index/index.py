@@ -92,13 +92,17 @@ class Index(BaseIndex[DS, CE]):
         log.info("Building index blocking pairs...")
         for field_name, field in self.fields.items():
             boost = self.BOOSTS.get(field_name, 1.0)
-            for idx, entry in enumerate(field.tokens.values()):
+            for idx, (token, entry) in enumerate(field.tokens.items()):
                 if idx % 10000 == 0:
                     log.info("Pairwise xref [%s]: %d" % (field_name, idx))
 
                 if len(entry.entities) == 1 or len(entry.entities) > 100:
                     continue
                 entities = entry.frequencies(field)
+                if field_name == "country":
+                    for id, freq in entities:
+                        if id.id == "NK-cVfXUNMeCpGWyQVFLkQCe7":
+                            print(id, token, freq)
                 for (left, lw), (right, rw) in combinations(entities, 2):
                     if lw == 0.0 or rw == 0.0:
                         continue
