@@ -121,12 +121,27 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             yield row
             row = mentions_rel.fetchone()
 
+    def common_tokens(self) -> Set[Tuple[str, str]]:
+        """Yields tuples of (field_name, token)"""
+        query = """
+            SELECT field, token, count(*) as frequency
+            FROM entries
+            GROUP BY field, token
+        """
+        token_counts_rel = self.con.sql(query)
+        common_tokens_rel = self.con.sql("SELECT * from token_counts_rel where frequency > 100")
+        tokens: Set[Tuple[str, str]] = set()
+        for (field_name, token, freq) in common_tokens_rel.fetchall():
+            tokens.add((field_name, token))
+        return tokens
+
     def id_grouped_mentions(
         self,
     ) -> Generator[Tuple[str, str, int, List[Tuple[str, int]]], None, None]:
         """
         Yields tuples of (field_name, entity_id, field_len, [(token, mention_count)])
         """
+        common_tokens = self.common_tokens()
         mentions_gen = self.mentions()
         mention_row = None
         # Read all field lengths into memory because the concurrent iteration
@@ -140,7 +155,8 @@ class DuckDBIndex(BaseIndex[DS, CE]):
                     )
 
                 while mention_field_name == field_name and mention_id == id:
-                    mentions.append((token, mention_count))
+                    if (mention_field_name, token) not in common_tokens:
+                        mentions.append((token, mention_count))
                     mention_field_name, mention_id, token, mention_count = next(
                         mentions_gen
                     )
