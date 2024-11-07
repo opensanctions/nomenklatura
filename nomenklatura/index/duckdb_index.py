@@ -1,21 +1,18 @@
-from collections import defaultdict
-import csv
-from pathlib import Path
-import logging
-from itertools import combinations
-from tempfile import mkdtemp
-from typing import Any, Dict, Generator, Iterable, List, Set, Tuple
+from duckdb import DuckDBPyRelation
 from followthemoney.types import registry
+from pathlib import Path
+from tempfile import mkdtemp
+from typing import Iterable, Tuple
+import csv
 import duckdb
+import logging
 
-from nomenklatura.util import PathLike
-from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
-from nomenklatura.store import View
-from nomenklatura.index.entry import Field
-from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 from nomenklatura.index.common import BaseIndex
+from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
+from nomenklatura.resolver import Pair, Identifier
+from nomenklatura.store import View
 
 log = logging.getLogger(__name__)
 
@@ -55,59 +52,74 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         self.tokenizer = Tokenizer[DS, CE]()
         self.path = Path(mkdtemp())
         self.con = duckdb.connect((self.path / "duckdb_index.db").as_posix())
+
+        # https://duckdb.org/docs/guides/performance/environment
+        # > For ideal performance, aggregation-heavy workloads require approx.
+        # > 5 GB memory per thread and join-heavy workloads require approximately
+        # > 10 GB memory per thread.
+        # > Aim for 5-10 GB memory per thread.
         self.con.execute("SET memory_limit = '2GB';")
         self.con.execute("SET max_memory = '2GB';")
+        # > If you have a limited amount of memory, try to limit the number of threads
         self.con.execute("SET threads = 1;")
-        self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
-        self.con.execute("CREATE TABLE boosts (field TEXT, boost FLOAT)")
-
-    def dump(self, writer, entity: CE) -> None:
-
-        if not entity.schema.matchable or entity.id is None:
-            return
-
-        for field, token in self.tokenizer.entity(entity):
-            writer.writerow([entity.id, field, token])
 
     def build(self) -> None:
         """Index all entities in the dataset."""
         log.info("Building index from: %r...", self.view)
-        csv_path = self.path / "mentions.csv"
-        with open(csv_path, "w") as fh:
-            writer = csv.writer(fh)
-            writer.writerow(["id", "field", "token"])
-            for idx, entity in enumerate(self.view.entities()):
-                self.dump(writer, entity)
-                if idx % 10000 == 0:
-                    log.info("Dumped %s entities" % idx)
+        self.con.execute("CREATE TABLE boosts (field TEXT, boost FLOAT)")
         for field, boost in self.BOOSTS.items():
             self.con.execute("INSERT INTO boosts VALUES (?, ?)", [field, boost])
 
+        self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
+        csv_path = self.path / "mentions.csv"
+        log.info("Dumping entity tokens to CSV for bulk load into the database...")
+        with open(csv_path, "w") as fh:
+            writer = csv.writer(fh)
+
+            # csv.writer type gymnastics
+            def dump_entity(entity: CE) -> None:
+                if not entity.schema.matchable or entity.id is None:
+                    return
+                for field, token in self.tokenizer.entity(entity):
+                    writer.writerow([entity.id, field, token])
+
+            writer.writerow(["id", "field", "token"])
+            for idx, entity in enumerate(self.view.entities()):
+                dump_entity(entity)
+                if idx % 10000 == 0:
+                    log.info("Dumped %s entities" % idx)
+
         log.info("Loading data...")
         self.con.execute(f"COPY entries from '{csv_path}'")
-
         log.info("Index built.")
 
-    def pairs(
-        self, max_pairs: int = BaseIndex.MAX_PAIRS
-    ) -> Iterable[Tuple[Pair, float]]:
+    def field_len_rel(self) -> DuckDBPyRelation:
         field_len_query = """
             SELECT field, id, count(*) as field_len from entries
             GROUP BY field, id
         """
-        field_len = self.con.sql(field_len_query)
+        return self.con.sql(field_len_query)
+
+    def mentions_rel(self) -> DuckDBPyRelation:
         mentions_query = """
             SELECT field, id, token, count(*) as mentions
             FROM entries
             GROUP BY field, id, token
         """
-        mentions = self.con.sql(mentions_query)
+        return self.con.sql(mentions_query)
+
+    def token_freq_rel(self) -> DuckDBPyRelation:
         token_freq_query = """
             SELECT field, token, count(*) as token_freq
             FROM entries
             GROUP BY field, token
         """
-        token_freq = self.con.sql(token_freq_query)
+        return self.con.sql(token_freq_query)
+
+    def frequencies_rel(self) -> DuckDBPyRelation:
+        field_len = self.field_len_rel()  # noqa
+        mentions = self.mentions_rel()  # noqa
+        token_freq = self.token_freq_rel()  # noqa
         term_frequencies_query = """
             SELECT mentions.field, mentions.token, mentions.id, mentions/field_len as tf
             FROM field_len
@@ -117,7 +129,12 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             ON token_freq.field = mentions.field AND token_freq.token = mentions.token
             where token_freq < 100
         """
-        term_frequencies = self.con.sql(term_frequencies_query)
+        return self.con.sql(term_frequencies_query)
+
+    def pairs(
+        self, max_pairs: int = BaseIndex.MAX_PAIRS
+    ) -> Iterable[Tuple[Pair, float]]:
+        term_frequencies = self.frequencies_rel()  # noqa
         pairs_query = """
             SELECT "left".id, "right".id, sum(("left".tf + "right".tf) * boost) as score
             FROM term_frequencies as "left"

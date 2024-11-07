@@ -1,6 +1,6 @@
 from pathlib import Path
-from typing import Generic, List, Tuple
-from nomenklatura.resolver import Identifier
+from typing import Generic, Iterable, List, Tuple
+from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import View
@@ -16,9 +16,7 @@ class BaseIndex(Generic[DS, CE]):
     def build(self) -> None:
         raise NotImplementedError
 
-    def pairs(
-        self, max_pairs: int = MAX_PAIRS
-    ) -> List[Tuple[Tuple[Identifier, Identifier], float]]:
+    def pairs(self, max_pairs: int = MAX_PAIRS) -> Iterable[Tuple[Pair, float]]:
         raise NotImplementedError
 
     def match(self, entity: CE) -> List[Tuple[Identifier, float]]:

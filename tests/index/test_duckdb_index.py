@@ -1,10 +1,5 @@
 from collections import defaultdict
-from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
-from nomenklatura.index import Index
 from nomenklatura.index.duckdb_index import DuckDBIndex
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.store import SimpleMemoryStore
@@ -24,7 +19,7 @@ VERBAND_BADEN_DATA = {
 def test_field_lengths(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     field_names = set()
     ids = set()
-    for field_name, id, field_len in duckdb_index.field_lengths():
+    for field_name, id, field_len in duckdb_index.field_len_rel().fetchall():
         field_names.add(field_name)
         ids.add(id)
 
@@ -51,7 +46,7 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     ids = set()
     field_tokens = defaultdict(set)
 
-    for field_name, id, token, count in duckdb_index.mentions():
+    for field_name, id, token, count in duckdb_index.mentions_rel().fetchall():
         ids.add(id)
         field_tokens[field_name].add(token)
 
@@ -62,25 +57,14 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     assert "dortmund" in field_tokens["word"], field_tokens["word"]
 
 
-def test_id_grouped_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
-    ids = set()
-    field_tokens = defaultdict(set)
-    for field_name, id, field_len, mentions in duckdb_index.id_grouped_mentions():
-        ids.add(id)
-        for token, count in mentions:
-            field_tokens[field_name].add(token)
-
-    assert len(ids) == 184, len(ids)
-    assert "verband" in field_tokens["namepart"], field_tokens["namepart"]
-    assert "gb" in field_tokens["country"], field_tokens["country"]
-    assert "adolf wurth gmbh" in field_tokens["name"], field_tokens["name"]
-    assert "dortmund" in field_tokens["word"], field_tokens["word"]
-
-
 def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     view = dstore.default_view()
-    pairs = duckdb_index.pairs()
-    assert len(pairs) > 0, pairs
+    pairs = list(duckdb_index.pairs())
+
+    # At least one pair is found
+    assert len(pairs) > 0, len(pairs)
+
+    # A pair has tokens which overlap
     tokenizer = duckdb_index.tokenizer
     pair, score = pairs[0]
     entity0 = view.get_entity(str(pair[0]))
@@ -89,7 +73,40 @@ def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     tokens1 = set(tokenizer.entity(entity1))
     overlap = tokens0.intersection(tokens1)
     assert len(overlap) > 0, overlap
-    # assert "Schnabel" in (overlap, tokens0, tokens1)
-    # assert "Schnabel" in (entity0.caption, entity1.caption)
+
+    # A pair has non-zero score
     assert score > 0
-    # assert False
+
+    # pairs are in descending score order
+    last_score = pairs[0][1]
+    for pair in pairs[1:]:
+        assert pair[1] <= last_score
+        last_score = pair[1]
+
+    #  Johanna Quandt <> Frau Johanna Quandt
+    jq = (
+        Identifier.get("9add84cbb7bb48c7552f8ec7ae54de54eed1e361"),
+        Identifier.get("2d3e50433e36ebe16f3d906b684c9d5124c46d76"),
+    )
+    jq_score = [score for pair, score in pairs if jq == pair][0]
+
+    #  Bayerische Motorenwerke AG <> Bayerische Motorenwerke (BMW) AG
+    bmw = (
+        Identifier.get("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
+        Identifier.get("12570ee94b8dc23bcc080e887539d3742b2a5237"),
+    )
+    bmw_score = [score for pair, score in pairs if bmw == pair][0]
+
+    # More tokens in BMW means lower TF, reducing the score
+    assert jq_score > bmw_score, (jq_score, bmw_score)
+    assert jq_score == 19.0, jq_score
+    assert 3.3 < bmw_score < 3.4, bmw_score
+
+    # FERRING Arzneimittel GmbH <> Clou Container Leasing GmbH
+    false_pos = (
+        Identifier.get("f8867c433ba247cfab74096c73f6ff5e36db3ffe"),
+        Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
+    )
+    false_pos_score = [score for pair, score in pairs if false_pos == pair][0]
+    assert 1.1 < false_pos_score < 1.2, false_pos_score
+    assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
