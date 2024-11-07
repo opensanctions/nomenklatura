@@ -1,7 +1,7 @@
 from duckdb import DuckDBPyRelation
 from followthemoney.types import registry
 from pathlib import Path
-from tempfile import mkdtemp
+from shutil import rmtree
 from typing import Iterable, Tuple
 import csv
 import duckdb
@@ -50,8 +50,11 @@ class DuckDBIndex(BaseIndex[DS, CE]):
     def __init__(self, view: View[DS, CE], data_dir: Path):
         self.view = view
         self.tokenizer = Tokenizer[DS, CE]()
-        self.path = Path(mkdtemp())
-        self.con = duckdb.connect((self.path / "duckdb_index.db").as_posix())
+        self.data_dir = data_dir
+        if self.data_dir.exists():
+            rmtree(self.data_dir.as_posix())
+        self.data_dir.mkdir(parents=True)
+        self.con = duckdb.connect((self.data_dir / "duckdb_index.db").as_posix())
 
         # https://duckdb.org/docs/guides/performance/environment
         # > For ideal performance, aggregation-heavy workloads require approx.
@@ -71,7 +74,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             self.con.execute("INSERT INTO boosts VALUES (?, ?)", [field, boost])
 
         self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
-        csv_path = self.path / "mentions.csv"
+        csv_path = self.data_dir / "mentions.csv"
         log.info("Dumping entity tokens to CSV for bulk load into the database...")
         with open(csv_path, "w") as fh:
             writer = csv.writer(fh)
