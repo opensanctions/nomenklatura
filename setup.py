@@ -59,6 +59,7 @@ setup(
             "plyvel < 2.0.0",
             "redis > 5.0.0, < 6.0.0",
             "tantivy < 1.0.0",
+            "duckdb < 2.0.0",
         ],
         "leveldb": [
             "plyvel < 2.0.0",
@@ -68,6 +69,9 @@ setup(
         ],
         "tantivy": [
             "tantivy < 1.0.0",
+        ],
+        "duckdb": [
+            "duckdb < 2.0.0",
         ],
     },
 )

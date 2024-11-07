@@ -1,5 +1,7 @@
 from collections import defaultdict
+from pathlib import Path
 
+from nomenklatura.index import get_index
 from nomenklatura.index.duckdb_index import DuckDBIndex
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.store import SimpleMemoryStore
@@ -14,6 +16,12 @@ VERBAND_BADEN_DATA = {
         "name": ["VERBAND DER METALL UND ELEKTROINDUSTRIE BADEN WURTTEMBERG"]
     },
 }
+
+
+def test_import(dstore: SimpleMemoryStore, index_path: Path):
+    view = dstore.default_view()
+    index = get_index(view, index_path, "duckdb")
+    assert isinstance(index, DuckDBIndex), type(index)
 
 
 def test_field_lengths(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
