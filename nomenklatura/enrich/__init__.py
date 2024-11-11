@@ -6,7 +6,7 @@ from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.matching import DefaultAlgorithm
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import Enricher, EnricherConfig, BulkEnricher
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -16,6 +16,7 @@ __all__ = [
     "Enricher",
     "EnrichmentAbort",
     "EnrichmentException",
+    "BulkEnricher",
     "make_enricher",
     "enrich",
     "match",

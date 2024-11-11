@@ -1,8 +1,9 @@
+from io import TextIOWrapper
 from duckdb import DuckDBPyRelation
 from followthemoney.types import registry
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Tuple
 import csv
 import duckdb
 import logging
@@ -60,6 +61,10 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             rmtree(self.data_dir.as_posix())
         self.data_dir.mkdir(parents=True)
         self.con = duckdb.connect((self.data_dir / "duckdb_index.db").as_posix())
+        self.matching_path = self.data_dir / "matching.csv"
+        self.matching_dump: TextIOWrapper | None = open(self.matching_path, "w")
+        writer = csv.writer(self.matching_dump)
+        writer.writerow(["id", "field", "token"])
 
         # https://duckdb.org/docs/guides/performance/environment
         # > For ideal performance, aggregation-heavy workloads require approx.
@@ -78,6 +83,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         for field, boost in self.BOOSTS.items():
             self.con.execute("INSERT INTO boosts VALUES (?, ?)", [field, boost])
 
+        self.con.execute("CREATE TABLE matching (id TEXT, field TEXT, token TEXT)")
         self.con.execute("CREATE TABLE entries (id TEXT, field TEXT, token TEXT)")
         csv_path = self.data_dir / "mentions.csv"
         log.info("Dumping entity tokens to CSV for bulk load into the database...")
@@ -110,7 +116,6 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             "CREATE TABLE stopwords as SELECT * FROM token_freq where token_freq > 100"
         )
 
-        self.con.execute("CREATE TEMPORARY TABLE matching (field TEXT, token TEXT)")
         log.info("Index built.")
 
     def field_len_rel(self) -> DuckDBPyRelation:
@@ -170,29 +175,45 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             for left, right, score in batch:
                 yield (Identifier.get(left), Identifier.get(right)), score
 
-    def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
-        """Match an entity against the index, returning a list of
-        (entity_id, score) pairs."""
-        rows = list(self.tokenizer.entity(entity))
+    def add_matching_subject(self, entity: CE) -> None:
+        print("adding", entity)
+        writer = csv.writer(self.matching_dump)
+        for field, token in self.tokenizer.entity(entity):
+            writer.writerow([entity.id, field, token])
 
-        if rows:
-            self.con.executemany("INSERT INTO matching VALUES (?, ?)", rows)
+    def matches(
+        self,
+    ) -> Generator[Tuple[Identifier, List[Tuple[Identifier, float]]], None, None]:
+        if self.matching_dump is not None:
+            self.matching_dump.close()
+            self.matching_dump = None
+            log.info("Loading matching subjects...")
+            print(self.con.execute(f"COPY entries from '{self.matching_path}'").fetchall())
+            log.info("Finished loading matching subjects.")
 
-        match_query = """
-            SELECT id, sum(tf * ifnull(boost, 1)) as score
-            FROM term_frequencies
+        pairs_query = """
+            SELECT matching.id, matches.id, sum(matches.tf * ifnull(boost, 1)) as score
+            FROM term_frequencies as matches
             JOIN matching
-            ON term_frequencies.field = matching.field AND term_frequencies.token = matching.token
+            ON matches.field = matching.field AND matches.token = matching.token
             LEFT OUTER JOIN boosts
-            ON term_frequencies.field = boosts.field
-            GROUP BY id
-            ORDER BY score DESC
-            LIMIT ?
+            ON matches.field = boosts.field
+            GROUP BY matches.id, matching.id
+            ORDER BY matching.id, score DESC
         """
-        results = self.con.execute(match_query, [self.max_candidates])
-        matches = [(Identifier.get(id), score) for id, score in results.fetchall()]
-        self.con.execute("DELETE FROM matching")
-        return matches
+        results = self.con.execute(pairs_query)
+        print("results", results.fetchall)
+        previous_id = None
+        matches: List[Tuple[Identifier, float]] = []
+        while batch := results.fetchmany(BATCH_SIZE):
+            print("batch")
+            for matching_id, match_id, score in batch:
+                if previous_id is not None and matching_id != previous_id:
+                    if matches:
+                        yield Identifier.get(previous_id), matches
+                    matches = []
+                    previous_id = matching_id
+                matches.append((Identifier.get(match_id), score))
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (

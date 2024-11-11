@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from banal import as_bool
-from typing import Union, Any, Dict, Optional, Generator, Generic
+from typing import List, Tuple, Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException
@@ -18,6 +18,7 @@ from nomenklatura.entity import CE, CompositeEntity
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
+from nomenklatura.resolver import Identifier
 
 EnricherConfig = Dict[str, Any]
 log = logging.getLogger(__name__)
@@ -205,3 +206,23 @@ class Enricher(Generic[DS], ABC):
         self.cache.close()
         if self._session is not None:
             self._session.close()
+
+
+class BulkEnricher(Enricher[DS], ABC):
+    """
+    An enricher which performs matching in bulk, requiring all subject entities
+    to be loaded before matching. 
+    """
+    def load_wrapped(self, entity: CE) -> None:
+        if not self._filter_entity(entity):
+            return
+        self.load(entity)
+
+    def load(self, entity: CE) -> None:
+        raise NotImplementedError()
+    
+    def candidates(self) -> Generator[Tuple[Identifier, List[Tuple[Identifier, float]]], None, None]:
+        raise NotImplementedError()
+
+    def match_candidates(self, entity: CE, candidates: List[Tuple[Identifier, float]]) -> Generator[CE, None, None]:
+        raise NotImplementedError()
