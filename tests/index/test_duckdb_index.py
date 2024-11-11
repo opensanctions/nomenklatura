@@ -1,6 +1,8 @@
 from collections import defaultdict
 from pathlib import Path
 
+from nomenklatura.dataset import Dataset
+from nomenklatura.entity import CompositeEntity
 from nomenklatura.index import get_index
 from nomenklatura.index.duckdb_index import DuckDBIndex
 from nomenklatura.resolver.identifier import Identifier
@@ -118,3 +120,42 @@ def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     false_pos_score = [score for pair, score in pairs if false_pos == pair][0]
     assert 1.1 < false_pos_score < 1.2, false_pos_score
     assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
+
+    assert len(pairs) == 428, len(pairs)
+
+
+def test_match_score(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
+    """Match an entity that isn't itself in the index"""
+    dx = Dataset.make({"name": "test", "title": "Test"})
+    entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
+    matches = duckdb_index.match(entity)
+    # 9 entities in the index where some token in the query entity matches some
+    # token in the index.
+    assert len(matches) == 9, matches
+
+    top_result = matches[0]
+    assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
+    assert 1.99 < top_result[1] < 2, top_result
+
+    next_result = matches[1]
+    assert next_result[0] == Identifier(VERBAND_ID), next_result
+    assert 1.66 < next_result[1] < 1.67, next_result
+
+    match_identifiers = set(str(m[0]) for m in matches)
+
+
+def test_top_match_matches_strong_pairs(
+    dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex
+):
+    """Pairs with high scores are each others' top matches"""
+
+    view = dstore.default_view()
+    strong_pairs = [p for p in duckdb_index.pairs() if p[1] > 3.0]
+    assert len(strong_pairs) > 4
+
+    for pair, pair_score in strong_pairs:
+        entity = view.get_entity(pair[0].id)
+        matches = duckdb_index.match(entity)
+        # it'll match itself and the other in the pair
+        for match, match_score in matches[:2]:
+            assert match in pair, (match, pair)

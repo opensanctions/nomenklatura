@@ -33,13 +33,13 @@ def test_index_persist(dstore: SimpleMemoryStore, dindex):
         with NamedTemporaryFile("w") as fh:
             path = Path(fh.name)
             dindex.save(path)
-            loaded = Index.load(dstore.default_view(), path, tmpdir)
+            loaded = Index.load(dstore.default_view(), path, Path(tmpdir))
     assert len(dindex.entities) == len(loaded.entities), (dindex, loaded)
     assert len(dindex) == len(loaded), (dindex, loaded)
 
     path.unlink(missing_ok=True)
     with TemporaryDirectory() as tmpdir:
-        empty = Index.load(view, path, tmpdir)
+        empty = Index.load(view, path, Path(tmpdir))
         assert len(empty) == len(loaded), (empty, loaded)
 
 
@@ -97,6 +97,8 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     assert 1.1 < false_pos_score < 1.2, false_pos_score
     assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
 
+    assert len(pairs) == 428, len(pairs)
+
 
 def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
     """Match an entity that isn't itself in the index"""
@@ -129,7 +131,7 @@ def test_top_match_matches_strong_pairs(dstore: SimpleMemoryStore, dindex: Index
     assert len(strong_pairs) > 4
 
     for pair, pair_score in strong_pairs:
-        entity = view.get_entity(pair[0])
+        entity = view.get_entity(pair[0].id)
         matches = dindex.match(entity)
         # it'll match itself and the other in the pair
         for match, match_score in matches[:2]:

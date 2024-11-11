@@ -2,7 +2,7 @@ from duckdb import DuckDBPyRelation
 from followthemoney.types import registry
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 import csv
 import duckdb
 import logging
@@ -21,10 +21,11 @@ BATCH_SIZE = 1000
 
 class DuckDBIndex(BaseIndex[DS, CE]):
     """
-    An in-memory search index to match entities against a given dataset.
+    An index using DuckDB for token matching and scoring, keeping data in memory
+    until it needs to spill to disk as it approaches the configured memory limit.
 
-    For each field in the dataset, the index stores the IDs which contains each
-    token, along with the absolute frequency of each token in the document.
+    Pairs match if they share one or more tokens. A basic similarity score is calculated
+    cumulatively based on each token's Term Frequency (TF) and the field's boost factor.
     """
 
     name = "duckdb"
@@ -47,8 +48,12 @@ class DuckDBIndex(BaseIndex[DS, CE]):
 
     __slots__ = "view", "fields", "tokenizer", "entities"
 
-    def __init__(self, view: View[DS, CE], data_dir: Path):
+    def __init__(
+        self, view: View[DS, CE], data_dir: Path, options: Dict[str, Any] = {}
+    ):
         self.view = view
+        # self.memory_budget = int(options.get("memory_budget", 500) * 1024 * 1024)
+        self.max_candidates = int(options.get("max_candidates", 50))
         self.tokenizer = Tokenizer[DS, CE]()
         self.data_dir = data_dir
         if self.data_dir.exists():
@@ -89,11 +94,23 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             writer.writerow(["id", "field", "token"])
             for idx, entity in enumerate(self.view.entities()):
                 dump_entity(entity)
-                if idx % 10000 == 0:
+                if idx % 50000 == 0:
                     log.info("Dumped %s entities" % idx)
 
         log.info("Loading data...")
         self.con.execute(f"COPY entries from '{csv_path}'")
+
+        log.info("Calculating term frequencies...")
+        frequencies = self.frequencies_rel()  # noqa
+        self.con.execute("CREATE TABLE term_frequencies as SELECT * FROM frequencies")
+
+        log.info("Calculating stopwords...")
+        token_freq = self.token_freq_rel()  # noqa
+        self.con.execute(
+            "CREATE TABLE stopwords as SELECT * FROM token_freq where token_freq > 100"
+        )
+
+        self.con.execute("CREATE TEMPORARY TABLE matching (field TEXT, token TEXT)")
         log.info("Index built.")
 
     def field_len_rel(self) -> DuckDBPyRelation:
@@ -122,30 +139,28 @@ class DuckDBIndex(BaseIndex[DS, CE]):
     def frequencies_rel(self) -> DuckDBPyRelation:
         field_len = self.field_len_rel()  # noqa
         mentions = self.mentions_rel()  # noqa
-        token_freq = self.token_freq_rel()  # noqa
         term_frequencies_query = """
             SELECT mentions.field, mentions.token, mentions.id, mentions/field_len as tf
             FROM field_len
             JOIN mentions
             ON field_len.field = mentions.field AND field_len.id = mentions.id
-            JOIN token_freq
-            ON token_freq.field = mentions.field AND token_freq.token = mentions.token
-            where token_freq < 100
         """
         return self.con.sql(term_frequencies_query)
 
     def pairs(
         self, max_pairs: int = BaseIndex.MAX_PAIRS
     ) -> Iterable[Tuple[Pair, float]]:
-        term_frequencies = self.frequencies_rel()  # noqa
         pairs_query = """
-            SELECT "left".id, "right".id, sum(("left".tf + "right".tf) * boost) as score
+            SELECT "left".id, "right".id, sum(("left".tf + "right".tf) * ifnull(boost, 1)) as score
             FROM term_frequencies as "left"
             JOIN term_frequencies as "right"
             ON "left".field = "right".field AND "left".token = "right".token
-            JOIN boosts
+            LEFT OUTER JOIN boosts
             ON "left".field = boosts.field
-            WHERE "left".id > "right".id
+            LEFT OUTER JOIN stopwords
+            ON stopwords.field = "left".field AND stopwords.token = "left".token
+            WHERE token_freq is NULL
+              AND "left".id > "right".id
             GROUP BY "left".id, "right".id
             ORDER BY score DESC
             LIMIT ?
@@ -154,6 +169,30 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         while batch := results.fetchmany(BATCH_SIZE):
             for left, right, score in batch:
                 yield (Identifier.get(left), Identifier.get(right)), score
+
+    def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
+        """Match an entity against the index, returning a list of
+        (entity_id, score) pairs."""
+        rows = list(self.tokenizer.entity(entity))
+
+        if rows:
+            self.con.executemany("INSERT INTO matching VALUES (?, ?)", rows)
+
+        match_query = """
+            SELECT id, sum(tf * ifnull(boost, 1)) as score
+            FROM term_frequencies
+            JOIN matching
+            ON term_frequencies.field = matching.field AND term_frequencies.token = matching.token
+            LEFT OUTER JOIN boosts
+            ON term_frequencies.field = boosts.field
+            GROUP BY id
+            ORDER BY score DESC
+            LIMIT ?
+        """
+        results = self.con.execute(match_query, [self.max_candidates])
+        matches = [(Identifier.get(id), score) for id, score in results.fetchall()]
+        self.con.execute("DELETE FROM matching")
+        return matches
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (
