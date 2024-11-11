@@ -104,7 +104,8 @@ class DuckDBIndex(BaseIndex[DS, CE]):
                     log.info("Dumped %s entities" % idx)
 
         log.info("Loading data...")
-        self.con.execute(f"COPY entries from '{csv_path}'")
+        result = self.con.execute(f"COPY entries from '{csv_path}'").fetchall()
+        log.info("Loaded %r rows", len(result))
 
         log.info("Calculating term frequencies...")
         frequencies = self.frequencies_rel()  # noqa
@@ -188,10 +189,10 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             self.matching_dump.close()
             self.matching_dump = None
             log.info("Loading matching subjects...")
-            print(self.con.execute(f"COPY entries from '{self.matching_path}'").fetchall())
+            print(self.con.execute(f"COPY matching from '{self.matching_path}'").fetchall())
             log.info("Finished loading matching subjects.")
 
-        pairs_query = """
+        match_query = """
             SELECT matching.id, matches.id, sum(matches.tf * ifnull(boost, 1)) as score
             FROM term_frequencies as matches
             JOIN matching
@@ -201,8 +202,8 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             GROUP BY matches.id, matching.id
             ORDER BY matching.id, score DESC
         """
-        results = self.con.execute(pairs_query)
-        print("results", results.fetchall)
+        print(self.con.execute(match_query).fetchall())
+        results = self.con.execute(match_query)
         previous_id = None
         matches: List[Tuple[Identifier, float]] = []
         while batch := results.fetchmany(BATCH_SIZE):
@@ -214,6 +215,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
                     matches = []
                     previous_id = matching_id
                 matches.append((Identifier.get(match_id), score))
+        yield Identifier.get(previous_id), matches
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (

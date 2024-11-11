@@ -93,4 +93,4 @@ def duckdb_index(index_path: Path, dstore: SimpleMemoryStore):
 def index_path():
     index_path = Path(mkdtemp()) / "index-dir"
     yield index_path
-    #shutil.rmtree(index_path, ignore_errors=True)
+    shutil.rmtree(index_path, ignore_errors=True)
