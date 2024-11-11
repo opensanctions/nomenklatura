@@ -133,6 +133,7 @@ def test_match_score(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     match_sets = list(duckdb_index.matches())
     assert len(match_sets) == 1, match_sets
     subject_id, matches = match_sets[0]
+    assert subject_id == Identifier("bla"), subject_id
 
     # 9 entities in the index where some token in the query entity matches some
     # token in the index.

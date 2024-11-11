@@ -71,8 +71,8 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         # > 5 GB memory per thread and join-heavy workloads require approximately
         # > 10 GB memory per thread.
         # > Aim for 5-10 GB memory per thread.
-        self.con.execute("SET memory_limit = '2GB';")
-        self.con.execute("SET max_memory = '2GB';")
+        self.con.execute("SET memory_limit = '3GB';")
+        self.con.execute("SET max_memory = '3GB';")
         # > If you have a limited amount of memory, try to limit the number of threads
         self.con.execute("SET threads = 1;")
 
@@ -177,7 +177,6 @@ class DuckDBIndex(BaseIndex[DS, CE]):
                 yield (Identifier.get(left), Identifier.get(right)), score
 
     def add_matching_subject(self, entity: CE) -> None:
-        print("adding", entity)
         writer = csv.writer(self.matching_dump)
         for field, token in self.tokenizer.entity(entity):
             writer.writerow([entity.id, field, token])
@@ -189,27 +188,30 @@ class DuckDBIndex(BaseIndex[DS, CE]):
             self.matching_dump.close()
             self.matching_dump = None
             log.info("Loading matching subjects...")
-            print(self.con.execute(f"COPY matching from '{self.matching_path}'").fetchall())
+            self.con.execute(f"COPY matching from '{self.matching_path}'")
             log.info("Finished loading matching subjects.")
 
         match_query = """
             SELECT matching.id, matches.id, sum(matches.tf * ifnull(boost, 1)) as score
             FROM term_frequencies as matches
+            LEFT OUTER JOIN stopwords
+            ON stopwords.field = matches.field AND stopwords.token = matches.token
             JOIN matching
             ON matches.field = matching.field AND matches.token = matching.token
             LEFT OUTER JOIN boosts
             ON matches.field = boosts.field
+            WHERE token_freq is NULL
             GROUP BY matches.id, matching.id
             ORDER BY matching.id, score DESC
         """
-        print(self.con.execute(match_query).fetchall())
         results = self.con.execute(match_query)
         previous_id = None
         matches: List[Tuple[Identifier, float]] = []
         while batch := results.fetchmany(BATCH_SIZE):
-            print("batch")
             for matching_id, match_id, score in batch:
-                if previous_id is not None and matching_id != previous_id:
+                if previous_id is None:
+                    previous_id = matching_id
+                if matching_id != previous_id:
                     if matches:
                         yield Identifier.get(previous_id), matches
                     matches = []
