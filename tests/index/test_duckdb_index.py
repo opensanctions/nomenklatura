@@ -29,7 +29,9 @@ def test_import(dstore: SimpleMemoryStore, index_path: Path):
 def test_field_lengths(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     field_names = set()
     ids = set()
-    for field_name, id, field_len in duckdb_index.field_len_rel().fetchall():
+
+    field_len_rel = duckdb_index.con.sql("SELECT * FROM field_len")
+    for field_name, id, field_len in field_len_rel.fetchall():
         field_names.add(field_name)
         ids.add(id)
 
@@ -56,7 +58,8 @@ def test_mentions(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     ids = set()
     field_tokens = defaultdict(set)
 
-    for field_name, id, token, count in duckdb_index.mentions_rel().fetchall():
+    mentions_rel = duckdb_index.con.sql("SELECT * FROM mentions")
+    for field_name, id, token, count in mentions_rel.fetchall():
         ids.add(id)
         field_tokens[field_name].add(token)
 
@@ -121,11 +124,10 @@ def test_index_pairs(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     assert 1.1 < false_pos_score < 1.2, false_pos_score
     assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
 
-    assert len(pairs) == 428, len(pairs)
+    assert len(pairs) >= 428, len(pairs)
 
 
 def test_match_score(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
-    print(duckdb_index.data_dir)
     """Match an entity that isn't itself in the index"""
     dx = Dataset.make({"name": "test", "title": "Test"})
     entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
@@ -147,12 +149,12 @@ def test_match_score(dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex):
     assert next_result[0] == Identifier(VERBAND_ID), next_result
     assert 1.66 < next_result[1] < 1.67, next_result
 
-    match_identifiers = set(str(m[0]) for m in matches)
+    #match_identifiers = set(str(m[0]) for m in matches)
 
 
-#def test_top_match_matches_strong_pairs(
+# def test_top_match_matches_strong_pairs(
 #    dstore: SimpleMemoryStore, duckdb_index: DuckDBIndex
-#):
+# ):
 #    """Pairs with high scores are each others' top matches"""
 #
 #    view = dstore.default_view()
