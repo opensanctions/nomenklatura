@@ -163,7 +163,7 @@ class CSVStatementWriter(StatementWriter):
         self.fh = fh
         self.writer = csv.writer(self.fh, dialect=csv.unix_dialect)
         self.writer.writerow(CSV_COLUMNS)
-        self._batch: List[List[str]] = []
+        self._batch: List[List[Optional[str]]] = []
 
     def write(self, stmt: S) -> None:
         row = stmt.to_csv_row()
@@ -186,7 +186,7 @@ class PackStatementWriter(StatementWriter):
             dialect=csv.unix_dialect,
             quoting=csv.QUOTE_MINIMAL,
         )
-        self._batch: List[List[str]] = []
+        self._batch: List[List[Optional[str]]] = []
 
     def write(self, stmt: S) -> None:
         row = stmt.to_csv_row()
