@@ -191,7 +191,8 @@ class LevelDBView(View[DS, CE]):
             if stmt.dataset not in self.last_seens:
                 ls_val = self.store.db.get(b(f"ls:{stmt.dataset}"))
                 ls = ls_val.decode("utf-8") if ls_val is not None else None
-                self.last_seens[stmt.dataset] = ls
+                if ls is not None:
+                    self.last_seens[stmt.dataset] = ls
             stmt.last_seen = self.last_seens[stmt.dataset]
         return self.store.assemble(statements)
 
