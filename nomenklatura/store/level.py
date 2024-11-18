@@ -158,7 +158,7 @@ class LevelDBView(View[DS, CE]):
     ) -> None:
         super().__init__(store, scope, external=external)
         self.store: LevelDBStore[DS, CE] = store
-        self.last_seens: Dict[str, str] = {}
+        self.last_seens: Dict[str, Optional[str]] = {}
 
     def has_entity(self, id: str) -> bool:
         prefix = b(f"s:{id}:")
@@ -188,11 +188,13 @@ class LevelDBView(View[DS, CE]):
                 for v in it:
                     statements.append(unpack_statement(v, id, True))
         for stmt in statements:
-            if stmt.dataset not in self.last_seens:
+            if (
+                stmt.dataset not in self.last_seens
+                or self.last_seens[stmt.dataset] is None
+            ):
                 ls_val = self.store.db.get(b(f"ls:{stmt.dataset}"))
                 ls = ls_val.decode("utf-8") if ls_val is not None else None
-                if ls is not None:
-                    self.last_seens[stmt.dataset] = ls
+                self.last_seens[stmt.dataset] = ls
             stmt.last_seen = self.last_seens[stmt.dataset]
         return self.store.assemble(statements)
 
