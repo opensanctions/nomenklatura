@@ -1,4 +1,6 @@
-from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
+from math import isnan
+
+from nomenklatura.matching.compare.dates import dob_matches, dob_similarity, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
 
 from .util import e
@@ -11,23 +13,37 @@ def test_dob_matches():
     assert dob_year_matches(left, right) == 1.0
     assert dob_day_disjoint(left, right) == 0.0
     assert dob_year_disjoint(left, right) == 0.0
+    assert dob_similarity(left, right) == 1.0
+    right = e("Person", birthDate="1980-04-15")
+    assert dob_similarity(left, right) == 0.3
+    right = e("Person", birthDate="1980-03-16")
+    assert dob_similarity(left, right) == 0.3
+    right = e("Person", birthDate="1981-04-16")
+    assert dob_similarity(left, right) == 0.3
     right = e("Person", birthDate="1980")
     assert dob_year_matches(left, right) == 1.0
     assert dob_day_disjoint(left, right) == 0.0
+    assert dob_similarity(left, right) == 0.5
     right = e("Person", birthDate="1980-04")
     assert dob_year_matches(left, right) == 1.0
     assert dob_day_disjoint(left, right) == 0.0
+    assert dob_similarity(left, right) == 0.5
     right = e("Person", birthDate="1980-04-16T19:00:00")
     assert dob_matches(left, right) == 1.0
     assert dob_year_matches(left, right) == 1.0
     assert dob_day_disjoint(left, right) == 0.0
+    assert dob_similarity(left, right) == 1.0
     right = e("Person", birthDate="1965-04-16")
     assert dob_matches(left, right) == 0.0
     assert dob_year_matches(left, right) == 0.0
     assert dob_day_disjoint(left, right) == 1.0
     assert dob_year_disjoint(left, right) == 1.0
+    assert dob_similarity(left, right) == -0.3
     none = e("Person", name="Harry")
     assert dob_matches(left, none) == 0.0
     assert dob_year_matches(left, none) == 0.0
     assert dob_day_disjoint(left, none) == 0.0
     assert dob_year_disjoint(left, none) == 0.0
+    assert isnan(dob_similarity(left, none)), dob_similarity(left, none)
+
+    
