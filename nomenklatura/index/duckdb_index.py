@@ -55,7 +55,7 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         self.view = view
         memory_budget = options.get("memory_budget", None)
         self.memory_budget: Optional[int] = (
-            (int(memory_budget) * 1024) if memory_budget else None
+            int(memory_budget) if memory_budget else None
         )
         """Memory budget in megabytes"""
         self.max_candidates = int(options.get("max_candidates", 50))
