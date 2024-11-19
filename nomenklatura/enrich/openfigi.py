@@ -6,12 +6,12 @@ from followthemoney.util import make_entity_id
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 
 log = logging.getLogger(__name__)
 
 
-class OpenFIGIEnricher(Enricher[DS]):
+class OpenFIGIEnricher(ItemEnricher[DS]):
     """Uses the `OpenFIGI` search API to look up FIGIs by company name."""
 
     SEARCH_URL = "https://api.openfigi.com/v3/search"

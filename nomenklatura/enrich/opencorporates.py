@@ -11,7 +11,7 @@ from rigour.urls import build_url, ParamsType
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
 
 
@@ -22,7 +22,7 @@ def parse_date(raw: Any) -> Optional[str]:
     return registry.date.clean(raw)
 
 
-class OpenCorporatesEnricher(Enricher[DS]):
+class OpenCorporatesEnricher(ItemEnricher[DS]):
     COMPANY_SEARCH_API = "https://api.opencorporates.com/v0.4/companies/search"
     OFFICER_SEARCH_API = "https://api.opencorporates.com/v0.4/officers/search"
     UI_PART = "://opencorporates.com/"

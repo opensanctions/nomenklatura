@@ -11,13 +11,13 @@ from rigour.urls import build_url
 from nomenklatura.entity import CE, CompositeEntity
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentException
 
 log = logging.getLogger(__name__)
 
 
-class YenteEnricher(Enricher[DS]):
+class YenteEnricher(ItemEnricher[DS]):
     """Uses the `yente` match API to look up entities in a specific dataset."""
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):

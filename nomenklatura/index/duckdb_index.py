@@ -1,9 +1,8 @@
 from io import TextIOWrapper
-from duckdb import DuckDBPyRelation
 from followthemoney.types import registry
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, Optional, Tuple
 import csv
 import duckdb
 import logging
@@ -14,6 +13,7 @@ from nomenklatura.index.common import BaseIndex
 from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
 from nomenklatura.resolver import Pair, Identifier
 from nomenklatura.store import View
+from nomenklatura.enrich.common import MatchCandidates
 
 log = logging.getLogger(__name__)
 
@@ -189,13 +189,15 @@ class DuckDBIndex(BaseIndex[DS, CE]):
                 yield (Identifier.get(left), Identifier.get(right)), score
 
     def add_matching_subject(self, entity: CE) -> None:
+        if self.matching_dump is None:
+            raise Exception("Cannot add matching subject after getting candidates.")
         writer = csv.writer(self.matching_dump)
         for field, token in self.tokenizer.entity(entity):
             writer.writerow([entity.id, field, token])
 
     def matches(
         self,
-    ) -> Generator[Tuple[Identifier, List[Tuple[Identifier, float]]], None, None]:
+    ) -> Generator[Tuple[Identifier, MatchCandidates], None, None]:
         if self.matching_dump is not None:
             self.matching_dump.close()
             self.matching_dump = None
@@ -215,18 +217,22 @@ class DuckDBIndex(BaseIndex[DS, CE]):
         """
         results = self.con.execute(match_query)
         previous_id = None
-        matches: List[Tuple[Identifier, float]] = []
+        matches: MatchCandidates = []
         while batch := results.fetchmany(BATCH_SIZE):
             for matching_id, match_id, score in batch:
+                # first row
                 if previous_id is None:
                     previous_id = matching_id
+                # Next pair of subject and candidates
                 if matching_id != previous_id:
                     if matches:
                         yield Identifier.get(previous_id), matches
                     matches = []
                     previous_id = matching_id
                 matches.append((Identifier.get(match_id), score))
-        yield Identifier.get(previous_id), matches[: self.max_candidates]
+        # Last pair or subject and candidates
+        if matches and previous_id is not None:
+            yield Identifier.get(previous_id), matches[: self.max_candidates]
 
     def __repr__(self) -> str:
         return "<DuckDBIndex(%r, %r)>" % (

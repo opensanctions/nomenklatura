@@ -21,6 +21,9 @@ from nomenklatura.util import HeadersType
 from nomenklatura.resolver import Identifier
 
 EnricherConfig = Dict[str, Any]
+MatchCandidates = List[Tuple[Identifier, float]]
+"""A list of candidate matches with their scores from a cheaper blocking comparison."""
+
 log = logging.getLogger(__name__)
 
 
@@ -184,19 +187,10 @@ class Enricher(Generic[DS], ABC):
                 return False
         return True
 
-    def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
-        if not self._filter_entity(entity):
-            return
-        yield from self.match(entity)
-
     def expand_wrapped(self, entity: CE, match: CE) -> Generator[CE, None, None]:
         if not self._filter_entity(entity):
             return
         yield from self.expand(entity, match)
-
-    @abstractmethod
-    def match(self, entity: CE) -> Generator[CE, None, None]:
-        raise NotImplementedError()
 
     @abstractmethod
     def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
@@ -208,21 +202,48 @@ class Enricher(Generic[DS], ABC):
             self._session.close()
 
 
+class ItemEnricher(Enricher[DS], ABC):
+    """
+    An enricher which performs matching on individual entities, one at a time.
+    """
+
+    def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
+        if not self._filter_entity(entity):
+            return
+        yield from self.match(entity)
+
+    @abstractmethod
+    def match(self, entity: CE) -> Generator[CE, None, None]:
+        raise NotImplementedError()
+
+
 class BulkEnricher(Enricher[DS], ABC):
     """
     An enricher which performs matching in bulk, requiring all subject entities
-    to be loaded before matching. 
+    to be loaded before matching.
+
+    Once loaded, matching can be done by iterating over the `candidates` method
+    which provides the subject entity ID and a list of IDs of candidate matches.
+
+    `match_candidates` is then called for each subject entity and its
+    `MatchCandidates` yielding matching entities.
     """
+
     def load_wrapped(self, entity: CE) -> None:
         if not self._filter_entity(entity):
             return
         self.load(entity)
 
+    @abstractmethod
     def load(self, entity: CE) -> None:
         raise NotImplementedError()
-    
-    def candidates(self) -> Generator[Tuple[Identifier, List[Tuple[Identifier, float]]], None, None]:
+
+    @abstractmethod
+    def candidates(self) -> Generator[Tuple[Identifier, MatchCandidates], None, None]:
         raise NotImplementedError()
 
-    def match_candidates(self, entity: CE, candidates: List[Tuple[Identifier, float]]) -> Generator[CE, None, None]:
+    @abstractmethod
+    def match_candidates(
+        self, entity: CE, candidates: MatchCandidates
+    ) -> Generator[CE, None, None]:
         raise NotImplementedError()
