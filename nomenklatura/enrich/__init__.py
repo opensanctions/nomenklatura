@@ -21,6 +21,7 @@ __all__ = [
     "Enricher",
     "EnrichmentAbort",
     "EnrichmentException",
+    "ItemEnricher",
     "BulkEnricher",
     "make_enricher",
     "enrich",
