@@ -98,7 +98,8 @@ class Index(BaseIndex[DS, CE]):
 
                 if len(entry.entities) == 1 or len(entry.entities) > 100:
                     continue
-                for (left, lw), (right, rw) in combinations(entry.frequencies(field), 2):
+                entities = entry.frequencies(field)
+                for (left, lw), (right, rw) in combinations(entities, 2):
                     if lw == 0.0 or rw == 0.0:
                         continue
                     pair = (max(left, right), min(left, right))
