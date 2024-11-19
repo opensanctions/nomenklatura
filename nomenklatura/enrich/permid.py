@@ -14,7 +14,7 @@ from followthemoney.types import registry
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
 from nomenklatura.util import fingerprint_name
 
@@ -28,7 +28,7 @@ STATUS = {
 }
 
 
-class PermIDEnricher(Enricher[DS]):
+class PermIDEnricher(ItemEnricher[DS]):
     MATCHING_API = "https://api-eit.refinitiv.com/permid/match"
 
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):

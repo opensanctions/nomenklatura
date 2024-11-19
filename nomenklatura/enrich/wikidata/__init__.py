@@ -18,7 +18,7 @@ from nomenklatura.enrich.wikidata.props import (
     PROPS_TOPICS,
 )
 from nomenklatura.enrich.wikidata.model import Claim, Item
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 
 WD_API = "https://www.wikidata.org/w/api.php"
 LABEL_PREFIX = "wd:lb:"
@@ -29,7 +29,7 @@ def clean_name(name: str) -> str:
     return clean_brackets(name).strip()
 
 
-class WikidataEnricher(Enricher[DS]):
+class WikidataEnricher(ItemEnricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self.depth = self.get_config_int("depth", 1)

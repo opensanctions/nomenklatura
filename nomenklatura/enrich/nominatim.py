@@ -5,14 +5,14 @@ from typing import Any, Dict, Iterable, Generator
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.enrich.common import ItemEnricher, EnricherConfig
 
 
 log = logging.getLogger(__name__)
 NOMINATIM = "https://nominatim.openstreetmap.org/search.php"
 
 
-class NominatimEnricher(Enricher[DS]):
+class NominatimEnricher(ItemEnricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self.cache.preload(f"{NOMINATIM}%")
