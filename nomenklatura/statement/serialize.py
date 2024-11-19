@@ -9,7 +9,7 @@ import orjson
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
-from nomenklatura.util import pack_prop, unpack_prop
+from nomenklatura.util import unpack_prop
 
 JSON = "json"
 CSV = "csv"
@@ -167,7 +167,7 @@ class CSVStatementWriter(StatementWriter):
 
     def write(self, stmt: S) -> None:
         row = stmt.to_csv_row()
-        self._batch.append([row.get(c) for c in CSV_COLUMNS])
+        self._batch.append([row[c] for c in CSV_COLUMNS])
         if len(self._batch) >= CSV_BATCH:
             self.writer.writerows(self._batch)
             self._batch.clear()
@@ -189,13 +189,27 @@ class PackStatementWriter(StatementWriter):
         self._batch: List[List[Optional[str]]] = []
 
     def write(self, stmt: S) -> None:
-        row = stmt.to_csv_row()
-        prop = row.pop("prop")
-        schema = row.pop("schema")
-        if prop is None or schema is None:
-            raise ValueError("Cannot pack statement without prop and schema")
-        row["prop"] = pack_prop(schema, prop)
-        self._batch.append([row.get(c) for c in PACK_COLUMNS])
+        # HACK: This is very similar to the CSV writer, but at the very inner
+        # loop of the application, so we're duplicating code here.
+        target_value: Optional[str] = "t" if stmt.target else "f"
+        if stmt.target is None:
+            target_value = None
+        external_value: Optional[str] = "t" if stmt.external else "f"
+        if stmt.external is None:
+            external_value = None
+        row = [
+            stmt.entity_id,
+            f"{stmt.schema}:{stmt.prop}",
+            stmt.value,
+            stmt.dataset,
+            stmt.lang,
+            stmt.original_value,
+            target_value,
+            external_value,
+            stmt.first_seen,
+            stmt.last_seen,
+        ]
+        self._batch.append(row)
         if len(self._batch) >= CSV_BATCH:
             self.writer.writerows(self._batch)
             self._batch.clear()

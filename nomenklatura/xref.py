@@ -35,6 +35,7 @@ def xref(
     limit_factor: int = 10,
     scored: bool = True,
     external: bool = True,
+    discount_internal: float = 0.7,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     conflicting_match_threshold: Optional[float] = None,
@@ -85,9 +86,8 @@ def xref(
             if conflict_reporter is not None:
                 conflict_reporter.check_match(result.score, left_id.id, right_id.id)
 
-            # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:
-                score = score * 0.7
+                score = score * discount_internal
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
