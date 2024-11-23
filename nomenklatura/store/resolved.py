@@ -4,8 +4,9 @@ from redis.client import Redis
 from typing import Generator, List, Optional, Tuple
 from followthemoney.property import Property
 from followthemoney.types import registry
+from rigour.env import ENCODING as ENC
 
-from nomenklatura.kv import get_redis, close_redis, b
+from nomenklatura.kv import get_redis, close_redis
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, StrIdent
@@ -49,7 +50,7 @@ class ResolvedStore(Store[DS, CE]):
             return None
         return self.entity_class.from_statements(self.dataset, statements)
 
-    def drop(self, prefix: Optional[str]) -> None:
+    def drop(self, prefix: Optional[str] = None) -> None:
         """Delete all data associated with a prefix of the store."""
         pipeline = self.db.pipeline()
         prefix = f"xre:{prefix}" if prefix else self.prefix
@@ -107,10 +108,10 @@ class ResolvedWriter(Writer[DS, CE]):
                 stmts.append(row)
             obj = {"i": entity.id, "c": entity.caption, "s": stmts}
             key = f"{self.store.prefix}:e:{entity.id}"
-            pipeline.set(b(key), orjson.dumps(obj))
+            pipeline.set(key.encode(ENC), orjson.dumps(obj))
             for inv_id in entity.get_type_values(registry.entity, matchable=True):
                 inv_key = f"{self.store.prefix}:i:{inv_id}"
-                pipeline.sadd(b(inv_key), key)
+                pipeline.sadd(inv_key.encode(ENC), key)
         pipeline.execute()
         self.entities = []
 
@@ -178,14 +179,14 @@ class ResolvedView(View[DS, CE]):
 
     def get_entity(self, id: str) -> Optional[CE]:
         key = f"{self.store.prefix}:e:{id}"
-        data = self.store.db.get(b(key))
+        data = self.store.db.get(key.encode(ENC))
         if data is None:
             return None
         return self._unpack(data)
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
         key = f"{self.store.prefix}:i:{id}"
-        inv_keys = self.store.db.smembers(b(key))
+        inv_keys = self.store.db.smembers(key.encode(ENC))
         inv_data = self.store.db.mget(inv_keys)
         for data in inv_data:
             if data is None:
