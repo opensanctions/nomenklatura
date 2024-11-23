@@ -46,7 +46,11 @@ def test_index_persist(dstore: SimpleMemoryStore, dindex):
 def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     view = dstore.default_view()
     pairs = dindex.pairs()
-    assert len(pairs) > 0, pairs
+
+    # At least one pair is found
+    assert len(pairs) > 0, len(pairs)
+
+    # A pair has tokens which overlap
     tokenizer = dindex.tokenizer
     pair, score = pairs[0]
     entity0 = view.get_entity(str(pair[0]))
@@ -55,10 +59,44 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     tokens1 = set(tokenizer.entity(entity1))
     overlap = tokens0.intersection(tokens1)
     assert len(overlap) > 0, overlap
-    # assert "Schnabel" in (overlap, tokens0, tokens1)
-    # assert "Schnabel" in (entity0.caption, entity1.caption)
+
+    # A pair has non-zero score
     assert score > 0
-    # assert False
+    # pairs are in descending score order
+    last_score = pairs[0][1]
+    for pair in pairs[1:]:
+        assert pair[1] <= last_score
+        last_score = pair[1]
+
+    #  Johanna Quandt <> Frau Johanna Quandt
+    jq = (
+        Identifier.get("9add84cbb7bb48c7552f8ec7ae54de54eed1e361"),
+        Identifier.get("2d3e50433e36ebe16f3d906b684c9d5124c46d76"),
+    )
+    jq_score = [score for pair, score in pairs if jq == pair][0]
+
+    #  Bayerische Motorenwerke AG <> Bayerische Motorenwerke (BMW) AG
+    bmw = (
+        Identifier.get("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
+        Identifier.get("12570ee94b8dc23bcc080e887539d3742b2a5237"),
+    )
+    bmw_score = [score for pair, score in pairs if bmw == pair][0]
+
+    # More tokens in BMW means lower TF, reducing the score
+    assert jq_score > bmw_score, (jq_score, bmw_score)
+    assert jq_score == 19.0, jq_score
+    assert 3.3 < bmw_score < 3.4, bmw_score
+
+    # FERRING Arzneimittel GmbH <> Clou Container Leasing GmbH
+    false_pos = (
+        Identifier.get("f8867c433ba247cfab74096c73f6ff5e36db3ffe"),
+        Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
+    )
+    false_pos_score = [score for pair, score in pairs if false_pos == pair][0]
+    assert 1.1 < false_pos_score < 1.2, false_pos_score
+    assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
+
+    assert len(pairs) == 428, len(pairs)
 
 
 def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
