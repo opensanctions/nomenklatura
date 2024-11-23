@@ -31,7 +31,7 @@ class EnrichmentAbort(Exception):
     pass
 
 
-class Enricher(Generic[DS], ABC):
+class BaseEnricher(Generic[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         self.dataset = dataset
         self.cache = cache
@@ -39,7 +39,6 @@ class Enricher(Generic[DS], ABC):
         self.cache_days = int(config.pop("cache_days", 90))
         self._filter_schemata = config.pop("schemata", [])
         self._filter_topics = config.pop("topics", [])
-        self._session: Optional[Session] = None
 
     def get_config_expand(
         self, name: str, default: Optional[str] = None
@@ -54,6 +53,28 @@ class Enricher(Generic[DS], ABC):
 
     def get_config_bool(self, name: str, default: Union[bool, str] = False) -> int:
         return as_bool(self.config.get(name, default))
+
+    def _filter_entity(self, entity: CompositeEntity) -> bool:
+        """Check if the given entity should be filtered out. Filters
+        can be applied by schema or by topic."""
+        if len(self._filter_schemata):
+            if entity.schema.name not in self._filter_schemata:
+                return False
+        _filter_topics = set(self._filter_topics)
+        if "all" in _filter_topics:
+            assert isinstance(registry.topic, TopicType)
+            _filter_topics.update(registry.topic.names.keys())
+        if len(_filter_topics):
+            topics = set(entity.get_type_values(registry.topic))
+            if not len(topics.intersection(_filter_topics)):
+                return False
+        return True
+
+
+class Enricher(BaseEnricher[DS], ABC):
+    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
+        super().__init__(dataset, cache, config)
+        self._session: Optional[Session] = None
 
     @property
     def session(self) -> Session:
@@ -166,22 +187,6 @@ class Enricher(Generic[DS], ABC):
     def make_entity(self, entity: CE, schema: str) -> CE:
         """Create a new entity of the given schema."""
         return self._make_data_entity(entity, {"schema": schema})
-
-    def _filter_entity(self, entity: CompositeEntity) -> bool:
-        """Check if the given entity should be filtered out. Filters
-        can be applied by schema or by topic."""
-        if len(self._filter_schemata):
-            if entity.schema.name not in self._filter_schemata:
-                return False
-        _filter_topics = set(self._filter_topics)
-        if "all" in _filter_topics:
-            assert isinstance(registry.topic, TopicType)
-            _filter_topics.update(registry.topic.names.keys())
-        if len(_filter_topics):
-            topics = set(entity.get_type_values(registry.topic))
-            if not len(topics.intersection(_filter_topics)):
-                return False
-        return True
 
     def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
         if not self._filter_entity(entity):

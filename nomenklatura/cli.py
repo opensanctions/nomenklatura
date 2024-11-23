@@ -10,7 +10,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.index import Index, INDEX_TYPES
+from nomenklatura.index import Index
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
@@ -64,7 +64,6 @@ def cli() -> None:
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
-@click.option("-i", "--index", type=click.Choice(INDEX_TYPES))
 @click.option(
     "-c",
     "--clear",
@@ -103,7 +102,6 @@ def xref_file(
         algorithm=algorithm_type,
         scored=scored,
         limit=limit,
-        index_type=index,
     )
     resolver_.save()
     log.info("Xref complete in: %s", resolver_.path)

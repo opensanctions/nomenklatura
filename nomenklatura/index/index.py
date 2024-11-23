@@ -18,7 +18,12 @@ log = logging.getLogger(__name__)
 
 
 class Index(BaseIndex[DS, CE]):
-    """An in-memory search index to match entities against a given dataset."""
+    """
+    An in-memory search index to match entities against a given dataset.
+
+    For each field in the dataset, the index stores the IDs which contains each
+    token, along with the absolute frequency of each token in the document.
+    """
 
     name = "memory"
 
@@ -73,9 +78,16 @@ class Index(BaseIndex[DS, CE]):
             field.compute()
 
     def pairs(self, max_pairs: int = BaseIndex.MAX_PAIRS) -> List[Tuple[Pair, float]]:
-        """A second method of doing xref: summing up the pairwise match value
-        for all entities lineraly. This uses a lot of memory but is really
-        fast."""
+        """
+        A second method of doing xref: summing up the pairwise match value
+        for all entities linearly. This uses a lot of memory but is really
+        fast.
+
+        The score of each pair is the the sum of the product of term frequencies for
+        each co-occurring token in each field of the pair.
+
+        We skip any tokens with more than 100 entities.
+        """
         pairs: Dict[Pair, float] = {}
         log.info("Building index blocking pairs...")
         for field_name, field in self.fields.items():
@@ -86,9 +98,7 @@ class Index(BaseIndex[DS, CE]):
 
                 if len(entry.entities) == 1 or len(entry.entities) > 100:
                     continue
-                entities = sorted(
-                    entry.frequencies(field), key=lambda f: f[1], reverse=True
-                )
+                entities = entry.frequencies(field)
                 for (left, lw), (right, rw) in combinations(entities, 2):
                     if lw == 0.0 or rw == 0.0:
                         continue

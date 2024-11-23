@@ -3,12 +3,13 @@ from typing import List, Optional, Type
 from followthemoney.schema import Schema
 from pathlib import Path
 
+from nomenklatura import Index
 from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import get_index
+from nomenklatura.index import BaseIndex
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
@@ -31,21 +32,23 @@ def xref(
     resolver: Resolver[CE],
     store: Store[DS, CE],
     index_dir: Path,
+    index_type: Type[BaseIndex[DS, CE]] = Index,
     limit: int = 5000,
     limit_factor: int = 10,
     scored: bool = True,
     external: bool = True,
+    discount_internal: float = 0.7,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     conflicting_match_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
-    index_type: Optional[str] = None,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
     view = store.default_view(external=external)
-    index = get_index(view, index_dir, index_type)
+    index = index_type(view, index_dir)
+    index.build()
     conflict_reporter = None
     if conflicting_match_threshold is not None:
         conflict_reporter = ConflictingMatchReporter(
@@ -85,9 +88,8 @@ def xref(
             if conflict_reporter is not None:
                 conflict_reporter.check_match(result.score, left_id.id, right_id.id)
 
-            # Not sure this is globally a good idea.
             if len(left.datasets.intersection(right.datasets)) > 0:
-                score = score * 0.7
+                score = score * discount_internal
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
