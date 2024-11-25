@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import time
+import traceback
 from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
@@ -109,6 +110,7 @@ class Enricher(BaseEnricher[DS], ABC):
                 if rex.response is not None and rex.response.status_code in (401, 403):
                     raise EnrichmentAbort("Authorization failure: %s" % url) from rex
                 msg = "HTTP fetch failed [%s]: %s" % (url, rex)
+                log.info(f"{msg}\n{traceback.format_exc()}")
                 raise EnrichmentException(msg) from rex
             response = resp.text
             if cache_days_ > 0:
@@ -164,6 +166,7 @@ class Enricher(BaseEnricher[DS], ABC):
                             "Rate limit exceeded and out of retries: %s" % url
                         ) from rex
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
+                log.info(f"{msg}\n{traceback.format_exc()}")
                 raise EnrichmentException(msg) from rex
             resp_data = resp.json()
             if cache_days_ > 0:
