@@ -8,23 +8,27 @@ from nomenklatura.util import PathLike
 
 
 class JudgedPair(object):
-    """A pair of two entities which have been judged to be the same
-    (or not) by a user."""
+    """
+    A pair of two entities which have been judged to be the same
+    (or not) by a user.
+    """
 
-    __slots__ = ("left", "right", "judgement")
+    __slots__ = ("left", "right", "judgement", "group")
 
     def __init__(
-        self, left: EntityProxy, right: EntityProxy, judgement: Judgement
+        self, left: EntityProxy, right: EntityProxy, judgement: Judgement, group: int
     ) -> None:
         self.left = left
         self.right = right
         self.judgement = judgement
+        self.group = group
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "left": self.left.to_dict(),
             "right": self.right.to_dict(),
             "judgement": self.judgement.value,
+            "group": self.group,
         }
 
 
@@ -38,4 +42,5 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
             judgement = Judgement(data["judgement"])
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue
-            yield JudgedPair(left_entity, right_entity, judgement)
+            group = data.get("group", None)
+            yield JudgedPair(left_entity, right_entity, judgement, group)
