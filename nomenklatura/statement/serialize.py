@@ -2,20 +2,21 @@ import csv
 from io import TextIOWrapper
 from pathlib import Path
 from types import TracebackType
-from typing import BinaryIO, Generator, Iterable, List, Optional, Type
+from typing import BinaryIO, Generator, Iterable, List, Optional, TextIO, Type
 
 import click
 import orjson
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import S
-from nomenklatura.util import pack_prop, unpack_prop
+from nomenklatura.util import unpack_prop
 
 JSON = "json"
 CSV = "csv"
 PACK = "pack"
 FORMATS = [JSON, CSV, PACK]
 
+CSV_BATCH = 5000
 CSV_COLUMNS = [
     "canonical_id",
     "entity_id",
@@ -108,9 +109,11 @@ def read_path_statements(
 
 def get_statement_writer(fh: BinaryIO, format: str) -> "StatementWriter":
     if format == CSV:
-        return CSVStatementWriter(fh)
+        wrapped = TextIOWrapper(fh, encoding="utf-8")
+        return CSVStatementWriter(wrapped)
     elif format == PACK:
-        return PackStatementWriter(fh)
+        wrapped = TextIOWrapper(fh, encoding="utf-8")
+        return PackStatementWriter(wrapped)
     elif format == JSON:
         return JSONStatementWriter(fh)
     raise RuntimeError("Unknown statement format: %s" % format)
@@ -124,14 +127,11 @@ def write_statements(fh: BinaryIO, format: str, statements: Iterable[S]) -> None
 
 
 class StatementWriter(object):
-    def __init__(self, fh: BinaryIO) -> None:
-        self.fh = fh
-
     def write(self, stmt: S) -> None:
         raise NotImplementedError()
 
     def close(self) -> None:
-        self.fh.close()
+        raise NotImplementedError()
 
     def __enter__(self) -> "StatementWriter":
         return self
@@ -146,47 +146,75 @@ class StatementWriter(object):
 
 
 class JSONStatementWriter(StatementWriter):
+    def __init__(self, fh: BinaryIO) -> None:
+        self.fh = fh
+
     def write(self, stmt: S) -> None:
         data = stmt.to_dict()
         out = orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE)
         self.fh.write(out)
 
+    def close(self) -> None:
+        self.fh.close()
+
 
 class CSVStatementWriter(StatementWriter):
-    def __init__(self, fh: BinaryIO) -> None:
-        super().__init__(fh)
-        self.wrapper = TextIOWrapper(fh, encoding="utf-8")
-        self.writer = csv.writer(self.wrapper, dialect=csv.unix_dialect)
+    def __init__(self, fh: TextIO) -> None:
+        self.fh = fh
+        self.writer = csv.writer(self.fh, dialect=csv.unix_dialect)
         self.writer.writerow(CSV_COLUMNS)
+        self._batch: List[List[Optional[str]]] = []
 
     def write(self, stmt: S) -> None:
         row = stmt.to_csv_row()
-        self.writer.writerow([row.get(c) for c in CSV_COLUMNS])
+        self._batch.append([row[c] for c in CSV_COLUMNS])
+        if len(self._batch) >= CSV_BATCH:
+            self.writer.writerows(self._batch)
+            self._batch.clear()
 
     def close(self) -> None:
-        self.wrapper.close()
-        super().close()
+        if len(self._batch) > 0:
+            self.writer.writerows(self._batch)
+        self.fh.close()
 
 
 class PackStatementWriter(StatementWriter):
-    def __init__(self, fh: BinaryIO) -> None:
-        super().__init__(fh)
-        self.wrapper = TextIOWrapper(fh, encoding="utf-8")
+    def __init__(self, fh: TextIO) -> None:
+        self.fh = fh
         self.writer = csv.writer(
-            self.wrapper,
+            self.fh,
             dialect=csv.unix_dialect,
             quoting=csv.QUOTE_MINIMAL,
         )
+        self._batch: List[List[Optional[str]]] = []
 
     def write(self, stmt: S) -> None:
-        row = stmt.to_csv_row()
-        prop = row.pop("prop")
-        schema = row.pop("schema")
-        if prop is None or schema is None:
-            raise ValueError("Cannot pack statement without prop and schema")
-        row["prop"] = pack_prop(schema, prop)
-        self.writer.writerow([row.get(c) for c in PACK_COLUMNS])
+        # HACK: This is very similar to the CSV writer, but at the very inner
+        # loop of the application, so we're duplicating code here.
+        target_value: Optional[str] = "t" if stmt.target else "f"
+        if stmt.target is None:
+            target_value = None
+        external_value: Optional[str] = "t" if stmt.external else "f"
+        if stmt.external is None:
+            external_value = None
+        row = [
+            stmt.entity_id,
+            f"{stmt.schema}:{stmt.prop}",
+            stmt.value,
+            stmt.dataset,
+            stmt.lang,
+            stmt.original_value,
+            target_value,
+            external_value,
+            stmt.first_seen,
+            stmt.last_seen,
+        ]
+        self._batch.append(row)
+        if len(self._batch) >= CSV_BATCH:
+            self.writer.writerows(self._batch)
+            self._batch.clear()
 
     def close(self) -> None:
-        self.wrapper.close()
-        super().close()
+        if len(self._batch) > 0:
+            self.writer.writerows(self._batch)
+        self.fh.close()

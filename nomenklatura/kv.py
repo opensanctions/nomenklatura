@@ -5,6 +5,7 @@ from functools import cache
 from redis.client import Redis
 from fakeredis import FakeStrictRedis
 
+from rigour.env import ENCODING
 from nomenklatura import settings
 
 log = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ def close_redis() -> None:
 
 def b(s: str) -> bytes:
     """Encode a string to bytes."""
-    return s.encode("utf-8")
+    return s.encode(ENCODING)
 
 
 def bv(s: Union[bytes, str, int, float]) -> bytes:
