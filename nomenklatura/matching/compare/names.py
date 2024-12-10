@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import Callable, List, Dict, Tuple
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
@@ -125,7 +125,11 @@ def symmetric_aligned_levenshtein(qfp: str, rfp: str) -> float:
     return score * max(qfactor, rfactor)
 
 
-def name_fingerprint_levenshtein(query: E, result: E, lev=aligned_levenshtein) -> float:
+def name_fingerprint_levenshtein(
+    query: E,
+    result: E,
+    lev: Callable[[str, str], float] = aligned_levenshtein,
+) -> float:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
