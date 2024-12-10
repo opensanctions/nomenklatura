@@ -13,7 +13,7 @@ def country_mismatch(query: E, result: E) -> float:
 
 
 def country_match(query: E, result: E) -> float:
-    """Both entities are linked to the same country."""
+    """Positive when some countries match. Negative when no countries match."""
     qv, rv = type_pair(query, result, registry.country)
     if qv and rv:
         if has_overlap(qv, rv):

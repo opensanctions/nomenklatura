@@ -6,7 +6,11 @@ import numpy as np
 
 from nomenklatura.matching.regression_v3.util import tokenize_pair, compare_levenshtein
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
-from nomenklatura.matching.compare.names import aligned_levenshtein, name_fingerprint_levenshtein, symmetric_aligned_levenshtein
+from nomenklatura.matching.compare.names import (
+    aligned_levenshtein,
+    name_fingerprint_levenshtein,
+    symmetric_aligned_levenshtein,
+)
 from nomenklatura.matching.util import has_schema, props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets
 from nomenklatura.util import fingerprint_name
@@ -97,7 +101,12 @@ def name_numbers(left: E, right: E) -> float:
 def name_similarity(left: E, right: E) -> float:
     """Compute the similarity between the names of two entities, picking the max from
     a full string match, token overlap-based score, and levenshtein distance-based
-    score."""
+    score.
+
+    Full name match rewards longer names up to 10 parts.
+
+    The levenshtein approach first aligns name parts to find the most similar arrangement
+    """
     return max(
         [
             name_match(left, right),

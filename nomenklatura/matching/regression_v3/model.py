@@ -10,7 +10,11 @@ from nomenklatura.matching.regression_v3.names import first_name_match, name_sim
 from nomenklatura.matching.regression_v3.names import family_name_match
 from nomenklatura.matching.regression_v3.names import name_levenshtein, name_match
 from nomenklatura.matching.regression_v3.names import name_token_overlap, name_numbers
-from nomenklatura.matching.regression_v3.misc import phone_match, email_match, position_country_mismatch
+from nomenklatura.matching.regression_v3.misc import (
+    phone_match,
+    email_match,
+    position_country_mismatch,
+)
 from nomenklatura.matching.regression_v3.misc import address_match, address_numbers
 from nomenklatura.matching.regression_v3.misc import identifier_match, birth_place
 from nomenklatura.matching.regression_v3.misc import org_identifier_match
@@ -26,9 +30,18 @@ from nomenklatura.util import DATA_PATH
 
 
 class RegressionV3(ScoringAlgorithm):
-    """A simple matching algorithm based on a regression model."""
+    """
+    This is an experimental release and not recommended for production use.
 
-    NAME = "regression-v3"
+    A simple matching algorithm based on a regression model considering name
+    part alignment and date precision.
+
+    Similarity is rewarded and dissimilarity is penalised for country and date of birth.
+
+    Security-type entity similarity is heavily dependent on ISIN match.
+    """
+
+    NAME = "regression-v3-alpha"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
     FEATURES: List[CompareFunction] = [
         name_numbers,

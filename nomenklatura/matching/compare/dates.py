@@ -80,6 +80,9 @@ def dob_year_disjoint(query: E, result: E) -> float:
 
 def dob_similarity(query: E, result: E) -> float:
     """
+    Positive for matching or similar dates, negative for disjoint dates.
+    Lower precision values result in dampened scores.
+
     1.0: precise dates match
     0.75: years match
     0.5: dates within 1 edit from each other
