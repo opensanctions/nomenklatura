@@ -87,21 +87,21 @@ def test_nominatim_match():
         assert len(results) == 0, results
 
 
-def test_nominatim_match_list():
+def test_nominatim_match_list(resolver: Resolver[CompositeEntity]):
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
     ent = CompositeEntity.from_data(dataset, data)
 
-    resolver = Resolver()
-    assert len(resolver.edges) == 0, resolver.edges
+    candidates = list(resolver.get_candidates())
+    assert len(candidates) == 0, candidates
     with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         results = list(match(enricher, resolver, [ent]))
     assert len(results) == 2, results
-    assert len(resolver.edges) == 1, resolver.edges
-    assert list(resolver.edges.values())[0].judgement == Judgement.NO_JUDGEMENT
+    candidates = list(resolver.get_candidates())
+    assert len(candidates) == 1, candidates
 
 
 def test_nominatim_enrich():
@@ -115,7 +115,7 @@ def test_nominatim_enrich():
     assert len(adjacent) == 1, adjacent
 
 
-def test_nominatim_enrich_list():
+def test_nominatim_enrich_list(resolver: Resolver[CompositeEntity]):
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"
@@ -125,7 +125,6 @@ def test_nominatim_enrich_list():
 
     with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
-        resolver = Resolver()
         results = list(enrich(enricher, resolver, [ent]))
         assert len(results) == 0, results
         resolver.decide(ent.id, "osm-node-2140755199", judgement=Judgement.POSITIVE)

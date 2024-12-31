@@ -25,13 +25,11 @@ __all__ = [
 
 def load_entity_file_store(
     path: Path,
-    resolver: Optional[Resolver[CompositeEntity]] = None,
+    resolver: Resolver[CompositeEntity],
     dataset: Optional[Dataset] = None,
     cleaned: bool = True,
 ) -> SimpleMemoryStore:
     """Create a simple in-memory store by reading FtM entities from a file path."""
-    if resolver is None:
-        resolver = Resolver[CompositeEntity]()
     if dataset is None:
         dataset = Dataset.make({"name": path.stem, "title": path.stem})
     store = MemoryStore(dataset, resolver)

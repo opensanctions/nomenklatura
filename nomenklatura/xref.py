@@ -107,6 +107,7 @@ def xref(
                 score = (score + 1.0) / 2.0
 
             resolver.suggest(left.id, right.id, score, user=user)
+
             if suggested >= limit:
                 break
             suggested += 1

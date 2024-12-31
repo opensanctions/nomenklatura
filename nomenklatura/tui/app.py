@@ -1,4 +1,3 @@
-import asyncio
 from typing import Optional, Set, Tuple, cast
 from rich.text import Text
 from rich.console import RenderableType
@@ -35,6 +34,7 @@ class DedupeState(object):
     def load(self) -> bool:
         self.left = None
         self.right = None
+        self.resolver.begin()
         for left_id, right_id, score in self.resolver.get_candidates():
             left_id = self.resolver.get_canonical(left_id)
             right_id = self.resolver.get_canonical(right_id)
@@ -66,10 +66,8 @@ class DedupeState(object):
                     judgement=judgement,
                 )
                 self.store.update(canonical_id)
+        self.resolver.commit()
         self.load()
-
-    def save(self) -> None:
-        self.resolver.save()
 
 
 class DedupeWidget(Widget):
@@ -103,8 +101,6 @@ class DedupeApp(App[int]):
         ("n", "negative", "No match"),
         ("u", "unsure", "Unsure"),
         ("l", "latinize", "Latinize"),
-        ("s", "save", "Save"),
-        ("w", "exit_save", "Quit & save"),
         ("q", "exit_hard", "Quit"),
     ]
 
@@ -118,15 +114,6 @@ class DedupeApp(App[int]):
     def force_render(self) -> None:
         self.widget.refresh(layout=True)
 
-    async def save_resolver(self) -> None:
-        self.dedupe.message = "Saving..."
-        self.force_render()
-        self.dedupe.save()
-        self.dedupe.message = "Saved."
-        self.force_render()
-        await asyncio.sleep(1)
-        self.dedupe.message = None
-
     async def action_positive(self) -> None:
         await self.decide(Judgement.POSITIVE)
 
@@ -139,15 +126,6 @@ class DedupeApp(App[int]):
     async def action_latinize(self) -> None:
         self.dedupe.latinize = not self.dedupe.latinize
         self.force_render()
-
-    async def action_save(self) -> None:
-        await self.save_resolver()
-        # await self.load_candidate()
-        self.force_render()
-
-    async def action_exit_save(self) -> None:
-        await self.save_resolver()
-        self.exit(0)
 
     async def action_exit_hard(self) -> None:
         self.exit(0)

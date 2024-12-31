@@ -12,11 +12,11 @@ from nomenklatura.xref import xref
 
 
 def test_xref_candidates(
-    index_path: Path, dresolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
+    index_path: Path, resolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
 ):
-    xref(dresolver, dstore, index_path)
+    xref(resolver, dstore, index_path)
     view = dstore.default_view(external=True)
-    candidates = list(dresolver.get_candidates(limit=20))
+    candidates = list(resolver.get_candidates(limit=20))
     assert len(candidates) == 20
     for left_id, right_id, score in candidates:
         left = view.get_entity(left_id)
@@ -32,9 +32,9 @@ def test_xref_candidates(
 def test_xref_potential_conflicts(
     index_path: Path,
     test_dataset: Dataset,
+    resolver: Resolver[CompositeEntity],
     capsys,
 ):
-    resolver = Resolver[CompositeEntity]()
     store = SimpleMemoryStore(test_dataset, resolver)
     a = CompositeEntity.from_data(
         test_dataset,
