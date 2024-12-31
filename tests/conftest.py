@@ -52,19 +52,29 @@ def donations_json(donations_path):
     return data
 
 
-@pytest.fixture(scope="module")
-def dresolver():
-    return Resolver[CompositeEntity]()
+@pytest.fixture(scope="function")
+def resolver():
+    resolver = Resolver[CompositeEntity].make_default()
+    resolver.begin()
+    yield resolver
+    resolver.rollback()
 
 
-@pytest.fixture(scope="module")
-def dstore(donations_path, dresolver) -> SimpleMemoryStore:
-    return load_entity_file_store(donations_path, dresolver)
+@pytest.fixture(scope="function")
+def dstore(donations_path, resolver) -> SimpleMemoryStore:
+    return load_entity_file_store(donations_path, resolver)
 
 
 @pytest.fixture(scope="module")
 def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
+
+
+@pytest.fixture(scope="function")
+def index_path():
+    index_path = Path(mkdtemp()) / "index-dir"
+    yield index_path
+    shutil.rmtree(index_path, ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
@@ -79,10 +89,3 @@ def tantivy_index(index_path: Path, dstore: SimpleMemoryStore):
     index = TantivyIndex(dstore.default_view(), index_path)
     index.build()
     yield index
-
-
-@pytest.fixture(scope="function")
-def index_path():
-    index_path = Path(mkdtemp()) / "index-dir"
-    yield index_path
-    shutil.rmtree(index_path, ignore_errors=True)
