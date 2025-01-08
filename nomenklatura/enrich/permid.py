@@ -10,6 +10,7 @@ from functools import lru_cache
 from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 from followthemoney.types import registry
+from requests.exceptions import ChunkedEncodingError
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -179,7 +180,6 @@ class PermIDEnricher(Enricher[DS]):
                 cache_key,
                 data=query,
                 headers=headers,
-                retry=0,
                 cache_days=self.cache_days,
             )
             seen_matches: Set[str] = set()
