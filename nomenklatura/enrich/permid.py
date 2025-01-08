@@ -1,24 +1,22 @@
-import io
 import csv
+import io
 import json
 import logging
-from lxml import etree
-
-# from pprint import pprint
-from itertools import product
 from functools import lru_cache
+from itertools import product
 from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
+
 from followthemoney.types import registry
+from lxml import etree
 from requests import Session
 
-from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
+from nomenklatura.dataset import DS
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
+from nomenklatura.entity import CE
 from nomenklatura.util import fingerprint_name
-
 
 log = logging.getLogger(__name__)
 
@@ -186,7 +184,6 @@ class PermIDEnricher(Enricher[DS]):
                 cache_key,
                 data=query,
                 headers=headers,
-                retry=0,
                 cache_days=self.cache_days,
             )
             seen_matches: Set[str] = set()
