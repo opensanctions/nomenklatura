@@ -26,7 +26,6 @@ class StatementDict(TypedDict):
     dataset: str
     lang: Optional[str]
     original_value: Optional[str]
-    target: Optional[bool]
     external: Optional[bool]
     first_seen: Optional[str]
     last_seen: Optional[str]
@@ -56,7 +55,6 @@ class Statement(object):
         "dataset",
         "lang",
         "original_value",
-        "target",
         "external",
         "first_seen",
         "last_seen",
@@ -89,7 +87,6 @@ class Statement(object):
         self.original_value = original_value
         self.first_seen = first_seen
         self.last_seen = last_seen or first_seen
-        self.target = target
         self.external = external
         if id is None:
             id = self.generate_key()
@@ -108,14 +105,12 @@ class Statement(object):
             "original_value": self.original_value,
             "first_seen": self.first_seen,
             "last_seen": self.last_seen,
-            "target": self.target,
             "external": self.external,
             "id": self.id,
         }
 
     def to_csv_row(self) -> Dict[str, Optional[str]]:
         data = cast(Dict[str, Optional[str]], self.to_dict())
-        data["target"] = bool_text(self.target)
         data["external"] = bool_text(self.external)
         return data
 
@@ -188,7 +183,6 @@ class Statement(object):
             lang=data.get("lang", None),
             original_value=data.get("original_value", None),
             first_seen=data.get("first_seen", None),
-            target=data.get("target"),
             external=data.get("external"),
             id=data.get("id", None),
             canonical_id=data.get("canonical_id", None),
@@ -198,7 +192,6 @@ class Statement(object):
     @classmethod
     def from_row(cls: Type[S], data: Dict[str, str]) -> S:
         typed_data = cast(StatementDict, data)
-        typed_data["target"] = text_bool(data.get("target"))
         typed_data["external"] = text_bool(data.get("external"))
         if data.get("lang") == "":
             typed_data["lang"] = None
@@ -219,7 +212,6 @@ class Statement(object):
             lang=row.lang,
             original_value=row.original_value,
             first_seen=datetime_iso(row.first_seen),
-            target=row.target,
             external=row.external,
             last_seen=datetime_iso(row.last_seen),
         )
@@ -231,7 +223,6 @@ class Statement(object):
         dataset: str,
         first_seen: Optional[str] = None,
         last_seen: Optional[str] = None,
-        target: Optional[bool] = None,
         external: Optional[bool] = None,
     ) -> Generator[S, None, None]:
         if entity.id is None:
@@ -242,7 +233,6 @@ class Statement(object):
             schema=entity.schema.name,
             value=entity.id,
             dataset=dataset,
-            target=target,
             external=external,
             first_seen=first_seen,
             last_seen=last_seen,
@@ -254,7 +244,6 @@ class Statement(object):
                 schema=entity.schema.name,
                 value=value,
                 dataset=dataset,
-                target=target,
                 external=external,
                 first_seen=first_seen,
                 last_seen=last_seen,

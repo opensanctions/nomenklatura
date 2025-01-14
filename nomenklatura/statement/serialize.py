@@ -191,9 +191,6 @@ class PackStatementWriter(StatementWriter):
     def write(self, stmt: S) -> None:
         # HACK: This is very similar to the CSV writer, but at the very inner
         # loop of the application, so we're duplicating code here.
-        target_value: Optional[str] = "t" if stmt.target else "f"
-        if stmt.target is None:
-            target_value = None
         external_value: Optional[str] = "t" if stmt.external else "f"
         if stmt.external is None:
             external_value = None
@@ -204,7 +201,7 @@ class PackStatementWriter(StatementWriter):
             stmt.dataset,
             stmt.lang,
             stmt.original_value,
-            target_value,
+            None,
             external_value,
             stmt.first_seen,
             stmt.last_seen,

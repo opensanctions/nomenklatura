@@ -100,7 +100,6 @@ class ResolvedWriter(Writer[DS, CE]):
                     stmt.dataset,
                     stmt.lang,
                     stmt.original_value,
-                    stmt.target,
                     # stmt.external,
                     stmt.first_seen,
                     stmt.last_seen,
