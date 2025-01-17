@@ -30,6 +30,12 @@ def snak_value_to_string(
             prec_id = cast(int, value.get("precision"))
             prec = PRECISION.get(prec_id, Precision.DAY)
             time = time[: prec.value]
+
+            # Remove Jan 01, because it seems to be in input failure pattern
+            # with Wikidata (probably from bots that don't get "precision").
+            if time.endswith("-01-01"):
+                time = time[:4]
+
             # Date limit in FtM. These will be removed by the death filter:
             time = max("1001", time)
         if time is None:
