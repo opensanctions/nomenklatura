@@ -38,6 +38,7 @@ class Dataset(Named):
         self.updated_at = type_check(registry.date, data.get("updated_at"))
         self.version = type_check(registry.string, data.get("version"))
         self.category = type_check(registry.string, data.get("category"))
+        self.tags = string_list(data.get("tags", []))
         if self.version is None and self.updated_at is not None:
             self.version = iso_to_version(self.updated_at)
 
@@ -111,6 +112,7 @@ class Dataset(Named):
             "version": self.version,
             "updated_at": self.updated_at,
             "category": self.category,
+            "tags": self.tags,
             "resources": [r.to_dict() for r in self.resources],
         }
         children = [c for c in self._children if c != self.name]
