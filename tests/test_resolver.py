@@ -4,6 +4,7 @@ from tempfile import NamedTemporaryFile
 from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
+from nomenklatura.resolver.edge import Edge
 from nomenklatura.statement import Statement
 
 
@@ -89,6 +90,36 @@ def test_resolver():
     # Can we actually commit after all these operations?
     resolver.commit()
 
+
+def test_cluster_to_cluster():
+    resolver = Resolver.make_default()
+    resolver.begin()
+
+    a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    # ab_canon = resolver.decide("a1", "b1", Judgement.POSITIVE)
+    #assert ab_canon.canonical, ab_canon
+    ab_canon = resolver.decide(a_canon, b_canon, Judgement.POSITIVE)
+    assert ab_canon.canonical, ab_canon
+    # The pair the decision was made upon. get_resolved doesn't handle this case
+    # because get_canonical should be called on the arguments first and
+    # there's no edge between the same node.
+    #         note:         NOT
+    assert Edge("a1", "a2") not in set(resolver._get_resolved_edges("a1", "a2"))
+    assert resolver.get_edge("a1", "a2") is None
+    # A referent and canonical
+    assert Edge("a1", a_canon) in set(resolver._get_resolved_edges("a1", a_canon))
+    assert resolver.get_edge("a1", a_canon) == Edge("a1", a_canon)
+    # Two referents whose canonicals were decided upon
+    assert Edge(a_canon, b_canon) in set(resolver._get_resolved_edges("a1", "b1"))
+    assert resolver.get_edge("a1", "b1") is None
+
+    # recursive canonical
+    a_ultimate = resolver.get_canonical("a1")
+    b_ultimate = resolver.get_canonical("b1")
+    assert a_ultimate == a_ultimate
+
+    resolver.commit()
 
 def test_linker():
     resolver = Resolver.make_default()
