@@ -219,19 +219,26 @@ class Resolver(Linker[CE]):
             referents.add(connected.id)
         return referents
 
-    def get_resolved_edge(
+    def _get_resolved_edges(
         self, left_id: StrIdent, right_id: StrIdent
-    ) -> Optional[Edge]:
+    ) -> Generator[Edge, None, None]:
         (left, right) = Identifier.pair(left_id, right_id)
         left_connected = self.connected(left)
         right_connected = self.connected(right)
         for e in left_connected:
             for o in right_connected:
+                if e == o:
+                    continue
                 edge = self.get_edge(e, o)
                 if edge is None:
                     continue
-                return edge
-        return None
+                yield edge
+
+    def get_resolved_edge(
+        self, left_id: StrIdent, right_id: StrIdent
+    ) -> Optional[Edge]:
+        """Some edge between left and right, if any."""
+        return next(self._get_resolved_edges(left_id, right_id), None)
 
     def _pair_judgement(self, left: Identifier, right: Identifier) -> Judgement:
         edge = self.get_edge(left, right)
