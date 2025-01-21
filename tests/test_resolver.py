@@ -97,10 +97,17 @@ def test_cluster_to_cluster():
 
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    acbc = resolver.decide(a_canon, b_canon, Judgement.UNSURE)
+    assert "a1" in resolver.connected(Identifier.get("a1"))
+    assert "a2" in resolver.connected(Identifier.get("a1"))
+    assert "b1" not in resolver.connected(Identifier.get("a1"))
+    assert Edge(a_canon, b_canon) in set(resolver._get_resolved_edges("a1", "b1"))
+
     # ab_canon = resolver.decide("a1", "b1", Judgement.POSITIVE)
-    #assert ab_canon.canonical, ab_canon
-    ab_canon = resolver.decide(a_canon, b_canon, Judgement.POSITIVE)
-    assert ab_canon.canonical, ab_canon
+    # TODO: There's a bug here - decide(a, b, POSITIVE) must always return a canonical.
+    # assert ab_canon.canonical, ab_canon
+    acbc_canon = resolver.decide(a_canon, b_canon, Judgement.POSITIVE)
+    assert acbc_canon.canonical, acbc_canon
     # The pair the decision was made upon. get_resolved doesn't handle this case
     # because get_canonical should be called on the arguments first and
     # there's no edge between the same node.
@@ -114,10 +121,23 @@ def test_cluster_to_cluster():
     assert Edge(a_canon, b_canon) in set(resolver._get_resolved_edges("a1", "b1"))
     assert resolver.get_edge("a1", "b1") is None
 
-    # recursive canonical
+    # indirect canonical
     a_ultimate = resolver.get_canonical("a1")
     b_ultimate = resolver.get_canonical("b1")
-    assert a_ultimate == a_ultimate
+    assert a_ultimate == b_ultimate
+
+    # indirect connected
+    expected = {
+        Identifier.get("a1"),
+        Identifier.get("a2"),
+        Identifier.get("b1"),
+        Identifier.get(a_canon),
+        Identifier.get(b_canon),
+    }
+    assert expected.issubset(resolver.connected(Identifier.get("a1")))
+
+
+
 
     resolver.commit()
 
