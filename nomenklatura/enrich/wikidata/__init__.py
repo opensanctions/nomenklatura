@@ -245,7 +245,8 @@ class WikidataEnricher(Enricher[DS]):
         names: Set[str] = set()
         for label in item.labels:
             label.apply(proxy, "name", clean=clean_name)
-            names.add(label.text.lower())
+            if label.text is not None:
+                names.add(label.text.lower())
         item.description.apply(proxy, "notes")
         for alias in item.aliases:
             if alias.text is None or alias.text.lower() in names:
@@ -274,7 +275,7 @@ class WikidataEnricher(Enricher[DS]):
 
             # Sanity check that the name parts are in any of the full names:
             if ftm_prop in ("firstName", "lastName", "fatherName"):
-                if value.text.lower() not in names_concat:
+                if value.text is None or value.text.lower() not in names_concat:
                     continue
 
             # Make sure the aliases look like the main name, otherwise mark them as weak:
