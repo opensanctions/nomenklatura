@@ -3,7 +3,6 @@ from functools import lru_cache
 from typing import cast, Generator, Any, Dict, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from rigour.ids.wikidata import is_qid
-from fingerprints import clean_brackets
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -18,15 +17,12 @@ from nomenklatura.enrich.wikidata.props import (
     PROPS_TOPICS,
 )
 from nomenklatura.enrich.wikidata.model import Claim, Item
+from nomenklatura.enrich.wikidata.value import is_alias_strong, clean_name
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 
 WD_API = "https://www.wikidata.org/w/api.php"
 LABEL_PREFIX = "wd:lb:"
 log = logging.getLogger(__name__)
-
-
-def clean_name(name: str) -> str:
-    return clean_brackets(name).strip()
 
 
 class WikidataEnricher(Enricher[DS]):
@@ -244,18 +240,27 @@ class WikidataEnricher(Enricher[DS]):
         proxy.id = item.id
         if item.modified is None:
             return None
-        proxy.add("modifiedAt", item.modified)
+        # proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
+        names: Set[str] = set()
         for label in item.labels:
             label.apply(proxy, "name", clean=clean_name)
+            names.add(label.text.lower())
         item.description.apply(proxy, "notes")
         for alias in item.aliases:
-            alias.apply(proxy, "alias", clean=clean_name)
+            if alias.text is None or alias.text.lower() in names:
+                continue
+            _strong = is_alias_strong(alias.text, names)
+            prop = "alias" if _strong else "weakAlias"
+            alias.apply(proxy, prop, clean=clean_name)
+            if _strong:
+                names.add(alias.text.lower())
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
             log.debug("Person is not a Q5 [%s]: %s", item.id, item.labels)
             return None
 
+        names_concat = " ".join(names)
         for claim in item.claims:
             if claim.property is None:
                 continue
@@ -266,6 +271,19 @@ class WikidataEnricher(Enricher[DS]):
                 log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
                 continue
             value = claim.text(self)
+
+            # Sanity check that the name parts are in any of the full names:
+            if ftm_prop in ("firstName", "lastName", "fatherName"):
+                if value.text.lower() not in names_concat:
+                    continue
+
+            # Make sure the aliases look like the main name, otherwise mark them as weak:
+            if ftm_prop == "alias":
+                if value.text is None or value.text.lower() in names:
+                    continue
+                _strong = is_alias_strong(value.text, names)
+                ftm_prop = "alias" if _strong else "weakAlias"
+
             if ftm_prop in PROPS_QUALIFIED:
                 value = qualify_value(self, value, claim)
             if ftm_prop == "topics":

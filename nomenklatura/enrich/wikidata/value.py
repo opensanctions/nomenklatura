@@ -1,7 +1,9 @@
 import logging
 from prefixdate import Precision
-from typing import TYPE_CHECKING, cast, Any, Dict, Optional
+from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
+from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
+# from rigour.text.distance import is_levenshtein_plausible
 
 from nomenklatura.dataset import DS
 from nomenklatura.enrich.wikidata.lang import LangText
@@ -62,3 +64,18 @@ def snak_value_to_string(
     else:
         log.warning("Unhandled value [%s]: %s", value_type, value)
     return LangText(None)
+
+
+def clean_name(name: str) -> str:
+    return clean_brackets(name).strip()
+
+
+def is_alias_strong(alias: str, names: Set[str]) -> bool:
+    """Check if an alias is a plausible nickname for a person, ie. shows some
+    similarity to the actual name."""
+    if " " not in alias:
+        return False
+    # for name in names:
+    #     if is_levenshtein_plausible(alias, name, max_edits=None, max_percent=0.7):
+    #         return True
+    return True
