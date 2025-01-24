@@ -9,9 +9,9 @@ tests/fixtures/donations.frag.ijson
 tests/fixtures/donations.rslv.ijson
 .coverage
 htmlcov/
-build/
-dist/
-data/
+/build/
+/dist/
+/data/
 textual.log
 .nk_cache.db
 nomenklatura.db
