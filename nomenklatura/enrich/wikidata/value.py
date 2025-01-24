@@ -1,6 +1,7 @@
 import logging
 from prefixdate import Precision
 from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
+from normality.cleaning import collapse_spaces
 from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
 # from rigour.text.distance import is_levenshtein_plausible
@@ -66,8 +67,8 @@ def snak_value_to_string(
     return LangText(None)
 
 
-def clean_name(name: str) -> str:
-    return clean_brackets(name).strip()
+def clean_name(name: str) -> Optional[str]:
+    return collapse_spaces(clean_brackets(name))
 
 
 def is_alias_strong(alias: str, names: Set[str]) -> bool:

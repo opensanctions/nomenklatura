@@ -1,5 +1,6 @@
 from typing import Callable, Counter, Dict, Optional, Any
 from followthemoney.types import registry
+from normality.cleaning import remove_unsafe_chars
 
 from nomenklatura.entity import CE
 
@@ -19,10 +20,10 @@ class LangText(object):
     ) -> None:
         if text is None or len(text.strip()) == 0:
             text = None
-        self.text = text
+        self.text = remove_unsafe_chars(text)
         self.lang = registry.language.clean(lang)
         if lang is not None and self.lang is None:
-            self.text = None    
+            self.text = None
         self.original = original
 
     def __hash__(self) -> int:
@@ -36,11 +37,16 @@ class LangText(object):
             return "<empty>"
         return f"{self.text!r}@{self.lang or '???'}"
 
-    def apply(self, entity: CE, prop: str, clean: Optional[Callable[[str], str]] = None) -> None:
+    def apply(
+        self,
+        entity: CE,
+        prop: str,
+        clean: Optional[Callable[[str], Optional[str]]] = None,
+    ) -> None:
         if self.text is None:
             return
         clean_text = self.text if clean is None else clean(self.text)
-        if clean_text == "":
+        if clean_text is None or clean_text == "":
             return
         entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
 
@@ -60,7 +66,7 @@ def pick_lang_text(values: Dict[str, str]) -> LangText:
 
     counter = Counter[str]()
     counter.update(values.values())
-    for (value, count) in counter.most_common(1):
+    for value, count in counter.most_common(1):
         if count > 1:
             for lang, v in values.items():
                 if v == value:
