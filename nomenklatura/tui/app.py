@@ -36,6 +36,8 @@ class DedupeState(object):
         self.left = None
         self.right = None
         for left_id, right_id, score in self.resolver.get_candidates():
+            left_id = self.resolver.get_canonical(left_id)
+            right_id = self.resolver.get_canonical(right_id)
             if (left_id, right_id) in self.ignore:
                 continue
             if score is None:

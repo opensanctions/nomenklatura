@@ -69,7 +69,11 @@ def test_wikidata_match():
         ent = CompositeEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 1, results
-        assert results[0].id == "Q7747", results[0]
+        res0 = results[0]
+        assert res0.id == "Q7747", res0
+        assert "Putin" in res0.get("weakAlias")
+        assert "Vladimir Vladimirovich Putin" in res0.get("alias")
+        assert "Vladimir" in res0.get("firstName")
 
 
 def test_wikidata_enrich():
