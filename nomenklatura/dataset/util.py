@@ -5,6 +5,7 @@ from followthemoney.types.common import PropertyType
 from normality import stringify
 
 from nomenklatura.exceptions import MetadataException
+from nomenklatura.util import iso_datetime, datetime_iso
 
 
 def type_check(
@@ -24,6 +25,7 @@ def type_check(
 
 
 def type_require(type_: PropertyType, value: Any) -> str:
+    """Check that the given metadata field is a valid string of the given FtM property type."""
     text = stringify(value)
     if text is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
@@ -31,6 +33,22 @@ def type_require(type_: PropertyType, value: Any) -> str:
     if cleaned is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
     return cleaned
+
+
+def datetime_check(value: Any) -> Optional[str]:
+    """Check that the given metadata field is a valid datetime."""
+    dt = iso_datetime(value)
+    if dt is not None:
+        return datetime_iso(dt)
+    return None
+
+
+def int_check(value: Any) -> Optional[int]:
+    """Check that the given metadata field is a valid integer."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def string_list(value: Any) -> List[str]:
