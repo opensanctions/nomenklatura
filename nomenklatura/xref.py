@@ -60,15 +60,17 @@ def xref(
         suggested = 0
         idx = 0
         pairs = index.pairs(max_pairs=limit * limit_factor)
-        for idx, ((left_id, right_id), score) in enumerate(pairs):
+        for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
 
+            left_id = resolver.get_canonical(left_id_)
+            right_id = resolver.get_canonical(right_id_)
             if not resolver.check_candidate(left_id, right_id):
                 continue
 
-            left = view.get_entity(left_id.id)
-            right = view.get_entity(right_id.id)
+            left = view.get_entity(left_id)
+            right = view.get_entity(right_id)
             if left is None or left.id is None or right is None or right.id is None:
                 continue
 
@@ -86,7 +88,7 @@ def xref(
             scores.append(score)
 
             if conflict_reporter is not None:
-                conflict_reporter.check_match(result.score, left_id.id, right_id.id)
+                conflict_reporter.check_match(result.score, left_id, right_id)
 
             if len(left.datasets.intersection(right.datasets)) > 0:
                 score = score * discount_internal
