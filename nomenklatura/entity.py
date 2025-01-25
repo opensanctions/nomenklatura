@@ -32,7 +32,6 @@ class CompositeEntity(EntityProxy):
         "_caption",
         "extra_referents",
         "dataset",
-        "statement_type",
         "last_change",
         "_statements",
     )
@@ -60,7 +59,6 @@ class CompositeEntity(EntityProxy):
         self._statements: Dict[str, Set[Statement]] = {}
 
         properties = data.pop("properties", None)
-        # external = data.pop("external", None)
         if isinstance(properties, Mapping):
             for key, value in properties.items():
                 self.add(key, value, cleaned=cleaned, quiet=True)

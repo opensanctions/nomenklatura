@@ -1,18 +1,16 @@
 import hashlib
 import warnings
 from sqlalchemy.engine import Row
-from typing import cast, TYPE_CHECKING
-from typing import Any, Dict, Generator, Optional, Type, TypeVar
+from typing import Self, cast, TYPE_CHECKING
+from typing import Any, Dict, Generator, Optional
 from typing_extensions import TypedDict
 
 from nomenklatura.util import iso_datetime, datetime_iso
-from nomenklatura.util import bool_text, text_bool
+from nomenklatura.util import bool_text
 from nomenklatura.util import get_prop_type, BASE_ID
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CE
-
-S = TypeVar("S", bound="Statement")
 
 
 class StatementDict(TypedDict):
@@ -26,7 +24,7 @@ class StatementDict(TypedDict):
     dataset: str
     lang: Optional[str]
     original_value: Optional[str]
-    external: Optional[bool]
+    external: bool
     first_seen: Optional[str]
     last_seen: Optional[str]
 
@@ -70,8 +68,7 @@ class Statement(object):
         lang: Optional[str] = None,
         original_value: Optional[str] = None,
         first_seen: Optional[str] = None,
-        target: Optional[bool] = False,
-        external: Optional[bool] = False,
+        external: bool = False,
         id: Optional[str] = None,
         canonical_id: Optional[str] = None,
         last_seen: Optional[str] = None,
@@ -139,9 +136,9 @@ class Statement(object):
         other_key = (other.prop != BASE_ID, other.id or "")
         return self_key < other_key
 
-    def clone(self: S) -> S:
+    def clone(self: Self) -> "Statement":
         """Make a deep copy of the given statement."""
-        return type(self).from_dict(self.to_dict())
+        return Statement.from_dict(self.to_dict())
 
     def generate_key(self) -> Optional[str]:
         return self.make_key(
@@ -173,7 +170,7 @@ class Statement(object):
         return hashlib.sha1(key.encode("utf-8")).hexdigest()
 
     @classmethod
-    def from_dict(cls: Type[S], data: StatementDict) -> S:
+    def from_dict(cls, data: StatementDict) -> "Statement":
         return cls(
             entity_id=data["entity_id"],
             prop=data["prop"],
@@ -183,24 +180,14 @@ class Statement(object):
             lang=data.get("lang", None),
             original_value=data.get("original_value", None),
             first_seen=data.get("first_seen", None),
-            external=data.get("external"),
+            external=data.get("external", False),
             id=data.get("id", None),
             canonical_id=data.get("canonical_id", None),
             last_seen=data.get("last_seen", None),
         )
 
     @classmethod
-    def from_row(cls: Type[S], data: Dict[str, str]) -> S:
-        typed_data = cast(StatementDict, data)
-        typed_data["external"] = text_bool(data.get("external"))
-        if data.get("lang") == "":
-            typed_data["lang"] = None
-        if data.get("original_value") == "":
-            typed_data["original_value"] = None
-        return cls.from_dict(typed_data)
-
-    @classmethod
-    def from_db_row(cls: Type[S], row: Row) -> S:
+    def from_db_row(cls, row: Row) -> "Statement":
         return cls(
             id=row.id,
             canonical_id=row.canonical_id,
@@ -218,13 +205,13 @@ class Statement(object):
 
     @classmethod
     def from_entity(
-        cls: Type[S],
+        cls,
         entity: "CE",
         dataset: str,
         first_seen: Optional[str] = None,
         last_seen: Optional[str] = None,
-        external: Optional[bool] = None,
-    ) -> Generator[S, None, None]:
+        external: bool = False,
+    ) -> Generator["Statement", None, None]:
         if entity.id is None:
             raise ValueError("Cannot create statements for entity without ID!")
         yield cls(

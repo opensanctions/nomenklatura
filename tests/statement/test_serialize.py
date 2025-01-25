@@ -5,7 +5,6 @@ from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement import write_statements
 from nomenklatura.statement import read_path_statements
-from nomenklatura.statement.statement import Statement
 from nomenklatura.statement.serialize import CSV, JSON, PACK
 
 
@@ -22,7 +21,7 @@ def test_json_statements():
         path = Path(tmpdir) / "statement.json"
         with open(path, "wb") as fh:
             write_statements(fh, JSON, entity.statements)
-        stmts = list(read_path_statements(path, JSON, Statement))
+        stmts = list(read_path_statements(path, JSON))
         assert len(stmts) == 3
         for stmt in stmts:
             assert stmt.canonical_id == "bla", stmt
@@ -36,7 +35,7 @@ def test_csv_statements():
         path = Path(tmpdir) / "statement.csv"
         with open(path, "wb") as fh:
             write_statements(fh, CSV, entity.statements)
-        stmts = list(read_path_statements(path, CSV, Statement))
+        stmts = list(read_path_statements(path, CSV))
         assert len(stmts) == 3, stmts
         for stmt in stmts:
             assert stmt.canonical_id == "bla", stmt
@@ -50,7 +49,7 @@ def test_pack_statements():
         path = Path(tmpdir) / "statement.pack"
         with open(path, "wb") as fh:
             write_statements(fh, PACK, entity.statements)
-        stmts = list(read_path_statements(path, PACK, Statement))
+        stmts = list(read_path_statements(path, PACK))
         assert len(stmts) == 3, stmts
         for stmt in stmts:
             assert stmt.canonical_id == "bla", stmt

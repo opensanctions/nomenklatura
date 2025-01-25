@@ -259,9 +259,7 @@ def statements_apply(infile: Path, outpath: Path, format: str, resolver: Path) -
     resolver_ = _get_resolver(infile, resolver)
 
     def _generate() -> Generator[Statement, None, None]:
-        for stmt in read_path_statements(
-            infile, format=format, statement_type=Statement
-        ):
+        for stmt in read_path_statements(infile, format=format):
             yield resolver_.apply_statement(stmt)
 
     with path_writer(outpath) as outfh:
@@ -276,9 +274,7 @@ def statements_apply(infile: Path, outpath: Path, format: str, resolver: Path) -
 def format_statements(
     infile: Path, outpath: Path, in_format: str, out_format: str
 ) -> None:
-    statements = read_path_statements(
-        infile, format=in_format, statement_type=Statement
-    )
+    statements = read_path_statements(infile, format=in_format)
     with path_writer(outpath) as outfh:
         write_statements(outfh, out_format, statements)
 
@@ -294,9 +290,7 @@ def statements_aggregate(
     dataset_ = Dataset.make({"name": dataset, "title": dataset})
     with path_writer(outpath) as outfh:
         statements: List[Statement] = []
-        for stmt in read_path_statements(
-            infile, format=format, statement_type=Statement
-        ):
+        for stmt in read_path_statements(infile, format=format):
             if len(statements) and statements[0].canonical_id != stmt.canonical_id:
                 entity = Entity.from_statements(dataset_, statements)
                 write_entity(outfh, entity)
