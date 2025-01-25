@@ -14,6 +14,8 @@ from nomenklatura.dataset.util import (
     string_list,
     type_check,
     type_require,
+    datetime_check,
+    int_check,
 )
 from nomenklatura.util import PathLike, iso_to_version
 
@@ -35,7 +37,11 @@ class Dataset(Named):
         self.summary = type_check(registry.string, data.get("summary"))
         self.description = type_check(registry.string, data.get("description"))
         self.url = type_check(registry.url, data.get("url"))
-        self.updated_at = type_check(registry.date, data.get("updated_at"))
+        self.updated_at = datetime_check(data.get("updated_at"))
+        self.last_export = datetime_check(data.get("last_export"))
+        self.last_change = datetime_check(data.get("last_change"))
+        self.entity_count = int_check(data.get("entity_count"))
+        self.thing_count = int_check(data.get("thing_count"))
         self.version = type_check(registry.string, data.get("version"))
         self.category = type_check(registry.string, data.get("category"))
         self.tags = string_list(data.get("tags", []))
@@ -111,6 +117,10 @@ class Dataset(Named):
             "url": self.url,
             "version": self.version,
             "updated_at": self.updated_at,
+            "last_export": self.last_export,
+            "last_change": self.last_change,
+            "entity_count": self.entity_count,
+            "thing_count": self.thing_count,
             "category": self.category,
             "tags": self.tags,
             "resources": [r.to_dict() for r in self.resources],

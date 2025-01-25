@@ -1,8 +1,8 @@
+from normality import stringify
+from prefixdate import parse as prefix_parse
 from typing import Any, Dict, Iterable, List, Optional
-
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
-from normality import stringify
 
 from nomenklatura.exceptions import MetadataException
 
@@ -24,6 +24,7 @@ def type_check(
 
 
 def type_require(type_: PropertyType, value: Any) -> str:
+    """Check that the given metadata field is a valid string of the given FtM property type."""
     text = stringify(value)
     if text is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
@@ -31,6 +32,19 @@ def type_require(type_: PropertyType, value: Any) -> str:
     if cleaned is None:
         raise MetadataException("Invalid %s: %r" % (type_.name, value))
     return cleaned
+
+
+def datetime_check(value: Any) -> Optional[str]:
+    """Check that the given metadata field is a valid datetime."""
+    return prefix_parse(value).text
+
+
+def int_check(value: Any) -> Optional[int]:
+    """Check that the given metadata field is a valid integer."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def string_list(value: Any) -> List[str]:
