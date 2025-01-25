@@ -58,7 +58,11 @@ def read_csv_statements(fh: BinaryIO) -> Generator[Statement, None, None]:
 
 def read_pack_statements(fh: BinaryIO) -> Generator[Statement, None, None]:
     wrapped = TextIOWrapper(fh, encoding="utf-8")
-    for row in csv.reader(wrapped, dialect=csv.unix_dialect):
+    yield from read_pack_statements_decoded(wrapped)
+
+
+def read_pack_statements_decoded(fh: TextIO) -> Generator[Statement, None, None]:
+    for row in csv.reader(fh, dialect=csv.unix_dialect):
         (
             entity_id,
             prop,
