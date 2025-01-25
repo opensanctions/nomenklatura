@@ -1,11 +1,10 @@
+from normality import stringify
+from prefixdate import parse as prefix_parse
 from typing import Any, Dict, Iterable, List, Optional
-
 from followthemoney.types import registry
 from followthemoney.types.common import PropertyType
-from normality import stringify
 
 from nomenklatura.exceptions import MetadataException
-from nomenklatura.util import iso_datetime, datetime_iso
 
 
 def type_check(
@@ -37,10 +36,7 @@ def type_require(type_: PropertyType, value: Any) -> str:
 
 def datetime_check(value: Any) -> Optional[str]:
     """Check that the given metadata field is a valid datetime."""
-    dt = iso_datetime(value)
-    if dt is not None:
-        return datetime_iso(dt)
-    return None
+    return prefix_parse(value).text
 
 
 def int_check(value: Any) -> Optional[int]:
