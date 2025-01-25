@@ -95,7 +95,6 @@ class SQLWriter(Writer[DS, CE]):
                 canonical_id=istmt.excluded.canonical_id,
                 schema=istmt.excluded.schema,
                 prop_type=istmt.excluded.prop_type,
-                target=istmt.excluded.target,
                 lang=istmt.excluded.lang,
                 original_value=istmt.excluded.original_value,
                 last_seen=istmt.excluded.last_seen,

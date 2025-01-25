@@ -28,7 +28,6 @@ def _pack_statement(stmt: Statement) -> bytes:
         stmt.original_value or 0,
         stmt.first_seen,
         stmt.last_seen,
-        1 if stmt.target else 0,
         1 if stmt.external else 0,
     )
     return orjson.dumps(values)
@@ -45,7 +44,6 @@ def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statem
         original_value,
         first_seen,
         last_seen,
-        target,
         external,
     ) = orjson.loads(data)
     schema, _, prop = unpack_prop(prop_id)
@@ -60,7 +58,6 @@ def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statem
         original_value=None if original_value == 0 else original_value,
         first_seen=first_seen,
         last_seen=last_seen,
-        target=target == 1,
         canonical_id=canonical_id or entity_id,
         external=external == 1,
     )

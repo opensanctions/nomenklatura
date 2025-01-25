@@ -123,14 +123,6 @@ class CompositeEntity(EntityProxy):
         return max(seen, default=None)
 
     @property
-    def target(self) -> Optional[bool]:
-        target: Optional[bool] = None
-        for stmt in self._iter_stmt():
-            if stmt.target is not None:
-                target = target or stmt.target
-        return target
-
-    @property
     def datasets(self) -> Set[str]:
         datasets: Set[str] = set()
         for stmt in self._iter_stmt():
@@ -163,7 +155,6 @@ class CompositeEntity(EntityProxy):
         return self._caption
 
     def add_statement(self, stmt: Statement) -> None:
-        # TODO: change target, schema etc. based on data
         if not self.schema.is_a(stmt.schema):
             try:
                 self.schema = model.common_schema(self.schema, stmt.schema)

@@ -31,7 +31,6 @@ def make_statement_table(
         Column("original_value", Unicode(VALUE_LEN), nullable=True),
         Column("dataset", Unicode(KEY_LEN), index=True),
         Column("lang", Unicode(KEY_LEN), nullable=True),
-        Column("target", Boolean, default=False, nullable=False),
         Column("external", Boolean, default=False, nullable=False),
         Column("first_seen", DateTime, nullable=True),
         Column("last_seen", DateTime, nullable=True),
