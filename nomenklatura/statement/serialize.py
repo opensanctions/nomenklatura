@@ -1,12 +1,11 @@
 import csv
+import click
+import orjson
 from io import TextIOWrapper
 from pathlib import Path
 from types import TracebackType
 from typing import cast
 from typing import BinaryIO, Generator, Iterable, List, Optional, TextIO, Type
-
-import click
-import orjson
 from followthemoney.cli.util import MAX_LINE
 
 from nomenklatura.statement.statement import Statement, StatementDict
@@ -74,7 +73,7 @@ def read_pack_statements_decoded(fh: TextIO) -> Generator[Statement, None, None]
             external,
             first_seen,
             last_seen,
-        ) = row
+        ) = row[:10]
         schema, _, prop = unpack_prop(prop)
         yield Statement(
             entity_id=entity_id,
