@@ -1,4 +1,4 @@
-from nomenklatura.matching.compare.names import name_literal_match
+from nomenklatura.matching.compare.names import aligned_levenshtein, name_literal_match, symmetric_aligned_levenshtein
 from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
@@ -318,6 +318,45 @@ def test_name_fingerprint_levenshtein():
     result = e("Company", name="Government of Ethiopia")
     assert name_fingerprint_levenshtein(query, result) < 0.85
     assert name_fingerprint_levenshtein(query, result) > 0.5
+
+
+def test_symmetric_aligned_levenshtein():
+    # Joint Stock Company Zlatoustovsky Machine Building Plant (JSC Zlatmash)
+    name1 = "jsc zlatoustovsky machine building plant"
+    name2 = name1 + " jsc zlatmash"
+    score1 = symmetric_aligned_levenshtein(name1, name2)
+    score2 = symmetric_aligned_levenshtein(name2, name1)
+    assert score1 == score2, (score1, score2)
+    #assert 0.71 < score1 < 0.72 , score1
+    assert score1 == 1, score1
+
+    name1 = "jsc zlatoustovsky machine building plant"
+    name2 = "jsc zlatostofsky machine building plant"
+    score1 = symmetric_aligned_levenshtein(name1, name2)
+    score2 = symmetric_aligned_levenshtein(name2, name1)
+    assert score1 == score2, (score1, score2)
+    assert 0.94 < score1 < 0.95 , score1
+
+    name2 = name2 + " jsc zlatmash"
+    score1 = symmetric_aligned_levenshtein(name1, name2)
+    score2 = symmetric_aligned_levenshtein(name2, name1)
+    assert score1 == score2, (score1, score2)
+    assert 0.94 < score1 < 0.95 , score1
+
+    name1 = "jsc zlatoustovsky machine building plant"
+    name2 = "jsc zlatoustovsky machine building zavod"
+    score1 = symmetric_aligned_levenshtein(name1, name2)
+    score2 = symmetric_aligned_levenshtein(name2, name1)
+    assert score1 == score2, (score1, score2)
+    assert score1 == 0, score1
+
+    name1 = "jsc zlatoustovsky machine building plant"
+    name2 = "zlatoustovsky machine building"
+    score1 = symmetric_aligned_levenshtein(name1, name2)
+    score2 = symmetric_aligned_levenshtein(name2, name1)
+    assert score1 == score2, (score1, score2)
+    assert score1 == 1, score1
+
 
 
 def test_org_name_partial_match():
