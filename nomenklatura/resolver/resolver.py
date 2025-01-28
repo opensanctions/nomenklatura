@@ -115,6 +115,8 @@ class Resolver(Linker[CE]):
         return Linker(clusters)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
+        """Get an edge matching the given keys in any direction, if it exists."""
+
         key = Identifier.pair(left_id, right_id)
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.target == key[0].id)
@@ -279,6 +281,18 @@ class Resolver(Linker[CE]):
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 
+    def get_judgements(self, limit: Optional[int] = None) -> Generator[Edge, None, None]:
+        """Get most recently updated edges other than NO_JUDGEMENT."""
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.order_by(self._table.c.timestamp.desc())
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(25):
+            for row in batch:
+                yield Edge.from_dict(row._mapping)
+
     def _get_suggested(self) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
         stmt = self._table.select()
@@ -351,7 +365,7 @@ class Resolver(Linker[CE]):
                 return canonical
 
         edge.judgement = judgement
-        edge.timestamp = utc_now().isoformat()[:16]
+        edge.timestamp = utc_now().isoformat()[:28]
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
@@ -359,6 +373,7 @@ class Resolver(Linker[CE]):
         return edge.target
 
     def _register(self, edge: Edge) -> None:
+        """Ensure the edge exists in the resolver, as provided."""
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
         istmt = self._upsert(self._table).values(edge.to_dict())

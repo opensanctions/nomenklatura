@@ -71,7 +71,6 @@ def xref_file(
     algorithm: str = DefaultAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
-    index: str = Index.name,
     clear: bool = False,
 ) -> None:
     resolver = Resolver[Entity].make_default()
