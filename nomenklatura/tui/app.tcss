@@ -1,0 +1,53 @@
+CompareWidget:focus {
+    background: #222222;
+}
+
+ConfirmEditModal {
+    align: center middle;
+}
+
+#dialog {
+    grid-size: 2;
+    grid-gutter: 1 2;
+    grid-rows: 1fr 3;
+    padding: 0 1;
+    width: 60;
+    height: 11;
+    border: thick $background 80%;
+    background: $surface;
+}
+
+#question {
+    column-span: 2;
+    height: 1fr;
+    width: 1fr;
+    content-align: center middle;
+}
+
+
+HistoryItem {
+    border: solid white;
+}
+
+HistoryWidget {
+    width: 50;
+    border: solid white;
+}
+
+HistoryWidget > .help {
+    padding: 1
+}
+
+DedupeWidget {
+    layout: horizontal;
+    overflow-x: auto;
+}
+
+CompareWidget {
+    height: auto;
+    width: 1fr;
+}
+
+DedupeApp {
+    layout: vertical;
+}

@@ -1,16 +1,23 @@
-from typing import Optional, Set, Tuple, cast
-from rich.text import Text
-from rich.console import RenderableType
-from textual.app import App, ComposeResult
-from textual.widget import Widget
-from textual.widgets import Footer
+import asyncio
+from typing import Dict, Optional, Set, Tuple, cast
 
-from nomenklatura.judgement import Judgement
-from nomenklatura.store import Store
-from nomenklatura.resolver import Resolver
-from nomenklatura.entity import CE
+from rich.console import RenderableType
+from rich.text import Text
+from textual.app import App, ComposeResult
+from textual.containers import Grid
+from textual.screen import ModalScreen
+from textual.widget import Widget
+from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
+
 from nomenklatura.dataset import DS
+from nomenklatura.entity import CE
+from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
+from nomenklatura.resolver.edge import Edge
+from nomenklatura.store import Store
 from nomenklatura.tui.comparison import render_comparison
+
+HISTORY_LENGTH = 20
 
 
 class DedupeState(object):
@@ -30,6 +37,7 @@ class DedupeState(object):
         self.left: Optional[CE] = None
         self.right: Optional[CE] = None
         self.score = 0.0
+        self.recents: Dict[str, CE] = dict()
 
     def load(self) -> bool:
         self.left = None
@@ -60,6 +68,9 @@ class DedupeState(object):
     def decide(self, judgement: Judgement) -> None:
         if self.left is not None and self.left.id is not None:
             if self.right is not None and self.right.id is not None:
+                # Hold on to pre-merge entities to show in history.
+                self.recents[self.left.id] = self.left
+                self.recents[self.right.id] = self.right
                 canonical_id = self.resolver.decide(
                     self.left.id,
                     self.right.id,
@@ -69,15 +80,123 @@ class DedupeState(object):
         self.resolver.commit()
         self.load()
 
+    def edit(self, edge: Edge, judgement: Judgement) -> None:
+        self.resolver.decide(edge.source, edge.target, judgement)
+        self.resolver.commit()
+        self.load()
 
-class DedupeWidget(Widget):
-    def on_mount(self) -> None:
-        self.styles.height = "auto"
 
+class DedupeAppWidget(Widget):
     @property
     def dedupe(self) -> DedupeState:
         return cast(DedupeApp, self.app).dedupe
 
+
+class HistoryItem(Static, DedupeAppWidget):
+    def __init__(self, edge: Edge) -> None:
+        self.edge = edge
+        source = self.dedupe.recents.get(edge.source.id, None)
+        target = self.dedupe.recents.get(edge.target.id, None)
+        if target is None:
+            target = self.dedupe.view.get_entity(edge.target.id)
+        source_str = f"src: {edge.source.id}"
+        if source:
+            source_str += f"\n     {source.caption}"
+        target_str = f"tgt: {edge.target.id}"
+        if target:
+            target_str += f"\n     {target.caption}"
+
+        content = (
+            f"{edge.timestamp if edge.timestamp else 'unknown time'}\n"
+            f"{source_str}\n"
+            f"{target_str}\n"
+            f"{edge.user} decided {edge.judgement.value}"
+        )
+        super().__init__(content)
+
+
+class ConfirmEditModal(ModalScreen[bool]):
+    edge: Optional[Edge] = None
+    judgement: Optional[Judgement] = None
+
+    def compose(self) -> ComposeResult:
+        assert self.edge is not None
+        assert self.judgement is not None
+        message = f"Change {self.edge.source.id} -> {self.edge.target.id} to {self.judgement.value}?"
+        yield Grid(
+            Label(message, id="question"),
+            Button("Yes", variant="error", id="yes"),
+            Button("No", variant="primary", id="no"),
+            id="dialog",
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "yes":
+            self.dismiss(True)
+        else:
+            self.dismiss(False)
+
+
+class HistoryListView(ListView):
+    BINDINGS = [
+        ("x", "positive", "Match"),
+        ("n", "negative", "No match"),
+        ("u", "unsure", "Unsure"),
+        ("d", "delete", "No judgement"),
+    ]
+
+    async def action_positive(self) -> None:
+        await self.trigger_edit(Judgement.POSITIVE)
+
+    async def action_negative(self) -> None:
+        await self.trigger_edit(Judgement.NEGATIVE)
+
+    async def action_unsure(self) -> None:
+        await self.trigger_edit(Judgement.UNSURE)
+
+    async def action_delete(self) -> None:
+        await self.trigger_edit(Judgement.NO_JUDGEMENT)
+
+    async def trigger_edit(self, judgement: Judgement) -> None:
+        selected = self.highlighted_child
+        if selected is None:
+            return
+        edge = selected.query_one(HistoryItem).edge
+        await cast(DedupeApp, self.app).edit(edge, judgement)
+
+
+class HistoryWidget(DedupeAppWidget):
+    list_view: ListView
+
+    def on_mount(self) -> None:
+        self.border_title = "History"
+        self.reload_history()
+
+    def compose(self) -> ComposeResult:
+        self.list_view = HistoryListView()
+        yield Static(
+            (
+                "Tab to toggle between dedupe and history.\n"
+                "Arrow up/down to select history to edit."
+            ),
+            classes="help",
+        )
+        yield self.list_view
+
+    def reload_history(self) -> None:
+        self.list_view.clear()
+        for edge in self.dedupe.resolver.get_judgements(HISTORY_LENGTH):
+            self.list_view.append(ListItem(HistoryItem(edge)))
+        self.list_view.scroll_home(animate=False)
+
+
+class DedupeWidget(Widget):
+    def compose(self) -> ComposeResult:
+        yield CompareWidget()
+        yield HistoryWidget()
+
+
+class CompareWidget(DedupeAppWidget, can_focus=True):
     def render(self) -> RenderableType:
         if self.dedupe.message is not None:
             return Text(self.dedupe.message, justify="center")
@@ -94,6 +213,7 @@ class DedupeWidget(Widget):
 
 
 class DedupeApp(App[int]):
+    CSS_PATH = "app.tcss"
     dedupe: DedupeState
 
     BINDINGS = [
@@ -104,15 +224,31 @@ class DedupeApp(App[int]):
         ("q", "exit_hard", "Quit"),
     ]
 
-    def on_mount(self) -> None:
-        self.screen.styles.layout = "vertical"
-
     async def decide(self, judgement: Judgement) -> None:
         self.dedupe.decide(judgement)
         self.force_render()
 
+    async def edit(self, edge: Edge, judgement: Judgement) -> None:
+        async def handle_confirmation(confirmed: bool | None) -> None:
+            if confirmed:
+                self.dedupe.edit(edge, judgement)
+                self.force_render()
+            else:
+                self.dedupe.message = "Canceled edit."
+                self.force_render()
+                await asyncio.sleep(1)
+                self.dedupe.message = None
+                self.force_render()
+
+        screen = ConfirmEditModal()
+        screen.edge = edge
+        screen.judgement = judgement
+        self.app.push_screen(screen, handle_confirmation)
+
     def force_render(self) -> None:
-        self.widget.refresh(layout=True)
+        self.query_one(CompareWidget).refresh(layout=True)
+        self.query_one(HistoryWidget).reload_history()
+        self.query_one(HistoryWidget).refresh(layout=True)
 
     async def action_positive(self) -> None:
         await self.decide(Judgement.POSITIVE)
@@ -132,6 +268,5 @@ class DedupeApp(App[int]):
 
     def compose(self) -> ComposeResult:
         self.dedupe.load()
-        self.widget = DedupeWidget()
-        yield self.widget
+        yield DedupeWidget()
         yield Footer()
