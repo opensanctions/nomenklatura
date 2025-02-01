@@ -22,7 +22,7 @@ With the file in place, you will cross-reference the entities to generate de-dup
 # generate merge candidates using an in-memory index:
 $ nomenklatura xref -r resolver.json entities.ijson
 # note there is now a new file, `resolver.json` that contains de-duplication info.
-$ nomenklatura dedupe -r resolver.json entites.ijson
+$ nomenklatura dedupe -r resolver.json entities.ijson
 # will pop up a user interface.
 $ nomenklatura apply entities.ijson -o merged.ijson -r resolver.json
 # de-duplicated data goes into `merged.ijson`:
