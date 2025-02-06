@@ -346,6 +346,7 @@ class Resolver(Linker[CE]):
         judgement: Judgement,
         user: Optional[str] = None,
         score: Optional[float] = None,
+        timestamp: Optional[str] = None,
     ) -> Identifier:
         edge = self.get_edge(left_id, right_id)
         if edge is None:
@@ -365,7 +366,7 @@ class Resolver(Linker[CE]):
                 return canonical
 
         edge.judgement = judgement
-        edge.timestamp = utc_now().isoformat()[:28]
+        edge.timestamp = timestamp or utc_now().isoformat()[:28]
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
@@ -458,19 +459,19 @@ class Resolver(Linker[CE]):
                     fh.write(line)
 
     def load(self, path: PathLike) -> None:
+        """Load edges directly into the database"""
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
                 if not line:
                     break
                 edge = Edge.from_line(line)
-                self.decide(
-                    edge.source,
-                    edge.target,
-                    judgement=edge.judgement,
-                    user=edge.user,
-                    score=edge.score,
-                )
+                # There exist legacy positive edges which don't lead to a canonical.
+                # If we load these edges using self.decide, some of them generate
+                # canonicals which are greater than the current canonicals connected
+                # to these edges. This could imply lots of unplanned rekeying.
+                # So let's just register the edges as they are for now.
+                self._register(edge)
 
     def __repr__(self) -> str:
         parts = self._engine.url

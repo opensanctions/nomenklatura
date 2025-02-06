@@ -285,7 +285,7 @@ def statements_aggregate(
             write_entity(outfh, entity)
 
 
-@cli.command("load-resolver", help="Load resolver decisions from file into database")
+@cli.command("load-resolver", help="Load resolver edges from file into database")
 @click.argument("source", type=InPath)
 def load_resolver(source: Path) -> None:
     resolver = Resolver[Entity].make_default()
