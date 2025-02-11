@@ -136,45 +136,64 @@ class Resolver(Linker[CE]):
     @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
         """
-        WITH RECURSIVE connected AS (
-            SELECT r.target AS node_id
-                FROM resolver r
-                WHERE r.source = 'Q7747' AND r.judgement = 'positive'
+        WITH RECURSIVE connected(node) AS
+        (
+            -- anything node points to
+            SELECT r.source, r.target
+            FROM resolver AS r
+            WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
+            AND r.judgement = 'positive'
+
+            -- anything that points to anything in the anchor
             UNION
-            SELECT r.source AS node_id
-                FROM resolver r
-                WHERE r.target = 'Q7747' AND r.judgement = 'positive'
-            UNION
-            SELECT r.source AS node_id
-                FROM connected c LEFT JOIN resolver r
-                WHERE r.target = c.node_id AND r.judgement = 'positive'
-            UNION
-            SELECT r.target_id AS node_id
-                FROM connected c LEFT JOIN resolver r
-                WHERE r.source = c.node_id AND r.judgement = 'positive'
+
+            SELECT r.source, r.target
+            FROM resolver AS r
+            JOIN connected AS c
+            ON (c.node = r.target OR c.node = r.source)
+            WHERE r.judgement = 'positive'
         )
-        SELECT node_id FROM connected;
+
+        SELECT connected.node AS node
+        FROM connected
+        UNION
+        SELECT connected.target AS node
+        FROM connected
         """
         positive = Judgement.POSITIVE.value
         rslv = alias(self._table, "r")
         target = rslv.c.target
         source = rslv.c.source
         judgement = rslv.c.judgement
-        stmt_t = select(target.label("node"))
-        stmt_t = stmt_t.where(source == node.id, judgement == positive)
-        cte = stmt_t.cte("connected", recursive=True)
-        cte_alias = cte.alias("c")
-        stmt_s = select(source.label("node"))
-        stmt_s = stmt_s.where(target == node.id, judgement == positive)
-        stmt_rs = select(source.label("node"))
-        stmt_rs = stmt_rs.join(cte_alias, cte_alias.c.node == target)
-        stmt_rs = stmt_rs.where(judgement == positive)
-        stmt_rt = select(target.label("node"))
-        stmt_rt = stmt_rt.join(cte_alias, cte_alias.c.node == source)
-        stmt_rt = stmt_rt.where(judgement == positive)
-        cte = cte.union(stmt_s, stmt_rs, stmt_rt)  # type: ignore
 
-        stmt = select(cte.c.node)
+        # Recursively get connected edges
+        # Anchor
+        stmt_anch = select(source, target)
+        stmt_anch = stmt_anch.where(
+            or_(source == node.id, target == node.id), judgement == positive
+        )
+        cte_inner = stmt_anch.cte("connected", recursive=True)
+        cte_i_alias = cte_inner.alias("c")
+        # Recursive step
+        stmt_recurs = select(source, target)
+        stmt_recurs = stmt_recurs.join(
+            cte_i_alias,
+            or_(
+                cte_i_alias.c.source == source,
+                cte_i_alias.c.source == target,
+                cte_i_alias.c.target == source,
+                cte_i_alias.c.target == target,
+            ),
+        )
+        stmt_recurs = stmt_recurs.where(judgement == positive)
+        cte_inner = cte_inner.union(stmt_recurs)  # type: ignore
+
+        # Nodes from edges
+        stmt_sources = select(cte_inner.c.source.label("node"))
+        stmt_targets = select(cte_inner.c.target.label("node"))
+        cte_outer = stmt_sources.union(stmt_targets)
+
+        stmt = select(cte_outer.c.node)
         connected = set([node])
         for row in self._get_connection().execute(stmt).fetchall():
             connected.add(Identifier(row.node))
@@ -281,7 +300,9 @@ class Resolver(Linker[CE]):
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 
-    def get_judgements(self, limit: Optional[int] = None) -> Generator[Edge, None, None]:
+    def get_judgements(
+        self, limit: Optional[int] = None
+    ) -> Generator[Edge, None, None]:
         """Get most recently updated edges other than NO_JUDGEMENT."""
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)

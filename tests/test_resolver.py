@@ -134,11 +134,9 @@ def test_cluster_to_cluster():
         Identifier.get(a_canon),
         Identifier.get(b_canon),
     }
-    assert expected.issubset(resolver.connected(Identifier.get("a1")))
-
-
-
-
+    connected = resolver.connected(Identifier.get("a1"))
+    assert expected.issubset(connected), (expected, connected)
+    
     resolver.commit()
 
 def test_linker():
