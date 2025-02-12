@@ -97,7 +97,7 @@ def test_cluster_to_cluster():
 
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
-    acbc = resolver.decide(a_canon, b_canon, Judgement.UNSURE)
+    _acbc = resolver.decide(a_canon, b_canon, Judgement.UNSURE)
     assert "a1" in resolver.connected(Identifier.get("a1"))
     assert "a2" in resolver.connected(Identifier.get("a1"))
     assert "b1" not in resolver.connected(Identifier.get("a1"))
@@ -136,8 +136,9 @@ def test_cluster_to_cluster():
     }
     connected = resolver.connected(Identifier.get("a1"))
     assert expected.issubset(connected), (expected, connected)
-    
+
     resolver.commit()
+
 
 def test_linker():
     resolver = Resolver.make_default()
@@ -161,6 +162,25 @@ def test_linker():
     assert linker.get_canonical("b1") == canon_b
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
+
+
+def test_cached_linker():
+    resolver = Resolver.make_default()
+    resolver.begin()
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    assert resolver.get_canonical("a1") == canon_a
+
+    assert resolver._linker is None
+    resolver.warm_linker()
+    assert resolver._linker is not None
+    # We get the same result as pre-warm
+    assert resolver.get_canonical("a1") == canon_a
+
+    canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    assert resolver._linker is None  # cache is cleared
+    assert resolver.get_canonical("a1") == canon_a
+    # New decision is available
+    assert resolver.get_canonical("b1") == canon_b
 
 
 def test_resolver_store():
