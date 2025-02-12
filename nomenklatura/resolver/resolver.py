@@ -1,18 +1,23 @@
-import logging
 import getpass
-from pathlib import Path
-from threading import RLock
+import logging
 from functools import lru_cache
-from collections import defaultdict
-from typing import Dict, Generator, List, Optional, Set, Tuple
+from typing import Dict, Generator, Optional, Set, Tuple
+from urllib.parse import urlunparse
+
+from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
+from sqlalchemy import Column, Float, MetaData, Table, Unicode, alias, func, or_
+from sqlalchemy.engine import Connection, Engine, Transaction
+from sqlalchemy.sql.expression import delete, select, update
 
+from nomenklatura.db import get_engine, get_upsert_func
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
 from nomenklatura.resolver.edge import Edge
+from nomenklatura.resolver.identifier import Identifier, StrIdent
 from nomenklatura.resolver.linker import Linker
+from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
@@ -21,70 +26,253 @@ log = logging.getLogger(__name__)
 class Resolver(Linker[CE]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
-    def __init__(self, path: Optional[Path] = None) -> None:
-        self.path = path
-        self.lock = RLock()
-        self.edges: Dict[Pair, Edge] = {}
-        self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
+    def __init__(
+        self,
+        engine: Engine,
+        metadata: MetaData,
+        create: bool = False,
+        table_name: str = "resolver",
+    ) -> None:
+        self._upsert = get_upsert_func(engine)
+        self._engine = engine
+        self._conn: Optional[Connection] = None
+        self._transaction: Optional[Transaction] = None
+        self._linker: Optional[Linker[CE]] = None
+        """A cached linker for bulk operations."""
+        self._table = Table(
+            table_name,
+            metadata,
+            Column("target", Unicode(512), index=True, primary_key=True),
+            Column("source", Unicode(512), index=True, primary_key=True),
+            Column("judgement", Unicode(14), nullable=False),
+            Column("score", Float, nullable=True),
+            Column("user", Unicode(512), nullable=False),
+            Column("timestamp", Unicode(28)),
+            extend_existing=True,
+        )
+        if create:
+            metadata.create_all(bind=engine, checkfirst=True)
+
+    @classmethod
+    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":
+        if engine is None:
+            engine = get_engine()
+        meta = MetaData()
+        return cls(engine, meta, create=True)
+
+    def _invalidate(self) -> None:
+        self.connected.cache_clear()
+        self.get_canonical.cache_clear()
+        self._linker = None
+
+    def begin(self) -> None:
+        """
+        Start a new transaction in Begin Once style. Callers are responsible for
+        committing or rolling back the transaction.
+
+        https://docs.sqlalchemy.org/en/20/core/connections.html#begin-once
+        """
+        if self._conn is not None or self._transaction is not None:
+            log.warning("Transaction already open: %s", self)
+            return
+        self._invalidate()
+        self._conn = self._engine.connect()
+        self._transaction = self._conn.begin()
+
+    def commit(self) -> None:
+        if self._transaction is None or self._conn is None:
+            raise RuntimeError("No transaction to commit.")
+        self._transaction.commit()
+        self._transaction = None
+        self._conn.close()
+        self._conn = None
+
+    def rollback(self) -> None:
+        if self._transaction is None or self._conn is None:
+            raise RuntimeError("No transaction to rollback.")
+        self._transaction.rollback()
+        self._transaction = None
+        self._conn.close()
+        self._conn = None
+
+    def _get_connection(self) -> Connection:
+        if self._transaction is None or self._conn is None:
+            raise RuntimeError("No transaction in progress.")
+        return self._conn
 
     def get_linker(self) -> Linker[CE]:
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
         """
-        entities: Dict[Identifier, Set[Identifier]] = {}
-        for node in self.nodes.keys():
-            if node in entities:
-                continue
-            connected = self._traverse(node, set())
-            for c in connected:
-                entities[c] = connected
-        return Linker(entities)
+        clusters: Dict[Identifier, Set[Identifier]] = {}
+        stmt = select(self._table)
+        stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        for row in self._get_connection().execute(stmt).fetchall():
+            edge = Edge.from_dict(row._mapping)
+            cluster = clusters.get(edge.target, set())
+            cluster.update(clusters.get(edge.source, [edge.source]))
+            cluster.add(edge.target)
+            for node in cluster:
+                clusters[node] = cluster
+        log.info("Loaded %s clusters from: %s", len(clusters), self)
+        return Linker(clusters)
+
+    def warm_linker(self) -> None:
+        """Preload the linker cache."""
+        self._linker = self.get_linker()
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
-        key = Identifier.pair(left_id, right_id)
-        return self.edges.get(key)
+        """Get an edge matching the given keys in any direction, if it exists."""
 
-    def _traverse(self, node: Identifier, seen: Set[Identifier]) -> Set[Identifier]:
-        connected = set([node])
-        if node in seen:
-            return connected
-        seen.add(node)
-        for edge in self.nodes.get(node, []):
-            if edge.judgement == Judgement.POSITIVE:
-                other = edge.other(node)
-                rec = self._traverse(other, seen)
-                connected.update(rec)
-        return connected
+        key = Identifier.pair(left_id, right_id)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.target == key[0].id)
+        stmt = stmt.where(self._table.c.source == key[1].id)
+        res = self._get_connection().execute(stmt).fetchone()
+        if res is None:
+            return None
+        return Edge.from_dict(res._mapping)
+
+    def get_edges(self) -> Set[Edge]:
+        stmt = select(self._table)
+        edges = set()
+        for row in self._get_connection().execute(stmt).fetchall():
+            edges.add(Edge.from_dict(row._mapping))
+        return edges
 
     @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._traverse(node, set())
+        """
+        WITH RECURSIVE connected(node) AS
+        (
+            -- anything node points to
+            SELECT r.source, r.target
+            FROM resolver AS r
+            WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
+            AND r.judgement = 'positive'
+
+            UNION
+
+            -- anything that points to anything in the anchor
+            SELECT r.source, r.target
+            FROM resolver AS r
+            JOIN connected AS c
+            ON (c.node = r.target OR c.node = r.source)
+            WHERE r.judgement = 'positive'
+        )
+
+        SELECT connected.node AS node
+        FROM connected
+        UNION
+        SELECT connected.target AS node
+        FROM connected
+        """
+        positive = Judgement.POSITIVE.value
+        rslv = alias(self._table, "r")
+        target = rslv.c.target
+        source = rslv.c.source
+        judgement = rslv.c.judgement
+
+        # Recursively get connected edges
+        # Anchor
+        stmt_anch = select(source, target)
+        stmt_anch = stmt_anch.where(
+            or_(source == node.id, target == node.id), judgement == positive
+        )
+        cte_inner = stmt_anch.cte("connected", recursive=True)
+        cte_i_alias = cte_inner.alias("c")
+        # Recursive step
+        stmt_recurs = select(source, target)
+        stmt_recurs = stmt_recurs.join(
+            cte_i_alias,
+            or_(
+                cte_i_alias.c.source == source,
+                cte_i_alias.c.source == target,
+                cte_i_alias.c.target == source,
+                cte_i_alias.c.target == target,
+            ),
+        )
+        stmt_recurs = stmt_recurs.where(judgement == positive)
+        cte_inner = cte_inner.union(stmt_recurs)
+
+        # Nodes from edges
+        stmt_sources = select(cte_inner.c.source.label("node"))
+        stmt_targets = select(cte_inner.c.target.label("node"))
+        cte_outer = stmt_sources.union(stmt_targets)
+
+        stmt = select(cte_outer.c.node)
+        connected = set([node])
+        for row in self._get_connection().execute(stmt).fetchall():
+            connected.add(Identifier(row.node))
+        return connected
+
+    @lru_cache(maxsize=200000)
+    def get_canonical(self, entity_id: StrIdent) -> str:
+        """Return the canonical identifier for the given entity ID."""
+        if self._linker is not None:
+            return self._linker.get_canonical(entity_id)
+
+        node = Identifier.get(entity_id)
+        best = max(self.connected(node))
+        if best.canonical:
+            return best.id
+        return node.id
 
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
-        for node in self.nodes.keys():
-            if not node.canonical:
+        col = func.distinct(self._table.c.target)
+        stmt = select(col.label("node"))
+        stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        rows = self._get_connection().execute(stmt).fetchall()
+        seen: Set[Identifier] = set()
+        for row in rows:
+            node = Identifier(row.node)
+            if not node.canonical or node in seen:
                 continue
-            canonical = self.get_canonical(node)
-            if canonical == node.id:
-                yield node
+            connected = self.connected(node)
+            for linked in connected:
+                if linked.canonical:
+                    seen.add(linked)
+            yield max(connected)
 
-    def get_resolved_edge(
+    def get_referents(
+        self, canonical_id: StrIdent, canonicals: bool = True
+    ) -> Set[str]:
+        """Get all the non-canonical entity identifiers which refer to a given
+        canonical identifier."""
+        node = Identifier.get(canonical_id)
+        referents: Set[str] = set()
+        for connected in self.connected(node):
+            if not canonicals and connected.canonical:
+                continue
+            if connected == node:
+                continue
+            referents.add(connected.id)
+        return referents
+
+    def _get_resolved_edges(
         self, left_id: StrIdent, right_id: StrIdent
-    ) -> Optional[Edge]:
+    ) -> Generator[Edge, None, None]:
         (left, right) = Identifier.pair(left_id, right_id)
         left_connected = self.connected(left)
         right_connected = self.connected(right)
         for e in left_connected:
             for o in right_connected:
-                edge = self.edges.get(Identifier.pair(e, o))
+                if e == o:
+                    continue
+                edge = self.get_edge(e, o)
                 if edge is None:
                     continue
-                return edge
-        return None
+                yield edge
+
+    def get_resolved_edge(
+        self, left_id: StrIdent, right_id: StrIdent
+    ) -> Optional[Edge]:
+        """Some edge between left and right, if any."""
+        return next(self._get_resolved_edges(left_id, right_id), None)
 
     def _pair_judgement(self, left: Identifier, right: Identifier) -> Judgement:
-        edge = self.edges.get(Identifier.pair(left, right))
+        edge = self.get_edge(left, right)
         if edge is not None:
             return edge.judgement
         return Judgement.NO_JUDGEMENT
@@ -122,12 +310,30 @@ class Resolver(Linker[CE]):
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 
-    def _get_suggested(self) -> List[Edge]:
+    def get_judgements(
+        self, limit: Optional[int] = None
+    ) -> Generator[Edge, None, None]:
+        """Get most recently updated edges other than NO_JUDGEMENT."""
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.order_by(self._table.c.timestamp.desc())
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(25):
+            for row in batch:
+                yield Edge.from_dict(row._mapping)
+
+    def _get_suggested(self) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
-        edges_all = self.edges.values()
-        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
-        cmp = lambda x: x.score or -1.0  # noqa
-        return sorted(candidates, key=cmp, reverse=True)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.score != None)  # noqa
+        stmt = stmt.order_by(self._table.c.score.desc())
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(25):
+            for row in batch:
+                yield Edge.from_dict(row._mapping)
 
     def get_candidates(
         self, limit: Optional[int] = None
@@ -153,6 +359,11 @@ class Resolver(Linker[CE]):
         edge = self.get_edge(left_id, right_id)
         if edge is not None:
             if edge.judgement == Judgement.NO_JUDGEMENT:
+                stmt = update(self._table)
+                stmt = stmt.where(self._table.c.target == edge.target.id)
+                stmt = stmt.where(self._table.c.source == edge.source.id)
+                stmt = stmt.values({"score": score})
+                self._get_connection().execute(stmt)
                 edge.score = score
             return edge.target
         return self.decide(
@@ -167,145 +378,137 @@ class Resolver(Linker[CE]):
         user: Optional[str] = None,
         score: Optional[float] = None,
     ) -> Identifier:
-        with self.lock:
-            edge = self.get_edge(left_id, right_id)
-            if edge is None:
-                edge = Edge(left_id, right_id, judgement=judgement)
+        edge = self.get_edge(left_id, right_id)
+        if edge is None:
+            edge = Edge(left_id, right_id, judgement=judgement)
 
-            # Canonicalise positive matches, i.e. make both identifiers refer to a
-            # canonical identifier, instead of making a direct link.
-            if judgement == Judgement.POSITIVE:
-                connected = set(self.connected(edge.target))
-                connected.update(self.connected(edge.source))
-                target = max(connected)
-                if not target.canonical:
-                    canonical = Identifier.make()
-                    self._remove_edge(edge)
-                    self.decide(edge.source, canonical, judgement=judgement, user=user)
-                    self.decide(edge.target, canonical, judgement=judgement, user=user)
-                    return canonical
+        # Canonicalise positive matches, i.e. make both identifiers refer to a
+        # canonical identifier, instead of making a direct link.
+        if judgement == Judgement.POSITIVE:
+            connected = set(self.connected(edge.target))
+            connected.update(self.connected(edge.source))
+            target = max(connected)
+            if not target.canonical:
+                canonical = Identifier.make()
+                self._remove_edge(edge)
+                self.decide(edge.source, canonical, judgement=judgement, user=user)
+                self.decide(edge.target, canonical, judgement=judgement, user=user)
+                return canonical
 
-            edge.judgement = judgement
-            edge.timestamp = utc_now().isoformat()[:16]
-            edge.user = user or getpass.getuser()
-            edge.score = score or edge.score
-            self._register(edge)
-            self.connected.cache_clear()
-            return edge.target
+        edge.judgement = judgement
+        edge.timestamp = utc_now().isoformat()[:28]
+        edge.user = user or getpass.getuser()
+        edge.score = score or edge.score
+        self._register(edge)
+        self._invalidate()
+        return edge.target
 
     def _register(self, edge: Edge) -> None:
+        """Ensure the edge exists in the resolver, as provided."""
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
-        self.edges[edge.key] = edge
-        self.nodes[edge.source].add(edge)
-        self.nodes[edge.target].add(edge)
+        istmt = self._upsert(self._table).values(edge.to_dict())
+        update_values = dict(
+            judgement=istmt.excluded.judgement,
+            score=istmt.excluded.score,
+            user=istmt.excluded.user,
+            timestamp=istmt.excluded.timestamp,
+        )
+        stmt = istmt.on_conflict_do_update(
+            index_elements=["source", "target"], set_=update_values
+        )
+        self._get_connection().execute(stmt)
 
     def _remove_edge(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
-        self.edges.pop(edge.key, None)
-        for node in (edge.source, edge.target):
-            if node in self.nodes:
-                self.nodes[node].discard(edge)
+        stmt = delete(self._table)
+        stmt = stmt.where(self._table.c.target == edge.target.id)
+        stmt = stmt.where(self._table.c.source == edge.source.id)
+        self._get_connection().execute(stmt)
 
     def _remove_node(self, node: Identifier) -> None:
         """Remove a node from the graph."""
-        edges = self.nodes.get(node)
-        if edges is None:
-            return
-        for edge in list(edges):
-            if edge.judgement != Judgement.NO_JUDGEMENT:
-                self._remove_edge(edge)
+        stmt = delete(self._table)
+        cond = or_(
+            self._table.c.source == node.id,
+            self._table.c.target == node.id,
+        )
+        stmt = stmt.where(cond)
+        self._get_connection().execute(stmt)
 
     def remove(self, node_id: StrIdent) -> None:
         """Remove all edges linking to the given node from the graph."""
-        with self.lock:
-            node = Identifier.get(node_id)
-            self._remove_node(node)
-            self.connected.cache_clear()
+        node = Identifier.get(node_id)
+        self._remove_node(node)
+        self._invalidate()
 
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
         This is the hard way to make sure we re-do context once we realise
         there's been a mistake."""
-        with self.lock:
-            node = Identifier.get(node_id)
-            affected: Set[str] = set()
-            for part in self.connected(node):
-                affected.add(str(part))
-                self._remove_node(part)
-            self.connected.cache_clear()
-            return affected
+        node = Identifier.get(node_id)
+        affected: Set[str] = set()
+        for part in self.connected(node):
+            affected.add(str(part))
+            self._remove_node(part)
+        self._invalidate()
+        return affected
 
     def prune(self) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
         highest score. This also checks if a transitive judgement has been
         established in the mean time and removes those candidates."""
-        with self.lock:
-            for edge in list(self.edges.values()):
-                if edge.judgement == Judgement.NO_JUDGEMENT:
-                    self._remove_edge(edge)
-            self.connected.cache_clear()
+        stmt = delete(self._table)
+        stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        self._get_connection().execute(stmt)
+        self._invalidate()
 
-    def save(self) -> None:
+    def apply_statement(self, stmt: Statement) -> Statement:
+        if stmt.entity_id is not None:
+            stmt.canonical_id = self.get_canonical(stmt.entity_id)
+        if stmt.prop_type == registry.entity.name:
+            canon_value = self.get_canonical(stmt.value)
+            if canon_value != stmt.value:
+                if stmt.original_value is None:
+                    stmt.original_value = stmt.value
+                # NOTE: this means the key is out of whack here now
+                stmt.value = canon_value
+        return stmt
+
+    def save(self, path: PathLike) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
-        with self.lock:
-            if self.path is None:
-                raise RuntimeError("Resolver has no path")
-            edges = sorted(self.edges.values())
-            with open(self.path, "w") as fh:
-                for edge in edges:
-                    fh.write(edge.to_line())
+        with open(path, "w") as fh:
+            res = self._get_connection().execute(select(self._table))
+            while True:
+                rows = res.fetchmany(10000)
+                if rows is None or not len(rows):
+                    break
+                for row in rows:
+                    edge = Edge.from_dict(row._mapping)
+                    line = edge.to_line()
+                    fh.write(line)
 
-    def merge(self, path: PathLike) -> None:
+    def load(self, path: PathLike) -> None:
+        """Load edges directly into the database"""
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
                 if not line:
                     break
                 edge = Edge.from_line(line)
-                self.decide(
-                    edge.source,
-                    edge.target,
-                    judgement=edge.judgement,
-                    user=edge.user,
-                    score=edge.score,
-                )
-
-    @classmethod
-    def _load_edges(cls, path: Path) -> Generator[Edge, None, None]:
-        if not path.exists():
-            return
-        with open(path, "r") as fh:
-            while True:
-                line = fh.readline()
-                if not line:
-                    break
-                yield Edge.from_line(line)
-
-    @classmethod
-    def load(cls, path: Path) -> "Resolver[CE]":
-        resolver = cls(path=path)
-        with resolver.lock:
-            for edge in cls._load_edges(path):
-                resolver._register(edge)
-        return resolver
-
-    @classmethod
-    def load_linker(cls, path: Path) -> Linker[CE]:
-        """Load a resolver file and return a linker object, without ever instantiating
-        a full resolver object."""
-        clusters: Dict[Identifier, Set[Identifier]] = {}
-        for edge in cls._load_edges(path):
-            if edge.judgement != Judgement.POSITIVE:
-                continue
-            cluster = clusters.get(edge.target, set())
-            cluster.update(clusters.get(edge.source, [edge.source]))
-            cluster.add(edge.target)
-            for node in cluster:
-                clusters[node] = cluster
-        log.info("Loaded %s clusters from: %s", len(clusters), path.as_posix())
-        return Linker(clusters)
+                self._register(edge)
+        self._invalidate()
 
     def __repr__(self) -> str:
-        path = self.path.name if self.path is not None else ":memory:"
-        return f"<Resolver({path!r}, {len(self.edges)})>"
+        parts = self._engine.url
+        url = urlunparse(
+            (
+                parts.drivername,
+                parts.host,
+                f"/{parts.database}/{self._table.name}",
+                None,
+                None,
+                None,
+            )
+        )
+        return f"<Resolver({url})>"
