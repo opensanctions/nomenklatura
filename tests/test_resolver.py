@@ -1,6 +1,8 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+from sqlalchemy import MetaData
+
 from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
@@ -247,3 +249,25 @@ def test_resolver_statements():
     assert stmt.canonical_id == "a1"
     assert stmt.value == "b2"
     other.commit()
+
+
+def test_table_name():
+    """Make fairly sure that we're hitting the correct table"""
+    default_resolver = Resolver.make_default()
+    default_resolver.begin()
+    default_resolver.decide("b1", "b2", Judgement.POSITIVE)  # No a1
+    default_resolver.decide("c1", "c2", Judgement.POSITIVE)  # 4 edges
+    default_resolver.commit()
+
+    engine = get_engine()
+    meta = MetaData()
+    resolver = Resolver(engine, meta, create=True, table_name="another_table")
+    resolver.begin()
+    a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    assert resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
+    assert resolver.get_canonical("a1") == a_canon
+    assert set(resolver.canonicals()) == {a_canon}
+    assert resolver.get_edge("a1", a_canon) is not None
+    assert len(resolver.get_edges()) == 2
+    assert "another_table" in repr(resolver)
+    resolver.rollback()
