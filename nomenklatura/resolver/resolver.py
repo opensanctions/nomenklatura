@@ -37,6 +37,8 @@ class Resolver(Linker[CE]):
         self._engine = engine
         self._conn: Optional[Connection] = None
         self._transaction: Optional[Transaction] = None
+        self._linker: Optional[Linker[CE]] = None
+        """A cached linker for bulk operations."""
         self._table = Table(
             table_name,
             metadata,
@@ -61,6 +63,7 @@ class Resolver(Linker[CE]):
     def _invalidate(self) -> None:
         self.connected.cache_clear()
         self.get_canonical.cache_clear()
+        self._linker = None
 
     def begin(self) -> None:
         """
@@ -114,6 +117,10 @@ class Resolver(Linker[CE]):
         log.info("Loaded %s clusters from: %s", len(clusters), self)
         return Linker(clusters)
 
+    def warm_linker(self) -> None:
+        """Preload the linker cache."""
+        self._linker = self.get_linker()
+
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
         """Get an edge matching the given keys in any direction, if it exists."""
 
@@ -144,9 +151,9 @@ class Resolver(Linker[CE]):
             WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
             AND r.judgement = 'positive'
 
-            -- anything that points to anything in the anchor
             UNION
 
+            -- anything that points to anything in the anchor
             SELECT r.source, r.target
             FROM resolver AS r
             JOIN connected AS c
@@ -186,7 +193,7 @@ class Resolver(Linker[CE]):
             ),
         )
         stmt_recurs = stmt_recurs.where(judgement == positive)
-        cte_inner = cte_inner.union(stmt_recurs)  # type: ignore
+        cte_inner = cte_inner.union(stmt_recurs)
 
         # Nodes from edges
         stmt_sources = select(cte_inner.c.source.label("node"))
@@ -202,6 +209,9 @@ class Resolver(Linker[CE]):
     @lru_cache(maxsize=200000)
     def get_canonical(self, entity_id: StrIdent) -> str:
         """Return the canonical identifier for the given entity ID."""
+        if self._linker is not None:
+            return self._linker.get_canonical(entity_id)
+
         node = Identifier.get(entity_id)
         best = max(self.connected(node))
         if best.canonical:
@@ -493,6 +503,7 @@ class Resolver(Linker[CE]):
                 # to these edges. This could imply lots of unplanned rekeying.
                 # So let's just register the edges as they are for now.
                 self._register(edge)
+        self._invalidate()
 
     def __repr__(self) -> str:
         parts = self._engine.url
