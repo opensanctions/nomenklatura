@@ -1,3 +1,6 @@
+#
+# Don't forget to call self._invalidate from methods that modify edges.
+#
 import getpass
 import logging
 from functools import lru_cache
@@ -9,7 +12,7 @@ from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from sqlalchemy import Column, Float, MetaData, Table, Unicode, alias, func, or_
 from sqlalchemy.engine import Connection, Engine, Transaction
-from sqlalchemy.sql.expression import delete, select, update
+from sqlalchemy.sql.expression import select, update
 
 from nomenklatura.db import get_engine, get_upsert_func
 from nomenklatura.entity import CE
@@ -21,6 +24,10 @@ from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
+
+
+def timestamp() -> str:
+    return utc_now().isoformat()[:28]
 
 
 class Resolver(Linker[CE]):
@@ -39,6 +46,7 @@ class Resolver(Linker[CE]):
         self._transaction: Optional[Transaction] = None
         self._linker: Optional[Linker[CE]] = None
         """A cached linker for bulk operations."""
+
         self._table = Table(
             table_name,
             metadata,
@@ -48,6 +56,7 @@ class Resolver(Linker[CE]):
             Column("score", Float, nullable=True),
             Column("user", Unicode(512), nullable=False),
             Column("timestamp", Unicode(28)),
+            Column("deleted_at", Unicode(28), nullable=True),
             extend_existing=True,
         )
         if create:
@@ -107,6 +116,7 @@ class Resolver(Linker[CE]):
         clusters: Dict[Identifier, Set[Identifier]] = {}
         stmt = select(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         for row in self._get_connection().execute(stmt).fetchall():
             edge = Edge.from_dict(row._mapping)
             cluster = clusters.get(edge.target, set())
@@ -128,14 +138,16 @@ class Resolver(Linker[CE]):
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.target == key[0].id)
         stmt = stmt.where(self._table.c.source == key[1].id)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         res = self._get_connection().execute(stmt).fetchone()
         if res is None:
             return None
         return Edge.from_dict(res._mapping)
 
     def get_edges(self) -> Set[Edge]:
-        stmt = select(self._table)
         edges = set()
+        stmt = select(self._table)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         for row in self._get_connection().execute(stmt).fetchall():
             edges.add(Edge.from_dict(row._mapping))
         return edges
@@ -150,6 +162,7 @@ class Resolver(Linker[CE]):
             FROM resolver AS r
             WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
             AND r.judgement = 'positive'
+            AND r.deleted_at IS NULL
 
             UNION
 
@@ -157,8 +170,9 @@ class Resolver(Linker[CE]):
             SELECT r.source, r.target
             FROM resolver AS r
             JOIN connected AS c
-            ON (c.node = r.target OR c.node = r.source)
+            ON (c.source = r.source OR c.source = r.target OR c.target = r.source OR c.target = r.target)
             WHERE r.judgement = 'positive'
+            AND r.deleted_at IS NULL
         )
 
         SELECT connected.node AS node
@@ -177,7 +191,9 @@ class Resolver(Linker[CE]):
         # Anchor
         stmt_anch = select(source, target)
         stmt_anch = stmt_anch.where(
-            or_(source == node.id, target == node.id), judgement == positive
+            or_(source == node.id, target == node.id),
+            judgement == positive,
+            rslv.c.deleted_at.is_(None),
         )
         cte_inner = stmt_anch.cte("connected", recursive=True)
         cte_i_alias = cte_inner.alias("c")
@@ -193,6 +209,7 @@ class Resolver(Linker[CE]):
             ),
         )
         stmt_recurs = stmt_recurs.where(judgement == positive)
+        stmt_recurs = stmt_recurs.where(rslv.c.deleted_at.is_(None))
         cte_inner = cte_inner.union(stmt_recurs)
 
         # Nodes from edges
@@ -223,6 +240,7 @@ class Resolver(Linker[CE]):
         col = func.distinct(self._table.c.target)
         stmt = select(col.label("node"))
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         rows = self._get_connection().execute(stmt).fetchall()
         seen: Set[Identifier] = set()
         for row in rows:
@@ -316,6 +334,7 @@ class Resolver(Linker[CE]):
         """Get most recently updated edges other than NO_JUDGEMENT."""
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         stmt = stmt.order_by(self._table.c.timestamp.desc())
         if limit is not None:
             stmt = stmt.limit(limit)
@@ -329,6 +348,7 @@ class Resolver(Linker[CE]):
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
         stmt = stmt.where(self._table.c.score != None)  # noqa
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         stmt = stmt.order_by(self._table.c.score.desc())
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(25):
@@ -396,7 +416,7 @@ class Resolver(Linker[CE]):
                 return canonical
 
         edge.judgement = judgement
-        edge.timestamp = utc_now().isoformat()[:28]
+        edge.timestamp = timestamp()
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
@@ -413,6 +433,7 @@ class Resolver(Linker[CE]):
             score=istmt.excluded.score,
             user=istmt.excluded.user,
             timestamp=istmt.excluded.timestamp,
+            deleted_at=None,
         )
         stmt = istmt.on_conflict_do_update(
             index_elements=["source", "target"], set_=update_values
@@ -421,14 +442,16 @@ class Resolver(Linker[CE]):
 
     def _remove_edge(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
-        stmt = delete(self._table)
+        stmt = update(self._table)
+        stmt = stmt.values({"deleted_at": timestamp()})
         stmt = stmt.where(self._table.c.target == edge.target.id)
         stmt = stmt.where(self._table.c.source == edge.source.id)
         self._get_connection().execute(stmt)
 
     def _remove_node(self, node: Identifier) -> None:
         """Remove a node from the graph."""
-        stmt = delete(self._table)
+        stmt = update(self._table)
+        stmt = stmt.values({"deleted_at": timestamp()})
         cond = or_(
             self._table.c.source == node.id,
             self._table.c.target == node.id,
@@ -455,11 +478,11 @@ class Resolver(Linker[CE]):
         return affected
 
     def prune(self) -> None:
-        """Remove suggested (i.e. NO_JUDGEMENT) edges, keep only the n with the
-        highest score. This also checks if a transitive judgement has been
-        established in the mean time and removes those candidates."""
-        stmt = delete(self._table)
+        """Remove suggested (i.e. NO_JUDGEMENT) edges."""
+        stmt = update(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt = stmt.values({"deleted_at": timestamp()})
         self._get_connection().execute(stmt)
         self._invalidate()
 
@@ -478,7 +501,9 @@ class Resolver(Linker[CE]):
     def save(self, path: PathLike) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
         with open(path, "w") as fh:
-            res = self._get_connection().execute(select(self._table))
+            stmt = select(self._table)
+            stmt = stmt.where(self._table.c.deleted_at.is_(None))
+            res = self._get_connection().execute(stmt)
             while True:
                 rows = res.fetchmany(10000)
                 if rows is None or not len(rows):

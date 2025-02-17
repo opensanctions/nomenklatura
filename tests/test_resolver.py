@@ -42,6 +42,10 @@ def test_resolver():
     resolver.suggest("a1", "b1", 7.0)
     assert resolver.get_judgement("a1", "b1") == Judgement.NEGATIVE
 
+    resolver.decide("c1", "c2", Judgement.POSITIVE)
+    assert len(list(resolver.canonicals())) == 3, list(resolver.canonicals())
+    resolver.remove("c1")
+    resolver.remove("c2")
     assert len(list(resolver.canonicals())) == 2, list(resolver.canonicals())
 
     assert resolver.get_canonical("a1") == a_canon
@@ -99,7 +103,10 @@ def test_cluster_to_cluster():
 
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
-    _acbc = resolver.decide(a_canon, b_canon, Judgement.UNSURE)
+    resolver.decide(a_canon, b_canon, Judgement.UNSURE)
+    resolver.decide(a_canon, "a3", Judgement.POSITIVE)
+    resolver.remove("a3")
+
     assert "a1" in resolver.connected(Identifier.get("a1"))
     assert "a2" in resolver.connected(Identifier.get("a1"))
     assert "b1" not in resolver.connected(Identifier.get("a1"))
@@ -127,6 +134,8 @@ def test_cluster_to_cluster():
     a_ultimate = resolver.get_canonical("a1")
     b_ultimate = resolver.get_canonical("b1")
     assert a_ultimate == b_ultimate
+    assert set(resolver.canonicals()) == {a_ultimate}
+    assert len(list(resolver.canonicals())) == 1
 
     # indirect connected
     expected = {
@@ -138,6 +147,7 @@ def test_cluster_to_cluster():
     }
     connected = resolver.connected(Identifier.get("a1"))
     assert expected.issubset(connected), (expected, connected)
+    assert "a3" not in connected
 
     resolver.commit()
 
@@ -146,6 +156,8 @@ def test_linker():
     resolver = Resolver.make_default()
     resolver.begin()
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    canon_a = resolver.decide(canon_a, "a3", Judgement.POSITIVE)
+    resolver.remove("a3")
     canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide("a1", "Q123", Judgement.POSITIVE)
     resolver.decide("a2", "c2", Judgement.NEGATIVE)
@@ -164,6 +176,7 @@ def test_linker():
     assert linker.get_canonical("b1") == canon_b
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
+    assert linker.get_canonical("a3") == "a3"
 
 
 def test_cached_linker():
@@ -190,10 +203,15 @@ def test_resolver_store():
         path = Path(fh.name)
         resolver = Resolver.make_default()
         resolver.begin()
-        resolver.decide("a1", "a2", Judgement.POSITIVE)
+        canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+        resolver.decide(canon_a, "a3", Judgement.POSITIVE)
+        resolver.remove("a3")
         resolver.decide("a2", "b2", Judgement.NEGATIVE)
         resolver.suggest("a1", "c1", 7.0)
         resolver.save(path)
+
+        with open(path, "r") as fh:
+            assert len(fh.readlines()) == 4
 
         get_engine.cache_clear()
         get_metadata.cache_clear()
@@ -227,6 +245,27 @@ def test_resolver_candidates():
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
     resolver.commit()
+
+
+def test_get_judgments():
+    resolver = Resolver.make_default()
+    resolver.begin()
+    canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide(canon, "a3", Judgement.POSITIVE)
+    resolver.decide(canon, "a4", Judgement.POSITIVE)
+    resolver.decide(canon, "b1", Judgement.NEGATIVE)
+    resolver.decide(canon, "b2", Judgement.NEGATIVE)
+    resolver.decide(canon, "a3", Judgement.UNSURE)
+    resolver.remove("b2")
+    edges = resolver.get_judgements(limit=3)
+    jgmts = [(e.source.id, e.judgement) for e in edges]
+    assert jgmts == [
+        ("a3", Judgement.UNSURE),  # first, because it's the last edit
+        # b2 was "soft deleted"
+        ("b1", Judgement.NEGATIVE),
+        ("a4", Judgement.POSITIVE),
+        # a1 and a2 to canon excluded by limit.
+    ]
 
 
 def test_resolver_statements():
