@@ -215,7 +215,7 @@ class Resolver(Linker[CE]):
         # Nodes from edges
         stmt_sources = select(cte_inner.c.source.label("node"))
         stmt_targets = select(cte_inner.c.target.label("node"))
-        cte_outer = stmt_sources.union(stmt_targets)
+        cte_outer = stmt_sources.union(stmt_targets).subquery()
 
         stmt = select(cte_outer.c.node)
         connected = set([node])
