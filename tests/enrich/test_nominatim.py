@@ -88,6 +88,7 @@ def test_nominatim_match():
 
 
 def test_nominatim_match_list(resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"
@@ -116,6 +117,7 @@ def test_nominatim_enrich():
 
 
 def test_nominatim_enrich_list(resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"

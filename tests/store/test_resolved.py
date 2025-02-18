@@ -28,6 +28,7 @@ PERSON_EXT = {
 
 
 def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = ResolvedStore(test_dataset, resolver, db=redis)
     entity = CompositeEntity.from_data(test_dataset, PERSON)
@@ -59,6 +60,7 @@ def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 def test_graph_query(
     donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 ):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = ResolvedStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).entities())) == 0
@@ -108,6 +110,7 @@ def test_graph_query(
 def test_custom_functions(
     donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 ):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     prefix = "test123"
     mem_store = MemoryStore(test_dataset, resolver)

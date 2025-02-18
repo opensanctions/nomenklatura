@@ -35,6 +35,7 @@ def test_xref_potential_conflicts(
     resolver: Resolver[CompositeEntity],
     capsys,
 ):
+    resolver.begin()
     store = SimpleMemoryStore(test_dataset, resolver)
     a = CompositeEntity.from_data(
         test_dataset,

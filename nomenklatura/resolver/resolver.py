@@ -96,13 +96,19 @@ class Resolver(Linker[CE]):
         self._conn.close()
         self._conn = None
 
-    def rollback(self) -> None:
-        if self._transaction is None or self._conn is None:
-            raise RuntimeError("No transaction to rollback.")
-        self._transaction.rollback()
-        self._transaction = None
-        self._conn.close()
-        self._conn = None
+    def rollback(self, force: bool = False) -> None:
+        if self._transaction is not None:
+            self._transaction.rollback()
+            self._transaction = None
+        else:
+            if not force:
+                raise RuntimeError("No transaction to rollback.")
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+        else:
+            if not force:
+                raise RuntimeError("No connection to close.")
 
     def _get_connection(self) -> Connection:
         if self._transaction is None or self._conn is None:
@@ -487,6 +493,11 @@ class Resolver(Linker[CE]):
         self._invalidate()
 
     def apply_statement(self, stmt: Statement) -> Statement:
+        """
+        Canonicalise the entity ID.
+
+        Doesn't canonicalise entity ID values.
+        """
         if stmt.entity_id is not None:
             stmt.canonical_id = self.get_canonical(stmt.entity_id)
         if stmt.prop_type == registry.entity.name:

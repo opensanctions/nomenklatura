@@ -1,5 +1,6 @@
 import json
 import shutil
+from sqlalchemy import MetaData
 import yaml
 import pytest
 from pathlib import Path
@@ -21,7 +22,12 @@ settings.TESTING = True
 
 @pytest.fixture(autouse=True)
 def wrap_test():
+    if not settings.DB_URL:
+        settings.DB_URL = "sqlite:///:memory:"
     yield
+    # Dispose of connections to let open transactions for resources not
+    # managed by the setup/teardown abort.
+    get_engine().dispose()
     get_engine.cache_clear()
     get_redis.cache_clear()
     get_metadata.cache_clear()
@@ -55,13 +61,24 @@ def donations_json(donations_path):
 @pytest.fixture(scope="function")
 def resolver():
     resolver = Resolver[CompositeEntity].make_default()
-    resolver.begin()
     yield resolver
-    resolver.rollback()
+    resolver.rollback(force=True)
+    resolver._table.drop(resolver._engine)
+
+
+@pytest.fixture(scope="function")
+def other_table_resolver():
+    engine = get_engine()
+    meta = MetaData()
+    resolver = Resolver(engine, meta, create=True, table_name="another_table")
+    yield resolver
+    resolver.rollback(force=True)
+    resolver._table.drop(engine)
 
 
 @pytest.fixture(scope="function")
 def dstore(donations_path, resolver) -> SimpleMemoryStore:
+    resolver.begin()
     return load_entity_file_store(donations_path, resolver)
 
 

@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from functools import cache
 from typing import Generator, Optional, Union
+import logging
 
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.dialects.mysql import insert as mysql_insert
@@ -13,14 +14,31 @@ from nomenklatura import settings
 Conn = Connection
 Connish = Optional[Connection]
 
+WARNED_DB_URL = False
+
+logger = logging.getLogger(__name__)
+
 
 @cache
-def get_engine(url: str = settings.DB_URL) -> Engine:
-    if settings.TESTING:
-        url = "sqlite:///:memory:"
-    # if url.lower().startswith('sqlite'):
-    #     return create_engine(url)
-    return create_engine(url, pool_size=settings.DB_POOL_SIZE)
+def get_engine(url: Optional[str] = None) -> Engine:
+    if not url:
+        if settings.DB_URL:
+            url = settings.DB_URL
+        else:
+            url = f"sqlite:///{settings.DB_PATH.as_posix()}"
+
+            global WARNED_DB_URL
+            if not WARNED_DB_URL:
+                logger.warning(f"No DB_URL set. Using {url}")
+                WARNED_DB_URL = True
+
+    connect_args = {}
+    if url.startswith("postgres"):
+        connect_args["options"] = "-c statement_timeout=3000"
+
+    return create_engine(
+        url, pool_size=settings.DB_POOL_SIZE, connect_args=connect_args
+    )
 
 
 @cache

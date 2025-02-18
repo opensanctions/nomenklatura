@@ -74,6 +74,7 @@ def test_store_sql(
     donations_json: List[Dict[str, Any]],
     resolver: Resolver[CompositeEntity],
 ):
+    resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
     assert str(store.engine.url) == uri
@@ -85,6 +86,7 @@ def test_store_memory(
     donations_json: List[Dict[str, Any]],
     resolver: Resolver[CompositeEntity],
 ):
+    resolver.begin()
     store = SimpleMemoryStore(dataset=test_dataset, linker=resolver)
     assert _run_store_test(store, test_dataset, donations_json)
 
@@ -95,6 +97,7 @@ def test_store_level(
     donations_json: List[Dict[str, Any]],
     resolver: Resolver[CompositeEntity],
 ):
+    resolver.begin()
     path = tmp_path / "level.db"
     store = LevelDBStore(dataset=test_dataset, linker=resolver, path=path)
     assert _run_store_test(store, test_dataset, donations_json)

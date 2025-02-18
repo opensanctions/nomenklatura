@@ -26,6 +26,7 @@ PERSON_EXT = {
 def test_leveldb_store_basics(
     test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 ):
+    resolver.begin()
     path = Path(tempfile.mkdtemp()) / "leveldb"
     store = LevelDBStore(test_dataset, resolver, path)
     entity = CompositeEntity.from_data(test_dataset, PERSON)
@@ -52,6 +53,7 @@ def test_leveldb_store_basics(
 def test_leveldb_graph_query(
     donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 ):
+    resolver.begin()
     path = Path(tempfile.mkdtemp()) / "xxx"
     store = LevelDBStore(test_dataset, resolver, path)
     assert len(list(store.view(test_dataset).entities())) == 0

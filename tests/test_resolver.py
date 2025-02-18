@@ -1,8 +1,6 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from sqlalchemy import MetaData
-
 from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
@@ -25,8 +23,7 @@ def test_qid_identifier():
     assert ident_hi.id == "Q63481"
 
 
-def test_resolver():
-    resolver = Resolver.make_default()
+def test_resolver(resolver):
     resolver.begin()
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
@@ -86,7 +83,7 @@ def test_resolver():
     assert "a1" in resolver.get_referents(a_canon, canonicals=False)
     # assert a_canon.id in resolver.get_referents(a_canon)
     assert a_canon.id not in resolver.get_referents(a_canon, canonicals=False)
-    assert ":memory:" in repr(resolver)
+    assert "sqlite://:memory:" in repr(resolver) or "postgresql://" in repr(resolver)
 
     resolver.explode("a1")
     assert resolver.get_canonical("a17") == "a17"
@@ -97,10 +94,8 @@ def test_resolver():
     resolver.commit()
 
 
-def test_cluster_to_cluster():
-    resolver = Resolver.make_default()
+def test_cluster_to_cluster(resolver):
     resolver.begin()
-
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide(a_canon, b_canon, Judgement.UNSURE)
@@ -149,11 +144,11 @@ def test_cluster_to_cluster():
     assert expected.issubset(connected), (expected, connected)
     assert "a3" not in connected
 
+    # Can we actually commit after all these operations?
     resolver.commit()
 
 
-def test_linker():
-    resolver = Resolver.make_default()
+def test_linker(resolver):
     resolver.begin()
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
     canon_a = resolver.decide(canon_a, "a3", Judgement.POSITIVE)
@@ -179,7 +174,7 @@ def test_linker():
     assert linker.get_canonical("a3") == "a3"
 
 
-def test_cached_linker():
+def test_cached_linker(resolver):
     resolver = Resolver.make_default()
     resolver.begin()
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
@@ -198,10 +193,9 @@ def test_cached_linker():
     assert resolver.get_canonical("b1") == canon_b
 
 
-def test_resolver_store():
+def test_resolver_store_load(resolver, other_table_resolver):
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
-        resolver = Resolver.make_default()
         resolver.begin()
         canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
         resolver.decide(canon_a, "a3", Judgement.POSITIVE)
@@ -215,18 +209,16 @@ def test_resolver_store():
 
         get_engine.cache_clear()
         get_metadata.cache_clear()
-        other = Resolver(engine=get_engine(), metadata=get_metadata(), create=True)
-        other.begin()
-        other.load(path)
-        assert len(other.get_edges()) == len(resolver.get_edges())
-        edge = other.get_edge("a1", "c1")
+        other_table_resolver.begin()
+        other_table_resolver.load(path)
+        assert len(other_table_resolver.get_edges()) == len(resolver.get_edges())
+        edge = other_table_resolver.get_edge("a1", "c1")
         assert edge is not None, edge
         assert edge.score == 7.0
-        other.commit()
+        assert other_table_resolver.get_canonical("a1") == canon_a
 
 
-def test_resolver_candidates():
-    resolver = Resolver.make_default()
+def test_resolver_candidates(resolver):
     resolver.begin()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
@@ -247,8 +239,7 @@ def test_resolver_candidates():
     resolver.commit()
 
 
-def test_get_judgments():
-    resolver = Resolver.make_default()
+def test_get_judgments(resolver):
     resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide(canon, "a3", Judgement.POSITIVE)
@@ -268,45 +259,37 @@ def test_get_judgments():
     ]
 
 
-def test_resolver_statements():
-    resolver = Resolver.make_default()
+def test_resolver_statements(resolver, other_table_resolver):
     resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
 
     stmt = Statement("a1", "holder", "Passport", "b2", "test")
-    stmt = resolver.apply_statement(stmt)
-    assert stmt.canonical_id == str(canon)
-    assert stmt.value == "b2"
-    resolver.commit()
 
-    get_engine.cache_clear()
-    get_metadata.cache_clear()
-    other = Resolver(engine=get_engine(), metadata=get_metadata(), create=True)
-    other.begin()
-    stmt = other.apply_statement(stmt)
+    # A resolver canonicalises the statement entity ID but not ID values.
+    stmt = resolver.apply_statement(stmt)
+    assert stmt.canonical_id == canon.id
+    assert stmt.value == "b2"
+
+    # A resolver that doesn't know about the entity doesn't alter stmt.
+    other_table_resolver.begin()
+    stmt = other_table_resolver.apply_statement(stmt)
     assert stmt.canonical_id == "a1"
     assert stmt.value == "b2"
-    other.commit()
 
 
-def test_table_name():
+def test_table_name(resolver, other_table_resolver):
     """Make fairly sure that we're hitting the correct table"""
-    default_resolver = Resolver.make_default()
-    default_resolver.begin()
-    default_resolver.decide("b1", "b2", Judgement.POSITIVE)  # No a1
-    default_resolver.decide("c1", "c2", Judgement.POSITIVE)  # 4 edges
-    default_resolver.commit()
-
-    engine = get_engine()
-    meta = MetaData()
-    resolver = Resolver(engine, meta, create=True, table_name="another_table")
     resolver.begin()
-    a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
-    assert resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
-    assert resolver.get_canonical("a1") == a_canon
-    assert set(resolver.canonicals()) == {a_canon}
-    assert resolver.get_edge("a1", a_canon) is not None
-    assert len(resolver.get_edges()) == 2
-    assert "another_table" in repr(resolver)
-    resolver.rollback()
+    resolver.decide("b1", "b2", Judgement.POSITIVE)  # No a1
+    resolver.decide("c1", "c2", Judgement.POSITIVE)  # 4 edges
+    resolver.commit()
+
+    other_table_resolver.begin()
+    a_canon = other_table_resolver.decide("a1", "a2", Judgement.POSITIVE)
+    assert other_table_resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
+    assert other_table_resolver.get_canonical("a1") == a_canon
+    assert set(other_table_resolver.canonicals()) == {a_canon}
+    assert other_table_resolver.get_edge("a1", a_canon) is not None
+    assert len(other_table_resolver.get_edges()) == 2
+    assert "another_table" in repr(other_table_resolver)
