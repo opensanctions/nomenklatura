@@ -181,7 +181,6 @@ def test_linker(resolver):
 
 
 def test_cached_linker(resolver):
-    resolver = Resolver.make_default()
     resolver.begin()
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert resolver.get_canonical("a1") == canon_a
@@ -213,8 +212,6 @@ def test_resolver_store_load(resolver, other_table_resolver):
         with open(path, "r") as fh:
             assert len(fh.readlines()) == 4
 
-        get_engine.cache_clear()
-        get_metadata.cache_clear()
         other_table_resolver.begin()
         other_table_resolver.load(path)
         assert len(other_table_resolver.get_edges()) == len(resolver.get_edges())
@@ -245,7 +242,7 @@ def test_resolver_candidates(resolver):
     resolver.commit()
 
 
-def test_get_judgments(resolver):
+def test_get_judgements(resolver):
     resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide(canon, "a3", Judgement.POSITIVE)
