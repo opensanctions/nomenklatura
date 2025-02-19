@@ -5,7 +5,6 @@ import getpass
 import logging
 from functools import lru_cache
 from typing import Dict, Generator, Optional, Set, Tuple
-from urllib.parse import urlunparse
 
 from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
@@ -537,14 +536,5 @@ class Resolver(Linker[CE]):
 
     def __repr__(self) -> str:
         parts = self._engine.url
-        url = urlunparse(
-            (
-                parts.drivername,
-                parts.host,
-                f"/{parts.database}/{self._table.name}",
-                None,
-                None,
-                None,
-            )
-        )
+        url = f"{parts.drivername}://{parts.host or ""}/{parts.database}/{self._table.name}"
         return f"<Resolver({url})>"

@@ -1,6 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+from nomenklatura import settings
 from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver, Identifier
@@ -83,7 +84,12 @@ def test_resolver(resolver):
     assert "a1" in resolver.get_referents(a_canon, canonicals=False)
     # assert a_canon.id in resolver.get_referents(a_canon)
     assert a_canon.id not in resolver.get_referents(a_canon, canonicals=False)
-    assert "sqlite://:memory:" in repr(resolver) or "postgresql://" in repr(resolver)
+    if settings.DB_URL.startswith("sqlite"):
+        assert "sqlite:///:memory:" in repr(resolver)
+    elif settings.DB_URL.startswith("postgres"):
+        assert "postgresql://" in repr(resolver)
+    else:
+        assert False, "Expected DB_URL to start with 'sqlite://' or 'postgres://'"
 
     resolver.explode("a1")
     assert resolver.get_canonical("a17") == "a17"
