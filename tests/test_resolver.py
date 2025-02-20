@@ -29,6 +29,7 @@ def test_resolver(resolver):
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
     assert Identifier.get("a2") in resolver.connected(Identifier.get("a1"))
+    assert set(n.id for n in resolver.get_nodes()) == {"a1", "a2", a_canon.id}
 
     assert resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
     resolver.decide("b1", "b2", Judgement.POSITIVE)

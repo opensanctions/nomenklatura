@@ -157,6 +157,18 @@ class Resolver(Linker[CE]):
             edges.add(Edge.from_dict(row._mapping))
         return edges
 
+    def get_nodes(self) -> Generator[Identifier, None, None]:
+        """Get all the nodes in the graph."""
+        targets = select(self._table.c.target.label("node"))
+        targets = targets.where(self._table.c.deleted_at.is_(None))
+        sources = select(self._table.c.source.label("node"))
+        sources = sources.where(self._table.c.deleted_at.is_(None))
+        stmt = targets.union(sources)
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(25):
+            for row in batch:
+                yield Identifier(row.node)
+
     @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
         """
@@ -242,6 +254,10 @@ class Resolver(Linker[CE]):
 
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
+        if self._linker is not None:
+            yield from self._linker.canonicals()
+            return
+
         col = func.distinct(self._table.c.target)
         stmt = select(col.label("node"))
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
@@ -263,6 +279,9 @@ class Resolver(Linker[CE]):
     ) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
+        if self._linker is not None:
+            return self._linker.get_referents(canonical_id, canonicals)
+
         node = Identifier.get(canonical_id)
         referents: Set[str] = set()
         for connected in self.connected(node):
