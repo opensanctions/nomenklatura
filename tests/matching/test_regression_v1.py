@@ -70,3 +70,21 @@ def test_compare_features():
     bela.set("nationality", "by")
     bela_match = RegressionV1.compare(cand, bela)
     assert ref_score > bela_match.score
+
+
+def test_name_country():
+    """name and country together shouldn't be too strong"""
+
+    data = {
+        "id": "mike1",
+        "schema": "Person",
+        "properties": {
+            "name": ["Mykhailov Hlib Leonidovych", "Михайлов Гліб Леонідович"],
+            "country": ["ru"],
+        },
+    }
+    e1 = Entity.from_dict(model, data)
+    data["id"] = "mike2"
+    e2 = Entity.from_dict(model, data)
+    res = RegressionV1.compare(e1, e2)
+    assert 0.8 < res.score < 0.96, res
