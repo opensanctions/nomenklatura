@@ -10,7 +10,6 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.index import Index
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
@@ -301,7 +300,7 @@ def load_resolver(source: Path) -> None:
 def dump_resolver(target: Path) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
-    resolver.save(target)
+    resolver.dump(target)
     resolver.rollback()
 
 

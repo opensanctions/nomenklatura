@@ -2,9 +2,8 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from nomenklatura import settings
-from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver, Identifier
+from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.statement import Statement
 
@@ -64,11 +63,10 @@ def test_resolver(resolver):
     resolver.remove("a42")
     assert resolver.get_canonical("a42") == "a42"
 
-    resolver._remove_edge
     resolver.suggest("c1", "c2", 7.0)
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 7.0
     resolver.suggest("c1", "c2", 8.0)
-    edges = resolver.get_edges()
+    edges = set(resolver.get_edges())
     # subsequent suggest() updates score
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 8.0
     assert c1c2 in edges, edges
@@ -76,7 +74,7 @@ def test_resolver(resolver):
     assert resolver.get_edge("c1", "c2") is None
     assert (ccnc2 := resolver.get_edge(ccn, "c2")) and ccnc2.score is None
     # positive decide() replaces non-canon edge with two towards canonical
-    edges2 = resolver.get_edges()
+    edges2 = set(resolver.get_edges())
     assert ccnc2 in edges2, edges2
     assert c1c2 not in edges2, edges2
     assert len(edges2) == len(edges) + 1, (edges, edges2)
@@ -208,14 +206,16 @@ def test_resolver_store_load(resolver, other_table_resolver):
         resolver.remove("a3")
         resolver.decide("a2", "b2", Judgement.NEGATIVE)
         resolver.suggest("a1", "c1", 7.0)
-        resolver.save(path)
+        resolver.dump(path)
 
         with open(path, "r") as fh:
             assert len(fh.readlines()) == 4
 
         other_table_resolver.begin()
         other_table_resolver.load(path)
-        assert len(other_table_resolver.get_edges()) == len(resolver.get_edges())
+        assert len(set(other_table_resolver.get_edges())) == len(
+            set(resolver.get_edges())
+        )
         edge = other_table_resolver.get_edge("a1", "c1")
         assert edge is not None, edge
         assert edge.score == 7.0
@@ -295,5 +295,5 @@ def test_table_name(resolver, other_table_resolver):
     assert other_table_resolver.get_canonical("a1") == a_canon
     assert set(other_table_resolver.canonicals()) == {a_canon}
     assert other_table_resolver.get_edge("a1", a_canon) is not None
-    assert len(other_table_resolver.get_edges()) == 2
+    assert len(set(other_table_resolver.get_edges())) == 2
     assert "another_table" in repr(other_table_resolver)

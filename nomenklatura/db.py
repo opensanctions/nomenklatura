@@ -34,7 +34,7 @@ def get_engine(url: Optional[str] = None) -> Engine:
 
     connect_args = {}
     if url.startswith("postgres"):
-        connect_args["options"] = "-c statement_timeout=3000"
+        connect_args["options"] = f"-c statement_timeout={settings.DB_STMT_TIMEOUT}"
 
     return create_engine(
         url, pool_size=settings.DB_POOL_SIZE, connect_args=connect_args

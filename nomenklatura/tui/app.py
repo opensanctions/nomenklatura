@@ -68,7 +68,8 @@ class DedupeState(object):
     def decide(self, judgement: Judgement) -> None:
         if self.left is not None and self.left.id is not None:
             if self.right is not None and self.right.id is not None:
-                # Hold on to pre-merge entities to show in history.
+                # Since we don't have an unresolved store as well as the resolved one,
+                # hold on to pre-merge entities to show in history.
                 self.recents[self.left.id] = self.left
                 self.recents[self.right.id] = self.right
                 canonical_id = self.resolver.decide(
@@ -82,6 +83,8 @@ class DedupeState(object):
 
     def edit(self, edge: Edge, judgement: Judgement) -> None:
         self.resolver.decide(edge.source, edge.target, judgement)
+        self.store.update(edge.source)
+        self.store.update(edge.target)
         self.resolver.commit()
         self.load()
 

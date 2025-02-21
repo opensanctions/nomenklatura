@@ -11,7 +11,7 @@ from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from sqlalchemy import Column, Float, MetaData, Table, Unicode, alias, func, or_
 from sqlalchemy.engine import Connection, Engine, Transaction
-from sqlalchemy.sql.expression import select, update
+from sqlalchemy.sql.expression import select, update, delete
 
 from nomenklatura.db import get_engine, get_upsert_func
 from nomenklatura.entity import CE
@@ -123,7 +123,7 @@ class Resolver(Linker[CE]):
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         for row in self._get_connection().execute(stmt).fetchall():
-            edge = Edge.from_dict(row._mapping)
+            edge = Edge.from_dict(dict(row._mapping))
             cluster = clusters.get(edge.target, set())
             cluster.update(clusters.get(edge.source, [edge.source]))
             cluster.add(edge.target)
@@ -133,7 +133,7 @@ class Resolver(Linker[CE]):
         return Linker(clusters)
 
     def warm_linker(self) -> None:
-        """Preload the linker cache."""
+        """Cache a linker for bulk read operations."""
         self._linker = self.get_linker()
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
@@ -147,15 +147,15 @@ class Resolver(Linker[CE]):
         res = self._get_connection().execute(stmt).fetchone()
         if res is None:
             return None
-        return Edge.from_dict(res._mapping)
+        return Edge.from_dict(dict(res._mapping))
 
-    def get_edges(self) -> Set[Edge]:
-        edges = set()
+    def get_edges(self) -> Generator[Edge, None, None]:
         stmt = select(self._table)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        for row in self._get_connection().execute(stmt).fetchall():
-            edges.add(Edge.from_dict(row._mapping))
-        return edges
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(25):
+            for row in batch:
+                yield Edge.from_dict(dict(row._mapping))
 
     def get_nodes(self) -> Generator[Identifier, None, None]:
         """Get all the nodes in the graph."""
@@ -247,9 +247,9 @@ class Resolver(Linker[CE]):
             return self._linker.get_canonical(entity_id)
 
         node = Identifier.get(entity_id)
-        best = max(self.connected(node))
-        if best.canonical:
-            return best.id
+        max_ = max(self.connected(node))
+        if max_.canonical:
+            return max_.id
         return node.id
 
     def canonicals(self) -> Generator[Identifier, None, None]:
@@ -365,7 +365,7 @@ class Resolver(Linker[CE]):
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(25):
             for row in batch:
-                yield Edge.from_dict(row._mapping)
+                yield Edge.from_dict(dict(row._mapping))
 
     def _get_suggested(self) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
@@ -377,7 +377,7 @@ class Resolver(Linker[CE]):
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(25):
             for row in batch:
-                yield Edge.from_dict(row._mapping)
+                yield Edge.from_dict(dict(row._mapping))
 
     def get_candidates(
         self, limit: Optional[int] = None
@@ -503,19 +503,13 @@ class Resolver(Linker[CE]):
 
     def prune(self) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges."""
-        stmt = update(self._table)
+        stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
-        stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        stmt = stmt.values({"deleted_at": timestamp()})
         self._get_connection().execute(stmt)
         self._invalidate()
 
     def apply_statement(self, stmt: Statement) -> Statement:
-        """
-        Canonicalise the entity ID.
-
-        Doesn't canonicalise entity ID values.
-        """
+        """Canonicalise Statement Entity IDs and ID values"""
         if stmt.entity_id is not None:
             stmt.canonical_id = self.get_canonical(stmt.entity_id)
         if stmt.prop_type == registry.entity.name:
@@ -527,7 +521,7 @@ class Resolver(Linker[CE]):
                 stmt.value = canon_value
         return stmt
 
-    def save(self, path: PathLike) -> None:
+    def dump(self, path: PathLike) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
         with open(path, "w") as fh:
             stmt = select(self._table)
@@ -538,12 +532,13 @@ class Resolver(Linker[CE]):
                 if rows is None or not len(rows):
                     break
                 for row in rows:
-                    edge = Edge.from_dict(row._mapping)
+                    edge = Edge.from_dict(dict(row._mapping))
                     line = edge.to_line()
                     fh.write(line)
 
     def load(self, path: PathLike) -> None:
         """Load edges directly into the database"""
+        edge_count = 0
         with open(path, "r") as fh:
             while True:
                 line = fh.readline()
@@ -551,6 +546,10 @@ class Resolver(Linker[CE]):
                     break
                 edge = Edge.from_line(line)
                 self._register(edge)
+                edge_count += 1
+                if edge_count % 10000 == 0:
+                    log.info("Loaded %s edges." % edge_count)
+        log.info("Done. Loaded %s edges." % edge_count)
         self._invalidate()
 
     def __repr__(self) -> str:
