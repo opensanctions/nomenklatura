@@ -54,7 +54,7 @@ class Resolver(Linker[CE]):
             Column("judgement", Unicode(14), nullable=False),
             Column("score", Float, nullable=True),
             Column("user", Unicode(512), nullable=False),
-            Column("timestamp", Unicode(28)),
+            Column("created_at", Unicode(28)),
             Column("deleted_at", Unicode(28), nullable=True),
             extend_existing=True,
         )
@@ -359,7 +359,7 @@ class Resolver(Linker[CE]):
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        stmt = stmt.order_by(self._table.c.timestamp.desc())
+        stmt = stmt.order_by(self._table.c.created_at.desc())
         if limit is not None:
             stmt = stmt.limit(limit)
         cursor = self._get_connection().execute(stmt)
@@ -440,7 +440,7 @@ class Resolver(Linker[CE]):
                 return canonical
 
         edge.judgement = judgement
-        edge.timestamp = timestamp()
+        edge.created_at = timestamp()
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
@@ -456,7 +456,7 @@ class Resolver(Linker[CE]):
             judgement=istmt.excluded.judgement,
             score=istmt.excluded.score,
             user=istmt.excluded.user,
-            timestamp=istmt.excluded.timestamp,
+            created_at=istmt.excluded.created_at,
             deleted_at=None,
         )
         stmt = istmt.on_conflict_do_update(

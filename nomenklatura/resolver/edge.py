@@ -6,8 +6,16 @@ from nomenklatura.resolver.identifier import Identifier, StrIdent
 
 
 class Edge(object):
-
-    __slots__ = ("key", "source", "target", "judgement", "score", "user", "timestamp")
+    __slots__ = (
+        "key",
+        "source",
+        "target",
+        "judgement",
+        "score",
+        "user",
+        "created_at",
+        "deleted_at",
+    )
 
     def __init__(
         self,
@@ -16,14 +24,16 @@ class Edge(object):
         judgement: Judgement = Judgement.NO_JUDGEMENT,
         score: Optional[float] = None,
         user: Optional[str] = None,
-        timestamp: Optional[str] = None,
+        created_at: Optional[str] = None,
+        deleted_at: Optional[str] = None,
     ):
         self.key = Identifier.pair(left_id, right_id)
         self.target, self.source = self.key
         self.judgement = judgement
         self.score = score
         self.user = user
-        self.timestamp = timestamp
+        self.created_at = created_at
+        self.deleted_at = deleted_at
 
     def other(self, cur: Identifier) -> Identifier:
         if cur == self.target:
@@ -37,7 +47,8 @@ class Edge(object):
             "judgement": self.judgement.value,
             "score": self.score,
             "user": self.user,
-            "timestamp": self.timestamp,
+            "created_at": self.created_at,
+            "deleted_at": self.deleted_at,
         }
 
     def to_line(self) -> str:
@@ -47,7 +58,7 @@ class Edge(object):
             self.judgement.value,
             self.score,
             self.user,
-            self.timestamp,
+            self.created_at,
         ]
         return json.dumps(row) + "\n"
 
@@ -69,14 +80,17 @@ class Edge(object):
     @classmethod
     def from_line(cls, line: str) -> "Edge":
         data = json.loads(line)
-        return cls(
+        edge = cls(
             data[0],
             data[1],
             judgement=Judgement(data[2]),
             score=data[3],
             user=data[4],
-            timestamp=data[5],
+            created_at=data[5],
         )
+        if len(data) > 6:
+            edge.deleted_at = data[6]
+        return edge
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Edge":
@@ -86,5 +100,6 @@ class Edge(object):
             judgement=Judgement(data["judgement"]),
             score=data["score"],
             user=data["user"],
-            timestamp=data["timestamp"],
+            created_at=data.get("created_at"),
+            deleted_at=data.get("deleted_at"),
         )
