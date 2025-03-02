@@ -110,7 +110,7 @@ class HistoryItem(Static, DedupeAppWidget):
             target_str += f"\n     {target.caption}"
 
         content = (
-            f"{edge.timestamp if edge.timestamp else 'unknown time'}\n"
+            f"{edge.created_at if edge.created_at else 'unknown time'}\n"
             f"{source_str}\n"
             f"{target_str}\n"
             f"{edge.user} decided {edge.judgement.value}"
