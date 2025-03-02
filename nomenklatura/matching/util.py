@@ -55,23 +55,6 @@ def max_in_sets(
     return res
 
 
-def compare_sets(
-    left: Iterable[Optional[V]],
-    right: Iterable[Optional[V]],
-    compare_func: Callable[[V, V], float],
-    select_func: Callable[[Iterable[float]], float] = max,
-) -> float:
-    """Compare two sets of values pair-wise and select a return value from select_func."""
-    results: List[float] = []
-    for le, ri in product(left, right):
-        if le is None or ri is None:
-            continue
-        results.append(compare_func(le, ri))
-    if not len(results):
-        return 0.0
-    return select_func(results)
-
-
 def make_github_url(func: Callable[..., Any]) -> str:
     """Make a URL to the source code of a matching function."""
     code_path = Path(func.__code__.co_filename).relative_to(CODE_PATH)
