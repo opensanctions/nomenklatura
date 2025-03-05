@@ -1,5 +1,7 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
+
+from sqlalchemy.engine import RowMapping
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent
@@ -93,7 +95,7 @@ class Edge(object):
         return edge
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Edge":
+    def from_dict(cls, data: Union[RowMapping, Dict[str, Any]]) -> "Edge":
         return cls(
             left_id=data["target"],
             right_id=data["source"],

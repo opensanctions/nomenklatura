@@ -9,11 +9,21 @@ from typing import Dict, Generator, Optional, Set, Tuple
 from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
-from sqlalchemy import Column, Float, MetaData, Table, Unicode, alias, func, or_
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    Table,
+    Unicode,
+    alias,
+    func,
+    or_,
+)
 from sqlalchemy.engine import Connection, Engine, Transaction
-from sqlalchemy.sql.expression import select, update, delete
+from sqlalchemy.sql.expression import select, insert, update, delete
 
-from nomenklatura.db import get_engine, get_upsert_func
+from nomenklatura.db import get_engine
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
@@ -39,7 +49,6 @@ class Resolver(Linker[CE]):
         create: bool = False,
         table_name: str = "resolver",
     ) -> None:
-        self._upsert = get_upsert_func(engine)
         self._engine = engine
         self._conn: Optional[Connection] = None
         self._transaction: Optional[Transaction] = None
@@ -49,8 +58,9 @@ class Resolver(Linker[CE]):
         self._table = Table(
             table_name,
             metadata,
-            Column("target", Unicode(512), index=True, primary_key=True),
-            Column("source", Unicode(512), index=True, primary_key=True),
+            Column("id", Integer(), primary_key=True),
+            Column("target", Unicode(512), index=True),
+            Column("source", Unicode(512), index=True),
             Column("judgement", Unicode(14), nullable=False),
             Column("score", Float, nullable=True),
             Column("user", Unicode(512), nullable=False),
@@ -90,6 +100,15 @@ class Resolver(Linker[CE]):
     def commit(self) -> None:
         if self._transaction is None or self._conn is None:
             raise RuntimeError("No transaction to commit.")
+
+        # Swipe up all NO JUDGEMENT edges that have been deleted:
+        clean_stmt = delete(self._table)
+        clean_stmt = clean_stmt.where(
+            self._table.c.judgement == Judgement.NO_JUDGEMENT.value
+        )
+        clean_stmt = clean_stmt.where(self._table.c.deleted_at.is_not(None))
+        self._conn.execute(clean_stmt)
+
         self._transaction.commit()
         self._transaction = None
         self._conn.close()
@@ -122,13 +141,15 @@ class Resolver(Linker[CE]):
         stmt = select(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        for row in self._get_connection().execute(stmt).fetchall():
-            edge = Edge.from_dict(dict(row._mapping))
-            cluster = clusters.get(edge.target, set())
-            cluster.update(clusters.get(edge.source, [edge.source]))
-            cluster.add(edge.target)
-            for node in cluster:
-                clusters[node] = cluster
+        cursor = self._get_connection().execute(stmt)
+        while batch := cursor.fetchmany(50000):
+            for row in batch:
+                edge = Edge.from_dict(row._mapping)
+                cluster = clusters.get(edge.target, set())
+                cluster.update(clusters.get(edge.source, [edge.source]))
+                cluster.add(edge.target)
+                for node in cluster:
+                    clusters[node] = cluster
         log.info("Loaded %s clusters from: %s", len(clusters), self)
         return Linker(clusters)
 
@@ -147,15 +168,15 @@ class Resolver(Linker[CE]):
         res = self._get_connection().execute(stmt).fetchone()
         if res is None:
             return None
-        return Edge.from_dict(dict(res._mapping))
+        return Edge.from_dict(res._mapping)
 
     def get_edges(self) -> Generator[Edge, None, None]:
         stmt = select(self._table)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         cursor = self._get_connection().execute(stmt)
-        while batch := cursor.fetchmany(25):
+        while batch := cursor.fetchmany(10000):
             for row in batch:
-                yield Edge.from_dict(dict(row._mapping))
+                yield Edge.from_dict(row._mapping)
 
     def get_nodes(self) -> Generator[Identifier, None, None]:
         """Get all the nodes in the graph."""
@@ -164,8 +185,10 @@ class Resolver(Linker[CE]):
         sources = select(self._table.c.source.label("node"))
         sources = sources.where(self._table.c.deleted_at.is_(None))
         stmt = targets.union(sources)
-        cursor = self._get_connection().execute(stmt)
-        while batch := cursor.fetchmany(25):
+        cte = stmt.cte("nodes")
+        dstmt = select(cte.c.node).distinct()
+        cursor = self._get_connection().execute(dstmt)
+        while batch := cursor.fetchmany(10000):
             for row in batch:
                 yield Identifier(row.node)
 
@@ -365,7 +388,7 @@ class Resolver(Linker[CE]):
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(25):
             for row in batch:
-                yield Edge.from_dict(dict(row._mapping))
+                yield Edge.from_dict(row._mapping)
 
     def _get_suggested(self) -> Generator[Edge, None, None]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
@@ -377,7 +400,7 @@ class Resolver(Linker[CE]):
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(25):
             for row in batch:
-                yield Edge.from_dict(dict(row._mapping))
+                yield Edge.from_dict(row._mapping)
 
     def get_candidates(
         self, limit: Optional[int] = None
@@ -451,17 +474,15 @@ class Resolver(Linker[CE]):
         """Ensure the edge exists in the resolver, as provided."""
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
-        istmt = self._upsert(self._table).values(edge.to_dict())
-        update_values = dict(
-            judgement=istmt.excluded.judgement,
-            score=istmt.excluded.score,
-            user=istmt.excluded.user,
-            created_at=istmt.excluded.created_at,
-            deleted_at=None,
-        )
-        stmt = istmt.on_conflict_do_update(
-            index_elements=["source", "target"], set_=update_values
-        )
+
+        ustmt = update(self._table)
+        ustmt = ustmt.values({"deleted_at": timestamp()})
+        ustmt = ustmt.where(self._table.c.source == edge.source.id)
+        ustmt = ustmt.where(self._table.c.target == edge.target.id)
+        ustmt = ustmt.where(self._table.c.deleted_at.is_(None))
+        self._get_connection().execute(ustmt)
+
+        stmt = insert(self._table).values(edge.to_dict())
         self._get_connection().execute(stmt)
 
     def _remove_edge(self, edge: Edge) -> None:
@@ -470,6 +491,7 @@ class Resolver(Linker[CE]):
         stmt = stmt.values({"deleted_at": timestamp()})
         stmt = stmt.where(self._table.c.target == edge.target.id)
         stmt = stmt.where(self._table.c.source == edge.source.id)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._get_connection().execute(stmt)
 
     def _remove_node(self, node: Identifier) -> None:
@@ -481,6 +503,7 @@ class Resolver(Linker[CE]):
             self._table.c.target == node.id,
         )
         stmt = stmt.where(cond)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._get_connection().execute(stmt)
 
     def remove(self, node_id: StrIdent) -> None:
@@ -532,7 +555,7 @@ class Resolver(Linker[CE]):
                 if rows is None or not len(rows):
                     break
                 for row in rows:
-                    edge = Edge.from_dict(dict(row._mapping))
+                    edge = Edge.from_dict(row._mapping)
                     line = edge.to_line()
                     fh.write(line)
 
