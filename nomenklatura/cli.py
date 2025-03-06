@@ -10,7 +10,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.matching import train_v2_matcher, train_v1_matcher
+from nomenklatura.matching import train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
 from nomenklatura.dataset import Dataset, DefaultDataset
@@ -166,12 +166,6 @@ def dedupe(path: Path, xref: bool = False) -> None:
 @click.argument("pairs_file", type=InPath)
 def train_v1_matcher_(pairs_file: Path) -> None:
     train_v1_matcher(pairs_file)
-
-
-@cli.command("train-v2-matcher", help="Train a matching model from judgement pairs")
-@click.argument("pairs_file", type=InPath)
-def train_v2_matcher_(pairs_file: Path) -> None:
-    train_v2_matcher(pairs_file)
 
 
 @cli.command("match", help="Generate matches from an enrichment source")

@@ -1,3 +1,4 @@
+from nomenklatura.matching.compare.phonetic import metaphone_token
 from nomenklatura.matching.compare.names import name_literal_match
 from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
@@ -9,6 +10,11 @@ from nomenklatura.matching.compare.phonetic import name_soundex_match
 
 
 from .util import e
+
+
+def test_phonetic():
+    assert metaphone_token("Vladimir") == "FLTMR"
+    assert metaphone_token("Vladimyr") == "FLTMR"
 
 
 def test_name_literal_match():

@@ -8,16 +8,9 @@ typecheck:
 
 check: test typecheck
 
-data/pairs-v2.json:
-	mkdir -p data/
-	curl -o data/pairs-v2.json https://data.opensanctions.org/contrib/training/pairs-v2.json
-
 data/pairs-v1.json:
 	mkdir -p data/
 	curl -o data/pairs-v1.json https://data.opensanctions.org/contrib/training/pairs-v1.json
-
-train-v2: data/pairs-v2.json
-	nomenklatura train-v2-matcher data/pairs-v2.json
 
 train-v1: data/pairs-v1.json
 	nomenklatura train-v1-matcher data/pairs-v1.json

@@ -4,7 +4,8 @@ from followthemoney.types import registry
 from rigour.text.distance import jaro_winkler
 
 from nomenklatura.matching.util import type_pair
-from nomenklatura.util import names_word_list, soundex_token
+from nomenklatura.matching.compare.phonetic import soundex_token
+from nomenklatura.util import names_word_list
 
 
 def soundex_name_parts(query: E, result: E) -> float:

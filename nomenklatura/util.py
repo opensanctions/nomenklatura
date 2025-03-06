@@ -6,7 +6,6 @@ from followthemoney import model
 from functools import lru_cache, cache
 from normality import collapse_spaces, category_replace
 from normality.constants import WS
-from rigour.text import metaphone, soundex
 from collections.abc import Mapping, Sequence
 from fingerprints.cleanup import clean_name_ascii, clean_entity_prefix
 from fingerprints.cleanup import CHARACTERS_REMOVE_RE
@@ -144,28 +143,6 @@ def names_word_list(
 def normalize_name(original: str) -> Optional[str]:
     """Normalize a legal entity name."""
     return clean_name_ascii(original)
-
-
-def phonetic_token(token: str) -> str:
-    return metaphone_token(token)
-
-
-def metaphone_token(token: str) -> str:
-    if token.isalpha() and len(token) > 1:
-        out = metaphone(token)
-        # doesn't handle non-ascii characters
-        if len(out) >= 3:
-            return out
-    return token.upper()
-
-
-def soundex_token(token: str) -> str:
-    if token.isalpha() and len(token) > 1:
-        out = soundex(token)
-        # doesn't handle non-ascii characters
-        if len(out):
-            return out
-    return token.upper()
 
 
 def list_intersection(left: List[str], right: List[str]) -> int:

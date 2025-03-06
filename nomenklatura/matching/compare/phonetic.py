@@ -4,10 +4,28 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.scripts import is_modern_alphabet
 from rigour.text.distance import is_levenshtein_plausible
+from rigour.text.phonetics import metaphone, soundex
 from rigour.names.part import name_parts, NamePart
 from nomenklatura.util import name_words, list_intersection, fingerprint_name
-from nomenklatura.util import metaphone_token, soundex_token
 from nomenklatura.matching.util import type_pair, has_schema
+
+
+def metaphone_token(token: str) -> str:
+    if token.isalpha() and len(token) > 1:
+        out = metaphone(token)
+        # doesn't handle non-ascii characters
+        if len(out) >= 3:
+            return out
+    return token.upper()
+
+
+def soundex_token(token: str) -> str:
+    if token.isalpha() and len(token) > 1:
+        out = soundex(token)
+        # doesn't handle non-ascii characters
+        if len(out):
+            return out
+    return token.upper()
 
 
 def compare_parts_phonetic(left: NamePart, right: NamePart) -> bool:
@@ -50,7 +68,7 @@ def _token_names_compare(
     query_names: List[List[str]], result_names: List[List[str]]
 ) -> float:
     score = 0.0
-    for (q, r) in product(query_names, result_names):
+    for q, r in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
         length = max(2.0, len(q))
         combo = list_intersection(q, r) / float(length)
@@ -66,7 +84,7 @@ def person_name_phonetic_match(query: E, result: E) -> float:
     query_parts = [name_parts(n) for n in query_names_]
     result_parts = [name_parts(n) for n in result_names_]
     score = 0.0
-    for (q, r) in product(query_parts, result_parts):
+    for q, r in product(query_parts, result_parts):
         if len(q) == 0:
             continue
         matches = list(r)

@@ -1,12 +1,6 @@
 from followthemoney import model
 
-from nomenklatura.util import metaphone_token
 from nomenklatura.util import pack_prop, unpack_prop
-
-
-def test_phonetic():
-    assert metaphone_token("Vladimir") == "FLTMR"
-    assert metaphone_token("Vladimyr") == "FLTMR"
 
 
 def test_packing_unique():
