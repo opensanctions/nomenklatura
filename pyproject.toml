@@ -60,6 +60,7 @@ dev = [
     "plyvel < 2.0.0",
     "redis > 5.0.0, < 6.0.0",
     "tantivy < 1.0.0",
+    "psycopg2-binary",
 ]
 leveldb = ["plyvel < 2.0.0"]
 redis = ["redis > 5.0.0, < 6.0.0"]
@@ -73,3 +74,7 @@ universal = true
 
 [tool.coverage.run]
 branch = true
+
+[tool.pytest.ini_options]
+# Log a stack trace when a test takes longer than 300 seconds
+faulthandler_timeout = 300

@@ -27,9 +27,9 @@ PERSON_EXT = {
 }
 
 
-def test_store_basics(test_dataset: Dataset):
+def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
-    resolver = Resolver[CompositeEntity]()
     store = ResolvedStore(test_dataset, resolver, db=redis)
     entity = CompositeEntity.from_data(test_dataset, PERSON)
     entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
@@ -57,9 +57,11 @@ def test_store_basics(test_dataset: Dataset):
         store.update(merged_id)
 
 
-def test_graph_query(donations_path: Path, test_dataset: Dataset):
+def test_graph_query(
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
-    resolver = Resolver[CompositeEntity]()
     store = ResolvedStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).entities())) == 0
     with store.writer() as writer:
@@ -105,9 +107,11 @@ def test_graph_query(donations_path: Path, test_dataset: Dataset):
     assert not view.has_entity("john-doe-333")
 
 
-def test_custom_functions(donations_path: Path, test_dataset: Dataset):
+def test_custom_functions(
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
-    resolver = Resolver[CompositeEntity]()
     prefix = "test123"
     mem_store = MemoryStore(test_dataset, resolver)
     store = ResolvedStore(test_dataset, resolver, prefix=prefix, db=redis)

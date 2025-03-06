@@ -4,13 +4,12 @@ import yaml
 import click
 import logging
 from pathlib import Path
-from typing import Generator, Iterable, List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
-from nomenklatura.index import Index
 from nomenklatura.matching import train_v2_matcher, train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
@@ -47,11 +46,6 @@ def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
         return dataset, enricher
 
 
-def _get_resolver(file_path: Path, resolver_path: Optional[Path]) -> Resolver[Entity]:
-    path = resolver_path or _path_sibling(file_path, ".rslv.ijson")
-    return Resolver[Entity].load(Path(path))
-
-
 @click.group(help="Nomenklatura data integration")
 def cli() -> None:
     logging.basicConfig(level=logging.INFO)
@@ -59,7 +53,6 @@ def cli() -> None:
 
 @cli.command("xref", help="Generate dedupe candidates")
 @click.argument("path", type=InPath)
-@click.option("-r", "--resolver", type=ResPath)
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
@@ -73,16 +66,16 @@ def cli() -> None:
 )
 def xref_file(
     path: Path,
-    resolver: Optional[Path] = None,
     auto_threshold: Optional[float] = None,
     algorithm: str = DefaultAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
-    index: str = Index.name,
     clear: bool = False,
 ) -> None:
-    resolver_ = _get_resolver(path, resolver)
-    store = load_entity_file_store(path, resolver=resolver_)
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    resolver.warm_linker()
+    store = load_entity_file_store(path, resolver=resolver)
     algorithm_type = get_algorithm(algorithm)
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
@@ -93,9 +86,8 @@ def xref_file(
     if clear and index_dir.exists():
         log.info("Clearing index: %s", index_dir)
         shutil.rmtree(index_dir, ignore_errors=True)
-
     run_xref(
-        resolver_,
+        resolver,
         store,
         index_dir,
         auto_threshold=auto_threshold,
@@ -103,16 +95,16 @@ def xref_file(
         scored=scored,
         limit=limit,
     )
-    resolver_.save()
-    log.info("Xref complete in: %s", resolver_.path)
+    resolver.commit()
+    log.info("Xref complete in: %r", resolver)
 
 
 @cli.command("prune", help="Remove dedupe candidates")
-@click.argument("resolver", type=ResPath)
-def xref_prune(resolver: Path) -> None:
-    resolver_ = _get_resolver(resolver, resolver)
-    resolver_.prune()
-    resolver_.save()
+def xref_prune() -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    resolver.prune()
+    resolver.commit()
 
 
 @cli.command("apply", help="Apply resolver to an entity stream")
@@ -125,14 +117,14 @@ def xref_prune(resolver: Path) -> None:
     default=None,
     help="Add a dataset to the entity metadata",
 )
-@click.option("-r", "--resolver", required=True, type=ResPath)
-def apply(
-    path: Path, outpath: Path, resolver: Optional[Path], dataset: Optional[str] = None
-) -> None:
-    resolver_ = _get_resolver(path, resolver)
+def apply(path: Path, outpath: Path, dataset: Optional[str] = None) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    linker = resolver.get_linker()
+    resolver.rollback()
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, StreamEntity):
-            proxy = resolver_.apply_stream(proxy)
+            proxy = linker.apply_stream(proxy)
             if dataset is not None:
                 proxy.datasets.add(dataset)
             write_entity(outfh, proxy)
@@ -157,26 +149,17 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @cli.command("dedupe", help="Interactively judge xref candidates")
 @click.argument("path", type=InPath)
 @click.option("-x", "--xref", is_flag=True, default=False)
-@click.option("-r", "--resolver", type=ResPath)
-def dedupe(path: Path, xref: bool = False, resolver: Optional[Path] = None) -> None:
-    resolver_ = _get_resolver(path, resolver)
-    store = load_entity_file_store(path, resolver=resolver_)
+def dedupe(path: Path, xref: bool = False) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    resolver.warm_linker()
+    store = load_entity_file_store(path, resolver=resolver)
     if xref:
         index_dir = path.parent / INDEX_SEGMENT
-        run_xref(resolver_, store, index_dir)
+        run_xref(resolver, store, index_dir)
+    resolver.commit()
 
-    dedupe_ui(resolver_, store)
-    resolver_.save()
-
-
-@cli.command("merge-resolver", help="Merge resolver configs")
-@click.argument("outpath", type=OutPath)
-@click.option("-i", "--inputs", type=InPath, multiple=True)
-def merge_resolver(outpath: Path, inputs: Iterable[Path]) -> None:
-    resolver = Resolver[Entity].load(outpath)
-    for path in inputs:
-        resolver.merge(path)
-    resolver.save()
+    dedupe_ui(resolver, store)
 
 
 @cli.command("train-v1-matcher", help="Train a matching model from judgement pairs")
@@ -195,22 +178,22 @@ def train_v2_matcher_(pairs_file: Path) -> None:
 @click.argument("config", type=InPath)
 @click.argument("entities", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
-@click.option("-r", "--resolver", type=ResPath)
 def match_command(
     config: Path,
     entities: Path,
     outpath: Path,
-    resolver: Optional[Path],
 ) -> None:
-    resolver_ = _get_resolver(entities, resolver)
+    resolver = Resolver[Entity].make_default()
     _, enricher = _load_enricher(config)
+
     try:
+        resolver.begin()
         with path_writer(outpath) as fh:
             stream = path_entities(entities, Entity)
-            for proxy in match(enricher, resolver_, stream):
+            for proxy in match(enricher, resolver, stream):
                 write_entity(fh, proxy)
+        resolver.commit()
     finally:
-        resolver_.save()
         enricher.close()
 
 
@@ -218,20 +201,20 @@ def match_command(
 @click.argument("config", type=InPath)
 @click.argument("entities", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")  # noqa
-@click.option("-r", "--resolver", type=ResPath)
 def enrich_command(
     config: Path,
     entities: Path,
     outpath: Path,
-    resolver: Optional[Path],
 ) -> None:
-    resolver_ = _get_resolver(entities, resolver)
+    resolver = Resolver[Entity].make_default()
     _, enricher = _load_enricher(config)
     try:
+        resolver.begin()
         with path_writer(outpath) as fh:
             stream = path_entities(entities, Entity)
-            for proxy in enrich(enricher, resolver_, stream):
+            for proxy in enrich(enricher, resolver, stream):
                 write_entity(fh, proxy)
+        resolver.commit()
     finally:
         enricher.close()
 
@@ -254,13 +237,15 @@ def entity_statements(path: Path, outpath: Path, dataset: str, format: str) -> N
 @click.option("-i", "--infile", type=InPath, default="-")
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
-@click.option("-r", "--resolver", required=True, type=ResPath)
-def statements_apply(infile: Path, outpath: Path, format: str, resolver: Path) -> None:
-    resolver_ = _get_resolver(infile, resolver)
+def statements_apply(infile: Path, outpath: Path, format: str) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    linker = resolver.get_linker()
+    resolver.rollback()
 
     def _generate() -> Generator[Statement, None, None]:
         for stmt in read_path_statements(infile, format=format):
-            yield resolver_.apply_statement(stmt)
+            yield linker.apply_statement(stmt)
 
     with path_writer(outpath) as outfh:
         write_statements(outfh, format, _generate())
@@ -299,6 +284,24 @@ def statements_aggregate(
         if len(statements):
             entity = Entity.from_statements(dataset_, statements)
             write_entity(outfh, entity)
+
+
+@cli.command("load-resolver", help="Load resolver edges from file into database")
+@click.argument("source", type=InPath)
+def load_resolver(source: Path) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    resolver.load(source)
+    resolver.commit()
+
+
+@cli.command("dump-resolver", help="Dump resolver decisions from database to file")
+@click.argument("target", type=OutPath)
+def dump_resolver(target: Path) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    resolver.dump(target)
+    resolver.rollback()
 
 
 @cli.command("bench", help="Benchmark a matching algorithm")

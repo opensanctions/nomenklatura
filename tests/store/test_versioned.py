@@ -26,9 +26,9 @@ PERSON_EXT = {
 }
 
 
-def test_store_basics(test_dataset: Dataset):
+def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
-    resolver = Resolver[CompositeEntity]()
     store = VersionedRedisStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).statements())) == 0
     entity = CompositeEntity.from_data(test_dataset, PERSON)
@@ -62,9 +62,11 @@ def test_store_basics(test_dataset: Dataset):
     assert len(list(store.view(test_dataset).statements())) == 5
 
 
-def test_graph_query(donations_path: Path, test_dataset: Dataset):
+def test_graph_query(
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+):
+    resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
-    resolver = Resolver[CompositeEntity]()
     store = VersionedRedisStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).entities())) == 0
     with store.writer() as writer:
@@ -117,8 +119,7 @@ def test_graph_query(donations_path: Path, test_dataset: Dataset):
     assert len(list(entity.statements)) == len(list(ext_entity.statements))
 
 
-def test_versioning(test_dataset: Dataset):
-    resolver = Resolver[CompositeEntity]()
+def test_versioning(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
     store = VersionedRedisStore(test_dataset, resolver)
     assert store.get_latest(test_dataset.name) is None
     assert len(store.get_history(test_dataset.name)) == 0
