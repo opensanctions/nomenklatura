@@ -21,8 +21,8 @@ PERSON_EXT = {
 }
 
 
-def test_basic_store(test_dataset: Dataset):
-    resolver = Resolver[CompositeEntity]()
+def test_basic_store(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+    resolver.begin()
     store = MemoryStore(test_dataset, resolver)
     entity = CompositeEntity.from_data(test_dataset, PERSON)
     entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 def pick_caption(proxy: "CompositeEntity") -> str:
     for prop_ in proxy.schema.caption:
         prop = proxy.schema.properties[prop_]
-        values = [s.value for s in proxy.get_statements(prop)]
+        values = sorted([s.value for s in proxy.get_statements(prop)])
         if prop.type == registry.name and len(values) > 1:
             name = pick_name(values)
             if name is not None:
