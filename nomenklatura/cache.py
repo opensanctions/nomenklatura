@@ -31,7 +31,7 @@ class CacheValue:
 
 
 def randomize_cache(days: int) -> timedelta:
-    min_cache = max(1, math.ceil(days * 0.7))
+    min_cache = max(1, math.ceil(days * 0.5))
     max_cache = math.ceil(days * 1.3)
     return timedelta(days=randint(min_cache, max_cache))
 
