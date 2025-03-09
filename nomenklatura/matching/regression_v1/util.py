@@ -19,7 +19,7 @@ def tokenize(texts: Iterable[str]) -> Set[str]:
 
 
 def tokenize_pair(
-    pair: Tuple[Iterable[str], Iterable[str]]
+    pair: Tuple[Iterable[str], Iterable[str]],
 ) -> Tuple[Set[str], Set[str]]:
     return tokenize(pair[0]), tokenize(pair[1])
 

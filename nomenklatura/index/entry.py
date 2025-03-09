@@ -1,4 +1,3 @@
-import math
 from typing import Any, Dict, Generator, Tuple
 
 from nomenklatura.resolver import Identifier
