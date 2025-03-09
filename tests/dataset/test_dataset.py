@@ -33,7 +33,7 @@ def test_company_dataset(catalog_data: Dict[str, Any]):
     assert ds.name == "company_data"
     assert ds.publisher is not None
     assert ds.publisher.country == "us"
-    assert ds.publisher.country_label == "United States"
+    assert ds.publisher.country_label == "United States of America"
     assert ds.coverage is not None
     assert "coverage" in ds.to_dict()
     assert ds.coverage.start == "2005"
