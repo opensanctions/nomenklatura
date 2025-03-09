@@ -1,27 +1,25 @@
 import logging
-from functools import lru_cache
-from typing import cast, Generator, Any, Dict, Optional, Set
+from typing import Generator, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from rigour.ids.wikidata import is_qid
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.wikidata.lang import LangText, pick_obj_lang
-from nomenklatura.enrich.wikidata.qualified import qualify_value
-from nomenklatura.enrich.wikidata.props import (
+from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.lang import LangText
+from nomenklatura.wikidata.model import Claim, Item
+from nomenklatura.wikidata.props import (
     PROPS_ASSOCIATION,
     PROPS_DIRECT,
     PROPS_FAMILY,
     PROPS_QUALIFIED,
     PROPS_TOPICS,
 )
-from nomenklatura.enrich.wikidata.model import Claim, Item
-from nomenklatura.enrich.wikidata.value import is_alias_strong, clean_name
-from nomenklatura.enrich.common import Enricher, EnricherConfig
+from nomenklatura.wikidata.qualified import qualify_value
+from nomenklatura.wikidata.value import clean_name, is_alias_strong
 
-WD_API = "https://www.wikidata.org/w/api.php"
-LABEL_PREFIX = "wd:lb:"
 log = logging.getLogger(__name__)
 
 
@@ -30,7 +28,7 @@ class WikidataEnricher(Enricher[DS]):
         super().__init__(dataset, cache, config)
         self.depth = self.get_config_int("depth", 1)
         self.label_cache_days = self.get_config_int("label_cache_days", 100)
-        self.cache.preload(f"{LABEL_PREFIX}%")
+        self.client = WikidataClient(cache, self.session)
 
     def keep_entity(self, entity: CE) -> bool:
         if check_person_cutoff(entity):
@@ -45,7 +43,7 @@ class WikidataEnricher(Enricher[DS]):
 
         # Already has an ID associated with it:
         if wikidata_id is not None:
-            item = self.fetch_item(wikidata_id)
+            item = self.client.fetch_item(wikidata_id)
             if item is not None:
                 proxy = self.item_proxy(entity, item, schema=entity.schema.name)
                 if proxy is not None and self.keep_entity(proxy):
@@ -60,13 +58,13 @@ class WikidataEnricher(Enricher[DS]):
                 "language": "en",
                 "strictlanguage": "false",
             }
-            data = self.http_get_json_cached(WD_API, params=params)
+            data = self.http_get_json_cached(WikidataClient.WD_API, params=params)
             if "search" not in data:
-                self.http_remove_cache(WD_API, params=params)
+                self.http_remove_cache(WikidataClient.WD_API, params=params)
                 log.info("Search response [%s] does not include results" % name)
                 continue
             for result in data["search"]:
-                item = self.fetch_item(result["id"])
+                item = self.client.fetch_item(result["id"])
                 if item is not None:
                     proxy = self.item_proxy(entity, item, schema=entity.schema.name)
                     if proxy is not None and self.keep_entity(proxy):
@@ -76,7 +74,7 @@ class WikidataEnricher(Enricher[DS]):
         wikidata_id = self.get_wikidata_id(match)
         if wikidata_id is None:
             return
-        item = self.fetch_item(wikidata_id)
+        item = self.client.fetch_item(wikidata_id)
         if item is None:
             return
         proxy = self.item_proxy(match, item, schema=match.schema.name)
@@ -95,42 +93,6 @@ class WikidataEnricher(Enricher[DS]):
                 return value
         return None
 
-    def wikibase_getentities(
-        self, id: str, cache_days: Optional[int] = None, **kwargs: Any
-    ) -> Dict[str, Any]:
-        # https://www.mediawiki.org/wiki/Wikibase/API
-        # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
-        params = {**kwargs, "format": "json", "ids": id, "action": "wbgetentities"}
-        data = self.http_get_json_cached(WD_API, params=params, cache_days=cache_days)
-        return cast(Dict[str, Any], data)
-
-    def fetch_item(self, qid: str) -> Optional[Item]:
-        data = self.wikibase_getentities(qid)
-        entity = data.get("entities", {}).get(qid)
-        if entity is None:
-            return None
-        return Item(entity)
-
-    @lru_cache(maxsize=100000)
-    def get_label(self, qid: str) -> LangText:
-        cache_key = f"{LABEL_PREFIX}{qid}"
-        cached = self.cache.get_json(cache_key, max_age=self.label_cache_days)
-        if cached is not None:
-            return LangText.parse(cached)
-
-        data = self.wikibase_getentities(
-            qid,
-            cache_days=0,
-            props="labels",
-        )
-        entity = data.get("entities", {}).get(qid)
-        label = pick_obj_lang(entity.get("labels", {}))
-        if label.text is None:
-            label.text = qid
-        label.original = qid
-        self.cache.set_json(cache_key, label.pack())
-        return label
-
     def make_link(
         self,
         proxy: CE,
@@ -144,7 +106,7 @@ class WikidataEnricher(Enricher[DS]):
     ) -> Generator[CE, None, None]:
         if depth < 1 or claim.qid is None or claim.qid in seen:
             return
-        item = self.fetch_item(claim.qid)
+        item = self.client.fetch_item(claim.qid)
         if item is None:
             return
 
@@ -171,29 +133,23 @@ class WikidataEnricher(Enricher[DS]):
         rel.apply(link, "relationship")
 
         for qual in claim.get_qualifier("P580"):
-            text = qual.text(self)
-            text.apply(link, "startDate")
+            qual.text.apply(link, "startDate")
 
         for qual in claim.get_qualifier("P582"):
-            text = qual.text(self)
-            text.apply(link, "endDate")
+            qual.text.apply(link, "endDate")
 
         for qual in claim.get_qualifier("P585"):
-            text = qual.text(self)
-            text.apply(link, "date")
+            qual.text.apply(link, "date")
 
         for qual in claim.get_qualifier("P1039"):
-            text = qual.text(self)
-            text.apply(link, "relationship")
+            qual.text.apply(link, "relationship")
 
         for qual in claim.get_qualifier("P2868"):
-            text = qual.text(self)
-            text.apply(link, "relationship")
+            qual.text.apply(link, "relationship")
 
         for ref in claim.references:
             for snak in ref.get("P854"):
-                text = snak.text(self)
-                text.apply(link, "sourceUrl")
+                qual.text.apply(link, "sourceUrl")
         yield link
 
     def item_graph(
@@ -271,7 +227,7 @@ class WikidataEnricher(Enricher[DS]):
             if ftm_prop not in proxy.schema.properties:
                 log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
                 continue
-            value = claim.text(self)
+            value = claim.text
 
             # Sanity check that the name parts are in any of the full names:
             if ftm_prop in ("firstName", "lastName", "fatherName"):

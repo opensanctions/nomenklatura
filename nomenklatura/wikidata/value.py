@@ -6,11 +6,10 @@ from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
 # from rigour.text.distance import is_levenshtein_plausible
 
-from nomenklatura.dataset import DS
-from nomenklatura.enrich.wikidata.lang import LangText
+from nomenklatura.wikidata.lang import LangText
 
 if TYPE_CHECKING:
-    from nomenklatura.enrich.wikidata import WikidataEnricher
+    from nomenklatura.wikidata.client import WikidataClient
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ PRECISION = {
 
 
 def snak_value_to_string(
-    enricher: "WikidataEnricher[DS]", value_type: Optional[str], value: Dict[str, Any]
+    client: WikidataClient, value_type: Optional[str], value: Dict[str, Any]
 ) -> LangText:
     if value_type is None:
         return LangText(None)
@@ -45,7 +44,7 @@ def snak_value_to_string(
             return LangText(None)
         return LangText(time, None, original=value.get("time"))
     elif value_type == "wikibase-entityid":
-        return enricher.get_label(value.get("id"))
+        return client.get_label(value.get("id"))
     elif value_type == "monolingualtext":
         text = value.get("text")
         if isinstance(text, str):
@@ -57,7 +56,7 @@ def snak_value_to_string(
         unit = value.get("unit", "")
         unit = unit.split("/")[-1]
         if is_qid(unit):
-            unit = enricher.get_label(unit)
+            unit = client.get_label(unit)
             amount = f"{amount} {unit}"
         return LangText(amount)
     elif isinstance(value, str):

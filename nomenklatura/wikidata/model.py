@@ -1,18 +1,18 @@
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from nomenklatura.dataset import DS
-from nomenklatura.enrich.wikidata.value import snak_value_to_string
-from nomenklatura.enrich.wikidata.lang import pick_obj_lang, LangText
+from nomenklatura.wikidata.value import snak_value_to_string
+from nomenklatura.wikidata.lang import pick_obj_lang, LangText
 
 if TYPE_CHECKING:
-    from nomenklatura.enrich.wikidata import WikidataEnricher
+    from nomenklatura.wikidata.client import WikidataClient
 
 
 class Snak(object):
     """Some Notation About Knowledge (TM)."""
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]):
+        self.client = client
         datavalue = data.pop("datavalue", {})
         self.value_type: str = datavalue.pop("type", None)
         self._value = datavalue.pop("value", None)
@@ -22,8 +22,8 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, enricher: "WikidataEnricher[DS]") -> LangText:
-        return enricher.get_label(self.property)
+    def property_label(self, client: WikidataClient) -> LangText:
+        return client.get_label(self.property)
 
     @property
     def qid(self) -> Optional[str]:
@@ -31,8 +31,9 @@ class Snak(object):
             return stringify(self._value.get("id"))
         return None
 
-    def text(self, enricher: "WikidataEnricher[DS]") -> LangText:
-        return snak_value_to_string(enricher, self.value_type, self._value)
+    @property
+    def text(self) -> LangText:
+        return snak_value_to_string(self.client, self.value_type, self._value)
 
     def __repr__(self) -> str:
         return f"<Snak({self.qid}, {self.property}, {self.value_type})>"
@@ -49,13 +50,15 @@ class Reference(object):
 
 
 class Claim(Snak):
-    def __init__(self, data: Dict[str, Any], prop: str) -> None:
+    def __init__(
+        self, client: "WikidataClient", data: Dict[str, Any], prop: str
+    ) -> None:
         self.id = data.pop("id")
         self.rank = data.pop("rank")
-        super().__init__(data.pop("mainsnak"))
+        super().__init__(client, data.pop("mainsnak"))
         self.qualifiers: Dict[str, List[Snak]] = {}
         for prop, snaks in data.pop("qualifiers", {}).items():
-            self.qualifiers[prop] = [Snak(s) for s in snaks]
+            self.qualifiers[prop] = [Snak(client, s) for s in snaks]
 
         self.references = [Reference(r) for r in data.pop("references", [])]
         self.property = self.property or prop
@@ -70,7 +73,8 @@ class Claim(Snak):
 class Item(object):
     """A wikidata item (or entity)."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]) -> None:
+        self.client = client
         self.id: str = data.pop("id")
         self.modified: Optional[str] = data.pop("modified", None)
 
@@ -92,7 +96,7 @@ class Item(object):
         claims: Dict[str, List[Dict[str, Any]]] = data.pop("claims", {})
         for prop, values in claims.items():
             for value in values:
-                self.claims.append(Claim(value, prop))
+                self.claims.append(Claim(client, value, prop))
 
         # TODO: get back to this later:
         data.pop("sitelinks", None)
