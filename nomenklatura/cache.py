@@ -167,13 +167,11 @@ class Cache(object):
 
     def flush(self) -> None:
         # log.info("Flushing cache.")
-        if self._conn is not None:
+        if self._transaction is not None:
             try:
                 self._transaction.commit()
             except InvalidRequestError:
                 log.exception("Transaction was failed, cannot store cache state.")
-                raise
-            self._conn.close()
         self.reset()
 
     def close(self) -> None:
