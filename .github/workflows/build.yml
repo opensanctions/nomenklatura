@@ -22,6 +22,7 @@ jobs:
         # Provide the password for postgres
         env:
           POSTGRES_USER: nomenklatura
+          PGUSER: nomenklatura
           POSTGRES_PASSWORD: nomenklatura
           POSTGRES_DB: nomenklatura
         # Set health checks to wait until postgres has started
