@@ -74,6 +74,7 @@ def test_wikidata_match():
         assert "Putin" in res0.get("weakAlias")
         assert "Vladimir Vladimirovich Putin" in res0.get("alias")
         assert "Vladimir" in res0.get("firstName")
+    enricher.close()
 
 
 def test_wikidata_enrich():
@@ -87,6 +88,7 @@ def test_wikidata_enrich():
         ent = CompositeEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
         adjacent = list(enricher.expand(ent, ent))
         assert len(adjacent) > 3, adjacent
+    enricher.close()
 
 
 def test_model_apply():

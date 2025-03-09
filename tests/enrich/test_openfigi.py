@@ -66,3 +66,4 @@ def test_figi_match():
         assert len(e_results) == 2, e_results
         assert e_results[1].get("ticker") == ["BKRUSS F 12/31/01"], e_results
         assert e_results[1].get("issuer") == [m_results[0].id], e_results
+    enricher.close()

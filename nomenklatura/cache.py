@@ -7,7 +7,7 @@ from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
-from sqlalchemy.engine import Engine, Connection
+from sqlalchemy.engine import Engine, Connection, Transaction
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
 from sqlalchemy.exc import OperationalError, InvalidRequestError
@@ -43,6 +43,7 @@ class Cache(object):
         self.dataset = dataset
         self._engine = engine
         self._conn: Optional[Connection] = None
+        self._transaction: Optional[Transaction] = None
         self._table = Table(
             "cache",
             metadata,
@@ -53,7 +54,7 @@ class Cache(object):
             extend_existing=True,
         )
         if create:
-            metadata.create_all(bind=engine, checkfirst=True)
+            metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
 
         self._preload: Dict[str, CacheValue] = {}
 
@@ -61,6 +62,7 @@ class Cache(object):
     def conn(self) -> Connection:
         if self._conn is None:
             self._conn = self._engine.connect()
+            self._transaction = self._conn.begin()
         return self._conn
 
     def set(self, key: str, value: Value) -> None:
@@ -77,7 +79,7 @@ class Cache(object):
             stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
             self.conn.execute(stmt)
         except (OperationalError, InvalidRequestError) as exc:
-            log.info("Error while saving to cache: %s" % exc)
+            log.exception("Error while saving to cache: %s" % exc)
             self.reset()
 
     def set_json(self, key: str, value: Any) -> None:
@@ -107,7 +109,7 @@ class Cache(object):
             result = self.conn.execute(q)
             row = result.fetchone()
         except InvalidRequestError as ire:
-            log.warn("Cache fetch error: %s", ire)
+            log.exception("Cache fetch error: %s", ire)
             self.reset()
             return None
         if row is not None:
@@ -130,7 +132,7 @@ class Cache(object):
         try:
             self.conn.execute(pq)
         except InvalidRequestError as ire:
-            log.warn("Cache delete error: %s", ire)
+            log.exception("Cache delete error: %s", ire)
             self.reset()
             return None
 
@@ -154,20 +156,23 @@ class Cache(object):
             pq = pq.where(self._table.c.dataset == self.dataset.name)
             self.conn.execute(pq)
         except InvalidRequestError:
+            log.exception("Cannot clear cache from database")
             self.reset()
 
     def reset(self) -> None:
         if self._conn is not None:
             self._conn.close()
         self._conn = None
+        self._transaction = None
 
     def flush(self) -> None:
         # log.info("Flushing cache.")
         if self._conn is not None:
             try:
-                self._conn.commit()  # type: ignore
+                self._transaction.commit()
             except InvalidRequestError:
-                log.info("Transaction was failed, cannot store cache state.")
+                log.exception("Transaction was failed, cannot store cache state.")
+                raise
             self._conn.close()
         self.reset()
 

@@ -69,7 +69,7 @@ class Resolver(Linker[CE]):
             extend_existing=True,
         )
         if create:
-            metadata.create_all(bind=engine, checkfirst=True)
+            metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
 
     @classmethod
     def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":

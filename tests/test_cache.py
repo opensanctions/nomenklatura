@@ -47,6 +47,7 @@ def test_cache_utils():
     ds = Dataset.make({"name": "test", "title": "Test Case"})
     cache = _make_cache(ds)
     assert hash(cache) != 0
+    cache.close()
 
 
 def test_preload_cache():
@@ -67,3 +68,4 @@ def test_preload_cache():
 
     res = cache.get("name", max_age=5)
     assert res == "TestCase", res
+    cache.close()

@@ -188,6 +188,7 @@ def test_permid_match():
         ent = CompositeEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 0, results
+    enricher.close()
 
 
 def test_permid_enrich():
@@ -208,3 +209,4 @@ def test_permid_enrich():
             adjacent = list(enricher.expand(ent, res))
             assert len(adjacent) == 1, adjacent
             assert adjacent[0].id == "lei-253400JT3MQWNDKMJE44"
+    enricher.close()

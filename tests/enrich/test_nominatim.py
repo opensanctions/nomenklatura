@@ -85,6 +85,7 @@ def test_nominatim_match():
         ent = CompositeEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 0, results
+    enricher.close()
 
 
 def test_nominatim_match_list(resolver: Resolver[CompositeEntity]):
@@ -103,6 +104,7 @@ def test_nominatim_match_list(resolver: Resolver[CompositeEntity]):
     assert len(results) == 2, results
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 1, candidates
+    enricher.close()
 
 
 def test_nominatim_enrich():
@@ -114,6 +116,7 @@ def test_nominatim_enrich():
         m.get("/search.php", json=RESPONSE)
         adjacent = list(enricher.expand(ent, ent))
     assert len(adjacent) == 1, adjacent
+    enricher.close()
 
 
 def test_nominatim_enrich_list(resolver: Resolver[CompositeEntity]):
@@ -132,3 +135,4 @@ def test_nominatim_enrich_list(resolver: Resolver[CompositeEntity]):
         resolver.decide(ent.id, "osm-node-2140755199", judgement=Judgement.POSITIVE)
         results = list(enrich(enricher, resolver, [ent]))
         assert len(results) == 1, results
+    enricher.close()
