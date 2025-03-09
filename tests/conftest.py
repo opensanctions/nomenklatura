@@ -22,12 +22,15 @@ settings.TESTING = True
 
 @pytest.fixture(autouse=True)
 def wrap_test():
-    if not settings.DB_URL:
+    if settings.DB_URL.startswith("sqlite"):
         settings.DB_URL = "sqlite:///:memory:"
     yield
     # Dispose of connections to let open transactions for resources not
     # managed by the setup/teardown abort.
-    get_engine().dispose()
+    engine = get_engine()
+    meta = get_metadata()
+    meta.drop_all(bind=engine)
+    engine.dispose()
     get_engine.cache_clear()
     get_redis.cache_clear()
     get_metadata.cache_clear()

@@ -5,6 +5,8 @@ TESTING = False
 
 DB_PATH = Path("nomenklatura.db").resolve()
 DB_URL = env_str("NOMENKLATURA_DB_URL", "")
+if DB_URL is None or not len(DB_URL):
+    DB_URL = f"sqlite:///{DB_PATH.as_posix()}"
 DB_POOL_SIZE = env_int("NOMENKLATURA_DB_POOL_SIZE", 5)
 DB_STMT_TIMEOUT = env_int("NOMENKLATURA_DB_STMT_TIMEOUT", 10000)
 

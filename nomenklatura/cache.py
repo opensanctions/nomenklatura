@@ -72,7 +72,7 @@ class Cache(object):
             "text": value,
         }
         try:
-            istmt = upsert(self._table).values([cache])
+            istmt = upsert(self._table).values(cache)
             values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
             stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
             self.conn.execute(stmt)

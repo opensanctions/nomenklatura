@@ -14,24 +14,12 @@ from nomenklatura import settings
 Conn = Connection
 Connish = Optional[Connection]
 
-WARNED_DB_URL = False
-
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 @cache
 def get_engine(url: Optional[str] = None) -> Engine:
-    if not url:
-        if settings.DB_URL:
-            url = settings.DB_URL
-        else:
-            url = f"sqlite:///{settings.DB_PATH.as_posix()}"
-
-            global WARNED_DB_URL
-            if not WARNED_DB_URL:
-                logger.warning(f"No DB_URL set. Using {url}")
-                WARNED_DB_URL = True
-
+    url = url or settings.DB_URL
     connect_args = {}
     if url.startswith("postgres"):
         connect_args["options"] = f"-c statement_timeout={settings.DB_STMT_TIMEOUT}"
