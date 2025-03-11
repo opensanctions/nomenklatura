@@ -19,6 +19,7 @@ from sqlalchemy import (
     alias,
     func,
     or_,
+    and_,
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import select, insert, update, delete
@@ -348,6 +349,8 @@ class Resolver(Linker[CE]):
         other = Identifier.get(other_id)
         if entity == other:
             return Judgement.POSITIVE
+        if is_qid(entity.id) and is_qid(other.id):
+            return Judgement.NEGATIVE
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
@@ -359,14 +362,27 @@ class Resolver(Linker[CE]):
         #     return Judgement.UNSURE
 
         other_connected = self.connected(other)
-        for e in entity_connected:
-            for o in other_connected:
-                judgement = self._pair_judgement(e, o)
-                if judgement != Judgement.NO_JUDGEMENT:
-                    return judgement
 
-        if is_qid(entity.id) and is_qid(other.id):
-            return Judgement.NEGATIVE
+        stmt = select(self._table.c.judgement)
+        stmt = stmt.where(
+            or_(
+                and_(
+                    self._table.c.source.in_([e.id for e in entity_connected]),
+                    self._table.c.target.in_([o.id for o in other_connected]),
+                ),
+                and_(
+                    self._table.c.source.in_([o.id for o in other_connected]),
+                    self._table.c.target.in_([e.id for e in entity_connected]),
+                ),
+            )
+        )
+        stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt = stmt.limit(1)
+        res = self._get_connection().execute(stmt).fetchone()
+        if res is not None:
+            return Judgement(res.judgement)
+
         return Judgement.NO_JUDGEMENT
 
     def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
