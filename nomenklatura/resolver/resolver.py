@@ -17,7 +17,7 @@
 import getpass
 import logging
 from functools import lru_cache
-from typing import Dict, Generator, Optional, Set, Tuple
+from typing import Any, Dict, Generator, Optional, Set, Tuple
 
 from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
@@ -78,7 +78,7 @@ class Resolver(Linker[CE]):
         self._linker: Optional[Linker[CE]] = None
         """A cached linker for bulk operations."""
 
-        unique_kw = {"unique": True}
+        unique_kw: Dict[str, Any] = {"unique": True}
         if engine.dialect.name == "sqlite":
             unique_kw["sqlite_where"] = text("deleted_at IS NULL")
         if engine.dialect.name in ("postgresql", "postgres"):
