@@ -1,5 +1,18 @@
 #
-# Don't forget to call self._invalidate from methods that modify edges.
+# - The database table is the authoritative store of edges.
+#     - updates to an edge set the current time to the old edge's deleted_at
+#       and insert a new edge, serving as a basic history log.
+# - Writes that affect the validity of caches must always call self._invalidate()
+#     - Check cache decorators, as well as self._linker for relevance.
+# - prioritise_read: bool is intended to support bulk read operations when true,
+#   at the cost of refreshing the linker cache on relevant writes, taking about
+#   2.5 seconds on a local postgres as of March 2025.
+#
+#   THERE CAN ONLY BE KIND OF MODE LIKE prioritise_read.
+#   ANOTHER ONE MAKES REASONING MORE HORRIBLE.
+#   If we feel the need to add another, we must reconsider an alternative approach,
+#   e.g. a full resolver (nodes and edges in memory) for reads, writing through to
+#   to database, and loading only recent changes between transactions.
 #
 import getpass
 import logging
@@ -232,33 +245,36 @@ class Resolver(Linker[CE]):
 
     @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
-        """
-        WITH RECURSIVE connected(node) AS
-        (
-            -- anything node points to
-            SELECT r.source, r.target
-            FROM resolver AS r
-            WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
-            AND r.judgement = 'positive'
-            AND r.deleted_at IS NULL
+        # Benchmarking has shown this to take about 14ms cold or 5ms hot on postgres.
+        # A table of connected nodes with grouping key has only been shown to be about 15% faster,
+        # while making updates significantly slower. Postgres is cool.
+        #
+        # WITH RECURSIVE connected(node) AS
+        # (
+        #     -- anything node points to
+        #     SELECT r.source, r.target
+        #     FROM resolver AS r
+        #     WHERE (r.source = 'NK-223yQP6hRaMuiALDCJ6xbY' OR r.target = 'NK-223yQP6hRaMuiALDCJ6xbY')
+        #     AND r.judgement = 'positive'
+        #     AND r.deleted_at IS NULL
+        #
+        #     UNION
+        #
+        #     -- anything that points to anything in the anchor
+        #     SELECT r.source, r.target
+        #     FROM resolver AS r
+        #     JOIN connected AS c
+        #     ON (c.source = r.source OR c.source = r.target OR c.target = r.source OR c.target = r.target)
+        #     WHERE r.judgement = 'positive'
+        #     AND r.deleted_at IS NULL
+        # )
+        #
+        # SELECT connected.node AS node
+        # FROM connected
+        # UNION
+        # SELECT connected.target AS node
+        # FROM connected
 
-            UNION
-
-            -- anything that points to anything in the anchor
-            SELECT r.source, r.target
-            FROM resolver AS r
-            JOIN connected AS c
-            ON (c.source = r.source OR c.source = r.target OR c.target = r.source OR c.target = r.target)
-            WHERE r.judgement = 'positive'
-            AND r.deleted_at IS NULL
-        )
-
-        SELECT connected.node AS node
-        FROM connected
-        UNION
-        SELECT connected.target AS node
-        FROM connected
-        """
         positive = Judgement.POSITIVE.value
         rslv = alias(self._table, "r")
         target = rslv.c.target

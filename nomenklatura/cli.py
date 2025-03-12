@@ -282,7 +282,7 @@ def statements_aggregate(
 @cli.command("load-resolver", help="Load resolver edges from file into database")
 @click.argument("source", type=InPath)
 def load_resolver(source: Path) -> None:
-    resolver = Resolver[Entity].make_default()
+    resolver = Resolver[Entity].make_default(prioritise_read=False)
     resolver.begin()
     resolver.load(source)
     resolver.commit()
