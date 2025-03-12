@@ -63,7 +63,7 @@ def donations_json(donations_path):
 
 @pytest.fixture(scope="function")
 def resolver():
-    resolver = Resolver[CompositeEntity].make_default()
+    resolver = Resolver[CompositeEntity].make_default(prioritise_read=False)
     yield resolver
     resolver.rollback(force=True)
     resolver._table.drop(resolver._engine)
@@ -73,7 +73,13 @@ def resolver():
 def other_table_resolver():
     engine = get_engine()
     meta = MetaData()
-    resolver = Resolver(engine, meta, create=True, table_name="another_table")
+    resolver = Resolver(
+        engine,
+        meta,
+        create=True,
+        table_name="another_table",
+        prioritise_read=False,
+    )
     yield resolver
     resolver.rollback(force=True)
     resolver._table.drop(engine)

@@ -185,13 +185,16 @@ def test_cached_linker(resolver):
     assert resolver.get_canonical("a1") == canon_a
 
     assert resolver._linker is None
-    resolver.warm_linker()
+    resolver.set_prioritise_read(True)
     assert resolver._linker is not None
+    first_linker = resolver._linker
     # We get the same result as pre-warm
     assert resolver.get_canonical("a1") == canon_a
 
     canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
-    assert resolver._linker is None  # cache is cleared
+    assert resolver._linker is not None
+    second_linker = resolver._linker
+    assert id(first_linker) != id(second_linker)  # cached linker updated.
     assert resolver.get_canonical("a1") == canon_a
     # New decision is available
     assert resolver.get_canonical("b1") == canon_b

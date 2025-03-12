@@ -49,10 +49,17 @@ class Resolver(Linker[CE]):
         metadata: MetaData,
         create: bool = False,
         table_name: str = "resolver",
+        prioritise_read: bool = True,
     ) -> None:
+        """
+        Args:
+            prioritise_read: If true, caches a linker for bulk read operations.
+                This implies a time penalty on writes other than NO_JUDGEMENT.
+        """
         self._engine = engine
         self._conn: Optional[Connection] = None
         self._transaction: Optional[Transaction] = None
+        self._prioritise_read: bool = prioritise_read
         self._linker: Optional[Linker[CE]] = None
         """A cached linker for bulk operations."""
 
@@ -73,16 +80,21 @@ class Resolver(Linker[CE]):
             metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
 
     @classmethod
-    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":
+    def make_default(
+        cls,
+        engine: Optional[Engine] = None,
+        prioritise_read: bool = True,
+    ) -> "Resolver[CE]":
         if engine is None:
             engine = get_engine()
         meta = MetaData()
-        return cls(engine, meta, create=True)
+        return cls(engine, meta, create=True, prioritise_read=prioritise_read)
 
     def _invalidate(self) -> None:
         self.connected.cache_clear()
         self.get_canonical.cache_clear()
-        self._linker = None
+        if self._prioritise_read:
+            self._linker = self.get_linker()
 
     def begin(self) -> None:
         """
@@ -94,9 +106,9 @@ class Resolver(Linker[CE]):
         if self._conn is not None or self._transaction is not None:
             log.warning("Transaction already open: %s", self)
             return
-        self._invalidate()
         self._conn = self._engine.connect()
         self._transaction = self._conn.begin()
+        self._invalidate()
 
     def commit(self) -> None:
         if self._transaction is None or self._conn is None:
@@ -114,6 +126,18 @@ class Resolver(Linker[CE]):
         self._transaction = None
         self._conn.close()
         self._conn = None
+
+    def set_prioritise_read(self, value: bool) -> None:
+        """
+        Updates prioritisation and resets the linker cache if True.
+
+        Must be called within a transaction when setting to True.
+        """
+        self._prioritise_read = value
+        if value is True:
+            self._linker = self.get_linker()
+        else:
+            self._linker = None
 
     def rollback(self, force: bool = False) -> None:
         if self._transaction is not None:
@@ -138,6 +162,8 @@ class Resolver(Linker[CE]):
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
         """
+        # Don't return cached linker - we use this to get the linker.
+
         clusters: Dict[Identifier, Set[Identifier]] = {}
         stmt = select(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
@@ -153,10 +179,6 @@ class Resolver(Linker[CE]):
                     clusters[node] = cluster
         log.info("Loaded %s clusters from: %s", len(clusters), self)
         return Linker(clusters)
-
-    def warm_linker(self) -> None:
-        """Cache a linker for bulk read operations."""
-        self._linker = self.get_linker()
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
         """Get an edge matching the given keys in any direction, if it exists."""
@@ -483,7 +505,8 @@ class Resolver(Linker[CE]):
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
-        self._invalidate()
+        if judgement != Judgement.NO_JUDGEMENT:
+            self._invalidate()
         return edge.target
 
     def _register(self, edge: Edge) -> None:
@@ -545,7 +568,6 @@ class Resolver(Linker[CE]):
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
         self._get_connection().execute(stmt)
-        self._invalidate()
 
     def apply_statement(self, stmt: Statement) -> Statement:
         """Canonicalise Statement Entity IDs and ID values"""
