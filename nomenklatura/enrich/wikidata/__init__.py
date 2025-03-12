@@ -124,6 +124,8 @@ class WikidataEnricher(Enricher[DS]):
             props="labels",
         )
         entity = data.get("entities", {}).get(qid)
+        if entity is None:
+            return LangText(None)
         label = pick_obj_lang(entity.get("labels", {}))
         if label.text is None:
             label.text = qid
