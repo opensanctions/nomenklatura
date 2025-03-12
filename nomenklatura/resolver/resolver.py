@@ -12,6 +12,7 @@ from rigour.time import utc_now
 from sqlalchemy import (
     Column,
     Float,
+    Index,
     Integer,
     MetaData,
     Table,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     func,
     or_,
     and_,
+    text,
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import select, insert, update, delete
@@ -63,6 +65,17 @@ class Resolver(Linker[CE]):
         self._linker: Optional[Linker[CE]] = None
         """A cached linker for bulk operations."""
 
+        unique_kw = {"unique": True}
+        if engine.dialect.name == "sqlite":
+            unique_kw["sqlite_where"] = text("deleted_at IS NULL")
+        if engine.dialect.name in ("postgresql", "postgres"):
+            unique_kw["postgresql_where"] = text("deleted_at IS NULL")
+        unique_pair = Index(
+            f"{table_name}_source_target_uniq",
+            text("source"),
+            text("target"),
+            **unique_kw,
+        )
         self._table = Table(
             table_name,
             metadata,
@@ -74,8 +87,10 @@ class Resolver(Linker[CE]):
             Column("user", Unicode(512), nullable=False),
             Column("created_at", Unicode(28)),
             Column("deleted_at", Unicode(28), nullable=True),
+            unique_pair,
             extend_existing=True,
         )
+
         if create:
             metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
 
