@@ -117,6 +117,7 @@ class Resolver(Linker[CE]):
         # Apply the new edges that currently exist (not deleted yet)
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt = stmt.where(self._table.c.id > self._max_id)
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
