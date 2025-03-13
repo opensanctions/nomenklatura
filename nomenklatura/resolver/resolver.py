@@ -107,10 +107,11 @@ class Resolver(Linker[CE]):
                 edge = Edge.from_dict(row._mapping)
                 if self._max_ts is None:
                     self._max_ts = edge.created_at
-                else:
-                    self._max_ts = max(self._max_ts, edge.created_at)
-                if edge.deleted_at is not None:
-                    self._max_ts = max(self._max_ts, edge.deleted_at)
+                if self._max_ts is not None:
+                    if edge.created_at is not None:
+                        self._max_ts = max(self._max_ts, edge.created_at)
+                    if edge.deleted_at is not None:
+                        self._max_ts = max(self._max_ts, edge.deleted_at)
                 self._update_edge(edge)
         cursor.close()
 
