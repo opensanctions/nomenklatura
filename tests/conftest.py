@@ -66,7 +66,7 @@ def resolver():
     resolver = Resolver[CompositeEntity].make_default()
     yield resolver
     resolver.rollback(force=True)
-    resolver._table.drop(resolver._engine)
+    resolver._table.drop(resolver._engine, checkfirst=True)
 
 
 @pytest.fixture(scope="function")
