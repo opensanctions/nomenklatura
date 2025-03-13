@@ -61,9 +61,9 @@ class Resolver(Linker[CE]):
 
         unique_kw: Dict[str, Any] = {"unique": True}
         if engine.dialect.name == "sqlite":
-            unique_kw["sqlite_where"] = text("deleted_at IS NOT NULL")
+            unique_kw["sqlite_where"] = text("deleted_at IS NULL")
         if engine.dialect.name in ("postgresql", "postgres"):
-            unique_kw["postgresql_where"] = text("deleted_at IS NOT NULL")
+            unique_kw["postgresql_where"] = text("deleted_at IS NULL")
         unique_pair = Index(
             f"{table_name}_source_target_uniq",
             text("source"),
