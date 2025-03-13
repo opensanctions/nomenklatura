@@ -62,9 +62,9 @@ class Resolver(Linker[CE]):
 
         unique_kw: Dict[str, Any] = {"unique": True}
         if engine.dialect.name == "sqlite":
-            unique_kw["sqlite_where"] = text("deleted_at IS NULL")
+            unique_kw["sqlite_where"] = text("deleted_at IS NOT NULL")
         if engine.dialect.name in ("postgresql", "postgres"):
-            unique_kw["postgresql_where"] = text("deleted_at IS NULL")
+            unique_kw["postgresql_where"] = text("deleted_at IS NOT NULL")
         unique_pair = Index(
             f"{table_name}_source_target_uniq",
             text("source"),
@@ -288,6 +288,8 @@ class Resolver(Linker[CE]):
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
+        if is_qid(entity.id) and is_qid(other.id):
+            return Judgement.NEGATIVE
 
         # HACK: this would mark pairs only as unsure if the unsure judgement
         # had been made on the current canonical combination:
@@ -302,8 +304,6 @@ class Resolver(Linker[CE]):
                 if judgement != Judgement.NO_JUDGEMENT:
                     return judgement
 
-        if is_qid(entity.id) and is_qid(other.id):
-            return Judgement.NEGATIVE
         return Judgement.NO_JUDGEMENT
 
     def check_candidate(self, left: StrIdent, right: StrIdent) -> bool:
@@ -359,11 +359,20 @@ class Resolver(Linker[CE]):
         edge = self.get_edge(left_id, right_id)
         if edge is not None:
             if edge.judgement == Judgement.NO_JUDGEMENT:
+                # Just update score
+
+                # database
                 stmt = update(self._table)
                 stmt = stmt.where(self._table.c.target == edge.target.id)
                 stmt = stmt.where(self._table.c.source == edge.source.id)
+                stmt = stmt.where(self._table.c.deleted_at.is_(None))
+                stmt = stmt.where(
+                    self._table.c.judgement == Judgement.NO_JUDGEMENT.value
+                )
                 stmt = stmt.values({"score": score})
                 self._get_connection().execute(stmt)
+
+                # local state
                 edge.score = score
             return edge.target
         return self.decide(
