@@ -5,8 +5,7 @@ from collections import defaultdict
 import getpass
 import logging
 from functools import lru_cache
-from typing import Dict, Generator, List, Optional, Set, Tuple
-from datetime import datetime
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 
 from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
@@ -17,11 +16,13 @@ from sqlalchemy import (
     Integer,
     MetaData,
     Table,
+    Index,
     Unicode,
     alias,
     func,
     or_,
     and_,
+    text,
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import select, insert, update, delete
@@ -55,11 +56,24 @@ class Resolver(Linker[CE]):
         self._engine = engine
         self._conn: Optional[Connection] = None
         self._transaction: Optional[Transaction] = None
-        self._max_id: Optional[int] = None
+        self._max_id: int = 0
+        # Start with None to skip deletes on first BEGIN.
+        # We don't have to process deletes to represent the state on first load.
         self._max_delete: Optional[str] = None
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
 
+        unique_kw: Dict[str, Any] = {"unique": True}
+        if engine.dialect.name == "sqlite":
+            unique_kw["sqlite_where"] = text("deleted_at IS NULL")
+        if engine.dialect.name in ("postgresql", "postgres"):
+            unique_kw["postgresql_where"] = text("deleted_at IS NULL")
+        unique_pair = Index(
+            f"{table_name}_source_target_uniq",
+            text("source"),
+            text("target"),
+            **unique_kw,
+        )
         self._table = Table(
             table_name,
             metadata,
@@ -71,23 +85,32 @@ class Resolver(Linker[CE]):
             Column("user", Unicode(512), nullable=False),
             Column("created_at", Unicode(28)),
             Column("deleted_at", Unicode(28), nullable=True),
+            unique_pair,
             extend_existing=True,
         )
         if create:
             metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
-
-        self._update_from_db()
 
     def _update_from_db(self) -> None:
         """Apply new deletes and unseen edges from the database."""
 
         # Apply all the deletes since the last delete we handled
         if self._max_delete is None:
-            pass
+            stmt = self._table.select()
+            stmt = stmt.where(self._table.c.deleted_at.is_not(None))
+            stmt = stmt.order_by(self._table.c.deleted_at.desc())
+            stmt = stmt.limit(1)
+            row = self._get_connection().execute(stmt).fetchone()
+            if row is None:
+                # This is for first BEGIN on a blank database.
+                self._max_delete = "0000-00-00T00:00:00.000000"
+            else:
+                # This is the typical first BEGIN on a populated database.
+                self._max_delete = row.deleted_at
         else:
             stmt = self._table.select()
             stmt = stmt.where(self._table.c.deleted_at.is_not(None))
-            cursor = self._engine.connect().execute(stmt)
+            cursor = self._get_connection().execute(stmt)
             while batch := cursor.fetchmany(10000):
                 for row in batch:
                     edge = Edge.from_dict(row._mapping)
@@ -99,14 +122,12 @@ class Resolver(Linker[CE]):
         # Apply the new edges that currently exist (not deleted yet)
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        if self._max_id is not None:
-            stmt = stmt.where(self._table.c.id > self._max_id)
-        cursor = self._engine.connect().execute(stmt)
+        cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
                 edge = Edge.from_dict(row._mapping)
-            self._register_in_state(edge)
-            self._max_id = max(self._max_id, row.id) if self._max_id else row.id
+                self._register_in_state(edge)
+                self._max_id = max(self._max_id, row.id) if self._max_id else row.id
         cursor.close()
 
     @classmethod
@@ -310,6 +331,7 @@ class Resolver(Linker[CE]):
         while batch := cursor.fetchmany(25):
             for row in batch:
                 yield Edge.from_dict(row._mapping)
+        cursor.close()
 
     def _get_suggested(self) -> List[Edge]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
@@ -383,7 +405,8 @@ class Resolver(Linker[CE]):
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
-        self._invalidate()
+        if judgement != Judgement.NO_JUDGEMENT:
+            self._invalidate()
         return edge.target
 
     def _register(self, edge: Edge) -> None:
@@ -430,7 +453,7 @@ class Resolver(Linker[CE]):
         Remove an edge from the in-memory representation.
 
         Must be idempotent because we might be applying a delete that isn't
-        represented in in the in-memory state.
+        represented in the in-memory state.
         """
         self.edges.pop(edge.key, None)
         for node in (edge.source, edge.target):

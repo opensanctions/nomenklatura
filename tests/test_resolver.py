@@ -2,9 +2,11 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from nomenklatura import settings
+from nomenklatura.db import get_engine
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
+from nomenklatura.resolver.resolver import Resolver
 from nomenklatura.statement import Statement
 
 
@@ -179,8 +181,74 @@ def test_linker(resolver):
     assert linker.get_canonical("a3") == "a3"
 
 
-# def test_concurrent_updates(resolver):
-#     assert False
+def test_update_from_db(resolver):
+    """
+    This tests that one resolver instance can load updates from the db made by
+    another instance.
+
+    On SQLite this is not concurrent - it only tests the update loading.
+    On Postgres this also tests transaction winners.
+    """
+    r1 = Resolver.make_default()
+    # we don't get_engine.cache_clear() because we want the same db,
+    # even when using in-memory sqlite.
+    r2 = Resolver.make_default()
+
+    try:
+        r1.begin()
+        r2.begin()
+        assert set(r1.canonicals()) == set()
+        r1.suggest("a1", "a2", 1.0, "test user")
+        r2.suggest("b1", "b2", 1.0, "test user")
+        r1.commit()
+        r2.commit()
+
+        r1.begin()
+        r2.begin()
+        canon_a = r1.decide("a1", "a2", Judgement.POSITIVE, user="r1")
+        canon_b = r2.decide("b1", "b2", Judgement.POSITIVE, user="r2")
+        assert set(r1.canonicals()) == {canon_a}
+        assert set(r2.canonicals()) == {canon_b}
+        r1.suggest(canon_a, "a3", 1.0, "test user")
+        r1.commit()
+        r2.commit()
+
+        r1.begin()
+        r2.begin()
+        # They see each others' decisions
+        assert set(r1.canonicals()) == {canon_a, canon_b}
+        assert set(r2.canonicals()) == {canon_a, canon_b}
+        # Validity for delete check
+        assert Identifier.get("a2") in r1.connected(canon_a)
+        assert Identifier.get("b2") in r2.connected(canon_b)
+        r1.remove("b2")
+        r2.remove("a2")
+        # TODO: postgres locks when these are happening in concurrent transactions
+        # r1.decide(canon_a, "a3", Judgement.POSITIVE, user="r1")
+        # r2.decide(canon_a, "a3", Judgement.UNSURE, user="r2")
+        r1.commit()
+        r2.commit()
+
+        r1.begin()
+        r2.begin()
+        # They see each others' deletes
+        assert Identifier.get("a2") not in r1.connected(canon_a)
+        assert Identifier.get("b2") not in r2.connected(canon_b)
+        # TODO: what determines which one wins?
+        # assert r1.get_judgement(canon_a, "a3") == Judgement.UNSURE
+        # assert r2.get_judgement(canon_a, "a3") == Judgement.UNSURE
+        r1.commit()
+        r2.commit()
+
+        # r1.begin()
+        # from pprint import pprint
+        # from sqlalchemy import text
+        # pprint(r1._get_connection().execute(text("SELECT * FROM resolver")).fetchall())
+        # assert False
+    finally:
+        r1.rollback(force=True)
+        r2.rollback(force=True)
+        r1._table.drop(r1._engine)
 
 
 def test_resolver_store_load(resolver, other_table_resolver):
