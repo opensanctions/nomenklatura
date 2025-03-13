@@ -198,13 +198,6 @@ def test_update_from_db(resolver):
         r1.begin()
         r2.begin()
         assert set(r1.canonicals()) == set()
-        r1.suggest("a1", "a2", 1.0, "test user")
-        r2.suggest("b1", "b2", 1.0, "test user")
-        r1.commit()
-        r2.commit()
-
-        r1.begin()
-        r2.begin()
         canon_a = r1.decide("a1", "a2", Judgement.POSITIVE, user="r1")
         canon_b = r2.decide("b1", "b2", Judgement.POSITIVE, user="r2")
         assert set(r1.canonicals()) == {canon_a}
@@ -223,9 +216,6 @@ def test_update_from_db(resolver):
         assert Identifier.get("b2") in r2.connected(canon_b)
         r1.remove("b2")
         r2.remove("a2")
-        # TODO: postgres locks when these are happening in concurrent transactions
-        # r1.decide(canon_a, "a3", Judgement.POSITIVE, user="r1")
-        # r2.decide(canon_a, "a3", Judgement.UNSURE, user="r2")
         r1.commit()
         r2.commit()
 
@@ -234,9 +224,6 @@ def test_update_from_db(resolver):
         # They see each others' deletes
         assert Identifier.get("a2") not in r1.connected(canon_a)
         assert Identifier.get("b2") not in r2.connected(canon_b)
-        # TODO: what determines which one wins?
-        # assert r1.get_judgement(canon_a, "a3") == Judgement.UNSURE
-        # assert r2.get_judgement(canon_a, "a3") == Judgement.UNSURE
         r1.commit()
         r2.commit()
 
