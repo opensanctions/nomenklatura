@@ -74,7 +74,6 @@ def xref_file(
 ) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
-    resolver.warm_linker()
     store = load_entity_file_store(path, resolver=resolver)
     algorithm_type = get_algorithm(algorithm)
     if algorithm_type is None:
@@ -152,7 +151,6 @@ def make_sortable(path: Path, outpath: Path) -> None:
 def dedupe(path: Path, xref: bool = False) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
-    resolver.warm_linker()
     store = load_entity_file_store(path, resolver=resolver)
     if xref:
         index_dir = path.parent / INDEX_SEGMENT

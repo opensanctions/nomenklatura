@@ -13,6 +13,10 @@ class Linker(Generic[CE]):
     post de-duplication."""
 
     def __init__(self, entities: Dict[Identifier, Set[Identifier]] = {}) -> None:
+        """
+        Args:
+            entities: an entry for each entity with its connected set of entities.
+        """
         self._entities: Dict[Identifier, Set[Identifier]] = entities
 
     def connected(self, node: Identifier) -> Set[Identifier]:
