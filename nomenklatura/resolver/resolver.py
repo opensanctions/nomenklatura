@@ -1,9 +1,9 @@
 #
 # Don't forget to call self._invalidate from methods that modify edges.
 #
-from collections import defaultdict
 import getpass
 import logging
+from collections import defaultdict
 from functools import lru_cache
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 
@@ -13,25 +13,22 @@ from rigour.time import utc_now
 from sqlalchemy import (
     Column,
     Float,
+    Index,
     Integer,
     MetaData,
     Table,
-    Index,
     Unicode,
-    alias,
-    func,
     or_,
-    and_,
     text,
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
-from sqlalchemy.sql.expression import select, insert, update, delete
+from sqlalchemy.sql.expression import delete, insert, update
 
 from nomenklatura.db import get_engine
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
-from nomenklatura.resolver.identifier import Identifier, StrIdent, Pair
+from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
 from nomenklatura.resolver.linker import Linker
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import PathLike
@@ -95,12 +92,12 @@ class Resolver(Linker[CE]):
         """Apply new deletes and unseen edges from the database."""
 
         # Apply all the deletes since the last delete we handled
+        deletes_stmt = self._table.select()
+        deletes_stmt = deletes_stmt.where(self._table.c.deleted_at.is_not(None))
         if self._max_delete is None:
-            stmt = self._table.select()
-            stmt = stmt.where(self._table.c.deleted_at.is_not(None))
-            stmt = stmt.order_by(self._table.c.deleted_at.desc())
-            stmt = stmt.limit(1)
-            row = self._get_connection().execute(stmt).fetchone()
+            deletes_stmt = deletes_stmt.order_by(self._table.c.deleted_at.desc())
+            deletes_stmt = deletes_stmt.limit(1)
+            row = self._get_connection().execute(deletes_stmt).fetchone()
             if row is None:
                 # This is for first BEGIN on a blank database.
                 self._max_delete = "0000-00-00T00:00:00.000000"
@@ -108,9 +105,7 @@ class Resolver(Linker[CE]):
                 # This is the typical first BEGIN on a populated database.
                 self._max_delete = row.deleted_at
         else:
-            stmt = self._table.select()
-            stmt = stmt.where(self._table.c.deleted_at.is_not(None))
-            cursor = self._get_connection().execute(stmt)
+            cursor = self._get_connection().execute(deletes_stmt)
             while batch := cursor.fetchmany(10000):
                 for row in batch:
                     edge = Edge.from_dict(row._mapping)
