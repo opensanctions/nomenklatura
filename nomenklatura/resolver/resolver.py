@@ -306,6 +306,8 @@ class Resolver(Linker[CE]):
         entity_connected = self.connected(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
+        # Check QIDs after connected because we sometimes insert an edge to say
+        # one QID is canonical for another. Not common but important.
         if is_qid(entity.id) and is_qid(other.id):
             return Judgement.NEGATIVE
 
