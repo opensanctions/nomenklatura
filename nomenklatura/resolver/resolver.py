@@ -53,10 +53,9 @@ class Resolver(Linker[CE]):
         self._engine = engine
         self._conn: Optional[Connection] = None
         self._transaction: Optional[Transaction] = None
-        self._max_id: int = 0
         # Start with None to skip deletes on first BEGIN.
         # We don't have to process deletes to represent the state on first load.
-        self._max_delete: Optional[str] = None
+        self._max_ts: Optional[str] = None
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
 
@@ -90,41 +89,45 @@ class Resolver(Linker[CE]):
 
     def _update_from_db(self) -> None:
         """Apply new deletes and unseen edges from the database."""
-
-        # Apply all the deletes since the last delete we handled
-        deletes_stmt = self._table.select()
-        deletes_stmt = deletes_stmt.where(self._table.c.deleted_at.is_not(None))
-        if self._max_delete is None:
-            deletes_stmt = deletes_stmt.order_by(self._table.c.deleted_at.desc())
-            deletes_stmt = deletes_stmt.limit(1)
-            row = self._get_connection().execute(deletes_stmt).fetchone()
-            if row is None:
-                # This is for first BEGIN on a blank database.
-                self._max_delete = "0000-00-00T00:00:00.000000"
-            else:
-                # This is the typical first BEGIN on a populated database.
-                self._max_delete = row.deleted_at
-        else:
-            cursor = self._get_connection().execute(deletes_stmt)
-            while batch := cursor.fetchmany(10000):
-                for row in batch:
-                    edge = Edge.from_dict(row._mapping)
-                    self._remove_edge_from_state(edge)
-                    assert edge.deleted_at is not None  # satisfy type checker
-                    self._max_delete = max(self._max_delete, edge.deleted_at)
-            cursor.close()
-
-        # Apply the new edges that currently exist (not deleted yet)
         stmt = self._table.select()
-        stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        stmt = stmt.where(self._table.c.id > self._max_id)
+        if self._max_ts is None:
+            stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        else:
+            stmt = stmt.where(
+                or_(
+                    self._table.c.deleted_at > self._max_ts,
+                    self._table.c.created_at > self._max_ts,
+                )
+            )
+        stmt.order_by(self._table.c.deleted_at.asc().nulls_last())
+        stmt.order_by(self._table.c.created_at.asc())
         cursor = self._get_connection().execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
                 edge = Edge.from_dict(row._mapping)
-                self._register_in_state(edge)
-                self._max_id = max(self._max_id, row.id) if self._max_id else row.id
+                if self._max_ts is None:
+                    self._max_ts = edge.created_at
+                else:
+                    self._max_ts = max(self._max_ts, edge.created_at)
+                if edge.deleted_at is not None:
+                    self._max_ts = max(self._max_ts, edge.deleted_at)
+                self._update_edge(edge)
         cursor.close()
+
+    def _update_edge(self, edge: Edge) -> None:
+        if edge.deleted_at is None:
+            if edge.judgement != Judgement.NO_JUDGEMENT:
+                edge.score = None
+            self.edges[edge.key] = edge
+            self.nodes[edge.source].add(edge)
+            self.nodes[edge.target].add(edge)
+        else:
+            self.edges.pop(edge.key, None)
+            for node in (edge.source, edge.target):
+                if node in self.nodes:
+                    self.nodes[node].discard(edge)
+                    if len(self.nodes[node]) == 0:
+                        del self.nodes[node]
 
     @classmethod
     def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":
@@ -193,12 +196,25 @@ class Resolver(Linker[CE]):
         This is less memory-consuming than the full resolver object.
         """
         entities: Dict[Identifier, Set[Identifier]] = {}
-        for node in self.nodes.keys():
-            if node in entities:
-                continue
-            connected = self._traverse(node, set())
-            for c in connected:
-                entities[c] = connected
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt.order_by(self._table.c.created_at.asc())
+        with self._engine.connect() as conn:
+            cursor = conn.execute(stmt)
+            while batch := cursor.fetchmany(20000):
+                for row in batch:
+                    edge = Edge.from_dict(row._mapping)
+                    cluster = entities.get(edge.source)
+                    if cluster is None:
+                        cluster = set([edge.source])
+                    other = entities.get(edge.target)
+                    if other is None:
+                        other = set([edge.target])
+                    cluster.update(other)
+                    for node in cluster:
+                        entities[node] = cluster
+            cursor.close()
         return Linker(entities)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
@@ -416,10 +432,6 @@ class Resolver(Linker[CE]):
 
     def _register(self, edge: Edge) -> None:
         """Ensure the edge exists in the resolver, as provided."""
-        self._register_in_db(edge)
-        self._register_in_state(edge)
-
-    def _register_in_db(self, edge: Edge) -> None:
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
 
@@ -432,49 +444,24 @@ class Resolver(Linker[CE]):
 
         stmt = insert(self._table).values(edge.to_dict())
         self._get_connection().execute(stmt)
-
-    def _register_in_state(self, edge: Edge) -> None:
-        if edge.judgement != Judgement.NO_JUDGEMENT:
-            edge.score = None
-        self.edges[edge.key] = edge
-        self.nodes[edge.source].add(edge)
-        self.nodes[edge.target].add(edge)
+        self._update_edge(edge)
 
     def _remove_edge(self, edge: Edge) -> None:
         """Remove an edge from the graph."""
-        self._remove_edge_from_db(edge)
-        self._remove_edge_from_state(edge)
-
-    def _remove_edge_from_db(self, edge: Edge) -> None:
+        edge.deleted_at = timestamp()
         stmt = update(self._table)
-        stmt = stmt.values({"deleted_at": timestamp()})
+        stmt = stmt.values({"deleted_at": edge.deleted_at})
         stmt = stmt.where(self._table.c.target == edge.target.id)
         stmt = stmt.where(self._table.c.source == edge.source.id)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._get_connection().execute(stmt)
-
-    def _remove_edge_from_state(self, edge: Edge) -> None:
-        """
-        Remove an edge from the in-memory representation.
-
-        Must be idempotent because we might be applying a delete that isn't
-        represented in the in-memory state.
-        """
-        self.edges.pop(edge.key, None)
-        for node in (edge.source, edge.target):
-            if node in self.nodes:
-                self.nodes[node].discard(edge)
-                if len(self.nodes[node]) == 0:
-                    del self.nodes[node]
+        self._update_edge(edge)
 
     def _remove_node(self, node: Identifier) -> None:
         """Remove a node from the graph."""
-        self._remove_node_from_db(node)
-        self._remove_node_from_state(node)
-
-    def _remove_node_from_db(self, node: Identifier) -> None:
+        deleted_at = timestamp()
         stmt = update(self._table)
-        stmt = stmt.values({"deleted_at": timestamp()})
+        stmt = stmt.values({"deleted_at": deleted_at})
         cond = or_(
             self._table.c.source == node.id,
             self._table.c.target == node.id,
@@ -483,13 +470,13 @@ class Resolver(Linker[CE]):
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._get_connection().execute(stmt)
 
-    def _remove_node_from_state(self, node: Identifier) -> None:
         edges = self.nodes.get(node)
         if edges is None:
             return
         for edge in list(edges):
+            edge.deleted_at = deleted_at
             if edge.judgement != Judgement.NO_JUDGEMENT:
-                self._remove_edge_from_state(edge)
+                self._update_edge(edge)
 
     def remove(self, node_id: StrIdent) -> None:
         """Remove all edges linking to the given node from the graph."""
@@ -517,9 +504,11 @@ class Resolver(Linker[CE]):
         self._get_connection().execute(stmt)
 
         # local state
+        now = timestamp()
         for edge in list(self.edges.values()):
             if edge.judgement == Judgement.NO_JUDGEMENT:
-                self._remove_edge_from_state(edge)
+                edge.deleted_at = now
+                self._update_edge(edge)
 
     def apply_statement(self, stmt: Statement) -> Statement:
         """Canonicalise Statement Entity IDs and ID values"""

@@ -159,8 +159,8 @@ def test_linker(resolver):
     canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide("a1", "Q123", Judgement.POSITIVE)
     resolver.decide("a2", "c2", Judgement.NEGATIVE)
-    linker = resolver.get_linker()
     resolver.commit()
+    linker = resolver.get_linker()
 
     assert len(linker.connected(canon_a)) == 4
     assert len(linker.connected(canon_b)) == 3
@@ -169,7 +169,7 @@ def test_linker(resolver):
     #   Q123 canon_a a1 a2 # removed a3
     #   canon_b b1 b2
     #   c2
-    assert len(linker._entities) == 8, linker._entities
+    assert len(linker._entities) == 7, linker._entities
     assert "a1" in linker.get_referents("Q123")
     assert "a2" in linker.get_referents("Q123")
     assert canon_a.id in linker.get_referents("Q123")
