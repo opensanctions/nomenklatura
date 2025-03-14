@@ -1,11 +1,8 @@
-from typing import TYPE_CHECKING, Set
+from typing import Set
 from followthemoney.helpers import dates_years
 
 from nomenklatura.wikidata.model import Claim
 from nomenklatura.wikidata.lang import LangText
-
-if TYPE_CHECKING:
-    from nomenklatura.wikidata.client import WikidataClient
 
 
 def post_summary(
@@ -31,7 +28,7 @@ def post_summary(
     return LangText(label, position.lang, original=original)
 
 
-def qualify_value(enricher: WikidataClient, value: LangText, claim: Claim) -> LangText:
+def qualify_value(value: LangText, claim: Claim) -> LangText:
     if value.text is None:
         return value
     starts: Set[str] = set()

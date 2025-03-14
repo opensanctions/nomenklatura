@@ -22,8 +22,9 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, client: WikidataClient) -> LangText:
-        return client.get_label(self.property)
+    @property
+    def property_label(self) -> LangText:
+        return self.client.get_label(self.property)
 
     @property
     def qid(self) -> Optional[str]:
@@ -40,10 +41,10 @@ class Snak(object):
 
 
 class Reference(object):
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]) -> None:
         self.snaks: Dict[str, List[Snak]] = {}
         for prop, snak_data in data.pop("snaks", {}).items():
-            self.snaks[prop] = [Snak(s) for s in snak_data]
+            self.snaks[prop] = [Snak(client, s) for s in snak_data]
 
     def get(self, prop: str) -> List[Snak]:
         return self.snaks.get(prop, [])
@@ -60,7 +61,7 @@ class Claim(Snak):
         for prop, snaks in data.pop("qualifiers", {}).items():
             self.qualifiers[prop] = [Snak(client, s) for s in snaks]
 
-        self.references = [Reference(r) for r in data.pop("references", [])]
+        self.references = [Reference(client, r) for r in data.pop("references", [])]
         self.property = self.property or prop
 
     def get_qualifier(self, prop: str) -> List[Snak]:

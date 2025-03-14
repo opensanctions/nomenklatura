@@ -1,10 +1,11 @@
+import logging
 from typing import Callable, Counter, Dict, Optional, Any
 from followthemoney.types import registry
 from normality.cleaning import remove_unsafe_chars
 
 from nomenklatura.entity import CE
 
-
+log = logging.getLogger(__name__)
 DEFAULT_LANG = "en"
 ALT_LANG_ORDER = ["es", "fr", "de", "ru"]
 

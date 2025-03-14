@@ -1,7 +1,9 @@
 import logging
 from typing import Generator, Optional, Set
 from followthemoney.helpers import check_person_cutoff
+from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
+from rigour.territories import get_territory_by_qid
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -27,8 +29,7 @@ class WikidataEnricher(Enricher[DS]):
     def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
         super().__init__(dataset, cache, config)
         self.depth = self.get_config_int("depth", 1)
-        self.label_cache_days = self.get_config_int("label_cache_days", 100)
-        self.client = WikidataClient(cache, self.session)
+        self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 
     def keep_entity(self, entity: CE) -> bool:
         if check_person_cutoff(entity):
@@ -129,8 +130,7 @@ class WikidataEnricher(Enricher[DS]):
         link.id = link.id.lower()
         link.add(source_prop, proxy.id)
         link.add(target_prop, item.id)
-        rel = claim.property_label(self)
-        rel.apply(link, "relationship")
+        claim.property_label.apply(link, "relationship")
 
         for qual in claim.get_qualifier("P580"):
             qual.text.apply(link, "startDate")
@@ -149,7 +149,7 @@ class WikidataEnricher(Enricher[DS]):
 
         for ref in claim.references:
             for snak in ref.get("P854"):
-                qual.text.apply(link, "sourceUrl")
+                snak.text.apply(link, "sourceUrl")
         yield link
 
     def item_graph(
@@ -227,7 +227,17 @@ class WikidataEnricher(Enricher[DS]):
             if ftm_prop not in proxy.schema.properties:
                 log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
                 continue
-            value = claim.text
+            ftm_prop_ = proxy.schema.get(ftm_prop)
+            if ftm_prop_ is None:
+                log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
+                continue
+            if ftm_prop_.type == registry.country:
+                territory = get_territory_by_qid(claim.qid)
+                if territory is None or territory.ftm_country is None:
+                    continue
+                value = LangText(territory.ftm_country, original=claim.qid)
+            else:
+                value = claim.text
 
             # Sanity check that the name parts are in any of the full names:
             if ftm_prop in ("firstName", "lastName", "fatherName"):
@@ -242,7 +252,7 @@ class WikidataEnricher(Enricher[DS]):
                 ftm_prop = "alias" if _strong else "weakAlias"
 
             if ftm_prop in PROPS_QUALIFIED:
-                value = qualify_value(self, value, claim)
+                value = qualify_value(value, claim)
             if ftm_prop == "topics":
                 topic = PROPS_TOPICS.get(claim.qid or "")
                 if topic is None:

@@ -21,7 +21,7 @@ PRECISION = {
 
 
 def snak_value_to_string(
-    client: WikidataClient, value_type: Optional[str], value: Dict[str, Any]
+    client: "WikidataClient", value_type: Optional[str], value: Dict[str, Any]
 ) -> LangText:
     if value_type is None:
         return LangText(None)
@@ -44,7 +44,8 @@ def snak_value_to_string(
             return LangText(None)
         return LangText(time, None, original=value.get("time"))
     elif value_type == "wikibase-entityid":
-        return client.get_label(value.get("id"))
+        qid = value.get("id")
+        return client.get_label(qid)
     elif value_type == "monolingualtext":
         text = value.get("text")
         if isinstance(text, str):
