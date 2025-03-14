@@ -1,12 +1,8 @@
-from typing import TYPE_CHECKING, Set
+from typing import Set
 from followthemoney.helpers import dates_years
 
-from nomenklatura.dataset import DS
-from nomenklatura.enrich.wikidata.model import Claim
-from nomenklatura.enrich.wikidata.lang import LangText
-
-if TYPE_CHECKING:
-    from nomenklatura.enrich.wikidata import WikidataEnricher
+from nomenklatura.wikidata.model import Claim
+from nomenklatura.wikidata.lang import LangText
 
 
 def post_summary(
@@ -32,27 +28,22 @@ def post_summary(
     return LangText(label, position.lang, original=original)
 
 
-def qualify_value(
-    enricher: "WikidataEnricher[DS]", value: LangText, claim: Claim
-) -> LangText:
+def qualify_value(value: LangText, claim: Claim) -> LangText:
     if value.text is None:
         return value
     starts: Set[str] = set()
     for qual in claim.get_qualifier("P580"):
-        label = qual.text(enricher)
-        if label.text is not None:
-            starts.add(label.text)
+        if qual.text.text is not None:
+            starts.add(qual.text.text)
 
     ends: Set[str] = set()
     for qual in claim.get_qualifier("P582"):
-        label = qual.text(enricher)
-        if label.text is not None:
-            ends.add(label.text)
+        if qual.text.text is not None:
+            ends.add(qual.text.text)
 
     dates: Set[str] = set()
     for qual in claim.get_qualifier("P585"):
-        label = qual.text(enricher)
-        if label.text is not None:
-            dates.add(label.text)
+        if qual.text.text is not None:
+            dates.add(qual.text.text)
 
     return post_summary(value, starts, ends, dates)

@@ -5,7 +5,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
 from nomenklatura.enrich.wikidata import clean_name
-from nomenklatura.enrich.wikidata.lang import LangText
+from nomenklatura.wikidata.lang import LangText
 from nomenklatura.entity import CompositeEntity
 
 from ..conftest import FIXTURES_PATH
@@ -71,8 +71,8 @@ def test_wikidata_match():
         assert len(results) == 1, results
         res0 = results[0]
         assert res0.id == "Q7747", res0
-        assert "Putin" in res0.get("weakAlias")
-        assert "Vladimir Vladimirovich Putin" in res0.get("alias")
+        assert "Platov" in res0.get("weakAlias")
+        assert "Владимир Владимирович Путин" in res0.get("alias")
         assert "Vladimir" in res0.get("firstName")
     enricher.close()
 
