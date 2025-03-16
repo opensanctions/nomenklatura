@@ -70,6 +70,9 @@ class Claim(Snak):
     def __repr__(self) -> str:
         return f"<Claim({self.qid}, {self.property}, {self.value_type})>"
 
+    def __hash__(self) -> int:
+        return hash((self.qid, self.property, self.id))
+
 
 class Item(object):
     """A wikidata item (or entity)."""
@@ -102,14 +105,38 @@ class Item(object):
         # TODO: get back to this later:
         data.pop("sitelinks", None)
 
+    def sorted_labels(self) -> List[LangText]:
+        return sorted(self.labels)
+
+    @property
+    def label(self) -> Optional[LangText]:
+        for label in self.labels:
+            return label
+        return None
+
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:
             if claim.property == "P31" and claim.qid == qid:
                 return True
         return False
 
+    def _types(self, path: List[str]) -> Set[str]:
+        qid = path[-1]
+        types = set([qid])
+        if len(path) > 6:
+            return types
+        for type_ in self.client._type_props(qid):
+            if type_ not in path:
+                types.update(self._types(path + [type_]))
+        return types
+
+    @property
+    def types(self) -> Set[str]:
+        """Get all the `instance of` and `subclass of` types for an item."""
+        return self._types([self.id])
+
     def __repr__(self) -> str:
         return f"<Item({self.id})>"
 
     def __hash__(self) -> int:
-        return hash(self.__repr__())
+        return hash(self.id)

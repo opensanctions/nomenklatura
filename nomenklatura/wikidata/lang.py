@@ -1,3 +1,4 @@
+from functools import total_ordering
 import logging
 from typing import Callable, Counter, Dict, Optional, Any
 from followthemoney.types import registry
@@ -7,9 +8,32 @@ from nomenklatura.entity import CE
 
 log = logging.getLogger(__name__)
 DEFAULT_LANG = "en"
-ALT_LANG_ORDER = ["es", "fr", "de", "ru"]
+LANG_ORDER = [
+    "es",
+    "fr",
+    "de",
+    "ru",
+    "ua",
+    "pt",
+    "it",
+    "nl",
+    "no",
+    "sv",
+    "lv",
+    "lt",
+    "lu",
+    "pl",
+    "cs",
+    "ro",
+    "tr",
+    "ja",
+    "zh",
+    "ar",
+]
+FTM_LANGS = ["eng"] + [registry.language.clean(la) for la in LANG_ORDER]
 
 
+@total_ordering
 class LangText(object):
     __slots__ = ["text", "lang", "original"]
 
@@ -26,17 +50,6 @@ class LangText(object):
         if lang is not None and self.lang is None:
             self.text = None
         self.original = original
-
-    def __hash__(self) -> int:
-        return hash((self.text, self.lang))
-
-    def __eq__(self, other: Any) -> bool:
-        return hash(self) == hash(other)
-
-    def __repr__(self) -> str:
-        if self.text is None:
-            return "<empty>"
-        return f"{self.text!r}@{self.lang or '???'}"
 
     def apply(
         self,
@@ -58,6 +71,25 @@ class LangText(object):
     def parse(self, data: Dict[str, Optional[str]]) -> "LangText":
         return LangText(data["t"], data["l"], original=data["o"])
 
+    def __hash__(self) -> int:
+        return hash((self.text, self.lang, self.original))
+
+    def __eq__(self, other: Any) -> bool:
+        return hash(self) == hash(other)
+
+    def __lt__(self, other: Any) -> bool:
+        """Sort by language order, then by text."""
+        if self.lang is None and other.lang is not None:
+            return True
+        if self.lang is not None and other.lang is None:
+            return False
+        if self.lang != other.lang:
+            return FTM_LANGS.index(self.lang) > FTM_LANGS.index(other.lang)
+        return self.text < other.text
+
+    def __repr__(self) -> str:
+        return f"<LangText({self.text!r}, {self.lang!r}, {self.original!r})>"
+
 
 def pick_lang_text(values: Dict[str, str]) -> LangText:
     """Pick a text value from a dict of language -> text."""
@@ -73,7 +105,7 @@ def pick_lang_text(values: Dict[str, str]) -> LangText:
                 if v == value:
                     return LangText(value, lang)
 
-    for lang in ALT_LANG_ORDER:
+    for lang in LANG_ORDER:
         value = values.get(lang)
         if value is not None:
             return LangText(value, lang)

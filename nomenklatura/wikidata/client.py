@@ -1,6 +1,6 @@
 import json
 from functools import lru_cache
-from typing import Any, Optional, Dict
+from typing import Any, List, Optional, Dict
 from requests import Session
 from rigour.urls import build_url
 from nomenklatura.cache import Cache
@@ -21,6 +21,7 @@ class WikidataClient(object):
         self.cache_days = cache_days
         self.cache.preload(f"{self.LABEL_PREFIX}%")
 
+    @lru_cache(maxsize=1000)
     def fetch_item(self, qid: str) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
@@ -50,7 +51,8 @@ class WikidataClient(object):
             "action": "wbgetentities",
             "props": "labels",
         }
-        res = self.session.get(self.WD_API, params=params)
+        url = build_url(self.WD_API, params=params)
+        res = self.session.get(url)
         res.raise_for_status()
         data: Dict[str, Any] = res.json()
         entity = data.get("entities", {}).get(qid)
@@ -62,3 +64,24 @@ class WikidataClient(object):
         label.original = qid
         self.cache.set_json(cache_key, label.pack())
         return label
+
+    @lru_cache(maxsize=10000)
+    def _type_props(self, qid: str) -> List[str]:
+        item = self.fetch_item(qid)
+        if item is None:
+            return []
+        types: List[str] = []
+        for claim in item.claims:
+            # historical countries are always historical:
+            ended = claim.qualifiers.get("P582") is not None and claim.qid != "Q3024240"
+            if ended or claim.qid is None:
+                continue
+            if claim.property in ("P31", "P279"):
+                types.append(claim.qid)
+        return types
+
+    def __repr__(self) -> str:
+        return "<WikidataClient()>"
+
+    def __hash__(self) -> int:
+        return 42
