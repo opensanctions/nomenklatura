@@ -1,5 +1,6 @@
 from functools import total_ordering
 import logging
+from rigour.langs import iso_639_alpha2, PREFERRED_LANG, PREFFERED_LANGS
 from typing import Callable, Counter, Dict, Optional, Any
 from followthemoney.types import registry
 from normality.cleaning import remove_unsafe_chars
@@ -7,30 +8,9 @@ from normality.cleaning import remove_unsafe_chars
 from nomenklatura.entity import CE
 
 log = logging.getLogger(__name__)
-DEFAULT_LANG = "en"
-LANG_ORDER = [
-    "es",
-    "fr",
-    "de",
-    "ru",
-    "ua",
-    "pt",
-    "it",
-    "nl",
-    "no",
-    "sv",
-    "lv",
-    "lt",
-    "lu",
-    "pl",
-    "cs",
-    "ro",
-    "tr",
-    "ja",
-    "zh",
-    "ar",
-]
-FTM_LANGS = ["eng"] + [registry.language.clean(la) for la in LANG_ORDER]
+DEFAULT_LANG = iso_639_alpha2(PREFERRED_LANG) or "eng"
+LANG_ORDER_ = [iso_639_alpha2(la) for la in PREFFERED_LANGS]
+LANG_ORDER = [la for la in LANG_ORDER_ if la is not None]
 
 
 @total_ordering
@@ -79,12 +59,12 @@ class LangText(object):
 
     def __lt__(self, other: Any) -> bool:
         """Sort by language order, then by text."""
-        if self.lang is None and other.lang is not None:
-            return True
-        if self.lang is not None and other.lang is None:
+        if not isinstance(other, LangText):
             return False
-        if self.lang != other.lang:
-            return FTM_LANGS.index(self.lang) > FTM_LANGS.index(other.lang)
+        if self.text is None:
+            return True
+        if other.text is None:
+            return False
         return self.text < other.text
 
     def __repr__(self) -> str:
@@ -106,6 +86,8 @@ def pick_lang_text(values: Dict[str, str]) -> LangText:
                     return LangText(value, lang)
 
     for lang in LANG_ORDER:
+        if lang is None:
+            continue
         value = values.get(lang)
         if value is not None:
             return LangText(value, lang)

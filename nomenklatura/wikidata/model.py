@@ -2,7 +2,7 @@ from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from nomenklatura.wikidata.value import snak_value_to_string
-from nomenklatura.wikidata.lang import pick_obj_lang, LangText
+from nomenklatura.wikidata.lang import pick_obj_lang, LangText, LANG_ORDER
 
 if TYPE_CHECKING:
     from nomenklatura.wikidata.client import WikidataClient
@@ -106,7 +106,13 @@ class Item(object):
         data.pop("sitelinks", None)
 
     def sorted_labels(self) -> List[LangText]:
-        return sorted(self.labels)
+        preferred: List[LangText] = []
+        for lang in LANG_ORDER:
+            labels = [la for la in self.labels if la.lang == lang]
+            preferred.extend(sorted(labels))
+        remaining = [la for la in self.labels if la not in preferred]
+        preferred.extend(sorted(remaining))
+        return preferred
 
     @property
     def label(self) -> Optional[LangText]:
