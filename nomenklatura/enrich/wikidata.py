@@ -2,6 +2,7 @@ import logging
 from typing import Generator, Optional, Set
 from followthemoney.helpers import check_person_cutoff
 from followthemoney.types import registry
+from requests import Session
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
@@ -26,8 +27,14 @@ log = logging.getLogger(__name__)
 
 
 class WikidataEnricher(Enricher[DS]):
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
         self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 

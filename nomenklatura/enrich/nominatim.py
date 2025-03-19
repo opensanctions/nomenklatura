@@ -1,6 +1,8 @@
 import logging
 from normality import collapse_spaces
-from typing import Any, Dict, Iterable, Generator
+from typing import Any, Dict, Iterable, Generator, Optional
+
+from requests import Session
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -13,8 +15,14 @@ NOMINATIM = "https://nominatim.openstreetmap.org/search.php"
 
 
 class NominatimEnricher(Enricher[DS]):
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         self.cache.preload(f"{NOMINATIM}%")
 
     def search_nominatim(self, address: CE) -> Iterable[Dict[str, Any]]:

@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from functools import cached_property
 from followthemoney.exc import InvalidData
 from followthemoney.namespace import Namespace
+from requests import Session
 from rigour.urls import build_url
 
 from nomenklatura.entity import CE
@@ -18,8 +19,14 @@ log = logging.getLogger(__name__)
 
 
 class AlephEnricher(Enricher[DS]):
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         self._host: str = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")
         self._host = self.get_config_expand("host") or self._host
         self._base_url: str = urljoin(self._host, "/api/2/")
