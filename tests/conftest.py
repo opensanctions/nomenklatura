@@ -15,6 +15,7 @@ from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
+from nomenklatura.cache import Cache
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
 settings.TESTING = True
@@ -88,6 +89,13 @@ def dstore(donations_path, resolver) -> SimpleMemoryStore:
 @pytest.fixture(scope="module")
 def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
+
+
+@pytest.fixture(scope="module")
+def test_cache(test_dataset: Dataset) -> Cache:
+    engine = get_engine(settings.DB_URL)
+    metadata = MetaData()
+    return Cache(engine, metadata, test_dataset, create=True)
 
 
 @pytest.fixture(scope="function")

@@ -2,14 +2,24 @@ import json
 from functools import lru_cache
 from typing import Any, List, Optional, Dict
 from requests import Session
+from normality import collapse_spaces
 from rigour.urls import build_url
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText, pick_obj_lang
 from nomenklatura.wikidata.model import Item
+from nomenklatura.wikidata.query import SparqlResponse
 
 
 class WikidataClient(object):
     WD_API = "https://www.wikidata.org/w/api.php"
+    QUERY_API = "https://query.wikidata.org/sparql"
+    QUERY_HEADERS = {
+        "Accept": "application/sparql-results+json",
+    }
+    CACHE_SHORT = 1
+    CACHE_MEDIUM = CACHE_SHORT * 7
+    CACHE_LONG = CACHE_SHORT * 30
+
     LABEL_PREFIX = "wd:lb:"
     LABEL_CACHE_DAYS = 100
 
@@ -19,7 +29,7 @@ class WikidataClient(object):
         self.cache = cache
         self.session = session or Session()
         self.cache_days = cache_days
-        self.cache.preload(f"{self.LABEL_PREFIX}%")
+        # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
     @lru_cache(maxsize=1000)
     def fetch_item(self, qid: str) -> Optional[Item]:
@@ -64,6 +74,22 @@ class WikidataClient(object):
         label.original = qid
         self.cache.set_json(cache_key, label.pack())
         return label
+
+    def query(self, query_text: str) -> SparqlResponse:
+        """Query the Wikidata SPARQL endpoint."""
+        clean_text: Optional[str] = collapse_spaces(query_text)
+        if clean_text is None:
+            raise RuntimeError("Invalid query: %r" % query_text)
+        params = {"query": clean_text}
+        url = build_url(self.QUERY_API, params=params)
+        raw = self.cache.get(url, max_age=self.cache_days)
+        if raw is None:
+            res = self.session.get(url, headers=self.QUERY_HEADERS)
+            res.raise_for_status()
+            raw = res.text
+            self.cache.set(url, raw)
+        data = json.loads(raw)
+        return SparqlResponse(clean_text, data)
 
     @lru_cache(maxsize=10000)
     def _type_props(self, qid: str) -> List[str]:
