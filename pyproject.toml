@@ -19,7 +19,7 @@ classifiers = [
 requires-python = ">= 3.11"
 dependencies = [
     "followthemoney >= 3.8.1, < 4.0.0",
-    "rigour >= 0.9.3, < 1.0.0",
+    "rigour >= 0.9.7, < 1.0.0",
     "fingerprints >= 1.2.0, < 2.0.0",
     "shortuuid >= 1.0.11, < 2.0.0",
     "jellyfish >= 1.0.0, < 2.0.0",
