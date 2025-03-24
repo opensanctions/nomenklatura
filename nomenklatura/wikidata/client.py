@@ -5,7 +5,7 @@ from requests import Session
 from normality import collapse_spaces
 from rigour.urls import build_url
 from nomenklatura.cache import Cache
-from nomenklatura.wikidata.lang import LangText, pick_obj_lang
+from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.query import SparqlResponse
 
@@ -49,7 +49,7 @@ class WikidataClient(object):
             return None
         return Item(self, entity)
 
-    @lru_cache(maxsize=100000)
+    @lru_cache(maxsize=200000)
     def get_label(self, qid: str) -> LangText:
         cache_key = f"{self.LABEL_PREFIX}{qid}"
         cached = self.cache.get_json(cache_key, max_age=self.LABEL_CACHE_DAYS)
@@ -68,9 +68,10 @@ class WikidataClient(object):
         entity = data.get("entities", {}).get(qid)
         if entity is None:
             return LangText(None)
-        label = pick_obj_lang(entity.get("labels", {}))
-        if label.text is None:
-            label.text = qid
+        labels = LangText.from_dict(entity.get("labels", {}))
+        label = LangText.pick(labels)
+        if label is None:
+            label = LangText(qid)
         label.original = qid
         self.cache.set_json(cache_key, label.pack())
         return label

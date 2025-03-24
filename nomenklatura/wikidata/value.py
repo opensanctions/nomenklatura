@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
 from normality.cleaning import collapse_spaces
 from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
+from rigour.text.emoji import remove_emoji
 # from rigour.text.distance import is_levenshtein_plausible
 
 from nomenklatura.wikidata.lang import LangText
@@ -68,7 +69,7 @@ def snak_value_to_string(
 
 
 def clean_name(name: str) -> Optional[str]:
-    return collapse_spaces(clean_brackets(name))
+    return remove_emoji(collapse_spaces(clean_brackets(name)))
 
 
 def is_alias_strong(alias: str, names: Set[str]) -> bool:

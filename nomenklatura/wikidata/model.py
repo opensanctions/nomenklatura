@@ -2,7 +2,7 @@ from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from nomenklatura.wikidata.value import snak_value_to_string
-from nomenklatura.wikidata.lang import pick_obj_lang, LangText, LANG_ORDER
+from nomenklatura.wikidata.lang import LangText
 
 if TYPE_CHECKING:
     from nomenklatura.wikidata.client import WikidataClient
@@ -82,19 +82,11 @@ class Item(object):
         self.id: str = data.pop("id")
         self.modified: Optional[str] = data.pop("modified", None)
 
-        labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
-        self.labels: Set[LangText] = set()
-        for obj in labels.values():
-            self.labels.add(LangText(obj["value"], obj["language"]))
+        self.labels: Set[LangText] = LangText.from_dict(data.pop("labels", {}))
+        self.aliases: Set[LangText] = LangText.from_dict(data.pop("aliases", {}))
 
-        aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases", {})
-        self.aliases: Set[LangText] = set()
-        for lang in aliases.values():
-            for obj in lang:
-                self.aliases.add(LangText(obj["value"], obj["language"]))
-
-        descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions", {})
-        self.description = pick_obj_lang(descriptions)
+        descriptions = LangText.from_dict(data.pop("descriptions", {}))
+        self.description = LangText.pick(descriptions)
 
         self.claims: List[Claim] = []
         claims: Dict[str, List[Dict[str, Any]]] = data.pop("claims", {})
@@ -105,20 +97,12 @@ class Item(object):
         # TODO: get back to this later:
         data.pop("sitelinks", None)
 
-    def sorted_labels(self) -> List[LangText]:
-        preferred: List[LangText] = []
-        for lang in LANG_ORDER:
-            labels = [la for la in self.labels if la.lang == lang]
-            preferred.extend(sorted(labels))
-        remaining = [la for la in self.labels if la not in preferred]
-        preferred.extend(sorted(remaining))
-        return preferred
-
     @property
     def label(self) -> Optional[LangText]:
-        for label in self.labels:
+        label = LangText.pick(self.labels)
+        if label is not None:
             return label
-        return None
+        return LangText.pick(self.aliases)
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:

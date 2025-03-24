@@ -8,18 +8,12 @@ from .conftest import wd_read_response
 
 
 def test_lang_text():
-    text1 = LangText("John Smith", "en")
-    text2 = LangText("John Smith", "ar")
+    text1 = LangText("John Smith", "eng")
+    text2 = LangText("John Smith", "ara")
     assert text1 != text2
-    assert text1 > text2
 
-    text3 = LangText("Abigail Smith", "en")
-    assert text1 != text3
-    assert text1 > text3
-
-    text2 = LangText("John Smith")
-    assert text1 != text2
-    assert text1 > text2
+    text2 = LangText("John Smith", "eng")
+    assert text1 == text2
 
 
 def test_client_query(test_cache: Cache):
@@ -91,5 +85,6 @@ def test_model(test_cache: Cache):
         item = client.fetch_item("Q7747")
         assert item is not None
         assert item.id == "Q7747"
+        assert item.label is not None
         assert item.label.text == "Vladimir Putin"
         assert "Q5" in item.types

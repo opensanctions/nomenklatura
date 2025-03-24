@@ -1,19 +1,14 @@
-from functools import total_ordering
 import logging
-from rigour.langs import iso_639_alpha2, PREFERRED_LANG, PREFFERED_LANGS
-from typing import Callable, Counter, Dict, Optional, Any
+from rigour.langs import PREFFERED_LANGS
+from typing import Callable, Dict, Iterable, List, Optional, Any, Set
 from followthemoney.types import registry
 from normality.cleaning import remove_unsafe_chars
 
 from nomenklatura.entity import CE
 
 log = logging.getLogger(__name__)
-DEFAULT_LANG = iso_639_alpha2(PREFERRED_LANG) or "eng"
-LANG_ORDER_ = [iso_639_alpha2(la) for la in PREFFERED_LANGS]
-LANG_ORDER = [la for la in LANG_ORDER_ if la is not None]
 
 
-@total_ordering
 class LangText(object):
     __slots__ = ["text", "lang", "original"]
 
@@ -48,8 +43,36 @@ class LangText(object):
         return {"t": self.text, "l": self.lang, "o": self.original}
 
     @classmethod
-    def parse(self, data: Dict[str, Optional[str]]) -> "LangText":
+    def parse(cls, data: Dict[str, Optional[str]]) -> "LangText":
         return LangText(data["t"], data["l"], original=data["o"])
+
+    @classmethod
+    def pick(cls, texts: Iterable["LangText"]) -> Optional["LangText"]:
+        for lang in PREFFERED_LANGS:
+            for lt in texts:
+                if lt.lang == lang:
+                    return lt
+        for lt in texts:
+            return lt
+        return None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, List[Dict[str, str]]]) -> Set["LangText"]:
+        langs: Set[LangText] = set()
+        for objs in data.values():
+            if not isinstance(objs, list):
+                objs = [objs]
+            for obj in objs:
+                value = obj["value"]
+                if value is None:
+                    continue
+                lang = obj["language"]
+                lt = LangText(value, lang)
+                if lang is not None and lt.lang is None:
+                    # Language is unsupported by FtM/rigour ecosystem.
+                    continue
+                langs.add(lt)
+        return langs
 
     def __hash__(self) -> int:
         return hash((self.text, self.lang, self.original))
@@ -57,52 +80,5 @@ class LangText(object):
     def __eq__(self, other: Any) -> bool:
         return hash(self) == hash(other)
 
-    def __lt__(self, other: Any) -> bool:
-        """Sort by language order, then by text."""
-        if not isinstance(other, LangText):
-            return False
-        if self.text is None:
-            return True
-        if other.text is None:
-            return False
-        return self.text < other.text
-
     def __repr__(self) -> str:
         return f"<LangText({self.text!r}, {self.lang!r}, {self.original!r})>"
-
-
-def pick_lang_text(values: Dict[str, str]) -> LangText:
-    """Pick a text value from a dict of language -> text."""
-    value = values.get(DEFAULT_LANG)
-    if value is not None:
-        return LangText(value, DEFAULT_LANG)
-
-    counter = Counter[str]()
-    counter.update(values.values())
-    for value, count in counter.most_common(1):
-        if count > 1:
-            for lang, v in values.items():
-                if v == value:
-                    return LangText(value, lang)
-
-    for lang in LANG_ORDER:
-        if lang is None:
-            continue
-        value = values.get(lang)
-        if value is not None:
-            return LangText(value, lang)
-
-    for lang, value in values.items():
-        if value is not None:
-            return LangText(value, lang)
-
-    return LangText(None, None)
-
-
-def pick_obj_lang(items: Dict[str, Dict[str, str]]) -> LangText:
-    values = {}
-    for label in items.values():
-        value = label.get("value")
-        if value is not None:
-            values[label.get("language", "")] = value
-    return pick_lang_text(values)

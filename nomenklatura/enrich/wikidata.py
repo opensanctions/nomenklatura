@@ -210,7 +210,8 @@ class WikidataEnricher(Enricher[DS]):
             label.apply(proxy, "name", clean=clean_name)
             if label.text is not None:
                 names.add(label.text.lower())
-        item.description.apply(proxy, "notes")
+        if item.description is not None:
+            item.description.apply(proxy, "notes")
         for alias in item.aliases:
             if alias.text is None or alias.text.lower() in names:
                 continue
