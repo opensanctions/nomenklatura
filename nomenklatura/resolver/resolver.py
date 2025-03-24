@@ -551,5 +551,5 @@ class Resolver(Linker[CE]):
 
     def __repr__(self) -> str:
         parts = self._engine.url
-        url = f"{parts.drivername}://{parts.host or ""}/{parts.database}/{self._table.name}"
+        url = f"{parts.drivername}://{parts.host or ''}/{parts.database}/{self._table.name}"
         return f"<Resolver({url})>"

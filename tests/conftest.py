@@ -8,7 +8,6 @@ from tempfile import mkdtemp
 from normality import slugify
 
 from nomenklatura import settings
-from nomenklatura.index.tantivy_index import TantivyIndex
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
 from nomenklatura.db import get_engine, get_metadata
@@ -111,13 +110,6 @@ def dindex(index_path: Path, dstore: SimpleMemoryStore):
     index = Index(dstore.default_view(), index_path)
     index.build()
     return index
-
-
-@pytest.fixture(scope="function")
-def tantivy_index(index_path: Path, dstore: SimpleMemoryStore):
-    index = TantivyIndex(dstore.default_view(), index_path)
-    index.build()
-    yield index
 
 
 def wd_read_response(request, context):

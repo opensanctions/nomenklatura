@@ -59,12 +59,10 @@ dev = [
     "fakeredis",
     "plyvel < 2.0.0",
     "redis > 5.0.0, < 6.0.0",
-    "tantivy < 1.0.0",
     "psycopg2-binary",
 ]
 leveldb = ["plyvel < 2.0.0"]
 redis = ["redis > 5.0.0, < 6.0.0"]
-tantivy = ["tantivy < 1.0.0"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["nomenklatura", "LICENSE", "README.md"]
