@@ -69,7 +69,8 @@ def snak_value_to_string(
 
 
 def clean_name(name: str) -> Optional[str]:
-    return remove_emoji(collapse_spaces(clean_brackets(name)))
+    """Clean a name for storage, try to throw out dangerous user inputs."""
+    return collapse_spaces(remove_emoji(clean_brackets(name))) or ""
 
 
 def is_alias_strong(alias: str, names: Set[str]) -> bool:
