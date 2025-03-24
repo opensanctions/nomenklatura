@@ -44,7 +44,7 @@ class SparqlBinding(object):
         if var in self.values:
             value = self.wrapped(var)
             if value is not None:
-                return value.value
+                return str(value)
         return None
 
     def __repr__(self) -> str:
@@ -61,9 +61,6 @@ class SparqlResponse(object):
 
     def __len__(self) -> int:
         return len(self.results)
-
-    def __iter__(self) -> List[SparqlBinding]:
-        return self.results
 
     def __repr__(self) -> str:
         return f"<SparqlResponse({self.vars!r}, {len(self)})>"

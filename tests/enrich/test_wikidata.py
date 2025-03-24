@@ -1,6 +1,4 @@
-import json
 import requests_mock
-from normality import slugify
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
@@ -8,32 +6,10 @@ from nomenklatura.enrich.wikidata import clean_name
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.entity import CompositeEntity
 
-from ..conftest import FIXTURES_PATH
+from ..conftest import wd_read_response
 
 PATH = "nomenklatura.enrich.wikidata:WikidataEnricher"
 dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-
-
-def wd_read_response(request, context):
-    """Read a local file if it exists, otherwise download it. This is not
-    so much a mocker as a test disk cache."""
-    file_name = slugify(request.url.split("/w/")[-1], sep="_")
-    path = FIXTURES_PATH / f"wikidata/{file_name}.json"
-    if not path.exists():
-        import urllib.request
-
-        data = json.load(urllib.request.urlopen(request.url))
-        for _, value in data["entities"].items():
-            value.pop("sitelinks", None)
-            for sect in ["labels", "aliases", "descriptions"]:
-                # labels = value.get("labels", {})
-                for lang in list(value.get(sect, {}).keys()):
-                    if lang != "en":
-                        del value[sect][lang]
-        with open(path, "w") as fh:
-            json.dump(data, fh)
-    with open(path, "r") as fh:
-        return json.load(fh)
 
 
 def load_enricher() -> Enricher[Dataset]:

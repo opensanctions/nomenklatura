@@ -1,7 +1,10 @@
+import pytest
 import requests_mock
 
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata import LangText, WikidataClient
+
+from .conftest import wd_read_response
 
 
 def test_lang_text():
@@ -64,9 +67,29 @@ def test_client_query(test_cache: Cache):
             json=data,
         )
         client = WikidataClient(test_cache)
+        with pytest.raises(RuntimeError):
+            client.query("  ")
+
         query = "SELECT ?person WHERE { ?person wdt:P31 wd:Q5 . } LIMIT 5"
         response = client.query(query)
-        assert len(response.results) == 5
+        assert len(response) == 5
+        assert "person" in repr(response)
         for result in response.results:
+            assert "Q" in repr(result)
             assert len(result.values) == 1
             assert result.plain("person") is not None
+
+
+def test_model(test_cache: Cache):
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri(
+            "GET",
+            WikidataClient.WD_API,
+            json=wd_read_response,
+        )
+        client = WikidataClient(test_cache)
+        item = client.fetch_item("Q7747")
+        assert item is not None
+        assert item.id == "Q7747"
+        assert item.label.text == "Vladimir Putin"
+        assert "Q5" in item.types

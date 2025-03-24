@@ -5,6 +5,7 @@ import yaml
 import pytest
 from pathlib import Path
 from tempfile import mkdtemp
+from normality import slugify
 
 from nomenklatura import settings
 from nomenklatura.index.tantivy_index import TantivyIndex
@@ -117,3 +118,25 @@ def tantivy_index(index_path: Path, dstore: SimpleMemoryStore):
     index = TantivyIndex(dstore.default_view(), index_path)
     index.build()
     yield index
+
+
+def wd_read_response(request, context):
+    """Read a local file if it exists, otherwise download it. This is not
+    so much a mocker as a test disk cache."""
+    file_name = slugify(request.url.split("/w/")[-1], sep="_")
+    path = FIXTURES_PATH / f"wikidata/{file_name}.json"
+    if not path.exists():
+        import urllib.request
+
+        data = json.load(urllib.request.urlopen(request.url))
+        for _, value in data["entities"].items():
+            value.pop("sitelinks", None)
+            for sect in ["labels", "aliases", "descriptions"]:
+                # labels = value.get("labels", {})
+                for lang in list(value.get(sect, {}).keys()):
+                    if lang != "en":
+                        del value[sect][lang]
+        with open(path, "w") as fh:
+            json.dump(data, fh)
+    with open(path, "r") as fh:
+        return json.load(fh)
