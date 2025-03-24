@@ -6,6 +6,7 @@ from typing import Any, Generator, Optional, Dict, List
 from urllib.parse import urljoin
 from followthemoney.types import registry
 from followthemoney.namespace import Namespace
+from requests import Session
 from rigour.urls import build_url
 
 from nomenklatura.entity import CE, CompositeEntity
@@ -20,8 +21,14 @@ log = logging.getLogger(__name__)
 class YenteEnricher(Enricher[DS]):
     """Uses the `yente` match API to look up entities in a specific dataset."""
 
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         self._api: str = config.pop("api")
         self._yente_dataset: str = config.pop("dataset", "default")
         self._threshold: Optional[float] = config.pop("threshold", None)

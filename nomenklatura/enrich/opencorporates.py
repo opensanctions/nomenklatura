@@ -5,6 +5,7 @@ from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
 from followthemoney.types import registry
+from requests import Session
 from requests.exceptions import RequestException
 from rigour.urls import build_url, ParamsType
 
@@ -28,8 +29,14 @@ class OpenCorporatesEnricher(Enricher[DS]):
     UI_PART = "://opencorporates.com/"
     API_PART = "://api.opencorporates.com/v0.4/"
 
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         token_var = "${OPENCORPORATES_API_TOKEN}"
         self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
         self.quota_exceeded = False

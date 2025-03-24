@@ -10,6 +10,7 @@ from functools import lru_cache
 from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 from followthemoney.types import registry
+from requests import Session
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -31,8 +32,14 @@ STATUS = {
 class PermIDEnricher(Enricher[DS]):
     MATCHING_API = "https://api-eit.refinitiv.com/permid/match"
 
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         token_var = "${PERMID_API_TOKEN}"
         self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
         if self.api_token == token_var:

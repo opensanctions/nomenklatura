@@ -2,6 +2,7 @@ import os
 import logging
 from typing import Generator, Dict, Optional
 from followthemoney.util import make_entity_id
+from requests import Session
 
 from nomenklatura.entity import CE
 from nomenklatura.dataset import DS
@@ -17,8 +18,14 @@ class OpenFIGIEnricher(Enricher[DS]):
     SEARCH_URL = "https://api.openfigi.com/v3/search"
     MAPPING_URL = "https://api.openfigi.com/v3/mapping"
 
-    def __init__(self, dataset: DS, cache: Cache, config: EnricherConfig):
-        super().__init__(dataset, cache, config)
+    def __init__(
+        self,
+        dataset: DS,
+        cache: Cache,
+        config: EnricherConfig,
+        session: Optional[Session] = None,
+    ):
+        super().__init__(dataset, cache, config, session)
         api_key_var = "${OPENFIGI_API_KEY}"
         self.api_key: Optional[str] = self.get_config_expand("api_key", api_key_var)
         if self.api_key == api_key_var:

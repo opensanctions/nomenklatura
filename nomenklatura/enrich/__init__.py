@@ -1,4 +1,5 @@
 import logging
+from requests import Session
 from importlib import import_module
 from typing import Iterable, Generator, Optional, Type, cast
 
@@ -23,8 +24,11 @@ __all__ = [
 
 
 def make_enricher(
-    dataset: DS, cache: Cache, config: EnricherConfig
-) -> Optional[Enricher[DS]]:
+    dataset: DS,
+    cache: Cache,
+    config: EnricherConfig,
+    http_session: Optional[Session] = None,
+) -> Enricher[DS]:
     enricher_type = config.pop("type")
     if ":" not in enricher_type:
         raise RuntimeError("Invalid import path: %r" % enricher_type)
@@ -34,7 +38,7 @@ def make_enricher(
     if clazz is None or not issubclass(clazz, Enricher):
         raise RuntimeError("Invalid enricher: %r" % enricher_type)
     enr_clazz = cast(Type[Enricher[DS]], clazz)
-    return enr_clazz(dataset, cache, config)
+    return enr_clazz(dataset, cache, config, session=http_session)
 
 
 # nk match -i entities.json -o entities-with-matches.json -r resolver.json

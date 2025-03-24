@@ -5,6 +5,7 @@ import yaml
 import pytest
 from pathlib import Path
 from tempfile import mkdtemp
+from normality import slugify
 
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
@@ -14,6 +15,7 @@ from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
+from nomenklatura.cache import Cache
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
 settings.TESTING = True
@@ -89,6 +91,13 @@ def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
 
 
+@pytest.fixture(scope="module")
+def test_cache(test_dataset: Dataset) -> Cache:
+    engine = get_engine(settings.DB_URL)
+    metadata = MetaData()
+    return Cache(engine, metadata, test_dataset, create=True)
+
+
 @pytest.fixture(scope="function")
 def index_path():
     index_path = Path(mkdtemp()) / "index-dir"
@@ -101,3 +110,25 @@ def dindex(index_path: Path, dstore: SimpleMemoryStore):
     index = Index(dstore.default_view(), index_path)
     index.build()
     return index
+
+
+def wd_read_response(request, context):
+    """Read a local file if it exists, otherwise download it. This is not
+    so much a mocker as a test disk cache."""
+    file_name = slugify(request.url.split("/w/")[-1], sep="_")
+    path = FIXTURES_PATH / f"wikidata/{file_name}.json"
+    if not path.exists():
+        import urllib.request
+
+        data = json.load(urllib.request.urlopen(request.url))
+        for _, value in data["entities"].items():
+            value.pop("sitelinks", None)
+            for sect in ["labels", "aliases", "descriptions"]:
+                # labels = value.get("labels", {})
+                for lang in list(value.get(sect, {}).keys()):
+                    if lang != "en":
+                        del value[sect][lang]
+        with open(path, "w") as fh:
+            json.dump(data, fh)
+    with open(path, "r") as fh:
+        return json.load(fh)

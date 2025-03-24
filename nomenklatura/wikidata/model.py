@@ -1,18 +1,18 @@
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from nomenklatura.dataset import DS
-from nomenklatura.enrich.wikidata.value import snak_value_to_string
-from nomenklatura.enrich.wikidata.lang import pick_obj_lang, LangText
+from nomenklatura.wikidata.value import snak_value_to_string
+from nomenklatura.wikidata.lang import LangText
 
 if TYPE_CHECKING:
-    from nomenklatura.enrich.wikidata import WikidataEnricher
+    from nomenklatura.wikidata.client import WikidataClient
 
 
 class Snak(object):
     """Some Notation About Knowledge (TM)."""
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]):
+        self.client = client
         datavalue = data.pop("datavalue", {})
         self.value_type: str = datavalue.pop("type", None)
         self._value = datavalue.pop("value", None)
@@ -22,8 +22,9 @@ class Snak(object):
         self.snaktype = data.pop("snaktype", None)
         # self._data = data
 
-    def property_label(self, enricher: "WikidataEnricher[DS]") -> LangText:
-        return enricher.get_label(self.property)
+    @property
+    def property_label(self) -> LangText:
+        return self.client.get_label(self.property)
 
     @property
     def qid(self) -> Optional[str]:
@@ -31,33 +32,36 @@ class Snak(object):
             return stringify(self._value.get("id"))
         return None
 
-    def text(self, enricher: "WikidataEnricher[DS]") -> LangText:
-        return snak_value_to_string(enricher, self.value_type, self._value)
+    @property
+    def text(self) -> LangText:
+        return snak_value_to_string(self.client, self.value_type, self._value)
 
     def __repr__(self) -> str:
         return f"<Snak({self.qid}, {self.property}, {self.value_type})>"
 
 
 class Reference(object):
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]) -> None:
         self.snaks: Dict[str, List[Snak]] = {}
         for prop, snak_data in data.pop("snaks", {}).items():
-            self.snaks[prop] = [Snak(s) for s in snak_data]
+            self.snaks[prop] = [Snak(client, s) for s in snak_data]
 
     def get(self, prop: str) -> List[Snak]:
         return self.snaks.get(prop, [])
 
 
 class Claim(Snak):
-    def __init__(self, data: Dict[str, Any], prop: str) -> None:
+    def __init__(
+        self, client: "WikidataClient", data: Dict[str, Any], prop: str
+    ) -> None:
         self.id = data.pop("id")
         self.rank = data.pop("rank")
-        super().__init__(data.pop("mainsnak"))
+        super().__init__(client, data.pop("mainsnak"))
         self.qualifiers: Dict[str, List[Snak]] = {}
         for prop, snaks in data.pop("qualifiers", {}).items():
-            self.qualifiers[prop] = [Snak(s) for s in snaks]
+            self.qualifiers[prop] = [Snak(client, s) for s in snaks]
 
-        self.references = [Reference(r) for r in data.pop("references", [])]
+        self.references = [Reference(client, r) for r in data.pop("references", [])]
         self.property = self.property or prop
 
     def get_qualifier(self, prop: str) -> List[Snak]:
@@ -66,36 +70,39 @@ class Claim(Snak):
     def __repr__(self) -> str:
         return f"<Claim({self.qid}, {self.property}, {self.value_type})>"
 
+    def __hash__(self) -> int:
+        return hash((self.qid, self.property, self.id))
+
 
 class Item(object):
     """A wikidata item (or entity)."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, client: "WikidataClient", data: Dict[str, Any]) -> None:
+        self.client = client
         self.id: str = data.pop("id")
         self.modified: Optional[str] = data.pop("modified", None)
 
-        labels: Dict[str, Dict[str, str]] = data.pop("labels", {})
-        self.labels: Set[LangText] = set()
-        for obj in labels.values():
-            self.labels.add(LangText(obj["value"], obj["language"]))
+        self.labels: Set[LangText] = LangText.from_dict(data.pop("labels", {}))
+        self.aliases: Set[LangText] = LangText.from_dict(data.pop("aliases", {}))
 
-        aliases: Dict[str, List[Dict[str, str]]] = data.pop("aliases", {})
-        self.aliases: Set[LangText] = set()
-        for lang in aliases.values():
-            for obj in lang:
-                self.aliases.add(LangText(obj["value"], obj["language"]))
-
-        descriptions: Dict[str, Dict[str, str]] = data.pop("descriptions", {})
-        self.description = pick_obj_lang(descriptions)
+        descriptions = LangText.from_dict(data.pop("descriptions", {}))
+        self.description = LangText.pick(descriptions)
 
         self.claims: List[Claim] = []
         claims: Dict[str, List[Dict[str, Any]]] = data.pop("claims", {})
         for prop, values in claims.items():
             for value in values:
-                self.claims.append(Claim(value, prop))
+                self.claims.append(Claim(client, value, prop))
 
         # TODO: get back to this later:
         data.pop("sitelinks", None)
+
+    @property
+    def label(self) -> Optional[LangText]:
+        label = LangText.pick(self.labels)
+        if label is not None:
+            return label
+        return LangText.pick(self.aliases)
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:
@@ -103,8 +110,23 @@ class Item(object):
                 return True
         return False
 
+    def _types(self, path: List[str]) -> Set[str]:
+        qid = path[-1]
+        types = set([qid])
+        if len(path) > 6:
+            return types
+        for type_ in self.client._type_props(qid):
+            if type_ not in path:
+                types.update(self._types(path + [type_]))
+        return types
+
+    @property
+    def types(self) -> Set[str]:
+        """Get all the `instance of` and `subclass of` types for an item."""
+        return self._types([self.id])
+
     def __repr__(self) -> str:
         return f"<Item({self.id})>"
 
     def __hash__(self) -> int:
-        return hash(self.__repr__())
+        return hash(self.id)
