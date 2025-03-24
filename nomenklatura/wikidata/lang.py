@@ -23,6 +23,7 @@ class LangText(object):
         self.text = remove_unsafe_chars(text)
         self.lang = registry.language.clean(lang)
         if lang is not None and self.lang is None:
+            # Language is given, but it is not one supported by the FtM ecosystem:
             self.text = None
         self.original = original
 
@@ -68,8 +69,7 @@ class LangText(object):
                     continue
                 lang = obj["language"]
                 lt = LangText(value, lang)
-                if lang is not None and lt.lang is None:
-                    # Language is unsupported by FtM/rigour ecosystem.
+                if lt.text is None:
                     continue
                 langs.add(lt)
         return langs
