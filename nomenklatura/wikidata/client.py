@@ -1,4 +1,5 @@
 import json
+import logging
 from functools import lru_cache
 from typing import Any, List, Optional, Dict
 from requests import Session
@@ -8,6 +9,8 @@ from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.query import SparqlResponse
+
+log = logging.getLogger(__name__)
 
 
 class WikidataClient(object):
@@ -89,7 +92,12 @@ class WikidataClient(object):
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
-        data = json.loads(raw)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as err:
+            self.cache.delete(url)
+            log.exception("Failed to parse JSON: %s", err)
+            return SparqlResponse(clean_text, {})
         return SparqlResponse(clean_text, data)
 
     @lru_cache(maxsize=10000)
