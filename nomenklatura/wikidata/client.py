@@ -52,7 +52,7 @@ class WikidataClient(object):
             return None
         return Item(self, entity)
 
-    @lru_cache(maxsize=200000)
+    @lru_cache(maxsize=100000)
     def get_label(self, qid: str) -> LangText:
         cache_key = f"{self.LABEL_PREFIX}{qid}"
         cached = self.cache.get_json(cache_key, max_age=self.LABEL_CACHE_DAYS)
@@ -100,7 +100,7 @@ class WikidataClient(object):
             return SparqlResponse(clean_text, {})
         return SparqlResponse(clean_text, data)
 
-    @lru_cache(maxsize=10000)
+    @lru_cache(maxsize=30000)
     def _type_props(self, qid: str) -> List[str]:
         item = self.fetch_item(qid)
         if item is None:

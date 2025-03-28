@@ -67,6 +67,13 @@ class Claim(Snak):
     def get_qualifier(self, prop: str) -> List[Snak]:
         return self.qualifiers.get(prop, [])
 
+    @property
+    def is_ended(self) -> bool:
+        snak = self.qualifiers.get("P582")
+        if snak is not None and len(snak) > 0:
+            return True
+        return False
+
     def __repr__(self) -> str:
         return f"<Claim({self.qid}, {self.property}, {self.value_type})>"
 
