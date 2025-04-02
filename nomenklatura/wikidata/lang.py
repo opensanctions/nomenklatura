@@ -21,11 +21,13 @@ class LangText(object):
         if text is None or len(text.strip()) == 0:
             text = None
         self.text = remove_unsafe_chars(text)
-        self.lang = registry.language.clean(lang)
+        self.lang: Optional[str] = None
+        if lang is not None:
+            self.lang = registry.language.clean_text(lang)
         if lang is not None and self.lang is None:
             # Language is given, but it is not one supported by the FtM ecosystem:
             self.text = None
-        self.original = original
+        self.original = original or self.text
 
     def apply(
         self,
@@ -36,7 +38,7 @@ class LangText(object):
         if self.text is None:
             return
         clean_text = self.text if clean is None else clean(self.text)
-        if clean_text is None or clean_text == "":
+        if clean_text is None or clean_text.strip() == "":
             return
         entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
 
@@ -68,11 +70,16 @@ class LangText(object):
                 if value is None:
                     continue
                 lang = obj["language"]
-                lt = LangText(value, lang)
+                lt = LangText(value, lang, original=value)
                 if lt.text is None:
                     continue
                 langs.add(lt)
         return langs
+
+    def __str__(self):
+        if self.text is None:
+            return ""
+        return self.text
 
     def __hash__(self) -> int:
         return hash((self.text, self.lang, self.original))

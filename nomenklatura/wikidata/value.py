@@ -1,10 +1,10 @@
 import logging
 from prefixdate import Precision
 from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
-from normality.cleaning import collapse_spaces
 from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
 from rigour.text.emoji import remove_emoji
+from rigour.names import is_name
 # from rigour.text.distance import is_levenshtein_plausible
 
 from nomenklatura.wikidata.lang import LangText
@@ -27,40 +27,39 @@ def snak_value_to_string(
     if value_type is None:
         return LangText(None)
     elif value_type == "time":
-        time = cast(Optional[str], value.get("time"))
-        if time is not None:
-            time = time.strip("+")
-            prec_id = cast(int, value.get("precision"))
-            prec = PRECISION.get(prec_id, Precision.DAY)
-            time = time[: prec.value]
-
-            # Remove Jan 01, because it seems to be in input failure pattern
-            # with Wikidata (probably from bots that don't get "precision").
-            if time.endswith("-01-01"):
-                time = time[:4]
-
-            # Date limit in FtM. These will be removed by the death filter:
-            time = max("1001", time)
-        if time is None:
+        raw_time = cast(Optional[str], value.get("time"))
+        if raw_time is None:
             return LangText(None)
-        return LangText(time, None, original=value.get("time"))
+        time = raw_time.strip("+")
+        prec_id = cast(int, value.get("precision"))
+        prec = PRECISION.get(prec_id, Precision.DAY)
+        time = time[: prec.value]
+
+        # Remove Jan 01, because it seems to be in input failure pattern
+        # with Wikidata (probably from bots that don't get "precision").
+        if time.endswith("-01-01"):
+            time = time[:4]
+
+        # Date limit in FtM. These will be removed by the death filter:
+        time = max("1001", time)
+        return LangText(time, original=raw_time)
     elif value_type == "wikibase-entityid":
         qid = value.get("id")
         return client.get_label(qid)
     elif value_type == "monolingualtext":
         text = value.get("text")
         if isinstance(text, str):
-            return LangText(text)
+            return LangText(text, lang=value.get("language"))
     elif value_type == "quantity":
         # Resolve unit name and make into string:
-        amount = cast(str, value.get("amount", ""))
-        amount = amount.lstrip("+")
+        raw_amount = cast(str, value.get("amount", ""))
+        amount = raw_amount.lstrip("+")
         unit = value.get("unit", "")
         unit = unit.split("/")[-1]
         if is_qid(unit):
             unit = client.get_label(unit)
             amount = f"{amount} {unit}"
-        return LangText(amount)
+        return LangText(amount, original=raw_amount)
     elif isinstance(value, str):
         return LangText(value)
     else:
@@ -70,7 +69,12 @@ def snak_value_to_string(
 
 def clean_name(name: str) -> Optional[str]:
     """Clean a name for storage, try to throw out dangerous user inputs."""
-    return collapse_spaces(remove_emoji(clean_brackets(name))) or ""
+    if not is_name(name):
+        return None
+    clean_name = remove_emoji(clean_brackets(name))
+    if not is_name(clean_name):
+        return name
+    return clean_name
 
 
 def is_alias_strong(alias: str, names: Set[str]) -> bool:
