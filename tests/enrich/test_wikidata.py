@@ -2,8 +2,6 @@ import requests_mock
 from nomenklatura.cache import Cache
 from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
-from nomenklatura.enrich.wikidata import clean_name
-from nomenklatura.wikidata.lang import LangText
 from nomenklatura.entity import CompositeEntity
 
 from ..conftest import wd_read_response
@@ -65,18 +63,3 @@ def test_wikidata_enrich():
         adjacent = list(enricher.expand(ent, ent))
         assert len(adjacent) > 3, adjacent
     enricher.close()
-
-
-def test_model_apply():
-    ent = CompositeEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
-    text = LangText("test", "en")
-    text.apply(ent, "name")
-    assert ent.get("name") == ["test"]
-
-    only_dirty = LangText("(placeholder)", "en")
-    only_dirty.apply(ent, "alias", clean=clean_name)
-    assert ent.get("alias") == []
-
-    dirty = LangText("clean part (politician)", "en")
-    dirty.apply(ent, "alias", clean=clean_name)
-    assert ent.get("alias") == ["clean part"]

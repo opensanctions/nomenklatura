@@ -71,10 +71,10 @@ def clean_name(name: str) -> Optional[str]:
     """Clean a name for storage, try to throw out dangerous user inputs."""
     if not is_name(name):
         return None
-    clean_name = remove_emoji(clean_brackets(name))
+    clean_name = clean_brackets(name)
     if not is_name(clean_name):
-        return name
-    return clean_name
+        clean_name = name
+    return remove_emoji(clean_name)
 
 
 def is_alias_strong(alias: str, names: Set[str]) -> bool:
