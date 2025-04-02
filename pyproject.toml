@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nomenklatura"
-version = "3.17.1"
+version = "3.17.2"
 description = "Make record linkages in followthemoney data."
 readme = "README.md"
 license = { file = "LICENSE" }
