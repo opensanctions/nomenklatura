@@ -528,9 +528,13 @@ class Resolver(Linker[CE]):
 
     def dump(self, path: PathLike) -> None:
         """Store the resolver adjacency list to a plain text JSON list."""
-        edges = sorted(self.edges.values())
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt.order_by(self._table.c.created_at.asc())
         with open(path, "w") as fh:
-            for edge in edges:
+            cursor = self._get_connection().execute(stmt)
+            for row in cursor.yield_per(20000):
+                edge = Edge.from_dict(row._mapping)
                 fh.write(edge.to_line())
 
     def load(self, path: PathLike) -> None:

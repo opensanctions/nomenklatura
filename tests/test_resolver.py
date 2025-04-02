@@ -2,7 +2,6 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from nomenklatura import settings
-from nomenklatura.db import get_engine
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
@@ -256,10 +255,13 @@ def test_resolver_store_load(resolver, other_table_resolver):
         other_table_resolver.load(path)
         assert len(other_table_resolver.edges) == len(resolver.edges)
 
-        edge = other_table_resolver.get_edge("a1", "c1")
+        edge = other_table_resolver.get_edge("a2", "b2")
         assert edge is not None, edge
-        assert edge.score == 7.0
+
         assert other_table_resolver.get_canonical("a1") == canon_a
+
+        edge = other_table_resolver.get_edge("a1", "c1")
+        assert edge is None, edge
 
 
 def test_resolver_candidates(resolver):
