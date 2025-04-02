@@ -76,7 +76,7 @@ class LangText(object):
                 langs.add(lt)
         return langs
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.text is None:
             return ""
         return self.text
