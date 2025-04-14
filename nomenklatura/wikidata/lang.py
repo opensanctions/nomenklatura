@@ -43,11 +43,14 @@ class LangText(object):
         entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
 
     def pack(self) -> Dict[str, Optional[str]]:
-        return {"t": self.text, "l": self.lang, "o": self.original}
+        data = {"t": self.text, "l": self.lang}
+        if self.original is not None and self.original != self.text:
+            data["o"] = self.original
+        return data
 
     @classmethod
     def parse(cls, data: Dict[str, Optional[str]]) -> "LangText":
-        return LangText(data["t"], data["l"], original=data["o"])
+        return LangText(data["t"], data["l"], original=data.get("o"))
 
     @classmethod
     def pick(cls, texts: Iterable["LangText"]) -> Optional["LangText"]:
