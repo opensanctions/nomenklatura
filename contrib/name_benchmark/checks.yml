@@ -1,0 +1,1060 @@
+checks:
+  # Messing about on our own
+  - match: true
+    schema: Person
+    query:
+      name: Olaf Scholze
+    candidate:
+      name: Olaf Scholz
+  - match: false
+    schema: Person
+    query:
+      name: Olaf Schulze
+    candidate:
+      name: Olaf Scholz
+  - match: false
+    schema: Person
+    query:
+      name: Octavian Scholz
+    candidate:
+      name: Olaf Scholz
+  - match: true
+    schema: Company
+    query:
+      name: Siemens Aktiengesellschaft
+    candidate:
+      name: Siemens AG
+  - match: true
+    schema: Company
+    query:
+      name: SiemensAG
+    candidate:
+      name: Siemens AG
+  - match: true
+    schema: Company
+    query:
+      name: Siemens Aktiengeselschaft
+    candidate:
+      name: Siemens AG
+  - match: false
+    schema: Company
+    query:
+      name: Volkswagen Aktiengesellschaft
+    candidate:
+      name: Siemens Aktiengesellschaft
+  - match: true
+    schema: Person
+    query:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+    candidate:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+  - match: true
+    schema: Person
+    query:
+      name: Isa Bin Tarif Al Bin Ali
+    candidate:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+  - match: true
+    schema: Person
+    query:
+      name: AL BEN ALI, Isa Ben Tarif
+    candidate:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+  - match: false
+    schema: Person
+    query:
+      name: Usama bin Laden
+    candidate:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+  - match: false
+    schema: Person
+    query:
+      name: AL BEN MAHMOUD, Isa Ben Tarif
+    candidate:
+      name: Shaikh Isa Bin Tarif Al Bin Ali
+  - match: true
+    schema: Person
+    query:
+      firstName: Hans
+      lastName: Friedrich
+    candidate:
+      firstName: Hans
+      lastName: Friedrich
+  - match: false
+    schema: Person
+    query:
+      firstName: Friedrich
+      lastName: Hans
+    candidate:
+      firstName: Hans
+      lastName: Friedrich
+  - match: false
+    schema: Person
+    query:
+      firstName: Hans
+      lastName: Friedrich
+      middleName: O
+    candidate:
+      firstName: Hans
+      lastName: Friedrich
+      middleName: Joachim
+  - match: true
+    schema: Person
+    query:
+      firstName: Hans
+      lastName: Friedrich
+      middleName: J
+    candidate:
+      firstName: Hans
+      lastName: Friedrich
+      middleName: Joachim
+  - match: false
+    schema: Person
+    query:
+      name: Vita Klave
+    candidate:
+      name: Фуад Гулієв
+  - match: false
+    schema: Person
+    query:
+      name: Olga Barynova
+    candidate:
+      name: Oleg BARANOV
+  - match: false
+    schema: Person
+    query:
+      name: Ginta Boreza
+    candidate:
+      name: Janett Borez
+
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank's AG
+    candidate:
+      name: Deutsche Bank AG
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank Aktiengesellschaft
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank (Schweiz) AG
+    candidate:
+      name: Deutsche Bank AG
+  - match: false
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank GmbH
+  - match: false
+    schema: Company
+    query:
+      name: Deutsche Bank Trust Company
+    candidate:
+      name: Deutsche Bank
+  - match: true
+    schema: Company
+    query:
+      name: OAO Gazprom
+    candidate:
+      name: Open Joint Stock Company Gazprom
+
+  - match: true
+    schema: Person
+    query:
+      name: Friedrych Lindenberg
+    candidate:
+      name: Friedrich Lindenberg
+  - match: true
+    schema: Person
+    query:
+      name: Fridrich Lindenberg
+    candidate:
+      name: Friedrich Lindenberg
+  - match: true
+    schema: Person
+    query:
+      name: FridrichLindenberg
+    candidate:
+      name: Friedrich Lindenberg
+  - match: true
+    schema: Person
+    query:
+      name: Friedrich Lindenbergo
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Frederick Lindenberg
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Lars Friedrich Lindemann
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Wolfgang Friedrich Ischinger
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Gerhard Friedrich Karl Westdickenberg
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Klaus-Peter Friedrich Walter Schulze
+    candidate:
+      name: Friedrich Lindenberg
+  - match: false
+    schema: Person
+    query:
+      name: Frank Richter
+    candidate:
+      name: Frederik Richter
+  - match: false
+    schema: Person
+    query:
+      name: Фрэнк Рихтер
+    candidate:
+      name: Frederik Richter
+
+  # Reported set of test cases, 21 Nov 2024
+  - match: true
+    label: Alphanumeric Swap
+    schema: Person
+    query:
+      name: Ig0r Sech1n
+    candidate:
+      name: Igor Sechin
+  - match: true
+    label: Alphanumeric Swap
+    schema: Person
+    query:
+      name: I9or Sech1n
+    candidate:
+      name: Igor Sechin
+  - match: true
+    label: Character Deletion
+    schema: Person
+    query:
+      name: Sergi Lavrov
+    candidate:
+      name: Sergei Lavrov
+  - match: true
+    label: Character Deletion
+    schema: Person
+    query:
+      name: Serei Lavrov
+    candidate:
+      name: Sergei Lavrov
+  - match: true
+    label: Character Addition/Deletion
+    schema: Person
+    query:
+      name: Alexandr Lukashnko
+    candidate:
+      name: Alexander Lukashenko
+  - match: true
+    label: Character Addition/Deletion
+    schema: Person
+    query:
+      name: Alexander Luakshenko
+    candidate:
+      name: Alexander Lukashenko
+  - match: true
+    label: Character Repetition
+    schema: Person
+    query:
+      name: Kim Jong-uun
+    candidate:
+      name: Kim Jong-un
+  - match: true
+    label: Character Repetition
+    schema: Person
+    query:
+      name: Kim Joonng-un
+    candidate:
+      name: Kim Jong-un
+  - match: true
+    label: Character Reversal
+    schema: Person
+    query:
+      name: rimaldiV nituP
+    candidate:
+      name: Vladimir Putin
+  - match: true
+    label: Character Reversal
+    schema: Person
+    query:
+      name: Vladimir nitPu
+    candidate:
+      name: Vladimir Putin
+  - match: true
+    label: Contextual Ending
+    schema: Person
+    query:
+      name: Nicolás Maduro SA
+    candidate:
+      name: Nicolás Maduro
+  - match: true
+    label: Contextual Ending
+    schema: Person
+    query:
+      name: Nicolás Maduro LLC
+    candidate:
+      name: Nicolás Maduro
+  - match: true
+    label: Contextual Beginning
+    schema: Person
+    query:
+      name: Mr. Recep Tayyip Erdoğan
+    candidate:
+      name: Recep Tayyip Erdoğan
+  - match: true
+    label: Contextual Beginning
+    schema: Person
+    query:
+      name: President Erdoğan
+    candidate:
+      name: Recep Tayyip Erdoğan
+  - match: true
+    label: Fat Finger Typo
+    schema: Person
+    query:
+      name: Basharr al-Assad
+    candidate:
+      name: Bashar al-Assad
+  - match: true
+    label: Fat Finger Typo
+    schema: Person
+    query:
+      name: Bashar al-Asasd
+    candidate:
+      name: Bashar al-Assad
+  - match: true
+    label: Phonetic Replacement
+    schema: Person
+    query:
+      name: Shi Jinping
+    candidate:
+      name: Xi Jinping
+  - match: true
+    label: Phonetic Replacement
+    schema: Person
+    query:
+      name: Si Jinpin
+    candidate:
+      name: Xi Jinping
+  - match: true
+    label: Special Characters Addition
+    schema: Person
+    query:
+      name: Margarita-Simonyan
+    candidate:
+      name: Margarita Simonyan
+  - match: true
+    label: Special Characters Addition
+    schema: Person
+    query:
+      name: Margarita Simonyán
+    candidate:
+      name: Margarita Simonyan
+  - match: true
+    label: Initials Usage
+    schema: Person
+    query:
+      name: A. Khamenei
+    candidate:
+      name: Ali Khamenei
+  - match: true
+    label: Initials Usage
+    schema: Person
+    query:
+      name: J.-C. Juncker
+    candidate:
+      name: Jean-Claude Juncker
+  - match: true
+    label: Initials Usage
+    schema: Person
+    query:
+      name: JC Juncker
+    candidate:
+      name: Jean-Claude Juncker
+  - match: true
+    label: Abbreviation
+    schema: Person
+    query:
+      name: PLA
+    candidate:
+      name: People’s Liberation Army
+  - match: true
+    label: Abbreviation
+    schema: Person
+    query:
+      name: PLA China
+    candidate:
+      name: People’s Liberation Army
+  - match: true
+    label: Word Joining
+    schema: Person
+    query:
+      name: AlisherUsmanov
+    candidate:
+      name: Alisher Usmanov
+  - match: true
+    label: Word Joining
+    schema: Person
+    query:
+      name: Alisher-Usmanov
+    candidate:
+      name: Alisher Usmanov
+  - match: true
+    label: Word Splitting
+    schema: Person
+    query:
+      name: Nikolai Patr ushev
+    candidate:
+      name: Nikolai Platonovich Patrushev
+  - match: true
+    label: Word Splitting
+    schema: Person
+    query:
+      name: Nikolai Plat Ono Vich Patrushev
+    candidate:
+      name: Nikolai Platonovich Patrushev
+  - match: true
+    label: Word Reordering
+    schema: Person
+    query:
+      name: bin Salman Mohammed
+    candidate:
+      name: Mohammed bin Salman
+  - match: true
+    label: Word Reordering
+    schema: Person
+    query:
+      name: Salman Mohammed bin
+    candidate:
+      name: Mohammed bin Salman
+  - match: true
+    label: Ordinal Number Variation
+    schema: Company
+    query:
+      name: 1st International Bank
+    candidate:
+      name: First International Bank
+  - match: true
+    label: Ordinal Number Variation
+    schema: Company
+    query:
+      name: First Bank Int’l
+    candidate:
+      name: First International Bank
+  - match: true
+    label: Digit to Text Conversion
+    schema: Organization
+    query:
+      name: Brigade Forty-Four
+    candidate:
+      name: Brigade 44
+  - match: true
+    label: Digit to Text Conversion
+    schema: Organization
+    query:
+      name: Brigade Forty 4
+    candidate:
+      name: Brigade 44
+  - match: true
+    label: Text to Digit Conversion
+    schema: Organization
+    query:
+      name: 3 Percenters
+    candidate:
+      name: Three Percenters
+  - match: true
+    label: Text to Digit Conversion
+    schema: Organization
+    query:
+      name: 3%ers
+    candidate:
+      name: Three Percenters
+  - match: true
+    label: Name Duplication Removal
+    schema: Person
+    query:
+      name: Sergey Sergey Shoigu
+    candidate:
+      name: Sergey Shoigu
+  - match: true
+    label: Name Duplication Removal
+    schema: Person
+    query:
+      name: Shoigu Shoigu Sergey
+    candidate:
+      name: Sergey Shoigu
+  - match: true
+    label: Initials Addition
+    schema: Person
+    query:
+      name: N. Nazarbayev
+    candidate:
+      name: Nursultan Nazarbayev
+  - match: true
+    label: Initials Addition
+    schema: Person
+    query:
+      name: N.N.
+    candidate:
+      name: Nursultan Nazarbayev
+  - match: true
+    label: Title Addition
+    schema: Person
+    query:
+      name: Dr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: true
+    label: Title Addition
+    schema: Person
+    query:
+      name: Mr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: true
+    label: Nickname Usage
+    schema: Person
+    query:
+      name: Bibi Netanyahu
+    candidate:
+      name: Benjamin Netanyahu
+  - match: true
+    label: Nickname Usage
+    schema: Person
+    query:
+      name: Ben Netanyahu
+    candidate:
+      name: Benjamin Netanyahu
+  - match: false
+    schema: Person
+    query:
+      name: Boris Netanyahu
+    candidate:
+      name: Benjamin Netanyahu
+  - match: true
+    label: Common Misspelling
+    schema: Person
+    query:
+      name: Emanuel Macron
+    candidate:
+      name: Emmanuel Macron
+  - match: true
+    label: Common Misspelling
+    schema: Person
+    query:
+      name: Emmanuel Macrone
+    candidate:
+      name: Emmanuel Macron
+
+  # Short names
+  - match: false
+    schema: Person
+    query:
+      name: Pot Pouv
+    candidate:
+      name: Pol Pot
+  - match: true
+    schema: Person
+    query:
+      name: PolPot
+    candidate:
+      name: Pol Pot
+  - match: true
+    schema: Person
+    query:
+      name: ប៉ុល ពត
+    candidate:
+      name: Pol Pot
+  - match: false
+    schema: Person
+    query:
+      name: Paul Murphy
+    candidate:
+      name: Pol Pot
+  - match: false
+    schema: Person
+    query:
+      name: Pol Pot
+    candidate:
+      name: Paul Murphy
+  - match: true
+    schema: Person
+    query:
+      name: ماري تيريز أدينا أوندوا
+    candidate:
+      name: Marie-Therese Abena Ondoa
+  - match: false
+    schema: Person
+    query:
+      name: Barack Obama
+    candidate:
+      name: George Hussein Onyango Obama
+  - match: true
+    schema: Person
+    query:
+      name: Barack Obama
+    candidate:
+      name: Բարակ Օբամա
+  - match: true
+    schema: Person
+    query:
+      name: Barack Obama
+    candidate:
+      name: ジョージ
+  - match: true
+    schema: Person
+    query:
+      name: Barak Obama
+    candidate:
+      name: Barack Obama
+  - match: true
+    schema: Person
+    query:
+      name: Barry Obama
+    candidate:
+      name: Barack Obama
+  - match: true
+    schema: Person
+    query:
+      name: 贝拉克·奥巴马
+    candidate:
+      name: Barack Obama
+  - match: true
+    schema: Person
+    query:
+      name: Präsident Barack Obama
+    candidate:
+      name: Barack Obama
+  - match: true
+    schema: Person
+    query:
+      name: Barack Obama
+    candidate:
+      name: Барак Хусеин Обама
+  - match: true
+    schema: Person
+    query:
+      name: ბარაკ ობამა
+    candidate:
+      name: Barack Obama
+  - match: false
+    schema: Person
+    query:
+      name: Michel Obama
+    candidate:
+      name: Michelle Obama
+  - match: false
+    schema: Person
+    query:
+      name: Marie-Thérèse Obama
+    candidate:
+      name: Michelle Obama
+
+  - match: true
+    schema: Person
+    query:
+      name: Hannibal
+    candidate:
+      name: Hannibal
+  - match: true
+    schema: Person
+    query:
+      name: Hanniball
+    candidate:
+      name: Hannibal
+
+  - match: true
+    schema: Person
+    query:
+      name: Sergejs Lavrovs
+    candidate:
+      name: Sergey Viktorovich LAVROV
+  - match: false
+    schema: Person
+    query:
+      name: Sergey Ivanov
+    candidate:
+      name: Sergey Viktorovich LAVROV
+  - match: false
+    schema: Person
+    query:
+      name: Sergey Ivanevich Lavrov
+    candidate:
+      name: Sergey Viktorovich LAVROV
+  - match: true
+    schema: Person
+    query:
+      firstName: Sergey
+      middleName: Viktorovich
+      lastName: Lavrov
+    candidate:
+      firstName: Sergey
+      fatherName: Viktorovich
+      lastName: LAVROV
+  - match: false
+    schema: Person
+    query:
+      firstName: Sergey
+      middleName: Viktorovich
+      lastName: Lavrov
+    candidate:
+      firstName: Sergey
+      fatherName: Ivanevich
+      lastName: LAVROV
+  - match: false
+    schema: Person
+    query:
+      name: Sergej Viktorovich Navros
+    candidate:
+      name: Sergey Viktorovich LAVROV
+
+  - match: false
+    schema: Person
+    query:
+      name: Jeremy Thomas England
+    candidate:
+      name: Thomas Lindemann
+  - match: false
+    schema: Person
+    query:
+      name: Niranjan Thomas Alva
+    candidate:
+      name: Thomas Lindemann
+  - match: false
+    schema: Person
+    query:
+      name: Thomas A. Lind
+    candidate:
+      name: Thomas Lindemann
+  - match: true
+    schema: Person
+    query:
+      name: Thomas A. Lindeman
+    candidate:
+      name: Thomas Lindemann
+
+  - match: true
+    schema: Person
+    query:
+      name: Ротенберг Аркадий
+    candidate:
+      name: Arkadiii Romanovich Rotenberg
+  - match: true
+    schema: Person
+    query:
+      name: Osama bin Laden
+    candidate:
+      name: Usāma bin Muhammad ibn Awad ibn Lādin
+  - match: false
+    schema: Person
+    query:
+      name: Muhammad bin Salman
+    candidate:
+      name: Usāma bin Muhammad ibn Awad ibn Lādin
+
+  - match: true
+    schema: Company
+    query:
+      name: Goodwill Company
+    candidate:
+      name: Good Will Company
+  - match: false
+    schema: Organization
+    query:
+      name: Government of Estonia
+    candidate:
+      name: Government of Ethiopia
+  - match: true
+    schema: Company
+    query:
+      name: CRYSTALORD LIMITED
+    candidate:
+      name: CRYSTALORD LTD
+  - match: true
+    schema: Company
+    query:
+      name: CRISTALORD LIMITED
+    candidate:
+      name: CRYSTALORD LTD
+  - match: false
+    schema: Company
+    query:
+      name: CRYSTALORD SYSTEMS LIMITED
+    candidate:
+      name: CRYSTALORD LTD
+
+  - match: true
+    schema: Company
+    query:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: true
+    schema: Company
+    query:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPAN
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: true
+    schema: Company
+    query:
+      name: JSC TACTICAL MISSILES CORPORATION
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: true
+    schema: Company
+    query:
+      name: OJSC TACTICAL MISSILES CORPORATION
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: true
+    schema: Company
+    query:
+      name: JSC TACTICAL MISSILES CORP.
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: false
+    schema: Company
+    query:
+      name: OJSC TACTICAL KITTENS CORPORATION
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: false
+    schema: Company
+    query:
+      name: OJSC TACTICAL MISSIVES CORPORATION
+    candidate:
+      name: TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY
+  - match: true
+    schema: Company
+    query:
+      name: Oboronnye Initsiativy OOO
+    candidate:
+      name: OOO Oboronnye Initsiativy
+  - match: true
+    schema: Company
+    query:
+      name: Oboronnye Initsiativy o.O.O.
+    candidate:
+      name: OOO Oboronnye Initsiativy
+
+  - match: true
+    schema: Company
+    query:
+      name: Iskusstvo Krasoty
+    candidate:
+      name: LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY
+  - match: false
+    schema: Company
+    query:
+      name: ANO Iskusstvo Krasoty
+    candidate:
+      name: LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY
+  - match: true
+    schema: Company
+    query:
+      name: faberlic
+    candidate:
+      name: FABERLIC EUROPE Sp. z o.o.
+  - match: true
+    schema: LegalEntity
+    query:
+      name: faberlic
+    candidate:
+      name: FABERLIC EUROPE Sp. z o.o.
+
+  - match: true
+    schema: Person
+    query:
+      name: Boris Johnson
+    candidate:
+      name: Alexandre Boris de Pfeffel Johnson
+  - match: false
+    schema: Person
+    query:
+      name: Geoffrey Boris Johnson
+    candidate:
+      name: Alexandre Boris de Pfeffel Johnson
+  - match: true
+    schema: Person
+    query:
+      name: Boris de Pfeffel Johnson
+    candidate:
+      name: Alexandre Boris de Pfeffel Johnson
+  - match: true
+    schema: Person
+    query:
+      name: Boris Johnson de Pfeffel
+    candidate:
+      name: Alexandre Boris de Pfeffel Johnson
+
+  # cf. https://github.com/opensanctions/nomenklatura/issues/193
+  - match: true
+    schema: Company
+    query:
+      name: A.B.C. Company
+    candidate:
+      name: A.B.C. Company
+  - match: true
+    schema: Company
+    query:
+      name: ABC Company
+    candidate:
+      name: A.B.C. Company
+  - match: true
+    schema: Company
+    query:
+      name: ABC Co.
+    candidate:
+      name: A.B.C. Company
+  - match: false
+    schema: Company
+    query:
+      name: CDE Company
+    candidate:
+      name: A.B.C. Company
+  - match: false
+    schema: Company
+    query:
+      name: C.B.A. Company
+    candidate:
+      name: A.B.C. Company
+  - match: false
+    schema: Company
+    query:
+      name: N.A.B.C. Company
+    candidate:
+      name: A.B.C. Company
+  - match: false
+    schema: Company
+    query:
+      name: ABC International
+    candidate:
+      name: A.B.C. Company
+
+  - match: false
+    schema: Organization
+    query:
+      name: Yamahdi (UK) Limited
+    candidate:
+      name: YA MAHDI INDUSTRIES GROUP
+  - match: false
+    schema: Organization
+    query:
+      name: MAHDI & YASMIN LTD
+    candidate:
+      name: YA MAHDI INDUSTRIES GROUP
+  - match: false
+    schema: Organization
+    query:
+      name: MAHDI & YASMIN LTD
+    candidate:
+      name: YA MAHDI INDUSTRIES GROUP
+  - match: false
+    schema: Person
+    query:
+      name: Niels Oscar Rost
+    candidate:
+      name: Niels Oscar TROOST
+  - match: false
+    schema: Person
+    query:
+      name: Nils Trosterich
+    candidate:
+      name: Niels Oscar TROOST
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Nils Trosterich
+    candidate:
+      name: Niels Oscar TROOST
+  - match: true
+    schema: Person
+    query:
+      name: Ali A. Velayati
+    candidate:
+      name: Ali Akbar Velayati
+  - match: false
+    schema: Person
+    query:
+      name: Ali A. Vellabati
+    candidate:
+      name: Ali Akbar Velayati
+
+  # The maritime section
+  - match: true
+    schema: Vessel
+    query:
+      name: Hellenic Spirit
+    candidate:
+      name: MV Hellenic Spirit
+  - match: false
+    schema: Vessel
+    query:
+      name: Lady Leila
+    candidate:
+      name: Lady Rania
+  - match: false
+    schema: Vessel
+    query:
+      name: Zu Zag Bong 6
+    candidate:
+      name: Zu Zag Bong 5
+  - match: false
+    schema: Vessel
+    query:
+      name: Yerotsakos
+    candidate:
+      name: YEVGENY PRIMAKOV
+  - match: false
+    schema: Vessel
+    query:
+      name: Yard No. 9918779 Zvezda-Dsme
+    candidate:
+      name: YARD NO. 455 IRAN MARINE
+  - match: false
+    schema: Vessel
+    query:
+      name: Victory
+    candidate:
+      name: Victory 3
+  - match: false
+    schema: Vessel
+    query:
+      name: Victory
+    candidate:
+      name: VICTOR KONETSKY
+  - match: true
+    schema: Vessel
+    query:
+      name: VELIKIY NOVGOROD
+    candidate:
+      name: Velikiy Novgorod
