@@ -87,10 +87,10 @@ def run_benchmark(
     table.add_column("%", justify="right", style="green")
     table.add_column("False positives", justify="right", style="yellow")
     table.add_column("False negatives", justify="right", style="red")
-    table.add_column("Avg loss", justify="right")
+    table.add_column("avg. Loss", justify="right")
 
     schemata = set(check.schema for check in checks)
-    for schema in schemata:
+    for schema in sorted(schemata):
         schema_results = [result for result in results if result.check.schema == schema]
         correct = sum(result.is_correct for result in schema_results)
         false_positives = sum(
@@ -107,7 +107,7 @@ def run_benchmark(
             schema,
             str(len(schema_results)),
             str(correct),
-            "%.2f" % pct_correct,
+            "%.1f" % pct_correct,
             str(false_positives),
             str(false_negatives),
             "%.3f" % avg_loss,
@@ -124,10 +124,10 @@ def run_benchmark(
         1 for result in results if not result.is_match and not result.is_correct
     )
     table.add_row(
-        "Total",
+        "TOTAL",
         str(total_count),
         str(total_correct),
-        "%.2f" % pct_correct,
+        "%.1f" % pct_correct,
         str(total_false_positives),
         str(total_false_negatives),
         "%.3f" % (total_loss / total_count),

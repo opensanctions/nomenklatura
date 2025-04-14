@@ -18,6 +18,24 @@ checks:
       name: Octavian Scholz
     candidate:
       name: Olaf Scholz
+  - match: false
+    schema: Person
+    query:
+      name: Angelo Cruz
+    candidate:
+      name: Angela Merkel
+  - match: false
+    schema: Person
+    query:
+      name: Angelo Mercaz
+    candidate:
+      name: Angela Merkel
+  - match: false
+    schema: Person
+    query:
+      name: Angela Merkur
+    candidate:
+      name: Angela Merkel
   - match: true
     schema: Company
     query:
@@ -518,6 +536,18 @@ checks:
       name: N. Nazarbayev
     candidate:
       name: Nursultan Nazarbayev
+  - match: false
+    schema: Person
+    query:
+      name: A. Nazarbayev
+    candidate:
+      name: Nursultan Nazarbayev
+  - match: false
+    schema: Person
+    query:
+      name: Nar Nazarbayev
+    candidate:
+      name: Nursultan Nazarbayev
   - match: true
     label: Initials Addition
     schema: Person
@@ -537,6 +567,18 @@ checks:
     schema: Person
     query:
       name: Mr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: false
+    schema: Person
+    query:
+      name: Ihab Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: false
+    schema: Person
+    query:
+      name: Hafez Makhlouf
     candidate:
       name: Rami Makhlouf
   - match: true
@@ -1005,9 +1047,199 @@ checks:
   - match: false
     schema: Person
     query:
-      name: Ali A. Vellabati
+      name: Ali Vellabati
     candidate:
       name: Ali Akbar Velayati
+  - match: false
+    schema: Person
+    query:
+      name: Kim Myong-sik
+    candidate:
+      name: Kim Myong-guk
+  - match: false
+    schema: Person
+    query:
+      name: Kim Pong-ryul
+    candidate:
+      name: Kim Pyong-ryul
+  - match: false
+    schema: Person
+    query:
+      name: Choe Ryong-hae
+    candidate:
+      name: Choe Kyong-song
+  - match: false
+    schema: Person
+    query:
+      name: Kim Yong-chol
+    candidate:
+      name: Kim Yong-chun
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Kim Yong-chol
+    candidate:
+      name: Kim Yong-chun
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Volodymyr Groysman
+    candidate:
+      name: Volodymyr Oleksandrovych Zelenskyy
+  - match: true
+    schema: Person
+    query:
+      name: Володимир Зеленський
+    candidate:
+      name: Volodymyr Oleksandrovych Zelenskyy
+  - match: false
+    schema: Person
+    query:
+      name: Oleksandr Zelenskyy
+    candidate:
+      name: Volodymyr Oleksandrovych Zelenskyy
+
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Nantahala Capital Offshore Fund, Ltd.
+    candidate:
+      name: Nantahala Capital Offshore Fund I, Ltd.
+  - match: false
+    schema: LegalEntity
+    query:
+      name: C G Clow Will Trust
+    candidate:
+      name: CG City Funding Limited
+  - match: false
+    schema: LegalEntity
+    query:
+      name: The Pudney Trust
+    candidate:
+      name: The Puccini Trust
+  - match: false
+    schema: LegalEntity
+    query:
+      name: The Puffin Trust
+    candidate:
+      name: The Puccini Trust
+  - match: false
+    schema: Company
+    query:
+      name: СБ Дако ООО
+    candidate:
+      name: СБ Банк (ООО)
+  - match: false
+    schema: Company
+    query:
+      name: ООО "БАЙ"
+    candidate:
+      name: ООО"БАЗО"
+  - match: false
+    schema: Company
+    query:
+      name: ООО "БАЙ"
+    candidate:
+      name: ООО "БАЙКАЛ"
+  - match: true
+    schema: Company
+    query:
+      name: ООО АЯС 2000
+    candidate:
+      name: ООО "АЯС 2000"
+  - match: false
+    schema: Company
+    query:
+      name: ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "БАЙ"
+    candidate:
+      name: ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "БАЙКАЛ"
+  - match: false
+    schema: Company
+    query:
+      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР СОЦИАЛЬНОЙ АДАПТАЦИИ "АЛЬЯНС"
+    candidate:
+      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР ИССЛЕДОВАНИЯ БОЕВЫХ ИСКУССТВ "УРАЛЬСКИЙ БУДОКАН"
+  - match: true
+    schema: LegalEntity
+    query:
+      name: Nanshan Group
+    candidate:
+      name: Nanshan Group Co Ltd
+  - match: true
+    schema: Company
+    query:
+      name: Societatea cu Răspundere Limitată PRO TRAFFIC
+    candidate:
+      name: SRL PRO TRAFFIC
+  - match: false
+    schema: Company
+    query:
+      name: Societatea cu Răspundere Limitată CON TRAFFIC
+    candidate:
+      name: Societatea cu Răspundere Limitată PRO TRAFFIC
+  - match: false
+    schema: Company
+    query:
+      name: S.R.L. CON TRAFFIC
+    candidate:
+      name: Societatea cu Răspundere Limitată PRO TRAFFIC
+  - match: true
+    schema: Company
+    query:
+      name: JSC Murom Instrument-Making Plant
+    candidate:
+      name: Акционерное общество “Муромский приборостроительный завод”
+  - match: true
+    schema: Organization
+    query:
+      name: ndrangheta
+    candidate:
+      name: "'Ndrangheta"
+  - match: false
+    schema: Organization
+    query:
+      name: Andrang Heta
+    candidate:
+      name: "'Ndrangheta"
+
+  - match: true
+    schema: Organization
+    query:
+      name: Al Qaeda
+    candidate:
+      name: Al Qa'ida
+  - match: true
+    schema: Organization
+    query:
+      name: Al Qaeda
+    candidate:
+      name: Al-Qa'ida/Islamic Army
+  - match: false
+    schema: Organization
+    query:
+      name: Al-Qaida in Iraq
+    candidate:
+      name: Al-Qaida in the Arabian Peninsula
+  - match: true
+    schema: Person
+    query:
+      name: "'Abd al-Aziz al-Nuristani"
+    candidate:
+      name: Abdul Aziz Nooristani
+  - match: true
+    schema: Person
+    query:
+      name: NURISTANI, Abdul Aziz
+    candidate:
+      name: Abdul Aziz Nooristani
+  - match: true
+    schema: Person
+    query:
+      name: NURISTANI, Abdul Aziz
+    candidate:
+      firstName: ABDUL AZIZ
+      middleName: Aziz
+      lastName: Nooristani
 
   # The maritime section
   - match: true
