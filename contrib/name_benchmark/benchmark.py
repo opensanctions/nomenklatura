@@ -80,6 +80,27 @@ def run_benchmark(
         results.append(result)
 
     console = Console()
+
+    failures = Table(title="Failed results")
+    failures.add_column("Query", justify="left")
+    failures.add_column("Candidate", justify="left")
+    failures.add_column("Truth", justify="right")
+    failures.add_column("Score", justify="right")
+    failures.add_column("Loss", justify="right")
+
+    for result in results:
+        if result.is_correct:
+            continue
+        failures.add_row(
+            result.check.query.first("name"),
+            result.check.candidate.first("name"),
+            str(result.is_match),
+            "%.2f" % result.score,
+            "%.2f" % result.loss,
+        )
+    if len(failures.rows) > 0:
+        console.print(failures)
+
     table = Table(title="Confusion Matrix by Schema")
     table.add_column("Schema", justify="left")
     table.add_column("Checks", justify="right")
