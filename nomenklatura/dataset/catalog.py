@@ -5,7 +5,7 @@ from followthemoney.types import registry
 from nomenklatura.dataset.dataset import DS
 from nomenklatura.exceptions import MetadataException
 from nomenklatura.dataset.util import type_check
-from nomenklatura.util import PathLike
+from followthemoney.util import PathLike
 
 
 class DataCatalog(Generic[DS]):

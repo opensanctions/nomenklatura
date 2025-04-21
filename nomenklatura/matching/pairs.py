@@ -2,9 +2,9 @@ import json
 from typing import Generator, Dict, Any
 from followthemoney import model
 from followthemoney.proxy import EntityProxy
+from followthemoney.util import PathLike
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.util import PathLike
 
 
 class JudgedPair(object):

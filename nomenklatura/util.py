@@ -16,7 +16,6 @@ from typing import cast, Any, Union, Iterable, Tuple, Optional, List, Callable
 DATA_PATH = Path(os.path.join(os.path.dirname(__file__), "data")).resolve()
 ID_CLEAN = re.compile(r"[^A-Z0-9]+", re.UNICODE)
 BASE_ID = "id"
-PathLike = Union[str, os.PathLike[str]]
 HeadersType = Optional[Mapping[str, Union[str, bytes, None]]]
 
 

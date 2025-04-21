@@ -10,11 +10,11 @@ from sklearn.model_selection import train_test_split  # type: ignore
 from sklearn.linear_model import LogisticRegression  # type: ignore
 from sklearn import metrics  # type: ignore
 from concurrent.futures import ThreadPoolExecutor
+from followthemoney.util import PathLike
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import read_pairs, JudgedPair
 from nomenklatura.matching.regression_v1.model import RegressionV1
-from nomenklatura.util import PathLike
 
 log = logging.getLogger(__name__)
 

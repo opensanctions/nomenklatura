@@ -6,8 +6,6 @@ import logging
 from collections import defaultdict
 from functools import lru_cache
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple
-
-from followthemoney.types import registry
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from sqlalchemy import (
@@ -23,6 +21,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import delete, insert, update
+from followthemoney.types import registry
+from followthemoney.util import PathLike
 
 from nomenklatura.db import get_engine
 from nomenklatura.entity import CE
@@ -31,7 +31,7 @@ from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
 from nomenklatura.resolver.linker import Linker
 from nomenklatura.statement.statement import Statement
-from nomenklatura.util import PathLike
+
 
 log = logging.getLogger(__name__)
 
