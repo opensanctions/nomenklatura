@@ -1290,3 +1290,76 @@ checks:
       name: VELIKIY NOVGOROD
     candidate:
       name: Velikiy Novgorod
+
+  - match: true
+    schema: Person
+    query:
+      name: Frost, William W.
+    candidate:
+      name: William W Frost
+  - match: false
+    schema: Person
+    query:
+      name: Frost, William G.
+    candidate:
+      name: William W Frost
+  - match: true
+    schema: Person
+    query:
+      name: GENA C RANDOLPH
+    candidate:
+      name: Randolph, Gena
+  - match: false
+    schema: Person
+    query:
+      name: GERD RANDOLPH
+    candidate:
+      name: Randolph, Gena
+  - match: false
+    schema: Organization
+    query:
+      name: The BSF Foundation
+    candidate:
+      name: The BIRD Foundation
+  - match: false
+    schema: Person
+    query:
+      name: Eric A. Wendt
+    candidate:
+      name: Josh A. Wendt
+  - match: false
+    schema: Person
+    query:
+      name: Aaron A. Wendt
+    candidate:
+      name: Josh A. Wendt
+  - match: false
+    schema: Company
+    query:
+      name: BWI Industries, Inc.
+    candidate:
+      name: BAE Industries, Inc.
+  - match: false
+    schema: LegalEntity
+    query:
+      name: BWI Industries, Inc.
+    candidate:
+      name: BAE Industries, Inc.
+  - match: false
+    schema: Company
+    query:
+      name: BAE Systems, Inc.
+    candidate:
+      name: BAE Industries, Inc.
+  - match: false
+    schema: Person
+    query:
+      name: Allaidin Hussain ALWAN
+    candidate:
+      name: Ahmad al-Hamidawi
+  - match: false
+    schema: Organization
+    query:
+      name: Academy of Military Medical Sciences, Insitute of Medical Equipment
+    candidate:
+      name: Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology
