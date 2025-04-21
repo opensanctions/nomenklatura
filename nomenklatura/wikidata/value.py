@@ -1,9 +1,8 @@
 import logging
 from prefixdate import Precision
 from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
-from fingerprints import clean_brackets
 from rigour.ids.wikidata import is_qid
-from rigour.text.emoji import remove_emoji
+from rigour.text.cleaning import remove_emoji, remove_bracketed_text
 from rigour.names import is_name
 # from rigour.text.distance import is_levenshtein_plausible
 
@@ -71,7 +70,7 @@ def clean_name(name: str) -> Optional[str]:
     """Clean a name for storage, try to throw out dangerous user inputs."""
     if not is_name(name):
         return None
-    clean_name = clean_brackets(name)
+    clean_name = remove_bracketed_text(name)
     if not is_name(clean_name):
         clean_name = name
     return remove_emoji(clean_name)
