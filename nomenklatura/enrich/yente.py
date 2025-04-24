@@ -31,7 +31,7 @@ class YenteEnricher(Enricher[DS]):
         super().__init__(dataset, cache, config, session)
         self._api: str = config.pop("api")
         self._yente_dataset: str = config.pop("dataset", "default")
-        self._threshold: Optional[float] = config.pop("threshold", None)
+        self._cutoff: Optional[float] = config.pop("cutoff", None)
         self._algorithm: Optional[float] = config.pop("algorithm", "best")
         self._nested: bool = config.pop("expand_nested", True)
         self._fuzzy: bool = config.pop("fuzzy", False)
@@ -54,8 +54,8 @@ class YenteEnricher(Enricher[DS]):
             return
         url = urljoin(self._api, f"match/{self._yente_dataset}")
         params: Dict[str, Any] = {"fuzzy": self._fuzzy, "algorithm": self._algorithm}
-        if self._threshold is not None:
-            params["threshold"] = self._threshold
+        if self._cutoff is not None:
+            params["cutoff"] = self._cutoff
         url = build_url(url, params)
         cache_key = f"{url}:{entity.id}"
         props: Dict[str, List[str]] = {}
