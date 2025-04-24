@@ -1,13 +1,37 @@
+from functools import cached_property
 from typing import List, Optional
 from itertools import product
+from normality import ascii_text
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.scripts import is_modern_alphabet
 from rigour.text.distance import is_levenshtein_plausible
 from rigour.text.phonetics import metaphone, soundex
-from rigour.names.part import name_parts, NamePart
+from rigour.names import tokenize_name
 from nomenklatura.util import name_words, list_intersection, fingerprint_name
 from nomenklatura.matching.util import type_pair, has_schema
+
+
+class NameTokenPhonetic:
+    def __init__(self, token: str):
+        self.token = token
+        self.ascii = ascii_text(token)
+
+    @cached_property
+    def metaphone(self) -> Optional[str]:
+        if is_modern_alphabet(self.token) and self.ascii is not None:
+            phoneme = metaphone(self.ascii)
+            if len(phoneme) >= 3:
+                return phoneme
+        return None
+
+    # def __repr__(self) -> str:
+    #     return f"<NameTokenPhonetic {self.token!r}, {self.ascii!r}, {self.metaphone!r}>"
+
+    @classmethod
+    def from_name(cls, name: str) -> List["NameTokenPhonetic"]:
+        tokens = tokenize_name(name.lower(), token_min_length=2)
+        return [cls(token) for token in tokens]
 
 
 def metaphone_token(token: str) -> str:
@@ -28,7 +52,7 @@ def soundex_token(token: str) -> str:
     return token.upper()
 
 
-def compare_parts_phonetic(left: NamePart, right: NamePart) -> bool:
+def compare_parts_phonetic(left: NameTokenPhonetic, right: NameTokenPhonetic) -> bool:
     if left.metaphone is None or right.metaphone is None:
         return left.ascii == right.ascii
     if (
@@ -42,26 +66,11 @@ def compare_parts_phonetic(left: NamePart, right: NamePart) -> bool:
     return False
 
 
-# def _clean_phonetic_person(original: str) -> Optional[str]:
-#     """Normalize a person name without transliteration."""
-#     if not is_modern_alphabet(original):
-#         return None
-#     text = clean_entity_prefix(original)
-#     return clean_name_ascii(text)
-
-
 def _clean_phonetic_entity(original: str) -> Optional[str]:
     """Normalize a legal entity name without transliteration."""
     if not is_modern_alphabet(original):
         return None
     return fingerprint_name(original)
-
-
-# def _phonetic_person_tokens(token: str) -> List[str]:
-#     words: List[str] = []
-#     for word in name_words(_clean_phonetic_person(token), min_length=2):
-#         words.append(phonetic_token(word))
-#     return words
 
 
 def _token_names_compare(
@@ -81,8 +90,8 @@ def person_name_phonetic_match(query: E, result: E) -> float:
     if not has_schema(query, result, "Person"):
         return 0.0
     query_names_, result_names_ = type_pair(query, result, registry.name)
-    query_parts = [name_parts(n) for n in query_names_]
-    result_parts = [name_parts(n) for n in result_names_]
+    query_parts = [NameTokenPhonetic.from_name(n) for n in query_names_]
+    result_parts = [NameTokenPhonetic.from_name(n) for n in result_names_]
     score = 0.0
     for q, r in product(query_parts, result_parts):
         if len(q) == 0:
