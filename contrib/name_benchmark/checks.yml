@@ -1363,3 +1363,15 @@ checks:
       name: Academy of Military Medical Sciences, Insitute of Medical Equipment
     candidate:
       name: Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology
+  - match: false
+    schema: Company
+    query:
+      name: Management Company
+    candidate:
+      name: Westminister Management Company
+  - match: false
+    schema: Company
+    query:
+      name: Management Company 23
+    candidate:
+      name: Management Company
