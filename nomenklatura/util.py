@@ -71,6 +71,7 @@ def datetime_iso(dt: Optional[Union[str, datetime]]) -> Optional[str]:
 
 
 def iso_to_version(value: str) -> Optional[str]:
+    ## Phase this out - it won't be used in new FtM metadata, is used by yente
     dt = iso_datetime(value)
     if dt is not None:
         return dt.strftime("%Y%m%d%H%M%S")
