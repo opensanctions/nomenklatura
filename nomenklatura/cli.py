@@ -31,10 +31,6 @@ log = logging.getLogger(__name__)
 ResPath = click.Path(dir_okay=False, writable=True, path_type=Path)
 
 
-def _path_sibling(path: Path, suffix: str) -> Path:
-    return path.parent.joinpath(f"{path.stem}{suffix}")
-
-
 def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
     with open(path, "r") as fh:
         data = yaml.safe_load(fh)

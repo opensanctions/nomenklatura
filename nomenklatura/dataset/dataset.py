@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Self
 from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from followthemoney.types import registry
+from followthemoney.util import PathLike
 
 from nomenklatura.dataset.coverage import DataCoverage
 from nomenklatura.dataset.publisher import DataPublisher
@@ -17,7 +18,7 @@ from nomenklatura.dataset.util import (
     datetime_check,
     int_check,
 )
-from nomenklatura.util import PathLike, iso_to_version
+from nomenklatura.util import iso_to_version
 
 if TYPE_CHECKING:
     from nomenklatura.dataset.catalog import DataCatalog
