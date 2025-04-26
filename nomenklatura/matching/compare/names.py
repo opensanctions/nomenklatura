@@ -2,17 +2,16 @@ from typing import List, Dict, Tuple
 from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from fingerprints import clean_name_light, clean_name_ascii
 from rigour.text.distance import levenshtein_similarity
 from rigour.text.distance import jaro_winkler, is_levenshtein_plausible
-from nomenklatura.util import names_word_list, name_words
-from nomenklatura.util import fingerprint_name, normalize_name
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
+from nomenklatura.matching.compat import clean_name_ascii, clean_name_light
+from nomenklatura.matching.compat import fingerprint_name, name_words, names_word_list
 
 
 def _name_parts(name: str) -> List[str]:
-    return name_words(normalize_name(name))
+    return name_words(clean_name_ascii(name))
 
 
 def _align_name_parts(query: List[str], result: List[str]) -> float:
