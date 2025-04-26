@@ -1375,3 +1375,15 @@ checks:
       name: Management Company 23
     candidate:
       name: Management Company
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Elois
+    candidate:
+      name: Alice Costandina Titus
+  - match: false
+    schema: Person
+    query:
+      name: Elois
+    candidate:
+      name: Alice Costandina Titus
