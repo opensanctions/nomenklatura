@@ -1,5 +1,4 @@
-from ast import Set
-from typing import Generic, Generator, Optional, Tuple
+from typing import Generic, Generator, Optional, Tuple, Set
 from normality import WS, category_replace, ascii_text
 from rigour.ids import StrictFormat
 from rigour.names import tokenize_name
@@ -70,7 +69,6 @@ class Tokenizer(Generic[DS, CE]):
                 yield type.name, cleaned
                 for token in cleaned.split(WS):
                     name_parts.add(token)
-            print("XXX", name_parts)
             for part in name_parts:
                 if len(part) > 2 and len(part) < 30:
                     yield NAME_PART_FIELD, part

@@ -49,8 +49,8 @@ def fingerprint_name(original: str) -> Optional[str]:
     text = remove_person_prefixes(original)
     # Super hard-core string scrubbing
     cleaned = clean_name_ascii(text)
-    cleaned = replace_org_types_compare(cleaned, normalizer=clean_name_ascii)
-    return collapse_spaces(cleaned)
+    replaced = replace_org_types_compare(cleaned, normalizer=clean_name_ascii)
+    return collapse_spaces(replaced)
 
 
 def names_word_list(
