@@ -54,9 +54,9 @@ def get_org_tagger() -> Tagger:
 
     mapping: Dict[str, List[Symbol]] = defaultdict(list)
     for key, values in ORG_SYMBOLS.items():
-        sym = Symbol(Symbol.ORG_SYMBOL, key.upper())
+        sym = Symbol(Symbol.Category.ORG_SYMBOL, key.upper())
         nkey = normalize_name(key)
-        mapping[nkey].append(Symbol(Symbol.ORG_SYMBOL, key))
+        mapping[nkey].append(Symbol(Symbol.Category.ORG_SYMBOL, key))
         for value in values:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
@@ -67,7 +67,7 @@ def get_org_tagger() -> Tagger:
         type_key = org_type.get("compare", org_type.get("display"))
         if type_key is None:
             continue
-        ot_sym = Symbol(Symbol.ORG_TYPE, type_key)
+        ot_sym = Symbol(Symbol.Category.ORG_TYPE, type_key)
         display = org_type.get("display")
         if display is not None:
             mapping[normalize_name(display)].append(ot_sym)
@@ -88,9 +88,9 @@ def get_person_tagger() -> Tagger:
 
     mapping: Dict[str, List[Symbol]] = defaultdict(list)
     for key, values in PERSON_SYMBOLS.items():
-        sym = Symbol(Symbol.PER_SYMBOL, key.upper())
+        sym = Symbol(Symbol.Category.PER_SYMBOL, key.upper())
         nkey = normalize_name(key)
-        mapping[nkey].append(Symbol(Symbol.PER_SYMBOL, key))
+        mapping[nkey].append(Symbol(Symbol.Category.PER_SYMBOL, key))
         for value in values:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
@@ -102,7 +102,7 @@ def get_person_tagger() -> Tagger:
             if not line:
                 continue
             names, qid = line.split(" => ")
-            sym = Symbol(Symbol.PER_NAME, int(qid[1:]))
+            sym = Symbol(Symbol.Category.PER_NAME, int(qid[1:]))
             names_norm: Set[str] = set()
             for alias in names.split(", "):
                 names_norm.add(normalize_name(alias))

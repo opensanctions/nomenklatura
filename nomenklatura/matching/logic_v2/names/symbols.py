@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, List, Set
 from rigour.names.name import Name
 from rigour.names.tag import NameTypeTag
@@ -7,16 +8,17 @@ from rigour.names.part import NamePart
 class Symbol:
     """A symbol is a semantic interpretation applied to one or more parts of a name."""
 
-    ORG_TYPE = "org.type"
-    ORG_SYMBOL = "org.symb"
-    PER_ABBR = "per.abbr"
-    PER_NAME = "per.name"
-    PER_SYMBOL = "per.symb"
-    PHONETIC = "phonetic"
+    class Category(Enum):
+        ORG_TYPE = "org.type"
+        ORG_SYMBOL = "org.symb"
+        PER_ABBR = "per.abbr"
+        PER_NAME = "per.name"
+        PER_SYMBOL = "per.symb"
+        PHONETIC = "phonetic"
 
     __slots__ = ["category", "id"]
 
-    def __init__(self, category: str, id: Any) -> None:
+    def __init__(self, category: Category, id: Any) -> None:
         """Create a symbol with a category and an id."""
         self.category = category
         self.id = id
