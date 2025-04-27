@@ -16,14 +16,15 @@ class Symbol:
 
     __slots__ = ["category", "id"]
 
-    def __init__(self, category: str, id: Any):
+    def __init__(self, category: str, id: Any) -> None:
+        """Create a symbol with a category and an id."""
         self.category = category
         self.id = id
 
     def __hash__(self) -> int:
         return hash((self.category, self.id))
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Symbol):
             return False
         return self.category == other.category and self.id == other.id
@@ -49,7 +50,7 @@ class SymbolName(Name):
 
     def apply_phrase(self, phrase: str, symbol: Symbol) -> None:
         """Apply a symbol to a phrase in the name."""
-        matching: List[str] = []
+        matching: List[NamePart] = []
         tokens = phrase.split(" ")
         for part in self.parts:
             next_token = tokens[len(matching)]

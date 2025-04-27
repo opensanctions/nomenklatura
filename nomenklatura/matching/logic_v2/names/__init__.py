@@ -47,25 +47,25 @@ def entity_names(
             name = remove_person_prefixes(name)
 
         form = prenormalize_name(name)
-        name = SymbolName(name, form=form, tag=type_tag)
+        sname = SymbolName(name, form=form, tag=type_tag)
         # tag name parts from properties:
         for prop, tag in PROP_MAPPINGS:
             for value in entity.get(prop, quiet=True):
-                name.tag_text(prenormalize_name(value), tag)
+                sname.tag_text(prenormalize_name(value), tag)
 
         # TODO: can we guess if something is a company based on org types?
 
         # tag organization types and symbols:
         if type_tag == NameTypeTag.ORG:
-            tag_org_name(name)
+            tag_org_name(sname)
 
         # tag given name abbreviations. this is meant to handle a case where the person's
         # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"
         if type_tag == NameTypeTag.PER:
-            for part in name.parts:
+            for part in sname.parts:
                 if is_query and len(part.form) == 1:
                     sym = Symbol(Symbol.PER_ABBR, part.form)
-                    name.apply_part(part, sym)
+                    sname.apply_part(part, sym)
                 elif part.tag in (
                     NamePartTag.GIVEN,
                     NamePartTag.MIDDLE,
@@ -73,11 +73,11 @@ def entity_names(
                     NamePartTag.MATRONYMIC,
                 ):
                     sym = Symbol(Symbol.PER_ABBR, part.form[0])
-                    name.apply_part(part, sym)
-            tag_person_name(name)
+                    sname.apply_part(part, sym)
+            tag_person_name(sname)
 
         # TODO: should we tag phonetic names here?
-        names.add(name)
+        names.add(sname)
     return names
 
 

@@ -80,10 +80,11 @@ class Tokenizer(Generic[DS, CE]):
             return
         if type in TEXT_TYPES:
             text = value.lower()
-            text = category_replace(text)
-            for word in text.split(WS):
-                if len(word) >= 3:
-                    yield WORD_FIELD, word
+            replaced = category_replace(text)
+            if replaced is not None:
+                for word in replaced.split(WS):
+                    if len(word) >= 3:
+                        yield WORD_FIELD, word
 
     def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0

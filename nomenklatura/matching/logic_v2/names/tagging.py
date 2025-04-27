@@ -1,4 +1,3 @@
-import re
 import gzip
 import logging
 from functools import cache
@@ -27,16 +26,10 @@ class Tagger(Scanner):
         super().__init__(forms, ignore_case=False)
         self.mapping = mapping
 
-    def _get(self, match: re.Match[str]) -> str:
-        """Internal: given a match, return the replacement value. Called by the regex."""
-        value = match.group(1)
-        lookup = value.lower() if self.ignore_case else value
-        return self.mapping.get(lookup, value)
-
     def __call__(self, text: Optional[str]) -> List[Tuple[str, Symbol]]:
         """Apply the tagger on a piece of pre-normalized text."""
         if text is None:
-            return None
+            return []
         symbols: List[Tuple[str, Symbol]] = []
         for match in self.pattern.finditer(text):
             value = match.group(1)
@@ -71,10 +64,10 @@ def get_org_tagger() -> Tagger:
 
     for org_type in ORG_TYPES:
         # TODO: should this apply to the display name or the compare name as separate symbols?
-        key = org_type.get("compare", org_type.get("display"))
-        if key is None:
+        type_key = org_type.get("compare", org_type.get("display"))
+        if type_key is None:
             continue
-        ot_sym = Symbol(Symbol.ORG_TYPE, key)
+        ot_sym = Symbol(Symbol.ORG_TYPE, type_key)
         display = org_type.get("display")
         if display is not None:
             mapping[normalize_name(display)].append(ot_sym)
@@ -117,7 +110,7 @@ def get_person_tagger() -> Tagger:
                 for norm in names_norm:
                     mapping[norm].append(sym)
 
-    log.info("Loading person tagger done (%s terms).", len(mapping))
+    log.info("Loaded person tagger (%s terms).", len(mapping))
     return Tagger(mapping)
 
 
