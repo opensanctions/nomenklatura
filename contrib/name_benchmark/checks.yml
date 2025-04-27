@@ -278,6 +278,12 @@ checks:
     candidate:
       name: Sergei Lavrov
   - match: true
+    schema: Person
+    query:
+      name: SergeiLavrov
+    candidate:
+      name: Sergei Lavrov
+  - match: true
     label: Character Deletion
     schema: Person
     query:
@@ -567,6 +573,12 @@ checks:
     schema: Person
     query:
       name: Mr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: true
+    schema: Person
+    query:
+      name: RamiMakhlouf
     candidate:
       name: Rami Makhlouf
   - match: false
