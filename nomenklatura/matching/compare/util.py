@@ -49,3 +49,8 @@ def extract_numbers(values: List[str]) -> Set[str]:
     for value in values:
         numbers.update(FIND_NUM.findall(value))
     return numbers
+
+
+def text_numbers(text: str) -> List[str]:
+    """Find if text contain numbers, return as list."""
+    return FIND_NUM.findall(text)
