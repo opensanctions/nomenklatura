@@ -42,3 +42,19 @@ def test_entity_names_company():
     parts = name.non_symbol_parts(symbols)
     assert len(parts) == 1
     assert parts[0].form == "westminster"
+
+    entity = e("Company", name="ABC Gesellschaft mit beschränkter Haftung")
+    names = entity_names(NameTypeTag.ORG, entity)
+    assert len(names) == 1
+    name = names.pop()
+    for span in name.spans:
+        if span.symbol.category == Symbol.Category.ORG_TYPE:
+            assert span.symbol.id == "LLC"
+            assert len(span.parts) == 4
+    other = e("Company", name="ABC Ltd.")
+    other_name = entity_names(NameTypeTag.ORG, other).pop()
+    common = name.symbols.intersection(other_name.symbols)
+    assert len(common) == 1
+    parts = name.non_symbol_parts(common)
+    assert len(parts) == 1
+    assert parts[0].form == "abc"

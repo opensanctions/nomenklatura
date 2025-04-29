@@ -79,6 +79,13 @@ def get_org_tagger() -> Tagger:
     return Tagger(mapping)
 
 
+def tag_org_name(name: SymbolName) -> None:
+    """Tag the name with the organization type and symbol tags."""
+    tagger = get_org_tagger()
+    for phrase, symbol in tagger(name.norm_form):
+        name.apply_phrase(phrase, symbol)
+
+
 @cache
 def get_person_tagger() -> Tagger:
     """Get the person name tagger."""
@@ -112,13 +119,6 @@ def get_person_tagger() -> Tagger:
 
     log.info("Loaded person tagger (%s terms).", len(mapping))
     return Tagger(mapping)
-
-
-def tag_org_name(name: SymbolName) -> None:
-    """Tag the name with the organization type and symbol tags."""
-    tagger = get_org_tagger()
-    for phrase, symbol in tagger(name.norm_form):
-        name.apply_phrase(phrase, symbol)
 
 
 def tag_person_name(name: SymbolName) -> None:
