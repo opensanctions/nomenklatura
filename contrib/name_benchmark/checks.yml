@@ -1399,3 +1399,9 @@ checks:
       name: Elois
     candidate:
       name: Alice Costandina Titus
+  - match: false
+    schema: Company
+    query:
+      name: Blinq Holdings Pty Ltd
+    candidate:
+      name: Bailey Holdings Pty Ltd
