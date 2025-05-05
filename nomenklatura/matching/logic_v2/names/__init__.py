@@ -1,13 +1,13 @@
 from typing import List
 from rigour.names import NameTypeTag, NamePart
-from rigour.text import levenshtein_similarity
 from followthemoney.proxy import E
 from followthemoney import model
 
 from nomenklatura.matching.logic_v2.names.symbols import SymbolName
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
-from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
+
+# from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
 from nomenklatura.matching.logic_v2.names.util import strict_levenshtein
 
 
@@ -24,7 +24,7 @@ class Alignment:
 
 
 def match_name_symbolic(query: SymbolName, result: SymbolName) -> float:
-    base_score = levenshtein_similarity(query.form, result.form)
+    base_score = strict_levenshtein(query.form, result.form)
     # TODO: ASCII conversion / transliteration?
     if query.tag == NameTypeTag.OBJ:
         # Things like Vessels, Airplanes, Securities, etc.
@@ -54,7 +54,7 @@ def match_name_symbolic(query: SymbolName, result: SymbolName) -> float:
     result_fuzzy = " ".join([part.form for part in result_fuzzy_parts])
 
     print("XXX", query_fuzzy, result_fuzzy, shared_symbols)
-    symbolic_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
+    symbolic_score = strict_levenshtein(query_fuzzy, result_fuzzy)
     return max(base_score, symbolic_score)
 
 

@@ -199,7 +199,7 @@ def test_name_fingerprint_levenshtein():
     # assert name_fingerprint_levenshtein(query, result) > 0.0
     # assert name_fingerprint_levenshtein(query, result) < 0.5
 
-    result = e("Company", name="Siemens AktG")
+    result = e("Company", name="Siemens AkG")
     assert name_fingerprint_levenshtein(query, result) > 0.7
     assert name_fingerprint_levenshtein(query, result) < 1.0
 

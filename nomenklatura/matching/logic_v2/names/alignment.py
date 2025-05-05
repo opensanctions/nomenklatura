@@ -41,7 +41,7 @@ def align_person_name_parts(
         contains the aligned name parts from the query and result. If a name part does not have
         a match, it will be None in the corresponding position.
     """
-    aligned_parts = []
+    aligned_parts: List[Tuple[Optional[NamePart], Optional[NamePart]]] = []
     query_used = [False] * len(query)
     result_used = [False] * len(result)
 
