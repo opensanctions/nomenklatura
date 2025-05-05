@@ -20,6 +20,8 @@ class Symbol:
 
     def __init__(self, category: Category, id: Any) -> None:
         """Create a symbol with a category and an id."""
+        # TODO: can it be used multiple times?
+        # TODO: does it involve a discount?
         self.category = category
         self.id = id
 

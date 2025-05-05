@@ -169,6 +169,12 @@ checks:
       name: Deutsche Bank (Schweiz) AG
     candidate:
       name: Deutsche Bank AG
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank (Schweiz) AG
   - match: false
     schema: Company
     query:
@@ -1405,3 +1411,9 @@ checks:
       name: Blinq Holdings Pty Ltd
     candidate:
       name: Bailey Holdings Pty Ltd
+  - match: true
+    schema: Person
+    query:
+      name: Ilie Bolojan
+    candidate:
+      name: Monsieur Ilie-Gabril Bolojan

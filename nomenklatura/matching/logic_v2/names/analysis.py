@@ -8,6 +8,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.tagging import tag_org_name, tag_person_name
 from nomenklatura.matching.logic_v2.names.util import prenormalize_name
+from nomenklatura.matching.logic_v2.names.util import GIVEN_NAME_TAGS
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),
@@ -71,12 +72,7 @@ def entity_names(
                 if is_query and len(part.form) == 1:
                     sym = Symbol(Symbol.Category.PER_ABBR, part.form)
                     sname.apply_part(part, sym)
-                elif part.tag in (
-                    NamePartTag.GIVEN,
-                    NamePartTag.MIDDLE,
-                    NamePartTag.PATRONYMIC,
-                    NamePartTag.MATRONYMIC,
-                ):
+                elif part.tag in GIVEN_NAME_TAGS:
                     sym = Symbol(Symbol.Category.PER_ABBR, part.form[0])
                     sname.apply_part(part, sym)
             tag_person_name(sname)
