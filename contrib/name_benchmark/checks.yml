@@ -169,6 +169,12 @@ checks:
       name: Deutsche Bank (Schweiz) AG
     candidate:
       name: Deutsche Bank AG
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank (Schweiz) AG
   - match: false
     schema: Company
     query:
@@ -275,6 +281,12 @@ checks:
     schema: Person
     query:
       name: Sergi Lavrov
+    candidate:
+      name: Sergei Lavrov
+  - match: true
+    schema: Person
+    query:
+      name: SergeiLavrov
     candidate:
       name: Sergei Lavrov
   - match: true
@@ -567,6 +579,12 @@ checks:
     schema: Person
     query:
       name: Mr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: true
+    schema: Person
+    query:
+      name: RamiMakhlouf
     candidate:
       name: Rami Makhlouf
   - match: false
@@ -1375,3 +1393,27 @@ checks:
       name: Management Company 23
     candidate:
       name: Management Company
+  - match: false
+    schema: LegalEntity
+    query:
+      name: Elois
+    candidate:
+      name: Alice Costandina Titus
+  - match: false
+    schema: Person
+    query:
+      name: Elois
+    candidate:
+      name: Alice Costandina Titus
+  - match: false
+    schema: Company
+    query:
+      name: Blinq Holdings Pty Ltd
+    candidate:
+      name: Bailey Holdings Pty Ltd
+  - match: true
+    schema: Person
+    query:
+      name: Ilie Bolojan
+    candidate:
+      name: Monsieur Ilie-Gabril Bolojan

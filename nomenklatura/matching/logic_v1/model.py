@@ -15,11 +15,11 @@ from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.compare.phonetic import person_name_phonetic_match
-from nomenklatura.matching.compare.phonetic import name_soundex_match
-from nomenklatura.matching.compare.phonetic import name_metaphone_match
 from nomenklatura.matching.compare.multi import numbers_mismatch
 from nomenklatura.matching.compare.addresses import address_entity_match
+from nomenklatura.matching.logic_v1.phonetic import person_name_phonetic_match
+from nomenklatura.matching.logic_v1.phonetic import name_soundex_match
+from nomenklatura.matching.logic_v1.phonetic import name_metaphone_match
 from nomenklatura.matching.util import FNUL
 
 

@@ -2,7 +2,8 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.util import type_pair, has_schema
-from nomenklatura.util import names_word_list, list_intersection
+from nomenklatura.matching.compat import names_word_list
+from nomenklatura.util import list_intersection
 
 
 def _address_match(query: E, result: E) -> float:
