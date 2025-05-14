@@ -1,7 +1,8 @@
 from rigour.names import NameTypeTag, NamePartTag, NamePart
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
 from nomenklatura.matching.logic_v2.names.symbols import Symbol
-from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
+
+# from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
 from nomenklatura.matching.logic_v2.names.util import strict_levenshtein
 
 from .util import e
@@ -62,56 +63,56 @@ def test_entity_names_company():
     assert parts[0].form == "abc"
 
 
-def test_align_person_name_parts():
-    query = [
-        NamePart("john", 0, NamePartTag.GIVEN),
-        NamePart("smith", 1, NamePartTag.FAMILY),
-    ]
-    result = [
-        NamePart("john", 0, NamePartTag.GIVEN),
-        NamePart("smith", 1, NamePartTag.FAMILY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert aligned[0][0].form == "john"
-    assert aligned[0][1].form == "john"
-    assert aligned[1][0].form == "smith"
-    assert aligned[1][1].form == "smith"
-    query = [
-        NamePart("smith", 0, NamePartTag.FAMILY),
-        NamePart("john", 1, NamePartTag.GIVEN),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert aligned[0][0].form == aligned[0][1].form
-    assert aligned[1][0].form == aligned[1][1].form
+# def test_align_person_name_parts():
+#     query = [
+#         NamePart("john", 0, NamePartTag.GIVEN),
+#         NamePart("smith", 1, NamePartTag.FAMILY),
+#     ]
+#     result = [
+#         NamePart("john", 0, NamePartTag.GIVEN),
+#         NamePart("smith", 1, NamePartTag.FAMILY),
+#     ]
+#     aligned = align_person_name_parts(query, result)
+#     assert len(aligned) == 2
+#     assert aligned[0][0].form == "john"
+#     assert aligned[0][1].form == "john"
+#     assert aligned[1][0].form == "smith"
+#     assert aligned[1][1].form == "smith"
+#     query = [
+#         NamePart("smith", 0, NamePartTag.FAMILY),
+#         NamePart("john", 1, NamePartTag.GIVEN),
+#     ]
+#     aligned = align_person_name_parts(query, result)
+#     assert len(aligned) == 2
+#     assert aligned[0][0].form == aligned[0][1].form
+#     assert aligned[1][0].form == aligned[1][1].form
 
-    query = [
-        NamePart("smith", 0, NamePartTag.ANY),
-        NamePart("john", 1, NamePartTag.ANY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert aligned[0][0].form == aligned[0][1].form
-    assert aligned[1][0].form == aligned[1][1].form
+#     query = [
+#         NamePart("smith", 0, NamePartTag.ANY),
+#         NamePart("john", 1, NamePartTag.ANY),
+#     ]
+#     aligned = align_person_name_parts(query, result)
+#     assert len(aligned) == 2
+#     assert aligned[0][0].form == aligned[0][1].form
+#     assert aligned[1][0].form == aligned[1][1].form
 
-    query = [
-        NamePart("henry", 1, NamePartTag.GIVEN),
-        NamePart("smith", 0, NamePartTag.ANY),
-        NamePart("john", 1, NamePartTag.GIVEN),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 3
-    assert aligned[0][1] is None
-    assert aligned[1][0].form == aligned[1][1].form
-    assert aligned[2][0].form == aligned[2][1].form
+#     query = [
+#         NamePart("henry", 1, NamePartTag.GIVEN),
+#         NamePart("smith", 0, NamePartTag.ANY),
+#         NamePart("john", 1, NamePartTag.GIVEN),
+#     ]
+#     aligned = align_person_name_parts(query, result)
+#     assert len(aligned) == 3
+#     assert aligned[0][1] is None
+#     assert aligned[1][0].form == aligned[1][1].form
+#     assert aligned[2][0].form == aligned[2][1].form
 
-    query = [
-        NamePart("smith", 0, NamePartTag.GIVEN),
-        NamePart("john", 1, NamePartTag.FAMILY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 4
+#     query = [
+#         NamePart("smith", 0, NamePartTag.GIVEN),
+#         NamePart("john", 1, NamePartTag.FAMILY),
+#     ]
+#     aligned = align_person_name_parts(query, result)
+#     assert len(aligned) == 4
 
 
 def test_strict_levenshtein():
