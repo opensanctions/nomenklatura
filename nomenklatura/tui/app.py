@@ -4,7 +4,7 @@ from typing import Dict, Optional, Set, Tuple, cast
 from rich.console import RenderableType
 from rich.text import Text
 from textual.app import App, ComposeResult
-from textual.containers import Grid
+from textual.containers import Grid, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
@@ -193,12 +193,6 @@ class HistoryWidget(DedupeAppWidget):
         self.list_view.scroll_home(animate=False)
 
 
-class DedupeWidget(Widget):
-    def compose(self) -> ComposeResult:
-        yield CompareWidget()
-        yield HistoryWidget()
-
-
 class CompareWidget(DedupeAppWidget, can_focus=True):
     def render(self) -> RenderableType:
         if self.dedupe.message is not None:
@@ -213,6 +207,12 @@ class CompareWidget(DedupeAppWidget, can_focus=True):
                 url_base=self.dedupe.url_base,
             )
         return Text("No candidates.", justify="center")
+
+
+class DedupeWidget(Widget):
+    def compose(self) -> ComposeResult:
+        yield VerticalScroll(CompareWidget())
+        yield HistoryWidget()
 
 
 class DedupeApp(App[int]):
