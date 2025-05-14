@@ -170,9 +170,11 @@ class HistoryListView(ListView):
 
 class HistoryWidget(DedupeAppWidget):
     list_view: ListView
+    is_visible: bool = False
 
     def on_mount(self) -> None:
         self.border_title = "History"
+        self._apply_visibility()
         self.reload_history()
 
     def compose(self) -> ComposeResult:
@@ -187,10 +189,23 @@ class HistoryWidget(DedupeAppWidget):
         yield self.list_view
 
     def reload_history(self) -> None:
+        if not self.is_visible:
+            return
         self.list_view.clear()
         for edge in self.dedupe.resolver.get_judgements(HISTORY_LENGTH):
             self.list_view.append(ListItem(HistoryItem(edge)))
         self.list_view.scroll_home(animate=False)
+
+    def toggle_visible(self) -> None:
+        self.is_visible = not self.is_visible
+        self._apply_visibility()
+        self.reload_history()
+
+    def _apply_visibility(self) -> None:
+        if self.is_visible:
+            self.styles.display = "block"
+        else:
+            self.styles.display = "none"
 
 
 class CompareWidget(DedupeAppWidget, can_focus=True):
@@ -224,6 +239,7 @@ class DedupeApp(App[int]):
         ("n", "negative", "No match"),
         ("u", "unsure", "Unsure"),
         ("l", "latinize", "Latinize"),
+        ("h", "history", "Toggle History"),
         ("q", "exit_hard", "Quit"),
     ]
 
@@ -265,6 +281,9 @@ class DedupeApp(App[int]):
     async def action_latinize(self) -> None:
         self.dedupe.latinize = not self.dedupe.latinize
         self.force_render()
+
+    async def action_history(self) -> None:
+        cast(HistoryWidget, self.query_one(HistoryWidget)).toggle_visible()
 
     async def action_exit_hard(self) -> None:
         self.exit(0)
