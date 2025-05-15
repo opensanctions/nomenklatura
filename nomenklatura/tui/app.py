@@ -283,7 +283,7 @@ class DedupeApp(App[int]):
         self.force_render()
 
     async def action_history(self) -> None:
-        cast(HistoryWidget, self.query_one(HistoryWidget)).toggle_visible()
+        self.query_one(HistoryWidget).toggle_visible()
 
     async def action_exit_hard(self) -> None:
         self.exit(0)
