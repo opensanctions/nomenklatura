@@ -1,9 +1,6 @@
 from typing import List, Set
-from banal import ensure_list, hash_data
-from followthemoney import model
-from nomenklatura.entity import CompositeEntity
 
-from rigour.names import NamePart, NameTypeTag
+from rigour.names import NamePart
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName, Span
 
 
@@ -58,20 +55,8 @@ class Pairing:
 
         return True
 
-    # def clone(self) -> "Pairing":
-    #     return Pairing(
-    #         self.query,
-    #         self.result,
-    #         set(self.query_used),
-    #         set(self.result_used),
-    #         set(self.symbols),
-    #     )
-
     def add(self, query_span: Span, result_span: Span) -> "Pairing":
         """Add a pair of spans to the pairing."""
-        # self.query_used = self.query_used.union(query_span.parts)
-        # self.result_used = self.result_used.union(result_span.parts)
-        # self.symbols = self.symbols.union({query_span.symbol, result_span.symbol})
         return Pairing(
             self.query,
             self.result,
@@ -99,63 +84,3 @@ class Pairing:
         qrem = ":".join([p.form for p in self.query_remainder()])
         rrem = ":".join([p.form for p in self.result_remainder()])
         return f"Pairing(qrem={qrem}, rrem={rrem}, symbols={self.symbols})"
-
-
-def e(schema: str, **kwargs) -> CompositeEntity:
-    props = {}
-    for key, value in kwargs.items():
-        if value is not None:
-            props[key] = ensure_list(value)
-    data = {"schema": schema, "properties": props, "id": hash_data(props)}
-    return CompositeEntity.from_dict(model, data)
-
-
-if __name__ == "__main__":
-    from nomenklatura.matching.logic_v2.names.analysis import entity_names
-
-    query = e("Person", name="John A Joseph Smith")
-    result = e("Person", name="Smith, John Anton", middleName="Anton")
-    query_name = entity_names(NameTypeTag.PER, query, is_query=True).pop()
-    result_name = entity_names(NameTypeTag.PER, result).pop()
-
-    pairings = [Pairing.create(query_name, result_name)]
-    for part in query_name.parts:
-        next_pairings = []
-        for span in query_name.spans:
-            if part not in span.parts:
-                continue
-            for other in result_name.spans:
-                if span.symbol != other.symbol:
-                    continue
-                for pairing in pairings:
-                    if pairing.can_pair(span, other):
-                        next_pairing = pairing.clone()
-                        next_pairing.add(span, other)
-                        next_pairings.append(next_pairing)
-        if len(next_pairings):
-            pairings = next_pairings
-
-    # pairings = [Pairing.create(query_name, result_name)]
-    # for query_span, result_span in product(query_name.spans, result_name.spans):
-    #     if query_span.symbol != result_span.symbol:
-    #         continue
-    #     for pairing in pairings:
-    #         if pairing.can_pair(query_span, result_span):
-    #             new_pairing = pairing.add(query_span, result_span)
-    #             pairings.append(new_pairing)
-
-    # for pairing in list(pairings):
-    #     for other in pairings:
-    #         if pairing.subset(other):
-    #             pairings.remove(pairing)
-    #             break
-
-    # pairings.append(Pairing.create(query_name, result_name))
-
-    for pairing in pairings:
-        print("---")
-        print(pairing)
-        print(pairing.query_remainder())
-        print(pairing.result_remainder())
-        print(pairing.symbols)
-    print(len(pairings))

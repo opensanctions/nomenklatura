@@ -6,7 +6,7 @@ from nomenklatura.matching.logic_v2.names.util import GIVEN_NAME_TAGS, FAMILY_NA
 
 
 class Alignment:
-    def __init__(self):
+    def __init__(self) -> None:
         self.query_sorted: List[NamePart] = []
         self.result_sorted: List[NamePart] = []
         self.query_extra: List[NamePart] = []

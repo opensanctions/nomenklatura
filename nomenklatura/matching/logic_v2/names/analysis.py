@@ -90,10 +90,10 @@ def entity_names(
     # Remove short names that are contained in longer names. This is meant to prevent a scenario
     # where a short version of of a name ("John Smith") is matched to a query ("John K Smith"), where
     # a longer version would have disqualified the match ("John K Smith" != "John R Smith").
-    for name in list(names):
+    for name_obj in list(names):
         for other in names:
-            if name == other:
+            if name_obj == other:
                 continue
-            if name.contains(other):
+            if name_obj.contains(other):
                 names.remove(other)
     return names

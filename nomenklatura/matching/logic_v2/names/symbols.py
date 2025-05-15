@@ -55,7 +55,7 @@ class Span:
 
     def __eq__(self, other: Any) -> bool:
         try:
-            return self.symbol == other.symbol and self.parts == other.parts
+            return bool(self.symbol == other.symbol and self.parts == other.parts)
         except AttributeError:
             return False
 
@@ -94,11 +94,6 @@ class SymbolName(Name):
         """Return the normalized form of the name."""
         return " ".join([part.form for part in self.parts])
 
-    @property
-    def ascii_form(self) -> str:
-        """Return the ASCII form of the name."""
-        return " ".join([part.ascii for part in self.parts])
-
     def contains(self, other: "SymbolName") -> bool:
         """Check if this name contains another name."""
         if self == other or self.tag == NameTypeTag.UNK:
@@ -108,10 +103,10 @@ class SymbolName(Name):
         if self.tag == NameTypeTag.PER:
             forms = [part.form for part in self.parts]
             other_forms = [part.form for part in other.parts]
-            return len(list_intersection(forms, other_forms)) == len(other_forms)
+            return list_intersection(forms, other_forms) == len(other_forms)
         return other.norm_form in self.norm_form
 
-    def symbol_map(self) -> Dict[Symbol, List[NamePart]]:
+    def symbol_map(self) -> Dict[Symbol, List[Span]]:
         """Return a mapping of symbols to their string representations."""
         symbol_map: Dict[Symbol, List[Span]] = {}
         for span in self.spans:
@@ -119,15 +114,3 @@ class SymbolName(Name):
                 symbol_map[span.symbol] = []
             symbol_map[span.symbol].append(span)
         return symbol_map
-
-    # def common_symbols(self, other: "SymbolName") -> Set[Symbol]:
-    #     """Return the intersection of two SymbolName objects."""
-    #     return self.symbols.intersection(other.symbols)
-
-    # def non_symbol_parts(self, symbols: Set[Symbol]) -> List[NamePart]:
-    #     """Return a list of parts that are not explained by symbols."""
-    #     ignore_parts: Set[NamePart] = set()
-    #     for span in self.spans:
-    #         if span.symbol in symbols:
-    #             ignore_parts.update(span.parts)
-    #     return [part for part in self.parts if part not in ignore_parts]

@@ -1,3 +1,4 @@
+from typing import List
 from rigour.names import NameTypeTag
 from followthemoney.proxy import E
 from followthemoney import model
@@ -22,7 +23,7 @@ def match_name_symbolic(query: SymbolName, result: SymbolName) -> float:
     pairings = [Pairing.create(query, result)]
     result_map = result.symbol_map()
     for part in query.parts:
-        next_pairings = []
+        next_pairings: List[Pairing] = []
         for qspan in query.spans:
             if part not in qspan.parts:
                 continue

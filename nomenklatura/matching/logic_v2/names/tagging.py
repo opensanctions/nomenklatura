@@ -6,7 +6,7 @@ from rigour.text.dictionary import Scanner
 from rigour.names import load_person_names_mapping
 
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
-from nomenklatura.matching.logic_v2.names.util import normalize_name
+from nomenklatura.matching.logic_v2.names.util import normalize_name, name_normalizer
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +85,8 @@ def get_org_tagger() -> Tagger:
         display = org_type.get("display")
         if display is not None:
             type_sym = Symbol(Symbol.Category.ORG_TYPE, display)
-            mapping[normalize_name(display)].append(class_sym)
+            if class_sym is not None:
+                mapping[normalize_name(display)].append(class_sym)
         for alias in org_type.get("aliases", []):
             nalias = normalize_name(alias)
             if type_sym is not None and type_sym not in mapping.get(nalias, []):
@@ -120,7 +121,7 @@ def get_person_tagger() -> Tagger:
             if sym not in mapping.get(nvalue, []):
                 mapping[nvalue].append(sym)
 
-    name_mapping = load_person_names_mapping(normalizer=normalize_name)
+    name_mapping = load_person_names_mapping(normalizer=name_normalizer)
     for name, qids in name_mapping.items():
         for qid in qids:
             sym = Symbol(Symbol.Category.PER_NAME, int(qid[1:]))

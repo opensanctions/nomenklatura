@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Set, Type
 
 from rigour.ids import get_identifier_format, IdentifierFormat
 from followthemoney import model
@@ -7,7 +7,9 @@ from followthemoney.types import registry
 from followthemoney.proxy import E
 
 
-def _format_normalize(format: IdentifierFormat, entity: E, prop: Property) -> Set[str]:
+def _format_normalize(
+    format: Type[IdentifierFormat], entity: E, prop: Property
+) -> Set[str]:
     values: Set[str] = set()
     for value in entity.get(prop, quiet=True):
         norm_value = format.normalize(value)
@@ -27,14 +29,13 @@ def _identifier_format_match(format_name: str, query: E, result: E) -> float:
     for prop in schema.properties.values():
         if prop.type != registry.identifier or not prop.matchable:
             continue
-        prop_format = get_identifier_format(prop.format)
-        if prop.format is not None and prop_format != format:
+        if prop.format is not None and get_identifier_format(prop.format) != format:
             continue
         query_values = _format_normalize(format, query, prop)
         query_identifiers.update(query_values)
         result_values = _format_normalize(format, result, prop)
         result_identifiers.update(result_values)
-        if prop.format is not None and prop_format == format:
+        if prop.format is not None and get_identifier_format(prop.format) == format:
             query_format.update(query_values)
             result_format.update(result_values)
     if len(query_format.intersection(result_identifiers)) > 0:
