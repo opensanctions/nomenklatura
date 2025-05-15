@@ -6,7 +6,6 @@ from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 from nomenklatura.matching.compare.identifiers import identifier_match
-from nomenklatura.matching.compare.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
@@ -21,6 +20,7 @@ from nomenklatura.matching.logic_v1.identifiers import bic_code_match
 from nomenklatura.matching.logic_v1.identifiers import inn_code_match, ogrn_code_match
 from nomenklatura.matching.logic_v1.identifiers import isin_security_match
 from nomenklatura.matching.logic_v1.identifiers import lei_code_match
+from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.util import FNUL
 
 

@@ -1,8 +1,10 @@
 from enum import Enum
-from typing import Any, List, Set
+from typing import Any, Dict, List, Set
 from rigour.names.name import Name
 from rigour.names.tag import NameTypeTag
 from rigour.names.part import NamePart
+
+from nomenklatura.util import list_intersection
 
 
 class Symbol:
@@ -10,11 +12,13 @@ class Symbol:
 
     class Category(Enum):
         ORG_TYPE = "org.type"
-        ORG_SYMBOL = "org.symb"
-        PER_ABBR = "per.abbr"
+        ORG_CLASS = "org.class"
+        ORG_SYMBOL = "org.symbol"
+        PER_INIT = "per.initial"
         PER_NAME = "per.name"
-        PER_SYMBOL = "per.symb"
-        PHONETIC = "phonetic"
+        PER_SYMBOL = "per.symbol"
+        ORDINAL = "ordinal"
+        # PHONETIC = "phonetic"
 
     __slots__ = ["category", "id"]
 
@@ -45,6 +49,15 @@ class Span:
     def __init__(self, parts: List[NamePart], symbol: Symbol) -> None:
         self.parts = parts
         self.symbol = symbol
+
+    def __hash__(self) -> int:
+        return hash((tuple(self.parts), self.symbol))
+
+    def __eq__(self, other: Any) -> bool:
+        try:
+            return self.symbol == other.symbol and self.parts == other.parts
+        except AttributeError:
+            return False
 
 
 class SymbolName(Name):
@@ -81,14 +94,40 @@ class SymbolName(Name):
         """Return the normalized form of the name."""
         return " ".join([part.form for part in self.parts])
 
-    def common_symbols(self, other: "SymbolName") -> Set[Symbol]:
-        """Return the intersection of two SymbolName objects."""
-        return self.symbols.intersection(other.symbols)
+    @property
+    def ascii_form(self) -> str:
+        """Return the ASCII form of the name."""
+        return " ".join([part.ascii for part in self.parts])
 
-    def non_symbol_parts(self, symbols: Set[Symbol]) -> List[NamePart]:
-        """Return a list of parts that are not explained by symbols."""
-        ignore_parts: Set[NamePart] = set()
+    def contains(self, other: "SymbolName") -> bool:
+        """Check if this name contains another name."""
+        if self == other or self.tag == NameTypeTag.UNK:
+            return False
+        if len(self.parts) < len(other.parts):
+            return False
+        if self.tag == NameTypeTag.PER:
+            forms = [part.form for part in self.parts]
+            other_forms = [part.form for part in other.parts]
+            return len(list_intersection(forms, other_forms)) == len(other_forms)
+        return other.norm_form in self.norm_form
+
+    def symbol_map(self) -> Dict[Symbol, List[NamePart]]:
+        """Return a mapping of symbols to their string representations."""
+        symbol_map: Dict[Symbol, List[Span]] = {}
         for span in self.spans:
-            if span.symbol in symbols:
-                ignore_parts.update(span.parts)
-        return [part for part in self.parts if part not in ignore_parts]
+            if span.symbol not in symbol_map:
+                symbol_map[span.symbol] = []
+            symbol_map[span.symbol].append(span)
+        return symbol_map
+
+    # def common_symbols(self, other: "SymbolName") -> Set[Symbol]:
+    #     """Return the intersection of two SymbolName objects."""
+    #     return self.symbols.intersection(other.symbols)
+
+    # def non_symbol_parts(self, symbols: Set[Symbol]) -> List[NamePart]:
+    #     """Return a list of parts that are not explained by symbols."""
+    #     ignore_parts: Set[NamePart] = set()
+    #     for span in self.spans:
+    #         if span.symbol in symbols:
+    #             ignore_parts.update(span.parts)
+    #     return [part for part in self.parts if part not in ignore_parts]

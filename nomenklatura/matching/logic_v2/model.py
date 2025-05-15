@@ -9,6 +9,7 @@ from nomenklatura.matching.compare.identifiers import identifier_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.compare.addresses import address_entity_match
+from nomenklatura.matching.compare.addresses import address_prop_match
 from nomenklatura.matching.logic_v2.names import name_match
 from nomenklatura.matching.logic_v2.identifiers import bic_code_match
 from nomenklatura.matching.logic_v2.identifiers import inn_code_match, ogrn_code_match
@@ -42,6 +43,7 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=npi_code_match, weight=0.95),
         Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
+        Feature(func=address_prop_match, weight=0.2, qualifier=True),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
         Feature(func=dob_day_disjoint, weight=-0.25, qualifier=True),
