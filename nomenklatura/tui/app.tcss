@@ -1,7 +1,3 @@
-CompareWidget:focus {
-    background: #222222;
-}
-
 ConfirmEditModal {
     align: center middle;
 }
@@ -40,12 +36,15 @@ HistoryWidget > .help {
 
 DedupeWidget {
     layout: horizontal;
-    overflow-x: auto;
+}
+
+CompareWidget:focus {
+    background: #222222;
 }
 
 CompareWidget {
-    height: auto;
     width: 1fr;
+    height: auto;
 }
 
 DedupeApp {
