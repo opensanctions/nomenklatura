@@ -1,5 +1,4 @@
-from typing import List, Optional, Tuple
-from itertools import product
+from typing import List, Optional
 from rigour.names import NamePartTag, NamePart
 from rigour.text import levenshtein_similarity
 
@@ -12,6 +11,9 @@ class Alignment:
         self.result_sorted: List[NamePart] = []
         self.query_extra: List[NamePart] = []
         self.result_extra: List[NamePart] = []
+
+    def __len__(self) -> int:
+        return max(len(self.query_sorted), len(self.result_sorted))
 
 
 def check_align_tags(query: NamePart, result: NamePart) -> bool:

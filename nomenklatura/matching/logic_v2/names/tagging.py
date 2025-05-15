@@ -1,15 +1,13 @@
-import gzip
 import logging
 from functools import cache
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 from rigour.text.dictionary import Scanner
+from rigour.names import load_person_names_mapping
 
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.util import normalize_name
-from nomenklatura.util import DATA_PATH
 
-NAMES_PATH = DATA_PATH.joinpath("names.gz")
 log = logging.getLogger(__name__)
 
 
@@ -44,6 +42,21 @@ class Tagger(Scanner):
         return symbols
 
 
+def common_symbols() -> Dict[str, List[Symbol]]:
+    """Get the common symbols for names."""
+    from rigour.data.names.data import ORDINALS
+
+    mapping: Dict[str, List[Symbol]] = defaultdict(list)
+    for key, values in ORDINALS.items():
+        sym = Symbol(Symbol.Category.ORDINAL, key.upper())
+        for value in values:
+            nvalue = normalize_name(value)
+            if sym not in mapping.get(nvalue, []):
+                mapping[nvalue].append(sym)
+
+    return mapping
+
+
 @cache
 def get_org_tagger() -> Tagger:
     """Get the organization name tagger."""
@@ -52,11 +65,11 @@ def get_org_tagger() -> Tagger:
 
     log.info("Loading org type/symbol tagger...")
 
-    mapping: Dict[str, List[Symbol]] = defaultdict(list)
+    mapping = common_symbols()
     for key, values in ORG_SYMBOLS.items():
         sym = Symbol(Symbol.Category.ORG_SYMBOL, key.upper())
         nkey = normalize_name(key)
-        mapping[nkey].append(Symbol(Symbol.Category.ORG_SYMBOL, key))
+        mapping[nkey].append(sym)
         for value in values:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
@@ -64,17 +77,21 @@ def get_org_tagger() -> Tagger:
 
     for org_type in ORG_TYPES:
         # TODO: should this apply to the display name or the compare name as separate symbols?
-        type_key = org_type.get("compare", org_type.get("display"))
-        if type_key is None:
-            continue
-        ot_sym = Symbol(Symbol.Category.ORG_TYPE, type_key)
+        class_sym: Optional[Symbol] = None
+        type_sym: Optional[Symbol] = None
+        compare = org_type.get("compare")
+        if compare is not None:
+            class_sym = Symbol(Symbol.Category.ORG_CLASS, compare)
         display = org_type.get("display")
         if display is not None:
-            mapping[normalize_name(display)].append(ot_sym)
+            type_sym = Symbol(Symbol.Category.ORG_TYPE, display)
+            mapping[normalize_name(display)].append(class_sym)
         for alias in org_type.get("aliases", []):
             nalias = normalize_name(alias)
-            if ot_sym not in mapping.get(nalias, []):
-                mapping[nalias].append(ot_sym)
+            if type_sym is not None and type_sym not in mapping.get(nalias, []):
+                mapping[nalias].append(type_sym)
+            if class_sym is not None and class_sym not in mapping.get(nalias, []):
+                mapping[nalias].append(class_sym)
 
     return Tagger(mapping)
 
@@ -93,7 +110,7 @@ def get_person_tagger() -> Tagger:
 
     log.info("Loading person tagger...")
 
-    mapping: Dict[str, List[Symbol]] = defaultdict(list)
+    mapping = common_symbols()
     for key, values in PERSON_SYMBOLS.items():
         sym = Symbol(Symbol.Category.PER_SYMBOL, key.upper())
         nkey = normalize_name(key)
@@ -103,19 +120,11 @@ def get_person_tagger() -> Tagger:
             if sym not in mapping.get(nvalue, []):
                 mapping[nvalue].append(sym)
 
-    with gzip.open(NAMES_PATH, "rt", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            names, qid = line.split(" => ")
+    name_mapping = load_person_names_mapping(normalizer=normalize_name)
+    for name, qids in name_mapping.items():
+        for qid in qids:
             sym = Symbol(Symbol.Category.PER_NAME, int(qid[1:]))
-            names_norm: Set[str] = set()
-            for alias in names.split(", "):
-                names_norm.add(normalize_name(alias))
-            if len(names_norm) > 1:
-                for norm in names_norm:
-                    mapping[norm].append(sym)
+            mapping[name].append(sym)
 
     log.info("Loaded person tagger (%s terms).", len(mapping))
     return Tagger(mapping)
