@@ -4,15 +4,15 @@ from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
-from nomenklatura.matching.compare.identifiers import crypto_wallet_address
+from nomenklatura.matching.compare.identifiers import CryptoWalletAddress
 from nomenklatura.matching.compare.identifiers import bic_code_match
 from nomenklatura.matching.compare.identifiers import inn_code_match, ogrn_code_match
 from nomenklatura.matching.compare.identifiers import lei_code_match, identifier_match
 from nomenklatura.matching.compare.identifiers import isin_security_match
-from nomenklatura.matching.compare.identifiers import vessel_imo_mmsi_match
+from nomenklatura.matching.compare.identifiers import VesselIMO_MMSIMatch
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
-from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
+from nomenklatura.matching.compare.names import last_name_mismatch, NameLiteralMatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.compare.phonetic import person_name_phonetic_match
@@ -30,7 +30,7 @@ class LogicV1(HeuristicAlgorithm):
 
     NAME = "logic-v1"
     features = [
-        Feature(func=name_literal_match, weight=1.0),
+        Feature(func=NameLiteralMatch(), weight=1.0),
         Feature(func=person_name_jaro_winkler, weight=0.8),
         Feature(func=person_name_phonetic_match, weight=0.9),
         Feature(func=name_fingerprint_levenshtein, weight=0.9),
@@ -38,11 +38,11 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=name_metaphone_match, weight=FNUL),
         Feature(func=name_soundex_match, weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
-        Feature(func=crypto_wallet_address, weight=0.98),
+        Feature(func=CryptoWalletAddress(), weight=0.98),
         Feature(func=isin_security_match, weight=0.98),
         Feature(func=lei_code_match, weight=0.95),
         Feature(func=ogrn_code_match, weight=0.95),
-        Feature(func=vessel_imo_mmsi_match, weight=0.95),
+        Feature(func=VesselIMO_MMSIMatch(), weight=0.95),
         Feature(func=inn_code_match, weight=0.95),
         Feature(func=bic_code_match, weight=0.95),
         Feature(func=identifier_match, weight=0.85),

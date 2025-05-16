@@ -3,6 +3,7 @@ from itertools import product
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from fingerprints import clean_name_light, clean_name_ascii
+from nomenklatura.matching.types import CompareFunction
 from rigour.text.distance import levenshtein_similarity
 from rigour.text.distance import jaro_winkler, is_levenshtein_plausible
 from nomenklatura.util import names_word_list, name_words
@@ -113,12 +114,16 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     return max_score
 
 
-def name_literal_match(query: E, result: E) -> float:
+class NameLiteralMatch(CompareFunction):
     """Two entities have the same name, without normalization applied to the name."""
-    query_names, result_names = type_pair(query, result, registry.name)
-    qnames = clean_map(query_names, clean_name_light)
-    rnames = clean_map(result_names, clean_name_light)
-    return 1.0 if has_overlap(qnames, rnames) else 0.0
+
+    domain = "Properties of type `Thing:name`"
+
+    def __call__(self, query: E, result: E) -> float:
+        query_names, result_names = type_pair(query, result, registry.name)
+        qnames = clean_map(query_names, clean_name_light)
+        rnames = clean_map(result_names, clean_name_light)
+        return 1.0 if has_overlap(qnames, rnames) else 0.0
 
 
 def last_name_mismatch(query: E, result: E) -> float:

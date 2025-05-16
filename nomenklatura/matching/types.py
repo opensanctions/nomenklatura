@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional
 from followthemoney.proxy import E, EntityProxy
+
+from camel_converter import to_snake
 
 from nomenklatura.matching.util import make_github_url, FNUL
 
 Encoded = List[float]
-CompareFunction = Callable[[EntityProxy, EntityProxy], float]
 
 
 class FeatureDoc(BaseModel):
@@ -50,6 +51,15 @@ class ScoringAlgorithm(object):
         raise NotImplementedError
 
 
+class CompareFunction:
+    name: Optional[str] = None  # override camelcase of class name
+    domain: str
+
+    def __call__(left: EntityProxy, right: EntityProxy) -> float:
+        """Compare two entities and return a score."""
+        raise NotImplementedError
+
+
 class Feature(BaseModel):
     func: CompareFunction
     weight: float
@@ -57,7 +67,9 @@ class Feature(BaseModel):
 
     @property
     def name(self) -> str:
-        return self.func.__name__
+        if self.name is not None:
+            return self.name
+        return to_snake(self.func.__name__)
 
     @property
     def doc(self) -> FeatureDoc:
@@ -68,6 +80,10 @@ class Feature(BaseModel):
             coefficient=self.weight,
             url=make_github_url(self.func),
         )
+
+    @property
+    def domain(self) -> str:
+        return self.func.domain
 
 
 class HeuristicAlgorithm(ScoringAlgorithm):

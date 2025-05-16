@@ -1,3 +1,4 @@
+from nomenklatura.matching.types import CompareFunction
 from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC, StrictFormat
 from followthemoney.proxy import E
 from followthemoney.types import registry
@@ -67,23 +68,32 @@ def isin_security_match(query: E, result: E) -> float:
     return _bidi_id_prop_match(query, result, "isin", ISIN.normalize)
 
 
-def vessel_imo_mmsi_match(query: E, result: E) -> float:
+class VesselIMO_MMSIMatch(CompareFunction):
     """Two vessels have the same IMO or MMSI identifier."""
-    imo_score = _bidi_id_prop_match(query, result, "imoNumber", IMO.normalize)
-    if imo_score > 0.0:
-        return imo_score
-    return _bidi_id_prop_match(query, result, "mmsi")
+
+    domain = "Properties named `imoNumber` or `mmsi`"
+    name = "vessel_imo_mmsi_match"
+
+    def __call__(self, query: E, result: E) -> float:
+        imo_score = _bidi_id_prop_match(query, result, "imoNumber", IMO.normalize)
+        if imo_score > 0.0:
+            return imo_score
+        return _bidi_id_prop_match(query, result, "mmsi")
 
 
-def crypto_wallet_address(query: E, result: E) -> float:
+class CryptoWalletAddress(CompareFunction):
     """Two cryptocurrency wallets have the same public key."""
-    if not has_schema(query, result, "CryptoWallet"):
+
+    domain = "Properties named `publicKey` of CryptoWallet entities"
+
+    def __call__(self, query: E, result: E) -> float:
+        if not has_schema(query, result, "CryptoWallet"):
+            return 0.0
+        lv, rv = props_pair(query, result, ["publicKey"])
+        for key in lv.intersection(rv):
+            if len(key) > 10:
+                return 1.0
         return 0.0
-    lv, rv = props_pair(query, result, ["publicKey"])
-    for key in lv.intersection(rv):
-        if len(key) > 10:
-            return 1.0
-    return 0.0
 
 
 def orgid_disjoint(query: E, result: E) -> float:
