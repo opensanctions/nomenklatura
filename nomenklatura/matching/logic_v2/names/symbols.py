@@ -18,7 +18,7 @@ class Symbol:
         PER_NAME = "per.name"
         PER_SYMBOL = "per.symbol"
         ORDINAL = "ordinal"
-        # PHONETIC = "phonetic"
+        PHONETIC = "phonetic"
 
     __slots__ = ["category", "id"]
 

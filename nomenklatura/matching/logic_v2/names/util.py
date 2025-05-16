@@ -10,6 +10,7 @@ GIVEN_NAME_TAGS = {
     NamePartTag.PATRONYMIC,
     NamePartTag.MATRONYMIC,
     NamePartTag.HONORIFIC,
+    # NamePartTag.NICK,
 }
 FAMILY_NAME_TAGS = {
     NamePartTag.PATRONYMIC,
@@ -18,7 +19,6 @@ FAMILY_NAME_TAGS = {
     NamePartTag.SUFFIX,
     NamePartTag.TRIBAL,
     NamePartTag.HONORIFIC,
-    # NamePartTag.NICK,
 }
 
 
