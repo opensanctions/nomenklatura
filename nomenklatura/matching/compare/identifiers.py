@@ -4,26 +4,7 @@ from followthemoney.types import registry
 from rigour.text.distance import levenshtein
 
 from nomenklatura.matching.util import type_pair, props_pair, has_schema, max_in_sets
-from nomenklatura.matching.compare.util import has_overlap, clean_map, CleanFunc
-
-
-def _id_prop_match(
-    query: E,
-    result: E,
-    prop_name: str,
-    clean: CleanFunc = None,
-) -> bool:
-    """Check if a specific property identifier is shared by two entities."""
-    prop = query.schema.get(prop_name)
-    if prop is None:
-        return False
-    lv = clean_map(query.get(prop), clean=clean)
-    if not len(lv):
-        return False
-    rv_ = result.get_type_values(prop.type, matchable=True)
-    rv = clean_map(rv_, clean=clean)
-    common = lv.intersection(rv)
-    return len(common) > 0
+from nomenklatura.matching.compare.util import has_overlap, clean_map
 
 
 def crypto_wallet_address(query: E, result: E) -> float:
