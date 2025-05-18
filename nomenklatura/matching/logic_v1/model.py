@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
@@ -31,30 +31,30 @@ class LogicV1(HeuristicAlgorithm):
 
     NAME = "logic-v1"
     features = [
-        Feature(func=name_literal_match, weight=1.0),
-        Feature(func=person_name_jaro_winkler, weight=0.8),
-        Feature(func=person_name_phonetic_match, weight=0.9),
-        Feature(func=name_fingerprint_levenshtein, weight=0.9),
+        Feature(func=FtResult.wrap(name_literal_match), weight=1.0),
+        Feature(func=FtResult.wrap(person_name_jaro_winkler), weight=0.8),
+        Feature(func=FtResult.wrap(person_name_phonetic_match), weight=0.9),
+        Feature(func=FtResult.wrap(name_fingerprint_levenshtein), weight=0.9),
         # These are there so they can be enabled using custom weights:
-        Feature(func=name_metaphone_match, weight=FNUL),
-        Feature(func=name_soundex_match, weight=FNUL),
-        Feature(func=address_entity_match, weight=0.98),
-        Feature(func=crypto_wallet_address, weight=0.98),
-        Feature(func=isin_security_match, weight=0.98),
-        Feature(func=lei_code_match, weight=0.95),
-        Feature(func=ogrn_code_match, weight=0.95),
-        Feature(func=vessel_imo_mmsi_match, weight=0.95),
-        Feature(func=inn_code_match, weight=0.95),
-        Feature(func=bic_code_match, weight=0.95),
-        Feature(func=identifier_match, weight=0.85),
-        Feature(func=weak_alias_match, weight=0.8),
-        Feature(func=country_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=last_name_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
-        Feature(func=dob_day_disjoint, weight=-0.2, qualifier=True),
-        Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=orgid_disjoint, weight=-0.2, qualifier=True),
-        Feature(func=numbers_mismatch, weight=-0.1, qualifier=True),
+        Feature(func=FtResult.wrap(name_metaphone_match), weight=FNUL),
+        Feature(func=FtResult.wrap(name_soundex_match), weight=FNUL),
+        Feature(func=FtResult.wrap(address_entity_match), weight=0.98),
+        Feature(func=FtResult.wrap(crypto_wallet_address), weight=0.98),
+        Feature(func=FtResult.wrap(isin_security_match), weight=0.98),
+        Feature(func=FtResult.wrap(lei_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(ogrn_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(vessel_imo_mmsi_match), weight=0.95),
+        Feature(func=FtResult.wrap(inn_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(identifier_match), weight=0.85),
+        Feature(func=FtResult.wrap(weak_alias_match), weight=0.8),
+        Feature(func=FtResult.wrap(country_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
+        Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(gender_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(numbers_mismatch), weight=-0.1, qualifier=True),
     ]
 
     @classmethod

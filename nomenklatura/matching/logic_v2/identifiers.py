@@ -4,11 +4,11 @@ from rigour.ids import get_identifier_format, IdentifierFormat
 from followthemoney import model
 from followthemoney.property import Property
 from followthemoney.types import registry
-from followthemoney.proxy import E
+from followthemoney.proxy import EntityProxy
 
 
 def _format_normalize(
-    format: Type[IdentifierFormat], entity: E, prop: Property
+    format: Type[IdentifierFormat], entity: EntityProxy, prop: Property
 ) -> Set[str]:
     values: Set[str] = set()
     for value in entity.get(prop, quiet=True):
@@ -18,7 +18,9 @@ def _format_normalize(
     return values
 
 
-def _identifier_format_match(format_name: str, query: E, result: E) -> float:
+def _identifier_format_match(
+    format_name: str, query: EntityProxy, result: EntityProxy
+) -> float:
     """Check if the identifier format is the same for two entities."""
     schema = model.common_schema(query.schema, result.schema)
     format = get_identifier_format(format_name)
@@ -47,44 +49,44 @@ def _identifier_format_match(format_name: str, query: E, result: E) -> float:
     return 0.0
 
 
-def lei_code_match(query: E, result: E) -> float:
+def lei_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same Legal Entity Identifier."""
     return _identifier_format_match("lei", query, result)
 
 
-def bic_code_match(query: E, result: E) -> float:
+def bic_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same SWIFT BIC."""
     return _identifier_format_match("bic", query, result)
 
 
-def ogrn_code_match(query: E, result: E) -> float:
+def ogrn_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same Russian company registration (OGRN) code."""
     return _identifier_format_match("ogrn", query, result)
 
 
-def inn_code_match(query: E, result: E) -> float:
+def inn_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same Russian tax identifier (INN)."""
     return _identifier_format_match("inn", query, result)
 
 
-def uei_code_match(query: E, result: E) -> float:
+def uei_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same US Unique Entity ID (UEI)."""
     return _identifier_format_match("uei", query, result)
 
 
-def npi_code_match(query: E, result: E) -> float:
+def npi_code_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two entities have the same US National Provider Identifier (NPI)."""
     return _identifier_format_match("npi", query, result)
 
 
-def isin_security_match(query: E, result: E) -> float:
+def isin_security_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two securities have the same ISIN."""
     # if not has_schema(query, result, "Security"):
     #     return 0.0
     return _identifier_format_match("isin", query, result)
 
 
-def vessel_imo_mmsi_match(query: E, result: E) -> float:
+def vessel_imo_mmsi_match(query: EntityProxy, result: EntityProxy) -> float:
     """Two vessels have the same IMO or MMSI identifier."""
     imo_score = _identifier_format_match("imo", query, result)
     if imo_score > 0.0:

@@ -1,6 +1,6 @@
 from typing import Dict
 
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.name_based.misc import orgid_disjoint
@@ -19,8 +19,8 @@ class NameMatcher(HeuristicAlgorithm):
 
     NAME = "name-based"
     features = [
-        Feature(func=jaro_name_parts, weight=0.5),
-        Feature(func=soundex_name_parts, weight=0.5),
+        Feature(func=FtResult.wrap(jaro_name_parts), weight=0.5),
+        Feature(func=FtResult.wrap(soundex_name_parts), weight=0.5),
     ]
 
     @classmethod
@@ -40,13 +40,13 @@ class NameQualifiedMatcher(HeuristicAlgorithm):
 
     NAME = "name-qualified"
     features = [
-        Feature(func=jaro_name_parts, weight=0.5),
-        Feature(func=soundex_name_parts, weight=0.5),
-        Feature(func=country_mismatch, weight=-0.1, qualifier=True),
-        Feature(func=dob_year_disjoint, weight=-0.1, qualifier=True),
-        Feature(func=dob_day_disjoint, weight=-0.15, qualifier=True),
-        Feature(func=gender_mismatch, weight=-0.1, qualifier=True),
-        Feature(func=orgid_disjoint, weight=-0.1, qualifier=True),
+        Feature(func=FtResult.wrap(jaro_name_parts), weight=0.5),
+        Feature(func=FtResult.wrap(soundex_name_parts), weight=0.5),
+        Feature(func=FtResult.wrap(country_mismatch), weight=-0.1, qualifier=True),
+        Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.1, qualifier=True),
+        Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.15, qualifier=True),
+        Feature(func=FtResult.wrap(gender_mismatch), weight=-0.1, qualifier=True),
+        Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.1, qualifier=True),
     ]
 
     @classmethod
