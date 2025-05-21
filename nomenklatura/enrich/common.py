@@ -162,7 +162,8 @@ class Enricher(BaseEnricher[DS], ABC):
                         retry_chunked_encoding_error=retry_chunked_encoding_error - 1,
                     )
 
-                raise EnrichmentException(rex) from rex
+                msg = "HTTP POST failed [%s]: %s" % (url, rex)
+                raise EnrichmentException(msg) from rex
             except RequestException as rex:
                 if rex.response is not None and rex.response.status_code in (401, 403):
                     raise EnrichmentAbort("Authorization failure: %s" % url) from rex
