@@ -74,7 +74,7 @@ class YenteEnricher(Enricher[DS]):
         }
         for retry in range(4):
             try:
-                response = self.http_post_json_cached(url, cache_key, query, retry=0)
+                response = self.http_post_json_cached(url, cache_key, query)
                 inner_resp = response.get("responses", {}).get("entity", {})
                 for result in inner_resp.get("results", []):
                     proxy = self.load_entity(entity, result)

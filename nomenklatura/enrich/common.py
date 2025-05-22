@@ -7,7 +7,7 @@ from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, ChunkedEncodingError
 from followthemoney.types import registry
 from followthemoney.types.topic import TopicType
 from rigour.urls import build_url, ParamsType
@@ -137,7 +137,7 @@ class Enricher(BaseEnricher[DS], ABC):
         data: Any = None,
         headers: HeadersType = None,
         cache_days: Optional[int] = None,
-        retry: int = 3,
+        retry_chunked_encoding_error: int = 1,
     ) -> Any:
         cache_days_ = self.cache_days if cache_days is None else cache_days
         resp_data = self.cache.get_json(cache_key, max_age=cache_days_)
@@ -145,24 +145,29 @@ class Enricher(BaseEnricher[DS], ABC):
             try:
                 resp = self.session.post(url, json=json, data=data, headers=headers)
                 resp.raise_for_status()
+            except ChunkedEncodingError as rex:
+                # Due to https://github.com/urllib3/urllib3/issues/2751#issuecomment-2567630065,
+                # urllib3's Retry strategy will not retry on chunked encoding errors.
+                # Since urllib won't retry it, retry it here.
+                # urllib does close the connection.
+                if "Response ended prematurely" in str(rex) and retry_chunked_encoding_error > 0:
+                    log.info("Retrying due to chunked encoding error: %s", rex)
+                    return self.http_post_json_cached(
+                        url,
+                        cache_key,
+                        json=json,
+                        data=data,
+                        headers=headers,
+                        cache_days=cache_days,
+                        retry_chunked_encoding_error=retry_chunked_encoding_error - 1,
+                    )
+
+                msg = "HTTP POST failed [%s]: %s" % (url, rex)
+                raise EnrichmentException(msg) from rex
             except RequestException as rex:
                 if rex.response is not None and rex.response.status_code in (401, 403):
                     raise EnrichmentAbort("Authorization failure: %s" % url) from rex
-                if rex.response is not None and rex.response.status_code == 429:
-                    if retry > 0:
-                        log.info("Rate limit exceeded. Sleeping for 60s.")
-                        time.sleep(61)
-                        return self.http_post_json_cached(
-                            url,
-                            cache_key,
-                            json=json,
-                            cache_days=cache_days,
-                            retry=retry - 1,
-                        )
-                    else:
-                        raise EnrichmentAbort(
-                            "Rate limit exceeded and out of retries: %s" % url
-                        ) from rex
+
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
                 log.info(f"{msg}\n{traceback.format_exc()}")
                 raise EnrichmentException(msg) from rex
