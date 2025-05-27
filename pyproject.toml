@@ -30,6 +30,7 @@ dependencies = [
     "pydantic > 2.0.0, < 3.0.0",
     "click < 9.0.0",
     "lxml > 4.0.0, < 6.0.0",
+    "camel-converter",
 ]
 
 [project.urls]
