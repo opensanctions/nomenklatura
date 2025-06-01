@@ -1,25 +1,7 @@
 from typing import Optional
 import unicodedata
 from rigour.names import tokenize_name
-from rigour.names import NamePartTag
 from rigour.text import levenshtein
-
-GIVEN_NAME_TAGS = {
-    NamePartTag.GIVEN,
-    NamePartTag.MIDDLE,
-    NamePartTag.PATRONYMIC,
-    NamePartTag.MATRONYMIC,
-    NamePartTag.HONORIFIC,
-    # NamePartTag.NICK,
-}
-FAMILY_NAME_TAGS = {
-    NamePartTag.PATRONYMIC,
-    NamePartTag.MATRONYMIC,
-    NamePartTag.FAMILY,
-    NamePartTag.SUFFIX,
-    NamePartTag.TRIBAL,
-    NamePartTag.HONORIFIC,
-}
 
 
 def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:

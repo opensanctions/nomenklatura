@@ -1,14 +1,14 @@
 from typing import Set
 from rigour.names import NameTypeTag, NamePartTag
 from rigour.names.person import remove_person_prefixes
-from followthemoney.proxy import E
+from rigour.names.tag import GIVEN_NAME_TAGS
+from followthemoney.proxy import EntityProxy
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.tagging import tag_org_name, tag_person_name
 from nomenklatura.matching.logic_v2.names.util import prenormalize_name
-from nomenklatura.matching.logic_v2.names.util import GIVEN_NAME_TAGS
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),
@@ -38,7 +38,7 @@ def schema_type_tag(schema: Schema) -> NameTypeTag:
 
 # @lru_cache(maxsize=128)  # Cache the query when doing multiple comparisons
 def entity_names(
-    type_tag: NameTypeTag, entity: E, is_query: bool = False
+    type_tag: NameTypeTag, entity: EntityProxy, is_query: bool = False
 ) -> Set[SymbolName]:
     """This will transform the entity into a set of names with tags applied. The idea
     is to tag the names with the type of entity they are, e.g. person, organization,

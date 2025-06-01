@@ -1,8 +1,7 @@
-from rigour.names import NameTypeTag, NamePartTag, NamePart
+from rigour.names import NameTypeTag, NamePartTag
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
 from nomenklatura.matching.logic_v2.names.symbols import Symbol
 
-from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
 from nomenklatura.matching.logic_v2.names.util import strict_levenshtein
 
 from .util import e
@@ -57,57 +56,6 @@ def test_entity_names_company():
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
-
-
-def test_align_person_name_parts():
-    query = [
-        NamePart("john", 0, NamePartTag.GIVEN),
-        NamePart("smith", 1, NamePartTag.FAMILY),
-    ]
-    result = [
-        NamePart("john", 0, NamePartTag.GIVEN),
-        NamePart("smith", 1, NamePartTag.FAMILY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert aligned.query_sorted[1].form == "john"
-    assert aligned.result_sorted[1].form == "john"
-    assert aligned.query_sorted[0].form == "smith"
-    assert aligned.result_sorted[0].form == "smith"
-    query = [
-        NamePart("smith", 0, NamePartTag.FAMILY),
-        NamePart("john", 1, NamePartTag.GIVEN),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2, (aligned.query_sorted, aligned.result_sorted)
-    assert aligned.query_sorted[0].form == aligned.result_sorted[0].form
-
-    query = [
-        NamePart("smith", 0, NamePartTag.ANY),
-        NamePart("john", 1, NamePartTag.ANY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert aligned.query_sorted[1].form == aligned.result_sorted[1].form
-    assert aligned.query_sorted[0].form == aligned.result_sorted[0].form
-
-    query = [
-        NamePart("henry", 1, NamePartTag.GIVEN),
-        NamePart("smith", 0, NamePartTag.ANY),
-        NamePart("john", 1, NamePartTag.GIVEN),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2
-    assert len(aligned.query_extra) == 1
-
-    query = [
-        NamePart("smith", 0, NamePartTag.GIVEN),
-        NamePart("john", 1, NamePartTag.FAMILY),
-    ]
-    aligned = align_person_name_parts(query, result)
-    assert len(aligned) == 2, (aligned.query_sorted, aligned.result_sorted)
-    assert aligned.query_sorted[0].form != aligned.result_sorted[0].form
-    assert aligned.query_sorted[1].form != aligned.result_sorted[1].form
 
 
 def test_strict_levenshtein():

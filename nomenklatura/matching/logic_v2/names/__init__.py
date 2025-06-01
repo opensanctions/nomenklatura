@@ -1,5 +1,6 @@
 from typing import List
 from rigour.names import NameTypeTag
+from rigour.names import align_person_name_order
 from followthemoney.proxy import E
 from followthemoney import model
 
@@ -7,7 +8,6 @@ from nomenklatura.matching.logic_v2.names.symbols import SymbolName
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
-from nomenklatura.matching.logic_v2.names.alignment import align_person_name_parts
 from nomenklatura.matching.logic_v2.names.util import strict_levenshtein
 from nomenklatura.matching.types import FtResult
 
@@ -50,7 +50,7 @@ def match_name_symbolic(query: SymbolName, result: SymbolName) -> FtResult:
         # TODO: ASCII conversion / transliteration?
         # TODO: Align name parts for people
         if query.tag == NameTypeTag.PER:
-            alignment = align_person_name_parts(query_rem, result_rem)
+            alignment = align_person_name_order(query_rem, result_rem)
             if alignment is not None:
                 query_rem = alignment.query_sorted + alignment.query_extra
                 result_rem = alignment.result_sorted + alignment.result_extra
