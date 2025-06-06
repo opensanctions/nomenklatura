@@ -7,7 +7,7 @@ from nomenklatura.matching.util import make_github_url, FNUL
 
 Encoded = List[float]
 CompareFunction = Callable[[EntityProxy, EntityProxy], float]
-FeatureCompareFunction = Callable[[E, E], "FtResult"]
+FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], "FtResult"]
 
 
 class FeatureDoc(BaseModel):
@@ -62,6 +62,17 @@ class FtResult(BaseModel):
 
         def wrapper(query: E, result: E) -> "FtResult":
             return cls(score=func(query, result), detail=None)
+
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        return wrapper
+
+    @classmethod
+    def unwrap(cls, func: FeatureCompareFunction) -> CompareFunction:
+        """Unwrap a feature result returned by a comparator into a score."""
+
+        def wrapper(query: E, result: E) -> float:
+            return func(query, result).score
 
         wrapper.__name__ = func.__name__
         wrapper.__doc__ = func.__doc__
