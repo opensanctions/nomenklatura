@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
@@ -31,24 +31,24 @@ class LogicV2(HeuristicAlgorithm):
     NAME = "UNSTABLE-logic-v2"
     features = [
         Feature(func=name_match, weight=1.0),
-        Feature(func=address_entity_match, weight=0.98),
-        Feature(func=crypto_wallet_address, weight=0.98),
-        Feature(func=isin_security_match, weight=0.98),
-        Feature(func=lei_code_match, weight=0.95),
-        Feature(func=ogrn_code_match, weight=0.95),
-        Feature(func=vessel_imo_mmsi_match, weight=0.95),
-        Feature(func=inn_code_match, weight=0.95),
-        Feature(func=bic_code_match, weight=0.95),
-        Feature(func=uei_code_match, weight=0.95),
-        Feature(func=npi_code_match, weight=0.95),
-        Feature(func=identifier_match, weight=0.85),
-        Feature(func=weak_alias_match, weight=0.8),
-        Feature(func=address_prop_match, weight=0.2, qualifier=True),
-        Feature(func=country_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
-        Feature(func=dob_day_disjoint, weight=-0.25, qualifier=True),
-        Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=orgid_disjoint, weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(address_entity_match), weight=0.98),
+        Feature(func=FtResult.wrap(crypto_wallet_address), weight=0.98),
+        Feature(func=FtResult.wrap(isin_security_match), weight=0.98),
+        Feature(func=FtResult.wrap(lei_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(ogrn_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(vessel_imo_mmsi_match), weight=0.95),
+        Feature(func=FtResult.wrap(inn_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(uei_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(npi_code_match), weight=0.95),
+        Feature(func=FtResult.wrap(identifier_match), weight=0.85),
+        Feature(func=FtResult.wrap(weak_alias_match), weight=0.8),
+        Feature(func=FtResult.wrap(address_prop_match), weight=0.2, qualifier=True),
+        Feature(func=FtResult.wrap(country_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
+        Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.25, qualifier=True),
+        Feature(func=FtResult.wrap(gender_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
     ]
 
     @classmethod
