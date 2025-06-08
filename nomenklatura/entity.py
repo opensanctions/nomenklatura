@@ -140,7 +140,7 @@ class CompositeEntity(EntityProxy):
         return self.dataset.name
 
     @key_prefix.setter
-    def key_prefix(self, dataset: str) -> None:
+    def key_prefix(self, dataset: Optional[str]) -> None:
         raise NotImplementedError()
 
     @property
