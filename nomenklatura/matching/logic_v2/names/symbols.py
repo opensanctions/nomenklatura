@@ -37,6 +37,9 @@ class Symbol:
             return False
         return self.category == other.category and self.id == other.id
 
+    def __str__(self) -> str:
+        return f"[{self.category.name}:{self.id}]"
+
     def __repr__(self) -> str:
         return f"<Symbol({self.category}, {self.id})>"
 
@@ -103,7 +106,10 @@ class SymbolName(Name):
         if self.tag == NameTypeTag.PER:
             forms = [part.form for part in self.parts]
             other_forms = [part.form for part in other.parts]
+            # TODO: we may want to make this support middle initials so that
+            # "John Smith" can match "J. Smith"
             return list_intersection(forms, other_forms) == len(other_forms)
+
         return other.norm_form in self.norm_form
 
     def symbol_map(self) -> Dict[Symbol, List[Span]]:

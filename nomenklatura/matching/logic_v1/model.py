@@ -48,11 +48,11 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
         Feature(func=FtResult.wrap(identifier_match), weight=0.85),
         Feature(func=FtResult.wrap(weak_alias_match), weight=0.8),
-        Feature(func=FtResult.wrap(country_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
         Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(gender_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(numbers_mismatch), weight=-0.1, qualifier=True),
     ]

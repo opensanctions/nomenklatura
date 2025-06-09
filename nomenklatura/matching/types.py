@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Any, List, Dict, Optional, Callable, Union
+from typing import Any, List, Dict, Optional, Callable, Union, cast
 from followthemoney.proxy import E, EntityProxy
 
 from nomenklatura.matching.util import make_github_url, FNUL
@@ -8,6 +8,9 @@ from nomenklatura.matching.util import make_github_url, FNUL
 Encoded = List[float]
 CompareFunction = Callable[[EntityProxy, EntityProxy], float]
 FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], "FtResult"]
+FeatureCompareConfigured = Callable[
+    [EntityProxy, EntityProxy, "ScoringConfig"], "FtResult"
+]
 
 
 class FeatureDoc(BaseModel):
@@ -78,6 +81,10 @@ class FtResult(BaseModel):
         wrapper.__doc__ = func.__doc__
         return wrapper
 
+    def __repr__(self) -> str:
+        """Return a string representation of the feature result."""
+        return f"<FtR(score={self.score}, detail={self.detail})>"
+
 
 class MatchingResult(BaseModel):
     """Score and feature comparison results for matching comparison."""
@@ -92,6 +99,10 @@ class MatchingResult(BaseModel):
         explanations = {k: v for k, v in explanations.items() if not v.empty()}
         features = {k: v.score for k, v in explanations.items()}
         return cls(score=score, features=features, explanations=explanations)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the matching result."""
+        return f"<MR(score={self.score}, expl={self.explanations})>"
 
 
 class ScoringConfig(BaseModel):
@@ -139,7 +150,7 @@ class ScoringAlgorithm(object):
 
 
 class Feature(BaseModel):
-    func: FeatureCompareFunction
+    func: Union[FeatureCompareFunction, FeatureCompareConfigured]
     weight: float
     qualifier: bool = False
 
@@ -156,6 +167,15 @@ class Feature(BaseModel):
             coefficient=self.weight,
             url=make_github_url(self.func),
         )
+
+    def invoke(self, query: E, result: E, config: ScoringConfig) -> FtResult:
+        """Invoke the feature function and return the result."""
+        if len(self.func.__code__.co_varnames) == 3:
+            func = cast(FeatureCompareConfigured, self.func)
+            return func(query, result, config)
+        else:
+            func = cast(FeatureCompareFunction, self.func)
+            return func(query, result)
 
 
 class HeuristicAlgorithm(ScoringAlgorithm):
@@ -182,7 +202,7 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         for feature in cls.features:
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
-                explanations[feature.name] = feature.func(query, result)
+                explanations[feature.name] = feature.invoke(query, result, config)
                 scores[feature.name] = explanations[feature.name].score
         score = cls.compute_score(scores, weights)
         score = min(1.0, max(FNUL, score))

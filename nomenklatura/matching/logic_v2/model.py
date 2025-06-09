@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
+from nomenklatura.matching.types import ConfigVar, ConfigVarType
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import orgid_disjoint
@@ -18,6 +19,8 @@ from nomenklatura.matching.logic_v2.identifiers import lei_code_match
 from nomenklatura.matching.logic_v2.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.logic_v2.identifiers import uei_code_match
 from nomenklatura.matching.logic_v2.identifiers import npi_code_match
+from nomenklatura.matching.logic_v2.names.tagging import get_org_tagger
+from nomenklatura.matching.logic_v2.names.tagging import get_person_tagger
 from nomenklatura.matching.util import FNUL
 
 
@@ -44,12 +47,35 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(identifier_match), weight=0.85),
         Feature(func=FtResult.wrap(weak_alias_match), weight=0.8),
         Feature(func=FtResult.wrap(address_prop_match), weight=0.2, qualifier=True),
-        Feature(func=FtResult.wrap(country_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
         Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.25, qualifier=True),
-        Feature(func=FtResult.wrap(gender_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
     ]
+    CONFIG = {
+        "nm_number_mismatch": ConfigVar(
+            type=ConfigVarType.FLOAT,
+            description="Penalty for mismatching numbers in object or company names.",
+            default=0.3,
+        ),
+        "nm_extra_query_name": ConfigVar(
+            type=ConfigVarType.FLOAT,
+            description="Penalty for name parts in the query not matched to the result.",
+            default=0.1,
+        ),
+        "nm_extra_result_name": ConfigVar(
+            type=ConfigVarType.FLOAT,
+            description="Penalty for name parts in the result not matched to the query.",
+            default=0.1,
+        ),
+    }
+
+    @classmethod
+    def init(cls) -> None:
+        """Initialize the algorithm, if necessary."""
+        get_org_tagger()
+        get_person_tagger()
 
     @classmethod
     def compute_score(
