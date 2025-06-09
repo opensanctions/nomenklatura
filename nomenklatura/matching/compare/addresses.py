@@ -56,13 +56,13 @@ def address_entity_match(query: E, result: E) -> float:
     """Two address entities relate to similar addresses."""
     if not has_schema(query, result, "Address"):
         return 0.0
-    query_addrs = query.get_type_values(registry.address, matchable=True)
-    result_addrs = result.get_type_values(registry.address, matchable=True)
-    return _address_match(query_addrs, result_addrs)
+    return _address_match(query.get("full"), result.get("full"))
 
 
 def address_prop_match(query: E, result: E) -> float:
     """Two entities have similar stated addresses."""
     if has_schema(query, result, "Address"):
         return 0.0
-    return _address_match(query.get("full"), result.get("full"))
+    query_addrs = query.get_type_values(registry.address, matchable=True)
+    result_addrs = result.get_type_values(registry.address, matchable=True)
+    return _address_match(query_addrs, result_addrs)
