@@ -3,25 +3,28 @@ from nomenklatura.matching.compare.names import last_name_mismatch
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import weak_alias_match
+from nomenklatura.matching.types import ScoringConfig
 
 
 from .util import e
+
+config = ScoringConfig.defaults()
 
 
 def test_name_literal_match():
     main = e("Company", name="Siemens AG")
     other = e("Company", name="Siemens AG")
-    assert name_literal_match(main, other) == 1.0
+    assert name_literal_match(main, other, config).score == 1.0
     other = e("Company", name="siemens ag")
-    assert name_literal_match(main, other) == 1.0
+    assert name_literal_match(main, other, config).score == 1.0
     other = e("Company", name="siemen's ag")
-    assert name_literal_match(main, other) == 1.0
+    assert name_literal_match(main, other, config).score == 1.0
     other = e("Company", name="siemen ag")
-    assert name_literal_match(main, other) == 0.0
+    assert name_literal_match(main, other, config).score == 0.0
     other = e("Company", name="siemens")
-    assert name_literal_match(main, other) == 0.0
+    assert name_literal_match(main, other, config).score == 0.0
     other = e("Company", name="siemens", alias="Siemens AG")
-    assert name_literal_match(main, other) == 1.0
+    assert name_literal_match(main, other, config).score == 1.0
 
 
 def test_last_name_missmatch():
@@ -180,12 +183,12 @@ def test_jaro_lindemann():
 def test_weak_name_match():
     query = e("Person", name="Abu")
     result = e("Person", weakAlias="ABU.")
-    assert weak_alias_match(query, result) == 1.0
+    assert weak_alias_match(query, result, config).score == 1.0
     result = e("Person", name="ABU.")
-    assert weak_alias_match(query, result) == 0.0
+    assert weak_alias_match(query, result, config).score == 0.0
     query = e("Person", weakAlias="Abu")
     result = e("Person", weakAlias="ABU.")
-    assert weak_alias_match(query, result) == 1.0
+    assert weak_alias_match(query, result, config).score == 1.0
 
 
 def test_name_fingerprint_levenshtein():

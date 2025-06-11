@@ -8,7 +8,7 @@ from nomenklatura.matching.logic_v2.model import LogicV2
 from nomenklatura.matching.types import ScoringConfig
 
 Props = Dict[str, Union[str, List[str]]]
-config = ScoringConfig(weights={}, config={})
+config = ScoringConfig.defaults()
 
 
 class MatchCase(TypedDict):

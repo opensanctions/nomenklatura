@@ -29,7 +29,7 @@ def test_logic_scoring():
 def test_logic_overrides():
     a = e("Company", name="CRYSTALORD LTD")
     b = e("Company", name="CRYSTALORD LTD")
-    config = ScoringConfig(weights={}, config={})
+    config = ScoringConfig.defaults()
     result = LogicV1.compare(a, b, config)
     assert result.score == 1.0
     assert name_literal_match.__name__ in result.features

@@ -13,8 +13,8 @@ from nomenklatura.matching.regression_v1.misc import phone_match, email_match
 from nomenklatura.matching.regression_v1.misc import address_match, address_numbers
 from nomenklatura.matching.regression_v1.misc import identifier_match, birth_place
 from nomenklatura.matching.regression_v1.misc import org_identifier_match
-from nomenklatura.matching.compare.countries import country_mismatch
-from nomenklatura.matching.compare.gender import gender_mismatch
+from nomenklatura.matching.regression_v1.misc import gender_mismatch
+from nomenklatura.matching.regression_v1.misc import country_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_year_disjoint
 from nomenklatura.matching.types import (

@@ -4,8 +4,9 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.distance import levenshtein_similarity
 from rigour.text.distance import jaro_winkler, is_levenshtein_plausible
+from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import type_pair, props_pair, has_schema
-from nomenklatura.matching.compare.util import is_disjoint, clean_map, has_overlap
+from nomenklatura.matching.compare.util import is_disjoint, clean_map
 from nomenklatura.matching.compat import clean_name_ascii, clean_name_light
 from nomenklatura.matching.compat import fingerprint_name, name_words, names_word_list
 
@@ -112,12 +113,16 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     return max_score
 
 
-def name_literal_match(query: E, result: E) -> float:
+def name_literal_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities have the same name, without normalization applied to the name."""
     query_names, result_names = type_pair(query, result, registry.name)
     qnames = clean_map(query_names, clean_name_light)
     rnames = clean_map(result_names, clean_name_light)
-    return 1.0 if has_overlap(qnames, rnames) else 0.0
+    overlap = qnames.intersection(rnames)
+    if len(overlap) == 0:
+        return FtResult(score=0.0, detail=None)
+    detail = f"Identical names: {', '.join(overlap)}"
+    return FtResult(score=1.0, detail=detail)
 
 
 def last_name_mismatch(query: E, result: E) -> float:
@@ -131,7 +136,7 @@ def last_name_mismatch(query: E, result: E) -> float:
     return 1.0 if is_disjoint(qvt, rvt) else 0.0
 
 
-def weak_alias_match(query: E, result: E) -> float:
+def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """The query name is exactly the same as a result's weak alias."""
     # NOTE: This is unbalanced, i.e. it treats 'query' and 'result' differently.
     # cf. https://ofac.treasury.gov/faqs/topic/1646
@@ -140,4 +145,8 @@ def weak_alias_match(query: E, result: E) -> float:
     result_names = result.get("weakAlias", quiet=True)
     qnames = clean_map(query_names, clean_name_light)
     rnames = clean_map(result_names, clean_name_light)
-    return 1.0 if has_overlap(qnames, rnames) else 0.0
+    overlap = qnames.intersection(rnames)
+    if len(overlap) == 0:
+        return FtResult(score=0.0, detail=None)
+    detail = f"Matched weak alias: {', '.join(overlap)}"
+    return FtResult(score=1.0, detail=detail)

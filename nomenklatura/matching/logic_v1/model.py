@@ -31,7 +31,7 @@ class LogicV1(HeuristicAlgorithm):
 
     NAME = "logic-v1"
     features = [
-        Feature(func=FtResult.wrap(name_literal_match), weight=1.0),
+        Feature(func=name_literal_match, weight=1.0),
         Feature(func=FtResult.wrap(person_name_jaro_winkler), weight=0.8),
         Feature(func=FtResult.wrap(person_name_phonetic_match), weight=0.9),
         Feature(func=FtResult.wrap(name_fingerprint_levenshtein), weight=0.9),
@@ -47,7 +47,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(inn_code_match), weight=0.95),
         Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
         Feature(func=FtResult.wrap(identifier_match), weight=0.85),
-        Feature(func=FtResult.wrap(weak_alias_match), weight=0.8),
+        Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),

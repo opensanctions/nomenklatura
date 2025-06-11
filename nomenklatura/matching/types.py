@@ -71,11 +71,12 @@ class FtResult(BaseModel):
         return wrapper
 
     @classmethod
-    def unwrap(cls, func: FeatureCompareFunction) -> CompareFunction:
+    def unwrap(cls, func: FeatureCompareConfigured) -> CompareFunction:
         """Unwrap a feature result returned by a comparator into a score."""
+        config = ScoringConfig.defaults()
 
         def wrapper(query: E, result: E) -> float:
-            return func(query, result).score
+            return func(query, result, config).score
 
         wrapper.__name__ = func.__name__
         wrapper.__doc__ = func.__doc__
@@ -83,7 +84,7 @@ class FtResult(BaseModel):
 
     def __repr__(self) -> str:
         """Return a string representation of the feature result."""
-        return f"<FtR(score={self.score}, detail={self.detail})>"
+        return f"<FtR({self.score}, {self.detail!r})>"
 
 
 class MatchingResult(BaseModel):
@@ -102,7 +103,7 @@ class MatchingResult(BaseModel):
 
     def __repr__(self) -> str:
         """Return a string representation of the matching result."""
-        return f"<MR(score={self.score}, expl={self.explanations})>"
+        return f"<MR({self.score}, expl={self.explanations})>"
 
 
 class ScoringConfig(BaseModel):
@@ -170,7 +171,7 @@ class Feature(BaseModel):
 
     def invoke(self, query: E, result: E, config: ScoringConfig) -> FtResult:
         """Invoke the feature function and return the result."""
-        if len(self.func.__code__.co_varnames) == 3:
+        if self.func.__code__.co_argcount == 3:
             func = cast(FeatureCompareConfigured, self.func)
             return func(query, result, config)
         else:
