@@ -1142,6 +1142,12 @@ checks:
     candidate:
       name: The Puccini Trust
   - match: false
+    schema: LegalEntity
+    query:
+      name: LVMH Aviation
+    candidate:
+      name: THEIA AVIATION, LLC
+  - match: false
     schema: Company
     query:
       name: СБ Дако ООО
