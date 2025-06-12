@@ -38,7 +38,7 @@ class LogicV1(HeuristicAlgorithm):
         # These are there so they can be enabled using custom weights:
         Feature(func=FtResult.wrap(name_metaphone_match), weight=FNUL),
         Feature(func=FtResult.wrap(name_soundex_match), weight=FNUL),
-        Feature(func=FtResult.wrap(address_entity_match), weight=0.98),
+        Feature(func=address_entity_match, weight=0.98),
         Feature(func=FtResult.wrap(crypto_wallet_address), weight=0.98),
         Feature(func=FtResult.wrap(isin_security_match), weight=0.98),
         Feature(func=FtResult.wrap(lei_code_match), weight=0.95),
