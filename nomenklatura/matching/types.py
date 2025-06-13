@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import Any, List, Dict, Optional, Callable, Union, cast
+from typing import List, Dict, Optional, Callable, Union, cast
 from followthemoney.proxy import E, EntityProxy
 
 from nomenklatura.matching.util import make_github_url, FNUL
@@ -37,7 +37,7 @@ class ConfigVar(BaseModel):
 
     type: ConfigVarType = ConfigVarType.FLOAT
     description: Optional[str] = None
-    default: Optional[Any] = None
+    default: Union[str, int, float, bool] = 0
 
 
 class AlgorithmDocs(BaseModel):
@@ -117,6 +117,10 @@ class ScoringConfig(BaseModel):
         """Return the default configuration."""
         return cls(weights={}, config={})
 
+    def get_float(self, key: str) -> float:
+        """Get a float value from the configuration."""
+        return float(self.config[key])
+
 
 class ScoringAlgorithm(object):
     """An implementation of a scoring system that compares two entities."""
@@ -193,10 +197,23 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         return {f.name: f.doc for f in cls.features}
 
     @classmethod
+    def default_config(cls) -> ScoringConfig:
+        """Return the default configuration for the algorithm."""
+        config = ScoringConfig.defaults()
+        for name, var in cls.CONFIG.items():
+            config.config[name] = var.default
+        return config
+
+    @classmethod
     def compare(cls, query: E, result: E, config: ScoringConfig) -> MatchingResult:
         if not query.schema.can_match(result.schema):
             if not query.schema.name == result.schema.name:
                 return MatchingResult.make(FNUL, {})
+
+        for name, var in cls.CONFIG.items():
+            if config.config.get(name) is None:
+                config.config[name] = var.default
+
         explanations: Dict[str, FtResult] = {}
         scores: Dict[str, float] = {}
         weights: Dict[str, float] = {}

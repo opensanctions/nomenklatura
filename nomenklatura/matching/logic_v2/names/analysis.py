@@ -77,10 +77,10 @@ def entity_names(
         if type_tag == NameTypeTag.PER:
             for part in sname.parts:
                 if is_query and len(part.form) == 1:
-                    sym = Symbol(Symbol.Category.PER_INIT, part.form)
+                    sym = Symbol(Symbol.Category.INITIAL, part.form)
                     sname.apply_part(part, sym)
                 elif part.tag in GIVEN_NAME_TAGS:
-                    sym = Symbol(Symbol.Category.PER_INIT, part.form[0])
+                    sym = Symbol(Symbol.Category.INITIAL, part.form[0])
                     sname.apply_part(part, sym)
             tag_person_name(sname)
 

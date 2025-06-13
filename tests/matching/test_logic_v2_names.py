@@ -18,10 +18,10 @@ def test_entity_names_person():
     assert name.parts[1].tag == NamePartTag.GIVEN
     assert len(name.spans) > 0
     for span in name.spans:
-        if span.symbol.category == Symbol.Category.PER_INIT:
+        if span.symbol.category == Symbol.Category.INITIAL:
             assert span.symbol.id == "j"
 
-    names = {sym.id for sym in name.symbols if sym.category == Symbol.Category.PER_NAME}
+    names = {sym.id for sym in name.symbols if sym.category == Symbol.Category.NAME}
     assert 1158446 in names
     # assert False, names
 
@@ -38,7 +38,7 @@ def test_entity_names_company():
         symbols.add(span.symbol)
         if span.symbol.category == Symbol.Category.ORG_CLASS:
             assert span.symbol.id == "LLC"
-        if span.symbol.category == Symbol.Category.ORG_SYMBOL:
+        if span.symbol.category == Symbol.Category.SYMBOL:
             assert span.symbol.id == "HOLDING"
 
     entity = e("Company", name="ABC Gesellschaft mit beschränkter Haftung")

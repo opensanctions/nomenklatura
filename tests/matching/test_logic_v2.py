@@ -5,10 +5,9 @@ from followthemoney import model
 import pytest
 
 from nomenklatura.matching.logic_v2.model import LogicV2
-from nomenklatura.matching.types import ScoringConfig
 
 Props = Dict[str, Union[str, List[str]]]
-config = ScoringConfig.defaults()
+config = LogicV2.default_config()
 
 
 class MatchCase(TypedDict):
@@ -70,6 +69,16 @@ CASES = [
             "name": "Сергей Викторович Лавров",
         },
     },
+    {
+        "schema": "Person",
+        "matches": False,
+        "query": {
+            "name": "Ramimakhlouf",
+        },
+        "result": {
+            "name": "Rami Makhlouf",
+        },
+    },
     # Organizations
     {
         "schema": "Company",
@@ -99,6 +108,56 @@ CASES = [
         },
         "result": {
             "name": "Open Joint Stock Company Gasprom",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": True,
+        "query": {
+            "name": "Gazprom Neft JSC",
+        },
+        "result": {
+            "name": "Gazprom Neft OAO",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": False,
+        "query": {
+            "name": "LXC Aviation",
+        },
+        "result": {
+            "name": "LAU Aviation",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": False,
+        "query": {
+            "name": "LXC Aviatio",
+        },
+        "result": {
+            "name": "LAU Aviation",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": True,
+        "query": {
+            "name": "LXC Aviation",
+        },
+        "result": {
+            "name": "L.X.C Aviation",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": False,
+        "query": {
+            "name": "L.X.C. Aviation",
+        },
+        "result": {
+            "name": "LAU Aviation",
         },
     },
     # Vessels
@@ -159,12 +218,6 @@ def test_match_cases(case: MatchCase) -> None:
     result = _make_entity(case["schema"], case["result"])
     res = LogicV2().compare(query, result, config)
     if case["matches"]:
-        assert res.score > 0.7, (
-            f"Expected match for {case['query']!r} and {case['result']!r}",
-            res,
-        )
+        assert res.score > 0.7, res
     else:
-        assert res.score < 0.7, (
-            f"Expected no match for {case['query']!r} and {case['result']!r}",
-            res,
-        )
+        assert res.score < 0.7, res

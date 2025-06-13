@@ -11,21 +11,19 @@ class Symbol:
     """A symbol is a semantic interpretation applied to one or more parts of a name."""
 
     class Category(Enum):
-        ORG_TYPE = "org.type"
-        ORG_CLASS = "org.class"
-        ORG_SYMBOL = "org.symbol"
-        PER_INIT = "per.initial"
-        PER_NAME = "per.name"
-        PER_SYMBOL = "per.symbol"
-        ORDINAL = "ordinal"
-        PHONETIC = "phonetic"
+        ORG_TYPE = "ORGTYPE"
+        ORG_CLASS = "ORGCLASS"
+        SYMBOL = "SYMBOL"
+        INITIAL = "INITIAL"
+        NAME = "NAME"
+        ORDINAL = "ORD"
+        PHONETIC = "PHON"
 
     __slots__ = ["category", "id"]
 
     def __init__(self, category: Category, id: Any) -> None:
         """Create a symbol with a category and an id."""
         # TODO: can it be used multiple times?
-        # TODO: does it involve a discount?
         self.category = category
         self.id = id
 
@@ -38,7 +36,7 @@ class Symbol:
         return self.category == other.category and self.id == other.id
 
     def __str__(self) -> str:
-        return f"[{self.category.name}:{self.id}]"
+        return f"[{self.category.value}:{self.id}]"
 
     def __repr__(self) -> str:
         return f"<Symbol({self.category}, {self.id})>"
@@ -52,6 +50,11 @@ class Span:
     def __init__(self, parts: List[NamePart], symbol: Symbol) -> None:
         self.parts = parts
         self.symbol = symbol
+
+    @property
+    def form(self) -> str:
+        """Return the string representation of the span."""
+        return " ".join([part.maybe_ascii for part in self.parts])
 
     def __hash__(self) -> int:
         return hash((tuple(self.parts), self.symbol))
@@ -106,9 +109,22 @@ class SymbolName(Name):
         if self.tag == NameTypeTag.PER:
             forms = [part.form for part in self.parts]
             other_forms = [part.form for part in other.parts]
-            # TODO: we may want to make this support middle initials so that
+            common_forms = list_intersection(forms, other_forms)
+
+            # we want to make this support middle initials so that
             # "John Smith" can match "J. Smith"
-            return list_intersection(forms, other_forms) == len(other_forms)
+            for ospan in other.spans:
+                if ospan.symbol.category == Symbol.Category.INITIAL:
+                    if len(ospan.parts[0].form) > 1:
+                        continue
+                    for span in self.spans:
+                        if span.symbol == ospan.symbol:
+                            common_forms.append(ospan.form)
+
+            # If every part of the other name is represented in the common forms,
+            # we consider it a match.
+            if len(common_forms) == len(other_forms):
+                return True
 
         return other.norm_form in self.norm_form
 

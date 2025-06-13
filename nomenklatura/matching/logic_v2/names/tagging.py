@@ -67,7 +67,7 @@ def get_org_tagger() -> Tagger:
 
     mapping = common_symbols()
     for key, values in ORG_SYMBOLS.items():
-        sym = Symbol(Symbol.Category.ORG_SYMBOL, key.upper())
+        sym = Symbol(Symbol.Category.SYMBOL, key.upper())
         nkey = normalize_name(key)
         mapping[nkey].append(sym)
         for value in values:
@@ -76,7 +76,6 @@ def get_org_tagger() -> Tagger:
                 mapping[nvalue].append(sym)
 
     for org_type in ORG_TYPES:
-        # TODO: should this apply to the display name or the compare name as separate symbols?
         class_sym: Optional[Symbol] = None
         type_sym: Optional[Symbol] = None
         compare = org_type.get("compare")
@@ -94,6 +93,7 @@ def get_org_tagger() -> Tagger:
             if class_sym is not None and class_sym not in mapping.get(nalias, []):
                 mapping[nalias].append(class_sym)
 
+    log.info("Loaded organization tagger (%s terms).", len(mapping))
     return Tagger(mapping)
 
 
@@ -113,9 +113,9 @@ def get_person_tagger() -> Tagger:
 
     mapping = common_symbols()
     for key, values in PERSON_SYMBOLS.items():
-        sym = Symbol(Symbol.Category.PER_SYMBOL, key.upper())
+        sym = Symbol(Symbol.Category.SYMBOL, key.upper())
         nkey = normalize_name(key)
-        mapping[nkey].append(Symbol(Symbol.Category.PER_SYMBOL, key))
+        mapping[nkey].append(Symbol(Symbol.Category.SYMBOL, key))
         for value in values:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
@@ -124,7 +124,7 @@ def get_person_tagger() -> Tagger:
     name_mapping = load_person_names_mapping(normalizer=name_normalizer)
     for name, qids in name_mapping.items():
         for qid in qids:
-            sym = Symbol(Symbol.Category.PER_NAME, int(qid[1:]))
+            sym = Symbol(Symbol.Category.NAME, int(qid[1:]))
             mapping[name].append(sym)
 
     log.info("Loaded person tagger (%s terms).", len(mapping))

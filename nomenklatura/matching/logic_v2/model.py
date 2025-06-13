@@ -61,13 +61,13 @@ class LogicV2(HeuristicAlgorithm):
         ),
         "nm_extra_query_name": ConfigVar(
             type=ConfigVarType.FLOAT,
-            description="Penalty for name parts in the query not matched to the result.",
-            default=0.1,
+            description="Weight for name parts in the query not matched to the result.",
+            default=0.5,
         ),
         "nm_extra_result_name": ConfigVar(
             type=ConfigVarType.FLOAT,
-            description="Penalty for name parts in the result not matched to the query.",
-            default=0.1,
+            description="Weight for name parts in the result not matched to the query.",
+            default=0.7,
         ),
     }
 

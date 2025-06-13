@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict, List, Set
 
 from rigour.names import NamePart
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName, Span
@@ -20,7 +20,7 @@ class Pairing:
         result: SymbolName,
         query_used: Set[NamePart],
         result_used: Set[NamePart],
-        symbols: Set[Symbol],
+        symbols: Dict[Symbol, bool],
     ) -> None:
         self.query = query
         self.query_used = query_used
@@ -36,7 +36,7 @@ class Pairing:
             result=result,
             query_used=set(),
             result_used=set(),
-            symbols=set(),
+            symbols={},
         )
 
     def can_pair(self, query_span: Span, result_span: Span) -> bool:
@@ -48,8 +48,15 @@ class Pairing:
         if self.result_used.intersection(result_span.parts):
             return False
 
+        # If the text is actually identical, we do not need to establish
+        # a pairing, as it is already a match.
+        # nb. This doesn't work because it knocks out the stopword-like functionality of
+        # symbolic matching.
+        # if query_span.form == result_span.form:
+        #     return False
+
         # Check if one at least of the two span parts is a name initial
-        if query_span.symbol.category == Symbol.Category.PER_INIT:
+        if query_span.symbol.category == Symbol.Category.INITIAL:
             if len(query_span.parts[0]) > 1 and len(result_span.parts[0]) > 1:
                 return False
 
@@ -57,19 +64,15 @@ class Pairing:
 
     def add(self, query_span: Span, result_span: Span) -> "Pairing":
         """Add a pair of spans to the pairing."""
+        symbols = self.symbols.copy()
+        symbols[query_span.symbol] = query_span.form == result_span.form
         return Pairing(
             self.query,
             self.result,
             self.query_used.union(query_span.parts),
             self.result_used.union(result_span.parts),
-            self.symbols.union({query_span.symbol, result_span.symbol}),
+            symbols,
         )
-
-    def subset(self, other: "Pairing") -> bool:
-        """Check if the pairing is in another pairing."""
-        if self == other or len(self.symbols) > len(other.symbols):
-            return False
-        return self.symbols.issubset(other.symbols)
 
     def query_remainder(self) -> List[NamePart]:
         """Get the remaining query parts."""
