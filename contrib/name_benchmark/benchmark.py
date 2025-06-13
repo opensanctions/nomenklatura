@@ -5,6 +5,9 @@ import yaml
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.matching.types import ScoringConfig
+
+config = ScoringConfig.defaults()
 
 
 class Check:
@@ -158,7 +161,12 @@ def run_benchmark(
     console.print(table)
 
 
+def wrap_matcher(query: Entity, candidate: Entity) -> float:
+    """Wrap the matcher function to match the expected signature."""
+    return name_match(query, candidate, config).score
+
+
 if __name__ == "__main__":
     from nomenklatura.matching.logic_v2.names import name_match
 
-    run_benchmark(name_match, threshold=0.8)
+    run_benchmark(wrap_matcher, threshold=0.7)
