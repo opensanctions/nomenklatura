@@ -82,7 +82,7 @@ def _token_names_compare(
     for q, r in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
         length = max(2.0, len(q))
-        combo = list_intersection(q, r) / float(length)
+        combo = len(list_intersection(q, r)) / float(length)
         score = max(score, combo)
     return score
 

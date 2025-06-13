@@ -86,15 +86,15 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     return text.lower().startswith("t")
 
 
-def list_intersection(left: List[str], right: List[str]) -> int:
+def list_intersection(left: List[str], right: List[str]) -> List[str]:
     """Return the number of elements in the intersection of two lists, accounting
     properly for duplicates."""
-    overlap = 0
+    overlap: List[str] = []
     remainder = list(right)
     for elem in left:
         try:
             remainder.remove(elem)
-            overlap += 1
+            overlap.append(elem)
         except ValueError:
             pass
     return overlap
