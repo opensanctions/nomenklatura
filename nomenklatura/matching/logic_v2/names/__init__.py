@@ -69,24 +69,26 @@ def match_name_symbolic(
             for np in alignment.query_extra:
                 weights.append(0.5)
             for np in alignment.query_extra:
-                weights.append(0.7)
+                weights.append(0.6)
 
             query_fuzzy = " ".join([p.maybe_ascii for p in alignment.query_sorted])
             result_fuzzy = " ".join([p.maybe_ascii for p in alignment.result_sorted])
             fuzzy_score = levenshtein_similarity(
                 query_fuzzy,
                 result_fuzzy,
-                max_edits=5,
-                max_percent=0.5,
+                max_edits=4,
+                max_percent=0.3,
             )
-            for np in alignment.query_sorted:
-                # Make the score drop off more steeply with errors:
-                weights.append(fuzzy_score**2)
+            # for np in alignment.query_sorted:
+            #     # Make the score drop off more steeply with errors:
+            #     weights.append(fuzzy_score**3)
+            weights.append(fuzzy_score**2)
         else:
             query_fuzzy = " ".join([p.maybe_ascii for p in query.parts])
             result_fuzzy = " ".join([p.maybe_ascii for p in result.parts])
 
         # Sum up and average all the weights to get the final score for this pairing.
+        # print("XXX", weights)
         score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
         if score > retval.score:
             detail = f"{query_fuzzy} <> {result_fuzzy}"

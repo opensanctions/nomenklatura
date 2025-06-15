@@ -160,6 +160,16 @@ CASES = [
             "name": "LAU Aviation",
         },
     },
+    {
+        "schema": "Company",
+        "matches": False,
+        "query": {
+            "name": "OJSC TACTICAL KITTENS CORPORATION",
+        },
+        "result": {
+            "name": "TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY",
+        },
+    },
     # Vessels
     {
         "schema": "Vessel",
