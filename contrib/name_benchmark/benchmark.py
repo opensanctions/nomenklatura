@@ -84,7 +84,8 @@ def run_benchmark(
     failures = Table(title="Failed results")
     failures.add_column("Query", justify="left")
     failures.add_column("Candidate", justify="left")
-    failures.add_column("Truth", justify="right")
+    failures.add_column("Correct", justify="right")
+    failures.add_column("Result", justify="right")
     failures.add_column("Score", justify="right")
     failures.add_column("Loss", justify="right")
 
@@ -94,6 +95,7 @@ def run_benchmark(
         failures.add_row(
             result.check.query.first("name"),
             result.check.candidate.first("name"),
+            str(result.check.is_match),
             str(result.is_match),
             "%.2f" % result.score,
             "%.2f" % result.loss,
@@ -156,5 +158,14 @@ def run_benchmark(
     console.print(table)
 
 
+def wrap_matcher(query: Entity, candidate: Entity) -> float:
+    """Wrap the matcher function to match the expected signature."""
+    from nomenklatura.matching.logic_v2.names import name_match
+    from nomenklatura.matching.logic_v2.model import LogicV2
+
+    config = LogicV2.default_config()
+    return name_match(query, candidate, config).score
+
+
 if __name__ == "__main__":
-    run_benchmark(stub_compare, threshold=0.8)
+    run_benchmark(wrap_matcher, threshold=0.7)

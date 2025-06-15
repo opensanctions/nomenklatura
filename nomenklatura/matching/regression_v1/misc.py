@@ -2,10 +2,10 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import has_overlap, extract_numbers
+from nomenklatura.matching.compare.util import has_overlap, extract_numbers, is_disjoint
 from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets, has_schema
-from nomenklatura.util import normalize_name
+from nomenklatura.matching.compat import clean_name_ascii
 
 
 def birth_place(query: E, result: E) -> float:
@@ -18,8 +18,8 @@ def birth_place(query: E, result: E) -> float:
 def address_match(query: E, result: E) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(query, result, registry.address)
-    lvn = [normalize_name(v) for v in lv]
-    rvn = [normalize_name(v) for v in rv]
+    lvn = [clean_name_ascii(v) for v in lv]
+    rvn = [clean_name_ascii(v) for v in rv]
     return max_in_sets(lvn, rvn, compare_levenshtein)
 
 
@@ -61,3 +61,15 @@ def org_identifier_match(query: E, result: E) -> float:
         return 0.0
     lv, rv = type_pair(query, result, registry.identifier)
     return 1.0 if has_overlap(lv, rv) else 0.0
+
+
+def gender_mismatch(query: E, result: E) -> float:
+    """Both entities have a different gender associated with them."""
+    qv, rv = props_pair(query, result, ["gender"])
+    return 1.0 if is_disjoint(qv, rv) else 0.0
+
+
+def country_mismatch(query: E, result: E) -> float:
+    """Both entities are linked to different countries."""
+    qv, rv = type_pair(query, result, registry.country)
+    return 1.0 if is_disjoint(qv, rv) else 0.0
