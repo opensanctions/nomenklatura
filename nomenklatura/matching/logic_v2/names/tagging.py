@@ -53,7 +53,6 @@ def common_symbols() -> Dict[str, List[Symbol]]:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
                 mapping[nvalue].append(sym)
-
     return mapping
 
 
@@ -77,21 +76,21 @@ def get_org_tagger() -> Tagger:
 
     for org_type in ORG_TYPES:
         class_sym: Optional[Symbol] = None
-        type_sym: Optional[Symbol] = None
-        compare = org_type.get("compare")
-        if compare is not None:
-            class_sym = Symbol(Symbol.Category.ORG_CLASS, compare)
+        generic = org_type.get("generic")
+        if generic is None:
+            continue
+        class_sym = Symbol(Symbol.Category.ORG_CLASS, generic)
         display = org_type.get("display")
         if display is not None:
-            type_sym = Symbol(Symbol.Category.ORG_TYPE, display)
-            if class_sym is not None:
-                mapping[normalize_name(display)].append(class_sym)
-        for alias in org_type.get("aliases", []):
-            nalias = normalize_name(alias)
-            if type_sym is not None and type_sym not in mapping.get(nalias, []):
-                mapping[nalias].append(type_sym)
-            if class_sym is not None and class_sym not in mapping.get(nalias, []):
-                mapping[nalias].append(class_sym)
+            mapping[normalize_name(display)].append(class_sym)
+        compare = org_type.get("compare", display)
+        if compare is not None:
+            mapping[normalize_name(compare)].append(class_sym)
+        if compare is None:
+            for alias in org_type.get("aliases", []):
+                nalias = normalize_name(alias)
+                if class_sym not in mapping.get(nalias, []):
+                    mapping[nalias].append(class_sym)
 
     log.info("Loaded organization tagger (%s terms).", len(mapping))
     return Tagger(mapping)

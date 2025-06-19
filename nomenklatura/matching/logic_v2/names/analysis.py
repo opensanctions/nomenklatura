@@ -1,5 +1,6 @@
 from typing import Set
 from rigour.names import NameTypeTag, NamePartTag
+from rigour.names import replace_org_types_compare
 from rigour.names.person import remove_person_prefixes
 from rigour.names.tag import GIVEN_NAME_TAGS
 from followthemoney.proxy import EntityProxy
@@ -9,6 +10,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.tagging import tag_org_name, tag_person_name
 from nomenklatura.matching.logic_v2.names.util import prenormalize_name
+from nomenklatura.matching.logic_v2.names.util import name_prenormalizer
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),
@@ -54,6 +56,10 @@ def entity_names(
             name = remove_person_prefixes(name)
 
         form = prenormalize_name(name)
+        if type_tag in (NameTypeTag.ORG, NameTypeTag.ENT):
+            # Replace organization types with their canonical form, e.g. "Limited Liability Company" -> "LLC"
+            form = replace_org_types_compare(form, normalizer=name_prenormalizer)
+
         if form in seen:
             continue
         seen.add(form)
@@ -69,8 +75,14 @@ def entity_names(
             if type_tag == NameTypeTag.ENT:
                 # If an entity name contains an organization type, we can tag it as an organization.
                 for span in sname.spans:
-                    if span.symbol.category == Symbol.Category.ORG_TYPE:
+                    if span.symbol.category == Symbol.Category.ORG_CLASS:
                         sname.tag = NameTypeTag.ORG
+            for span in sname.spans:
+                if span.symbol.category == Symbol.Category.ORG_CLASS:
+                    # If a name part is an organization class or type, we can tag it as legal.
+                    for part in sname.parts:
+                        if part.tag == NamePartTag.ANY:
+                            part.tag = NamePartTag.LEGAL
 
         # tag given name abbreviations. this is meant to handle a case where the person's
         # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"

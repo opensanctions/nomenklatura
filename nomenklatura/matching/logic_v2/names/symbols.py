@@ -11,7 +11,6 @@ class Symbol:
     """A symbol is a semantic interpretation applied to one or more parts of a name."""
 
     class Category(Enum):
-        ORG_TYPE = "ORGTYPE"
         ORG_CLASS = "ORGCLASS"
         SYMBOL = "SYMBOL"
         INITIAL = "INITIAL"
@@ -23,7 +22,6 @@ class Symbol:
 
     def __init__(self, category: Category, id: Any) -> None:
         """Create a symbol with a category and an id."""
-        # TODO: can it be used multiple times?
         self.category = category
         self.id = id
 
@@ -43,27 +41,30 @@ class Symbol:
 
 
 class Span:
-    """A span is a part of a name that has been tagged with a symbol."""
+    """A span is a set of parts of a name that have been tagged with a symbol."""
 
     __slots__ = ["parts", "symbol"]
 
     def __init__(self, parts: List[NamePart], symbol: Symbol) -> None:
-        self.parts = parts
+        self.parts = tuple(parts)
         self.symbol = symbol
 
     @property
-    def form(self) -> str:
+    def maybe_ascii(self) -> str:
         """Return the string representation of the span."""
         return " ".join([part.maybe_ascii for part in self.parts])
 
     def __hash__(self) -> int:
-        return hash((tuple(self.parts), self.symbol))
+        return hash((self.parts, self.symbol))
 
     def __eq__(self, other: Any) -> bool:
         try:
             return bool(self.symbol == other.symbol and self.parts == other.parts)
         except AttributeError:
             return False
+
+    def __repr__(self) -> str:
+        return f"<Span({self.parts!r}, {self.symbol})>"
 
 
 class SymbolName(Name):
@@ -119,7 +120,7 @@ class SymbolName(Name):
                         continue
                     for span in self.spans:
                         if span.symbol == ospan.symbol:
-                            common_forms.append(ospan.form)
+                            common_forms.append(ospan.maybe_ascii)
 
             # If every part of the other name is represented in the common forms,
             # we consider it a match.

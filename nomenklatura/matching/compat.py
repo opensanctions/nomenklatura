@@ -51,7 +51,9 @@ def fingerprint_name(original: str) -> Optional[str]:
     cleaned = clean_name_ascii(text)
     if cleaned is None:
         return text
-    replaced = replace_org_types_compare(cleaned, normalizer=clean_name_ascii)
+    replaced = replace_org_types_compare(
+        cleaned, normalizer=clean_name_ascii, generic=True
+    )
     return collapse_spaces(replaced)
 
 

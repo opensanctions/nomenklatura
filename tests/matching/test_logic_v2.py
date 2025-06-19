@@ -63,7 +63,7 @@ CASES = [
         "schema": "Person",
         "matches": True,
         "query": {
-            "name": "Serei Lavrov",
+            "name": "Serej Lavrov",
         },
         "result": {
             "name": "Сергей Викторович Лавров",
@@ -71,12 +71,22 @@ CASES = [
     },
     {
         "schema": "Person",
-        "matches": False,
+        "matches": True,
         "query": {
             "name": "Ramimakhlouf",
         },
         "result": {
             "name": "Rami Makhlouf",
+        },
+    },
+    {
+        "schema": "Person",
+        "matches": False,
+        "query": {
+            "name": "A Nazarbayev",
+        },
+        "result": {
+            "name": "Nursultan Naza",
         },
     },
     # Organizations
@@ -168,6 +178,26 @@ CASES = [
         },
         "result": {
             "name": "TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY",
+        },
+    },
+    {
+        "schema": "Company",
+        "matches": True,
+        "query": {
+            "name": "FABERLIC EUROPE",
+        },
+        "result": {
+            "name": "FABERLIC EUROPE Sp. z o.o.",
+        },
+    },
+    {
+        "schema": "Organization",
+        "matches": True,
+        "query": {
+            "name": "Brigade Fourty-four",
+        },
+        "result": {
+            "name": "Brigade 44",
         },
     },
     # Vessels

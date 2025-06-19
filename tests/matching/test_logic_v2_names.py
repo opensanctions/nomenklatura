@@ -48,10 +48,7 @@ def test_entity_names_company():
     for span in name.spans:
         if span.symbol.category == Symbol.Category.ORG_CLASS:
             assert span.symbol.id == "LLC"
-            assert len(span.parts) == 4
-        if span.symbol.category == Symbol.Category.ORG_TYPE:
-            assert span.symbol.id == "GmbH"
-            assert len(span.parts) == 4
+            assert len(span.parts) == 1
     other = e("Company", name="ABC Ltd.")
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)

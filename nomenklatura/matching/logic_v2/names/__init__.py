@@ -1,7 +1,10 @@
-from typing import List, Set
-from rigour.names import NameTypeTag
+import math
+from typing import List, Optional, Set
+from rigour.names import NameTypeTag, NamePart
+
+# from rigour.names.alignment import Alignment
 from rigour.names import align_person_name_order, align_name_slop
-from rigour.text import levenshtein_similarity
+from rigour.text import dam_levenshtein
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -19,6 +22,35 @@ SYM_WEIGHTS = {
     Symbol.Category.NAME: 0.9,
     Symbol.Category.SYMBOL: 0.9,
 }
+
+
+def is_numeric(name: SymbolName, part: NamePart) -> bool:
+    # TODO: check if the extras contain numbers, apply extra penalty if so
+    if part.form.isnumeric():
+        return True
+    for span in name.spans:
+        if span.symbol.category == Symbol.Category.ORDINAL and part in span.parts:
+            return True
+    return False
+
+
+def levenshtein_similarity(query: str, result: str) -> float:
+    if len(query) == 0 or len(result) == 0:
+        return 0.0
+    if query == result:
+        return 1.0
+    max_len = max(len(query), len(result))
+    max_edits = math.floor(math.log(max(max_len - 2, 1)))
+    if max_edits < 1:
+        return 0.0
+    distance = dam_levenshtein(query, result, max_edits=max_edits)
+    if distance > max_edits:
+        return 0.0
+    score = 1 - (distance / max_len)
+    score = score**2
+    if score < 0.5:
+        score = 0.0
+    return score
 
 
 def match_name_symbolic(
@@ -59,43 +91,56 @@ def match_name_symbolic(
         # Name parts that have not been tagged with a symbol:
         query_rem = pairing.query_remainder()
         result_rem = pairing.result_remainder()
+
+        query_fuzzy: Optional[str] = None
+        result_fuzzy: Optional[str] = None
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
                 alignment = align_person_name_order(query_rem, result_rem)
             else:
-                alignment = align_name_slop(query_rem, result_rem)
+                # alignment = Alignment()
+                # alignment.query_sorted = query_rem
+                # alignment.result_sorted = result_rem
+                alignment = align_name_slop(query_rem, result_rem, max_slop=1)
 
             # Handle name parts that are not matched to the other name.
+            # TODO: do we want to special-case ORG types and numbers here? Org types are not
+            # as bad to be unmatched, but numbers are worse than normal name parts.
             for np in alignment.query_extra:
-                weights.append(0.5)
-            for np in alignment.query_extra:
-                weights.append(0.6)
+                weights.append(0.40)
+            # if not len(alignment.result_sorted):
+            #     for np in alignment.query_sorted:
+            #         weights.append(0.43)
+            for np in alignment.result_extra:
+                weights.append(0.65)
+            # if not len(alignment.query_sorted):
+            #     for np in alignment.result_sorted:
+            #         weights.append(0.65)
 
-            query_fuzzy = " ".join([p.maybe_ascii for p in alignment.query_sorted])
-            result_fuzzy = " ".join([p.maybe_ascii for p in alignment.result_sorted])
-            fuzzy_score = levenshtein_similarity(
-                query_fuzzy,
-                result_fuzzy,
-                max_edits=4,
-                max_percent=0.3,
-            )
-            # for np in alignment.query_sorted:
-            #     # Make the score drop off more steeply with errors:
-            #     weights.append(fuzzy_score**3)
-            weights.append(fuzzy_score**2)
-        else:
+            # Fuzzy matching of the remaining name parts.
+            if len(alignment.query_sorted) and len(alignment.result_sorted):
+                query_fuzzy = "".join([p.maybe_ascii for p in alignment.query_sorted])
+                result_fuzzy = "".join([p.maybe_ascii for p in alignment.result_sorted])
+                fuzzy_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
+                for np in alignment.query_sorted:
+                    # Make the score drop off more steeply with errors:
+                    weights.append(fuzzy_score)
+
+        if query_fuzzy is None:
             query_fuzzy = " ".join([p.maybe_ascii for p in query.parts])
+        if result_fuzzy is None:
             result_fuzzy = " ".join([p.maybe_ascii for p in result.parts])
 
         # Sum up and average all the weights to get the final score for this pairing.
-        # print("XXX", weights)
         score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
         if score > retval.score:
-            detail = f"{query_fuzzy} <> {result_fuzzy}"
+            detail = f"{query_fuzzy} ~ {result_fuzzy}"
             if len(pairing.symbols) > 0:
                 symbols = ", ".join((str(s) for s in pairing.symbols.keys()))
                 detail = f"{detail} (symbolic: {symbols})"
             retval = FtResult(score=score, detail=detail)
+    if retval.detail is None:
+        retval.detail = f"{query.maybe_ascii} <> {result.maybe_ascii}"
     return retval
 
 
@@ -115,7 +160,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
         for result_name in result_names:
             score = strict_levenshtein(query_name, result_name, max_rate=5)
             # Things like Vessels, Airplanes, Securities, etc.
-            detail = None
+            detail = f"{query_name} ~ {result_name}"
             if numbers_mismatch(query_name, result_name):
                 score = score * 0.7
                 detail = "Number mismatch in name"
@@ -136,10 +181,12 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
         return match_object_names(query, result, config)
     query_names = entity_names(type_tag, query, is_query=True)
     result_names = entity_names(type_tag, result)
-    best = FtResult(score=0.0, detail=None)
+    best: Optional[FtResult] = None
     for query_name in query_names:
         for result_name in result_names:
             ftres = match_name_symbolic(query_name, result_name, config)
-            if ftres.score > best.score:
+            if best is None or ftres.score > best.score:
                 best = ftres
+    if best is None:
+        return FtResult(score=0.0, detail="No names available for matching.")
     return best

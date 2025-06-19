@@ -24,6 +24,16 @@ def prenormalize_name(name: str) -> str:
     return name.lower()
 
 
+def name_prenormalizer(name: Optional[str]) -> Optional[str]:
+    """Same as before, but meeting the definition of a rigour Normalizer."""
+    if name is None:
+        return None
+    name = prenormalize_name(name)
+    if len(name) == 0:
+        return None
+    return name
+
+
 def normalize_name(name: str) -> str:
     """Normalize a name for tokenization and matching."""
     name = prenormalize_name(name)
@@ -34,8 +44,7 @@ def name_normalizer(name: Optional[str]) -> Optional[str]:
     """Same as before, but meeting the definition of a rigour Normalizer."""
     if name is None:
         return None
-    name = prenormalize_name(name)
-    name = " ".join(tokenize_name(name))
+    name = normalize_name(name)
     if len(name) == 0:
         return None
     return name

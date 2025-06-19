@@ -60,12 +60,19 @@ class Pairing:
             if len(query_span.parts[0]) > 1 and len(result_span.parts[0]) > 1:
                 return False
 
+        if query_span.symbol.category == Symbol.Category.NAME:
+            # This may not be correct for many tokens since it's expected that the bulk
+            # of filtered items will be single-part span.
+            for qp, rp in zip(query_span.parts, result_span.parts):
+                if not qp.can_match(rp):
+                    return False
+
         return True
 
     def add(self, query_span: Span, result_span: Span) -> "Pairing":
         """Add a pair of spans to the pairing."""
         symbols = self.symbols.copy()
-        symbols[query_span.symbol] = query_span.form == result_span.form
+        symbols[query_span.symbol] = query_span.maybe_ascii == result_span.maybe_ascii
         return Pairing(
             self.query,
             self.result,

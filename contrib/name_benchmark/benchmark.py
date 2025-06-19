@@ -1,10 +1,11 @@
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 from rich.console import Console
 from rich.table import Table
 import yaml
 
 from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity as Entity
+from nomenklatura.matching.types import FtResult
 
 
 class Check:
@@ -16,9 +17,12 @@ class Check:
 
 
 class Result:
-    def __init__(self, check: Check, score: float, threshold: float):
+    def __init__(
+        self, check: Check, score: float, detail: Optional[str], threshold: float
+    ):
         self.check = check
         self.score = score
+        self.detail = detail
         self.threshold = threshold
         self.true_score = 1.0 if check.is_match else 0.0
         self.is_match = score >= threshold
@@ -68,15 +72,15 @@ def stub_compare(query: Entity, candidate: Entity) -> float:
 
 
 def run_benchmark(
-    func: Callable[[Entity, Entity], float], threshold: float = 0.8
+    func: Callable[[Entity, Entity], FtResult], threshold: float = 0.8
 ) -> None:
     """Run the benchmark."""
     checks = load_checks()
     results = []
     print("Running benchmark for: %s (threshold: %.2f)" % (func.__name__, threshold))
     for check in checks:
-        score = func(check.query, check.candidate)
-        result = Result(check, score, threshold)
+        ftres = func(check.query, check.candidate)
+        result = Result(check, ftres.score, ftres.detail, threshold)
         results.append(result)
 
     console = Console()
@@ -88,6 +92,7 @@ def run_benchmark(
     failures.add_column("Result", justify="right")
     failures.add_column("Score", justify="right")
     failures.add_column("Loss", justify="right")
+    failures.add_column("Detail", justify="right")
 
     for result in results:
         if result.is_correct:
@@ -99,6 +104,7 @@ def run_benchmark(
             str(result.is_match),
             "%.2f" % result.score,
             "%.2f" % result.loss,
+            result.detail if result.detail else "",
         )
     if len(failures.rows) > 0:
         console.print(failures)
@@ -158,13 +164,13 @@ def run_benchmark(
     console.print(table)
 
 
-def wrap_matcher(query: Entity, candidate: Entity) -> float:
+def wrap_matcher(query: Entity, candidate: Entity) -> FtResult:
     """Wrap the matcher function to match the expected signature."""
     from nomenklatura.matching.logic_v2.names import name_match
     from nomenklatura.matching.logic_v2.model import LogicV2
 
     config = LogicV2.default_config()
-    return name_match(query, candidate, config).score
+    return name_match(query, candidate, config)
 
 
 if __name__ == "__main__":
