@@ -1,6 +1,5 @@
 from typing import Optional
-import unicodedata
-from rigour.names import tokenize_name
+from rigour.names import tokenize_name, prenormalize_name
 from rigour.text import levenshtein
 
 
@@ -16,22 +15,6 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     if distance > max_edits:
         return 0.0
     return (1 - (distance / max_len)) ** max_edits
-
-
-def prenormalize_name(name: str) -> str:
-    """Prepare a name for tokenization and matching."""
-    name = unicodedata.normalize("NFC", name)
-    return name.lower()
-
-
-def name_prenormalizer(name: Optional[str]) -> Optional[str]:
-    """Same as before, but meeting the definition of a rigour Normalizer."""
-    if name is None:
-        return None
-    name = prenormalize_name(name)
-    if len(name) == 0:
-        return None
-    return name
 
 
 def normalize_name(name: str) -> str:

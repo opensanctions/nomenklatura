@@ -3,9 +3,9 @@ from functools import cache
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 from rigour.text.dictionary import Scanner
+from rigour.names import Symbol, Name
 from rigour.names import load_person_names_mapping
 
-from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.util import normalize_name, name_normalizer
 
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def common_symbols() -> Dict[str, List[Symbol]]:
 
     mapping: Dict[str, List[Symbol]] = defaultdict(list)
     for key, values in ORDINALS.items():
-        sym = Symbol(Symbol.Category.ORDINAL, key.upper())
+        sym = Symbol(Symbol.Category.ORDINAL, key)
         for value in values:
             nvalue = normalize_name(value)
             if sym not in mapping.get(nvalue, []):
@@ -96,7 +96,7 @@ def get_org_tagger() -> Tagger:
     return Tagger(mapping)
 
 
-def tag_org_name(name: SymbolName) -> None:
+def tag_org_name(name: Name) -> None:
     """Tag the name with the organization type and symbol tags."""
     tagger = get_org_tagger()
     for phrase, symbol in tagger(name.norm_form):
@@ -130,7 +130,7 @@ def get_person_tagger() -> Tagger:
     return Tagger(mapping)
 
 
-def tag_person_name(name: SymbolName) -> None:
+def tag_person_name(name: Name) -> None:
     """Tag the name with the person name part and symbol tags."""
     tagger = get_person_tagger()
     for phrase, symbol in tagger(name.norm_form):

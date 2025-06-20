@@ -1,7 +1,7 @@
 from typing import Dict, List, Set
 
 from rigour.names import NamePart
-from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName, Span
+from rigour.names import Symbol, Name, Span
 
 
 class Pairing:
@@ -16,8 +16,8 @@ class Pairing:
 
     def __init__(
         self,
-        query: SymbolName,
-        result: SymbolName,
+        query: Name,
+        result: Name,
         query_used: Set[NamePart],
         result_used: Set[NamePart],
         symbols: Dict[Symbol, bool],
@@ -29,7 +29,7 @@ class Pairing:
         self.symbols = symbols
 
     @classmethod
-    def create(cls, query: SymbolName, result: SymbolName) -> "Pairing":
+    def create(cls, query: Name, result: Name) -> "Pairing":
         """Create a new pairing."""
         return cls(
             query=query,
@@ -72,7 +72,7 @@ class Pairing:
     def add(self, query_span: Span, result_span: Span) -> "Pairing":
         """Add a pair of spans to the pairing."""
         symbols = self.symbols.copy()
-        symbols[query_span.symbol] = query_span.maybe_ascii == result_span.maybe_ascii
+        symbols[query_span.symbol] = query_span.comparable == result_span.comparable
         return Pairing(
             self.query,
             self.result,

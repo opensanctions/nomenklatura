@@ -86,20 +86,6 @@ def text_bool(text: Optional[str]) -> Optional[bool]:
     return text.lower().startswith("t")
 
 
-def list_intersection(left: List[str], right: List[str]) -> List[str]:
-    """Return the number of elements in the intersection of two lists, accounting
-    properly for duplicates."""
-    overlap: List[str] = []
-    remainder = list(right)
-    for elem in left:
-        try:
-            remainder.remove(elem)
-            overlap.append(elem)
-        except ValueError:
-            pass
-    return overlap
-
-
 def pack_prop(schema: str, prop: str) -> str:
     return f"{schema}:{prop}"
 

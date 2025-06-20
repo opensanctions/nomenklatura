@@ -1,16 +1,13 @@
 from typing import Set
-from rigour.names import NameTypeTag, NamePartTag
-from rigour.names import replace_org_types_compare
-from rigour.names.person import remove_person_prefixes
+from rigour.names import NameTypeTag, NamePartTag, Name, Symbol
+from rigour.names import replace_org_types_compare, prenormalize_name
+from rigour.names import remove_person_prefixes, remove_org_prefixes
 from rigour.names.tag import GIVEN_NAME_TAGS
 from followthemoney.proxy import EntityProxy
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 
-from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.tagging import tag_org_name, tag_person_name
-from nomenklatura.matching.logic_v2.names.util import prenormalize_name
-from nomenklatura.matching.logic_v2.names.util import name_prenormalizer
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),
@@ -41,7 +38,7 @@ def schema_type_tag(schema: Schema) -> NameTypeTag:
 # @lru_cache(maxsize=128)  # Cache the query when doing multiple comparisons
 def entity_names(
     type_tag: NameTypeTag, entity: EntityProxy, is_query: bool = False
-) -> Set[SymbolName]:
+) -> Set[Name]:
     """This will transform the entity into a set of names with tags applied. The idea
     is to tag the names with the type of entity they are, e.g. person, organization,
     etc. and to tag the parts of the name with their type, e.g. first name, last name,
@@ -49,7 +46,7 @@ def entity_names(
     comparisons needed to find the best match.
     """
     seen: Set[str] = set()
-    names: Set[SymbolName] = set()
+    names: Set[Name] = set()
     for name in entity.get_type_values(registry.name, matchable=True):
         # Remove prefix like "Mr.", "Ms.", "Dr." from the name:
         if type_tag == NameTypeTag.PER:
@@ -58,12 +55,14 @@ def entity_names(
         form = prenormalize_name(name)
         if type_tag in (NameTypeTag.ORG, NameTypeTag.ENT):
             # Replace organization types with their canonical form, e.g. "Limited Liability Company" -> "LLC"
-            form = replace_org_types_compare(form, normalizer=name_prenormalizer)
+            form = replace_org_types_compare(form, normalizer=prenormalize_name)
+            # Remove organization prefixes like "The" (actually that's it right now)
+            form = remove_org_prefixes(form)
 
         if form in seen:
             continue
         seen.add(form)
-        sname = SymbolName(name, form=form, tag=type_tag)
+        sname = Name(name, form=form, tag=type_tag)
         # tag name parts from properties:
         for prop, tag in PROP_MAPPINGS:
             for value in entity.get(prop, quiet=True):
@@ -89,10 +88,10 @@ def entity_names(
         if type_tag == NameTypeTag.PER:
             for part in sname.parts:
                 if is_query and len(part.form) == 1:
-                    sym = Symbol(Symbol.Category.INITIAL, part.form)
+                    sym = Symbol(Symbol.Category.INITIAL, part.comparable)
                     sname.apply_part(part, sym)
                 elif part.tag in GIVEN_NAME_TAGS:
-                    sym = Symbol(Symbol.Category.INITIAL, part.form[0])
+                    sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
                     sname.apply_part(part, sym)
             tag_person_name(sname)
 
@@ -103,9 +102,7 @@ def entity_names(
     # where a short version of of a name ("John Smith") is matched to a query ("John K Smith"), where
     # a longer version would have disqualified the match ("John K Smith" != "John R Smith").
     for name_obj in list(names):
-        for other in names:
-            if name_obj == other:
-                continue
+        for other in list(names):
             if name_obj.contains(other):
                 names.remove(other)
     return names

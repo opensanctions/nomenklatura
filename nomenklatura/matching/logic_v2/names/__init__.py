@@ -1,6 +1,6 @@
 import math
 from typing import List, Optional, Set
-from rigour.names import NameTypeTag, NamePart
+from rigour.names import NameTypeTag, NamePart, Symbol, Name
 
 # from rigour.names.alignment import Alignment
 from rigour.names import align_person_name_order, align_name_slop
@@ -9,7 +9,6 @@ from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
 
-from nomenklatura.matching.logic_v2.names.symbols import Symbol, SymbolName
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
@@ -24,7 +23,7 @@ SYM_WEIGHTS = {
 }
 
 
-def is_numeric(name: SymbolName, part: NamePart) -> bool:
+def is_numeric(name: Name, part: NamePart) -> bool:
     # TODO: check if the extras contain numbers, apply extra penalty if so
     if part.form.isnumeric():
         return True
@@ -53,9 +52,7 @@ def levenshtein_similarity(query: str, result: str) -> float:
     return score
 
 
-def match_name_symbolic(
-    query: SymbolName, result: SymbolName, config: ScoringConfig
-) -> FtResult:
+def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
     # Stage 1: We create a set of pairings between the symbols that have been annotated
     # on both names. This will try to determine the maximum, non-overlapping set of name
     # parts that can be explained using pre-defined symbols.
@@ -98,9 +95,8 @@ def match_name_symbolic(
             if query.tag == NameTypeTag.PER:
                 alignment = align_person_name_order(query_rem, result_rem)
             else:
-                # alignment = Alignment()
-                # alignment.query_sorted = query_rem
-                # alignment.result_sorted = result_rem
+                query_rem = NamePart.tag_sort(query_rem)
+                result_rem = NamePart.tag_sort(result_rem)
                 alignment = align_name_slop(query_rem, result_rem, max_slop=1)
 
             # Handle name parts that are not matched to the other name.
@@ -119,17 +115,17 @@ def match_name_symbolic(
 
             # Fuzzy matching of the remaining name parts.
             if len(alignment.query_sorted) and len(alignment.result_sorted):
-                query_fuzzy = "".join([p.maybe_ascii for p in alignment.query_sorted])
-                result_fuzzy = "".join([p.maybe_ascii for p in alignment.result_sorted])
+                query_fuzzy = "".join([p.comparable for p in alignment.query_sorted])
+                result_fuzzy = "".join([p.comparable for p in alignment.result_sorted])
                 fuzzy_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
                 for np in alignment.query_sorted:
                     # Make the score drop off more steeply with errors:
                     weights.append(fuzzy_score)
 
         if query_fuzzy is None:
-            query_fuzzy = " ".join([p.maybe_ascii for p in query.parts])
+            query_fuzzy = " ".join([p.comparable for p in query.parts])
         if result_fuzzy is None:
-            result_fuzzy = " ".join([p.maybe_ascii for p in result.parts])
+            result_fuzzy = " ".join([p.comparable for p in result.parts])
 
         # Sum up and average all the weights to get the final score for this pairing.
         score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
@@ -140,7 +136,7 @@ def match_name_symbolic(
                 detail = f"{detail} (symbolic: {symbols})"
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
-        retval.detail = f"{query.maybe_ascii} <> {result.maybe_ascii}"
+        retval.detail = f"{query.comparable} <> {result.comparable}"
     return retval
 
 
