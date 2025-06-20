@@ -71,13 +71,11 @@ def entity_names(
         # tag organization types and symbols:
         if type_tag in (NameTypeTag.ORG, NameTypeTag.ENT):
             tag_org_name(sname)
-            if type_tag == NameTypeTag.ENT:
-                # If an entity name contains an organization type, we can tag it as an organization.
-                for span in sname.spans:
-                    if span.symbol.category == Symbol.Category.ORG_CLASS:
-                        sname.tag = NameTypeTag.ORG
             for span in sname.spans:
                 if span.symbol.category == Symbol.Category.ORG_CLASS:
+                    if type_tag == NameTypeTag.ENT:
+                        # If an entity name contains an organization type, we can tag it as an organization.
+                        sname.tag = NameTypeTag.ORG
                     # If a name part is an organization class or type, we can tag it as legal.
                     for part in sname.parts:
                         if part.tag == NamePartTag.ANY:
@@ -87,11 +85,12 @@ def entity_names(
         # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"
         if type_tag == NameTypeTag.PER:
             for part in sname.parts:
+                if not part.is_modern_alphabet:
+                    continue
+                sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
                 if is_query and len(part.form) == 1:
-                    sym = Symbol(Symbol.Category.INITIAL, part.comparable)
                     sname.apply_part(part, sym)
                 elif part.tag in GIVEN_NAME_TAGS:
-                    sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
                     sname.apply_part(part, sym)
             tag_person_name(sname)
 
