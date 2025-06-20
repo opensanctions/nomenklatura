@@ -2,7 +2,7 @@ from typing import Generic, Generator, Optional, Tuple, Set
 from normality import WS, category_replace, ascii_text
 from rigour.ids import StrictFormat
 from rigour.names import tokenize_name
-from rigour.names.person import remove_person_prefixes
+from rigour.names import remove_person_prefixes
 from rigour.names.org_types import replace_org_types_display
 from followthemoney.types import registry
 from followthemoney.property import Property

@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional
 from functools import lru_cache
 from normality import collapse_spaces, ascii_text, category_replace
 from normality.constants import WS
-from rigour.names.person import remove_person_prefixes
+from rigour.names import remove_person_prefixes
 from rigour.names.org_types import replace_org_types_compare
 
 log = logging.getLogger(__name__)

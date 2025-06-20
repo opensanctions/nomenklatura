@@ -8,8 +8,8 @@ from rigour.text.scripts import is_modern_alphabet
 from rigour.text.distance import is_levenshtein_plausible
 from rigour.text.phonetics import metaphone, soundex
 from rigour.names import tokenize_name
+from rigour.util import list_intersection
 
-from nomenklatura.util import list_intersection
 from nomenklatura.matching.util import type_pair, has_schema
 from nomenklatura.matching.compat import fingerprint_name, name_words
 
