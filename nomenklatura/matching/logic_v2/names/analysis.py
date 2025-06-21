@@ -1,8 +1,7 @@
 from typing import Set
-from rigour.names import NameTypeTag, NamePartTag, Name, Symbol
+from rigour.names import NameTypeTag, NamePartTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
 from rigour.names import remove_person_prefixes, remove_org_prefixes
-from rigour.names.tag import GIVEN_NAME_TAGS
 from followthemoney.proxy import EntityProxy
 from followthemoney.schema import Schema
 from followthemoney.types import registry
@@ -71,28 +70,9 @@ def entity_names(
         # tag organization types and symbols:
         if type_tag in (NameTypeTag.ORG, NameTypeTag.ENT):
             tag_org_name(sname)
-            for span in sname.spans:
-                if span.symbol.category == Symbol.Category.ORG_CLASS:
-                    if type_tag == NameTypeTag.ENT:
-                        # If an entity name contains an organization type, we can tag it as an organization.
-                        sname.tag = NameTypeTag.ORG
-                    # If a name part is an organization class or type, we can tag it as legal.
-                    for part in sname.parts:
-                        if part.tag == NamePartTag.ANY:
-                            part.tag = NamePartTag.LEGAL
 
-        # tag given name abbreviations. this is meant to handle a case where the person's
-        # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"
         if type_tag == NameTypeTag.PER:
-            for part in sname.parts:
-                if not part.is_modern_alphabet:
-                    continue
-                sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
-                if is_query and len(part.form) == 1:
-                    sname.apply_part(part, sym)
-                elif part.tag in GIVEN_NAME_TAGS:
-                    sname.apply_part(part, sym)
-            tag_person_name(sname)
+            tag_person_name(sname, initials=is_query)
 
         # TODO: should we tag phonetic names here?
         names.add(sname)

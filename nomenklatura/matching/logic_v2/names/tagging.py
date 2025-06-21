@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from rigour.text.dictionary import Scanner
 from rigour.names import Symbol, Name
 from rigour.names import load_person_names_mapping
+from rigour.names.tag import NameTypeTag, NamePartTag, GIVEN_NAME_TAGS
 
 from nomenklatura.matching.logic_v2.names.util import normalize_name, name_normalizer
 
@@ -96,11 +97,21 @@ def get_org_tagger() -> Tagger:
     return Tagger(mapping)
 
 
-def tag_org_name(name: Name) -> None:
+def tag_org_name(name: Name) -> Name:
     """Tag the name with the organization type and symbol tags."""
     tagger = get_org_tagger()
     for phrase, symbol in tagger(name.norm_form):
         name.apply_phrase(phrase, symbol)
+    for span in name.spans:
+        if span.symbol.category == Symbol.Category.ORG_CLASS:
+            if name.tag == NameTypeTag.ENT:
+                # If an entity name contains an organization type, we can tag it as an organization.
+                name.tag = NameTypeTag.ORG
+            # If a name part is an organization class or type, we can tag it as legal.
+            for part in span.parts:
+                if part.tag == NamePartTag.ANY:
+                    part.tag = NamePartTag.LEGAL
+    return name
 
 
 @cache
@@ -130,8 +141,21 @@ def get_person_tagger() -> Tagger:
     return Tagger(mapping)
 
 
-def tag_person_name(name: Name) -> None:
+def tag_person_name(name: Name, initials: bool = False) -> Name:
     """Tag the name with the person name part and symbol tags."""
+    # tag given name abbreviations. this is meant to handle a case where the person's
+    # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"
+    for part in name.parts:
+        if not part.is_modern_alphabet:
+            continue
+        sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
+        if initials and len(part.form) == 1:
+            name.apply_part(part, sym)
+        elif part.tag in GIVEN_NAME_TAGS:
+            name.apply_part(part, sym)
+
+    # tag the name with person symbols
     tagger = get_person_tagger()
     for phrase, symbol in tagger(name.norm_form):
         name.apply_phrase(phrase, symbol)
+    return name

@@ -17,10 +17,10 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     return (1 - (distance / max_len)) ** max_edits
 
 
-def normalize_name(name: str) -> str:
+def normalize_name(name: Optional[str]) -> str:
     """Normalize a name for tokenization and matching."""
-    name = prenormalize_name(name)
-    return " ".join(tokenize_name(name))
+    norm = prenormalize_name(name)
+    return " ".join(tokenize_name(norm))
 
 
 def name_normalizer(name: Optional[str]) -> Optional[str]:
