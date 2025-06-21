@@ -141,7 +141,7 @@ def get_person_tagger() -> Tagger:
     return Tagger(mapping)
 
 
-def tag_person_name(name: Name, initials: bool = False) -> Name:
+def tag_person_name(name: Name, any_initials: bool = False) -> Name:
     """Tag the name with the person name part and symbol tags."""
     # tag given name abbreviations. this is meant to handle a case where the person's
     # first or middle name is an abbreviation, e.g. "J. Smith" or "John Q. Smith"
@@ -149,7 +149,7 @@ def tag_person_name(name: Name, initials: bool = False) -> Name:
         if not part.is_modern_alphabet:
             continue
         sym = Symbol(Symbol.Category.INITIAL, part.comparable[0])
-        if initials and len(part.form) == 1:
+        if any_initials and len(part.form) == 1:
             name.apply_part(part, sym)
         elif part.tag in GIVEN_NAME_TAGS:
             name.apply_part(part, sym)

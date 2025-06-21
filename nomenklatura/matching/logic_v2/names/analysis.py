@@ -72,7 +72,7 @@ def entity_names(
             tag_org_name(sname)
 
         if type_tag == NameTypeTag.PER:
-            tag_person_name(sname, initials=is_query)
+            tag_person_name(sname, any_initials=is_query)
 
         # TODO: should we tag phonetic names here?
         names.add(sname)
