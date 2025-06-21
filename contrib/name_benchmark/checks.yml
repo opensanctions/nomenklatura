@@ -93,6 +93,18 @@ checks:
   - match: true
     schema: Person
     query:
+      name: MOHAMMADHASNI HAJI SSAD KHAN ZARKARI
+    candidate:
+      name: HAJI ASAD KHAN ZARKARI MOHAMMADHASNI
+  - match: true
+    schema: Person
+    query:
+      name: MOHAMMAD HASNI HAJI SSAD KHAN ZARKARI
+    candidate:
+      name: HAJI ASAD KHAN ZARKARI MOHAMMADHASNI
+  - match: true
+    schema: Person
+    query:
       firstName: Hans
       lastName: Friedrich
     candidate:
@@ -126,6 +138,12 @@ checks:
       firstName: Hans
       lastName: Friedrich
       middleName: Joachim
+  - match: true
+    schema: Person
+    query:
+      name: REINALDO GREGORIO LENIN CERNA JUARE
+    candidate:
+      name: Reinaldo Lenin Gregorio Cerna Juarez
   - match: false
     schema: Person
     query:
@@ -193,6 +211,12 @@ checks:
       name: OAO Gazprom
     candidate:
       name: Open Joint Stock Company Gazprom
+  - match: true
+    schema: Company
+    query:
+      name: HOMS REFINERY CORPORATION
+    candidate:
+      name: The Homs Refinery Company
 
   - match: true
     schema: Person
