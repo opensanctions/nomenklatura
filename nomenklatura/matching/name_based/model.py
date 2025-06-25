@@ -3,8 +3,8 @@ from typing import Dict
 from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.identifiers import orgid_disjoint
-from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
+from nomenklatura.matching.name_based.misc import orgid_disjoint
+from nomenklatura.matching.name_based.misc import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
 

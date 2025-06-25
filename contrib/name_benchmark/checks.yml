@@ -93,6 +93,18 @@ checks:
   - match: true
     schema: Person
     query:
+      name: MOHAMMADHASNI HAJI SSAD KHAN ZARKARI
+    candidate:
+      name: HAJI ASAD KHAN ZARKARI MOHAMMADHASNI
+  - match: true
+    schema: Person
+    query:
+      name: MOHAMMAD HASNI HAJI SSAD KHAN ZARKARI
+    candidate:
+      name: HAJI ASAD KHAN ZARKARI MOHAMMADHASNI
+  - match: true
+    schema: Person
+    query:
       firstName: Hans
       lastName: Friedrich
     candidate:
@@ -126,6 +138,12 @@ checks:
       firstName: Hans
       lastName: Friedrich
       middleName: Joachim
+  - match: true
+    schema: Person
+    query:
+      name: REINALDO GREGORIO LENIN CERNA JUARE
+    candidate:
+      name: Reinaldo Lenin Gregorio Cerna Juarez
   - match: false
     schema: Person
     query:
@@ -169,6 +187,12 @@ checks:
       name: Deutsche Bank (Schweiz) AG
     candidate:
       name: Deutsche Bank AG
+  - match: true
+    schema: Company
+    query:
+      name: Deutsche Bank AG
+    candidate:
+      name: Deutsche Bank (Schweiz) AG
   - match: false
     schema: Company
     query:
@@ -187,6 +211,12 @@ checks:
       name: OAO Gazprom
     candidate:
       name: Open Joint Stock Company Gazprom
+  - match: true
+    schema: Company
+    query:
+      name: HOMS REFINERY CORPORATION
+    candidate:
+      name: The Homs Refinery Company
 
   - match: true
     schema: Person
@@ -275,6 +305,12 @@ checks:
     schema: Person
     query:
       name: Sergi Lavrov
+    candidate:
+      name: Sergei Lavrov
+  - match: true
+    schema: Person
+    query:
+      name: SergeiLavrov
     candidate:
       name: Sergei Lavrov
   - match: true
@@ -403,6 +439,7 @@ checks:
       name: A. Khamenei
     candidate:
       name: Ali Khamenei
+      firstName: Ali
   - match: true
     label: Initials Usage
     schema: Person
@@ -410,6 +447,7 @@ checks:
       name: J.-C. Juncker
     candidate:
       name: Jean-Claude Juncker
+      firstName: Jean-Claude
   - match: true
     label: Initials Usage
     schema: Person
@@ -536,6 +574,7 @@ checks:
       name: N. Nazarbayev
     candidate:
       name: Nursultan Nazarbayev
+      firstName: Nursultan
   - match: false
     schema: Person
     query:
@@ -548,7 +587,7 @@ checks:
       name: Nar Nazarbayev
     candidate:
       name: Nursultan Nazarbayev
-  - match: true
+  - match: false
     label: Initials Addition
     schema: Person
     query:
@@ -567,6 +606,12 @@ checks:
     schema: Person
     query:
       name: Mr. Rami Makhlouf
+    candidate:
+      name: Rami Makhlouf
+  - match: true
+    schema: Person
+    query:
+      name: RamiMakhlouf
     candidate:
       name: Rami Makhlouf
   - match: false
@@ -670,7 +715,7 @@ checks:
     query:
       name: Barack Obama
     candidate:
-      name: ジョージ
+      name: バラク・オバマ
   - match: true
     schema: Person
     query:
@@ -808,7 +853,7 @@ checks:
     query:
       name: Ротенберг Аркадий
     candidate:
-      name: Arkadiii Romanovich Rotenberg
+      name: Arkadii Romanovich Rotenberg
   - match: true
     schema: Person
     query:
@@ -1124,6 +1169,12 @@ checks:
     candidate:
       name: The Puccini Trust
   - match: false
+    schema: LegalEntity
+    query:
+      name: LVMH Aviation
+    candidate:
+      name: THEIA AVIATION, LLC
+  - match: false
     schema: Company
     query:
       name: СБ Дако ООО
@@ -1387,3 +1438,15 @@ checks:
       name: Elois
     candidate:
       name: Alice Costandina Titus
+  - match: false
+    schema: Company
+    query:
+      name: Blinq Holdings Pty Ltd
+    candidate:
+      name: Bailey Holdings Pty Ltd
+  - match: true
+    schema: Person
+    query:
+      name: Ilie Bolojan
+    candidate:
+      name: Monsieur Ilie-Gabril Bolojan

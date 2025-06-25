@@ -6,12 +6,14 @@ from followthemoney.util import PathLike
 
 from nomenklatura.matching import get_algorithm
 from nomenklatura.matching.pairs import read_pairs
+from nomenklatura.matching.types import ScoringConfig
 
 
 log = logging.getLogger(__name__)
 
 
 def bench_matcher(name: str, pairs_file: PathLike, number: int) -> None:
+    config = ScoringConfig.defaults()
     log.info("Loading pairs from %s", pairs_file)
     pairs = list(read_pairs(pairs_file))
     log.info("Read %d pairs", len(pairs))
@@ -23,7 +25,7 @@ def bench_matcher(name: str, pairs_file: PathLike, number: int) -> None:
 
     def compare_one_pair() -> None:
         pair = next(infinite_pairs)
-        matcher.compare(pair.left, pair.right)
+        matcher.compare(pair.left, pair.right, config)
 
     log.info("Running benchmark for %d iterations", number)
     seconds = timeit(compare_one_pair, number=number)
