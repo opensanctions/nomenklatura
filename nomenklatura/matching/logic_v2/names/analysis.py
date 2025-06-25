@@ -2,11 +2,12 @@ from typing import Set
 from rigour.names import NameTypeTag, NamePartTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
 from rigour.names import remove_person_prefixes, remove_org_prefixes
+from rigour.names import tag_org_name, tag_person_name
 from followthemoney.proxy import EntityProxy
 from followthemoney.schema import Schema
 from followthemoney.types import registry
 
-from nomenklatura.matching.logic_v2.names.tagging import tag_org_name, tag_person_name
+from nomenklatura.matching.logic_v2.names.util import normalize_name
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),
@@ -69,10 +70,10 @@ def entity_names(
 
         # tag organization types and symbols:
         if type_tag in (NameTypeTag.ORG, NameTypeTag.ENT):
-            tag_org_name(sname)
+            tag_org_name(sname, normalize_name)
 
         if type_tag == NameTypeTag.PER:
-            tag_person_name(sname, any_initials=is_query)
+            tag_person_name(sname, normalize_name, any_initials=is_query)
 
         # TODO: should we tag phonetic names here?
         names.add(sname)

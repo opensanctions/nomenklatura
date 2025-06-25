@@ -1,10 +1,6 @@
-import math
 from typing import List, Optional, Set
-from rigour.names import NameTypeTag, NamePart, Symbol, Name
-
-# from rigour.names.alignment import Alignment
-from rigour.names import align_person_name_order, align_name_slop
-from rigour.text import dam_levenshtein
+from rigour.names import NameTypeTag, Symbol, Name
+from rigour.names import align_person_name_order, align_tag_sort
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -12,44 +8,28 @@ from followthemoney.types import registry
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
-from nomenklatura.matching.logic_v2.names.util import strict_levenshtein, normalize_name
+from nomenklatura.matching.logic_v2.names.distance import levenshtein_similarity
+from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
+from nomenklatura.matching.logic_v2.names.util import normalize_name
+from nomenklatura.matching.logic_v2.util import penalize
 from nomenklatura.matching.types import FtResult, ScoringConfig
 
 SYM_WEIGHTS = {
     Symbol.Category.ORG_CLASS: 0.75,
-    Symbol.Category.INITIAL: 0.75,
+    Symbol.Category.INITIAL: 0.8,
     Symbol.Category.NAME: 0.9,
-    Symbol.Category.SYMBOL: 0.9,
+    Symbol.Category.SYMBOL: 0.8,
 }
 
 
-def is_numeric(name: Name, part: NamePart) -> bool:
-    # TODO: check if the extras contain numbers, apply extra penalty if so
-    if part.form.isnumeric():
-        return True
-    for span in name.spans:
-        if span.symbol.category == Symbol.Category.ORDINAL and part in span.parts:
-            return True
-    return False
-
-
-def levenshtein_similarity(query: str, result: str) -> float:
-    if len(query) == 0 or len(result) == 0:
-        return 0.0
-    if query == result:
-        return 1.0
-    max_len = max(len(query), len(result))
-    max_edits = math.floor(math.log(max(max_len - 2, 1)))
-    if max_edits < 1:
-        return 0.0
-    distance = dam_levenshtein(query, result, max_edits=max_edits)
-    if distance > max_edits:
-        return 0.0
-    score = 1 - (distance / max_len)
-    score = score**2
-    if score < 0.5:
-        score = 0.0
-    return score
+# def is_numeric(name: Name, part: NamePart) -> bool:
+#     # TODO: check if the extras contain numbers, apply extra penalty if so
+#     if part.form.isnumeric():
+#         return True
+#     for span in name.spans:
+#         if span.symbol.category == Symbol.Category.ORDINAL and part in span.parts:
+#             return True
+#     return False
 
 
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
@@ -95,23 +75,15 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             if query.tag == NameTypeTag.PER:
                 alignment = align_person_name_order(query_rem, result_rem)
             else:
-                query_rem = NamePart.tag_sort(query_rem)
-                result_rem = NamePart.tag_sort(result_rem)
-                alignment = align_name_slop(query_rem, result_rem, max_slop=1)
+                alignment = align_tag_sort(query_rem, result_rem)
 
             # Handle name parts that are not matched to the other name.
             # TODO: do we want to special-case ORG types and numbers here? Org types are not
             # as bad to be unmatched, but numbers are worse than normal name parts.
             for np in alignment.query_extra:
-                weights.append(0.40)
-            # if not len(alignment.result_sorted):
-            #     for np in alignment.query_sorted:
-            #         weights.append(0.43)
+                weights.append(config.get_float("nm_extra_query_name"))
             for np in alignment.result_extra:
-                weights.append(0.65)
-            # if not len(alignment.query_sorted):
-            #     for np in alignment.result_sorted:
-            #         weights.append(0.65)
+                weights.append(config.get_float("nm_extra_result_name"))
 
             # Fuzzy matching of the remaining name parts.
             if len(alignment.query_sorted) and len(alignment.result_sorted):
@@ -158,7 +130,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
             # Things like Vessels, Airplanes, Securities, etc.
             detail = f"{query_name} ~ {result_name}"
             if numbers_mismatch(query_name, result_name):
-                score = score * 0.7
+                score = penalize(score, config.get_float("nm_number_mismatch"))
                 detail = "Number mismatch in name"
             if score > best_result.score:
                 best_result = FtResult(score=score, detail=detail)

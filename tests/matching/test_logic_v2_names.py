@@ -1,7 +1,7 @@
 from rigour.names import NameTypeTag, NamePartTag, Symbol
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.util import strict_levenshtein
+from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 
 from .util import e
 
