@@ -1,6 +1,7 @@
 from types import TracebackType
 from typing import Optional, Generator, List, Tuple, Generic, Type, cast
 from followthemoney.property import Property
+from followthemoney.schema import Schema
 from followthemoney.types import registry
 
 from nomenklatura.dataset import DS
@@ -120,8 +121,27 @@ class View(Generic[DS, CE]):
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(
+        self, schemata: Optional[List[Schema]] = None
+    ) -> Generator[CE, None, None]:
+        """Note: the schemata argument is defined to be a full list of all schemata to
+        be returned. The check will not be .is_a, ie. descendants and parents are not
+        considered by default."""
         raise NotImplementedError()
+
+    def close(self) -> None:
+        self.store.close()
+
+    def __enter__(self) -> "View[DS, CE]":
+        return self
+
+    def __exit__(
+        self,
+        type: Optional[Type[BaseException]],
+        value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        self.close()
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__}({self.scope.name!r})>"
