@@ -9,9 +9,12 @@ from rigour.text.distance import dam_levenshtein, levenshtein
 SIMILAR_PAIRS = [
     ("0", "o"),
     ("1", "i"),
+    ("g", "9"),
+    ("e", "i"),
     ("1", "l"),
     ("o", "u"),
     ("i", "j"),
+    ("c", "k"),
 ]
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
 
@@ -62,9 +65,35 @@ def weighted_edit_similarity(
     dest_text = " ".join(dest_tokens)[:MAX_NAME_LENGTH]
     if src_text == dest_text:
         return 1.0
-    max_len = max(len(src_text), len(dest_text))
+    if len(src_text) < 4 or len(dest_text) < 4:
+        # Too short to fuzzy match
+        return 0.0
     total_distance = 0.0
+    # TODO build a set of matches (nee Pairing), aligning token name parts of src and dest
+    # to each other. Compute a score (based on edits) and weight (dependent on type) for each.
+    # Use editops to iterate over the differences between the two texts character by character.
+    #
+    # When does a bundle gets made as a match, and when not?
+    src_offset = 0
+    dest_offset = 0
     for op in Levenshtein.opcodes(src_text, dest_text):
+        # src_offset += op.src_end - op.src_start
+        # dest_offset += op.dest_end - op.dest_start
+
+        if op.tag == "equal":
+            continue
+
+    src_seen: List[NamePart] = []
+    src_token_start, src_offset = 0, 0
+    dest_seen: List[NamePart] = []
+    dest_token_start, dest_offset = 0, 0
+    for op in Levenshtein.opcodes(src_text, dest_text):
+        src_token = (
+            src_tokens[len(src_seen)] if len(src_seen) < len(src_tokens) else None
+        )
+        dest_token = (
+            dest_tokens[len(dest_seen)] if len(dest_seen) < len(dest_tokens) else None
+        )
         if op.tag == "equal":
             continue
         src_part = src_text[op.src_start : op.src_end]
@@ -92,7 +121,7 @@ def weighted_edit_similarity(
                     distance += 1.0
             elif (s, d) in SIMILAR_PAIRS:
                 # Similar character replacement, e.g. 0 and o
-                distance -= 1.5
+                distance -= 1.0
 
         if op.tag == "delete" and src_part in src_tokens:
             # Remove a full token (in query but not in result)
@@ -105,4 +134,12 @@ def weighted_edit_similarity(
             distance = 1.0
 
         total_distance += distance
-    return 1.0 - (total_distance / max_len)
+
+    max_len = max(len(src_text), len(dest_text))
+    # max_edits = math.floor(math.log(max(max_len - 2, 1)))
+    # if total_distance > max_edits:
+    #     return 0.0
+    score = (1.0 - (total_distance / max_len)) ** 2
+    if score < 0.5:
+        score = 0.0
+    return score

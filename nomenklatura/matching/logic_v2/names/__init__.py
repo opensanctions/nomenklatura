@@ -1,6 +1,6 @@
 from typing import List, Optional, Set
-from rigour.names import NameTypeTag, Symbol, Name
-from rigour.names import align_person_name_order, align_tag_sort
+from rigour.names import NameTypeTag, Symbol, Name, NamePart
+from rigour.names import align_person_name_order
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -8,7 +8,7 @@ from followthemoney.types import registry
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
-from nomenklatura.matching.logic_v2.names.distance import levenshtein_similarity
+from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import normalize_name
 from nomenklatura.matching.logic_v2.util import penalize
@@ -19,6 +19,7 @@ SYM_WEIGHTS = {
     Symbol.Category.INITIAL: 0.8,
     Symbol.Category.NAME: 0.9,
     Symbol.Category.SYMBOL: 0.8,
+    Symbol.Category.PHONETIC: 0.6,
 }
 
 
@@ -74,25 +75,33 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
                 alignment = align_person_name_order(query_rem, result_rem)
+                query_rem = alignment.query_sorted + alignment.query_extra
+                result_rem = alignment.result_sorted + alignment.result_extra
             else:
-                alignment = align_tag_sort(query_rem, result_rem)
+                query_rem = NamePart.tag_sort(query_rem)
+                result_rem = NamePart.tag_sort(result_rem)
 
-            # Handle name parts that are not matched to the other name.
-            # TODO: do we want to special-case ORG types and numbers here? Org types are not
-            # as bad to be unmatched, but numbers are worse than normal name parts.
-            for np in alignment.query_extra:
-                weights.append(config.get_float("nm_extra_query_name"))
-            for np in alignment.result_extra:
-                weights.append(config.get_float("nm_extra_result_name"))
+            # # Handle name parts that are not matched to the other name.
+            # # TODO: do we want to special-case ORG types and numbers here? Org types are not
+            # # as bad to be unmatched, but numbers are worse than normal name parts.
+            # for np in alignment.query_extra:
+            #     weights.append(config.get_float("nm_extra_query_name"))
+            # for np in alignment.result_extra:
+            #     weights.append(config.get_float("nm_extra_result_name"))
 
-            # Fuzzy matching of the remaining name parts.
-            if len(alignment.query_sorted) and len(alignment.result_sorted):
-                query_fuzzy = "".join([p.comparable for p in alignment.query_sorted])
-                result_fuzzy = "".join([p.comparable for p in alignment.result_sorted])
-                fuzzy_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
-                for np in alignment.query_sorted:
-                    # Make the score drop off more steeply with errors:
-                    weights.append(fuzzy_score)
+            # # Fuzzy matching of the remaining name parts.
+            # if len(alignment.query_sorted) and len(alignment.result_sorted):
+            #     query_fuzzy = "".join([p.comparable for p in alignment.query_sorted])
+            #     result_fuzzy = "".join([p.comparable for p in alignment.result_sorted])
+            #     fuzzy_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
+            #     for np in alignment.query_sorted:
+            #         # Make the score drop off more steeply with errors:
+            #         weights.append(fuzzy_score)
+            query_fuzzy = " ".join([p.comparable for p in query_rem])
+            result_fuzzy = " ".join([p.comparable for p in result_rem])
+            score = weighted_edit_similarity(query_rem, result_rem)
+            for np in query_rem:
+                weights.append(score)
 
         if query_fuzzy is None:
             query_fuzzy = " ".join([p.comparable for p in query.parts])
