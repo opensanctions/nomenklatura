@@ -99,9 +99,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             #         weights.append(fuzzy_score)
             query_fuzzy = " ".join([p.comparable for p in query_rem])
             result_fuzzy = " ".join([p.comparable for p in result_rem])
-            score = weighted_edit_similarity(query_rem, result_rem)
-            for np in query_rem:
-                weights.append(score)
+            weights.extend(weighted_edit_similarity(query_rem, result_rem))
 
         if query_fuzzy is None:
             query_fuzzy = " ".join([p.comparable for p in query.parts])

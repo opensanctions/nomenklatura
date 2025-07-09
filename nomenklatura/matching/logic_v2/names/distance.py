@@ -1,11 +1,11 @@
 import math
 import itertools
-from typing import List
+from typing import List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein
-from rigour.env import MAX_NAME_LENGTH
 from rigour.names import NamePart, NamePartTag
 from rigour.text.distance import dam_levenshtein, levenshtein
 
+SEP = " "
 SIMILAR_PAIRS = [
     ("0", "o"),
     ("1", "i"),
@@ -52,94 +52,78 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     return (1 - (distance / max_len)) ** max_edits
 
 
-def weighted_edit_similarity(
-    src_parts: List[NamePart],
-    dest_parts: List[NamePart],
-) -> float:
-    """Calculate a weighted similarity score between two sets of name parts."""
-    if len(src_parts) == 0 or len(dest_parts) == 0:
+def edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
+    """Calculate the cost of a pair of characters."""
+    if op == "equal":
         return 0.0
-    src_tokens = [p.comparable for p in src_parts]
-    dest_tokens = [p.comparable for p in dest_parts]
-    src_text = " ".join(src_tokens)[:MAX_NAME_LENGTH]
-    dest_text = " ".join(dest_tokens)[:MAX_NAME_LENGTH]
-    if src_text == dest_text:
+    if qc == SEP and rc is None:
+        return 0.2
+    if rc == SEP and qc is None:
+        return 0.2
+    if (qc, rc) in SIMILAR_PAIRS:
+        return 0.6
+    if qc is not None and qc.isdigit():
+        return 1.5
+    if rc is not None and rc.isdigit():
+        return 1.5
+    return 1.0
+
+
+def costs_similarity(costs: List[float], default: float = 0.0) -> float:
+    """Calculate a similarity score based on a list of costs."""
+    if len(costs) == 0:
+        return 0.0
+    max_cost = math.log(max(len(costs) - 2, 1))
+    total_cost = sum(costs)
+    if total_cost == 0:
         return 1.0
-    if len(src_text) < 4 or len(dest_text) < 4:
-        # Too short to fuzzy match
-        return 0.0
-    total_distance = 0.0
-    # TODO build a set of matches (nee Pairing), aligning token name parts of src and dest
-    # to each other. Compute a score (based on edits) and weight (dependent on type) for each.
-    # Use editops to iterate over the differences between the two texts character by character.
-    #
-    # When does a bundle gets made as a match, and when not?
-    src_offset = 0
-    dest_offset = 0
-    for op in Levenshtein.opcodes(src_text, dest_text):
-        # src_offset += op.src_end - op.src_start
-        # dest_offset += op.dest_end - op.dest_start
+    if total_cost > max_cost:
+        return default
+    # Normalize the score to be between 0 and 1
+    return 1 - (total_cost / len(costs))
 
-        if op.tag == "equal":
-            continue
 
-    src_seen: List[NamePart] = []
-    src_token_start, src_offset = 0, 0
-    dest_seen: List[NamePart] = []
-    dest_token_start, dest_offset = 0, 0
-    for op in Levenshtein.opcodes(src_text, dest_text):
-        src_token = (
-            src_tokens[len(src_seen)] if len(src_seen) < len(src_tokens) else None
-        )
-        dest_token = (
-            dest_tokens[len(dest_seen)] if len(dest_seen) < len(dest_tokens) else None
-        )
-        if op.tag == "equal":
-            continue
-        src_part = src_text[op.src_start : op.src_end]
-        dest_part = dest_text[op.dest_start : op.dest_end]
-        # Cases:
-        # - Full token insertion or deletion
-        # - Cheap replacement of a single character
-        # - Numeric addition or deletion
-        # - Space insert or deletion
-        distance = float(len(src_part) + len(dest_part))
-        for s, d in itertools.zip_longest(src_part, dest_part):
-            if d is None:
-                if s == " ":
-                    # Space deletion
-                    distance -= 0.8
-                elif s.isdigit():
-                    # Numeric deletion
-                    distance += 1.0
-            elif s is None:
-                if d == " ":
-                    # Space insertion
-                    distance -= 0.8
-                elif d.isdigit():
-                    # Numeric insertion
-                    distance += 1.0
-            elif (s, d) in SIMILAR_PAIRS:
-                # Similar character replacement, e.g. 0 and o
-                distance -= 1.0
+def weighted_edit_similarity(
+    qry_parts: List[NamePart],
+    res_parts: List[NamePart],
+) -> List[float]:
+    """Calculate a weighted similarity score between two sets of name parts."""
+    if len(qry_parts) == 0 and len(res_parts) == 0:
+        return []
+    qry_text = SEP.join(p.comparable for p in qry_parts)
+    res_text = SEP.join(p.comparable for p in res_parts)
 
-        if op.tag == "delete" and src_part in src_tokens:
-            # Remove a full token (in query but not in result)
-            part = src_parts[src_tokens.index(src_part)]
-            # TODO: check if legal or ordinal, then it's less severe
-            if part.tag != NamePartTag.NUMERIC:
-                distance = 1.0
-        elif op.tag == "insert" and dest_part in dest_tokens:
-            # Add a full token (in result but not in query)
-            distance = 1.0
+    qry_costs: List[Tuple[NamePart, List[float]]] = []
+    res_costs: List[Tuple[NamePart, List[float]]] = []
+    if len(qry_parts) == 0:
+        res_costs = [(p, [1.0]) for p in res_parts]
+    elif len(res_parts) == 0:
+        qry_costs = [(p, [1.0]) for p in qry_parts]
+    else:
+        qry_costs.append((qry_parts[0], []))
+        res_costs.append((res_parts[0], []))
+        for op in Levenshtein.opcodes(qry_text, res_text):
+            qry_span = qry_text[op.src_start : op.src_end]
+            res_span = res_text[op.dest_start : op.dest_end]
+            for qc, rc in itertools.zip_longest(qry_span, res_span, fillvalue=None):
+                cost = edit_cost(op.tag, qc, rc)
+                if qc is not None:
+                    qry_costs[-1][1].append(cost)
+                    if qc == SEP:
+                        if len(qry_parts) > len(qry_costs):
+                            qry_costs.append((qry_parts[len(qry_costs)], []))
+                if rc is not None:
+                    res_costs[-1][1].append(cost)
+                    if rc == SEP:
+                        if len(res_parts) > len(res_costs):
+                            res_costs.append((res_parts[len(res_costs)], []))
 
-        total_distance += distance
+    weights: List[float] = []
+    for qp, costs in qry_costs:
+        similarity = costs_similarity(costs)
+        weights.append(similarity)
 
-    max_len = max(len(src_text), len(dest_text))
-    # max_edits = math.floor(math.log(max(max_len - 2, 1)))
-    # if total_distance > max_edits:
-    #     return 0.0
-    score = (1.0 - (total_distance / max_len)) ** 2
-    if score < 0.5:
-        score = 0.0
-    return score
+    for rp, costs in res_costs:
+        similarity = costs_similarity(costs)
+        weights.append(similarity)
+    return weights
