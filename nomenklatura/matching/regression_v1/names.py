@@ -6,7 +6,7 @@ from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_leve
 from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
 from nomenklatura.matching.util import props_pair, type_pair
 from nomenklatura.matching.util import max_in_sets
-from nomenklatura.util import fingerprint_name
+from nomenklatura.matching.compat import fingerprint_name
 
 
 def normalize_names(raws: Iterable[str]) -> Set[str]:

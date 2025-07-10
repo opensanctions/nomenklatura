@@ -15,8 +15,8 @@ from nomenklatura.cache import Cache
 from nomenklatura.dataset import DS
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
-from nomenklatura.entity import CE
-from nomenklatura.util import fingerprint_name
+from nomenklatura.matching.compat import fingerprint_name
+from nomenklatura.entity import CE, CompositeEntity
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class PermIDEnricher(Enricher[DS]):
             log.warning("PermID has no API token (%s)" % token_var)
         self.quota_exceeded = False
 
-    def entity_to_queries(self, entity: CE) -> bytes:
+    def entity_to_queries(self, entity: CompositeEntity) -> bytes:
         names = entity.get_type_values(registry.name, matchable=True)
         countries = entity.get("jurisdiction", quiet=True)
         if not len(countries):
