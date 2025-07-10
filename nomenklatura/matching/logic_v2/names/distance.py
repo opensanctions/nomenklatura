@@ -1,9 +1,12 @@
+from collections import defaultdict
 import math
-import itertools
-from typing import List, Optional, Tuple
+from itertools import zip_longest, chain
+from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein
-from rigour.names import NamePart, NamePartTag
+from rigour.names import NamePart, is_stopword
 from rigour.text.distance import dam_levenshtein, levenshtein
+from nomenklatura.matching.logic_v2.names.magic import PART_WEIGHTS
+from nomenklatura.matching.logic_v2.names.util import Match
 
 SEP = " "
 SIMILAR_PAIRS = [
@@ -52,7 +55,16 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     return (1 - (distance / max_len)) ** max_edits
 
 
-def edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
+def _part_weight(part: NamePart, base: float) -> float:
+    """Calculate the weight of a name part based on its tag."""
+    if part.tag in PART_WEIGHTS:
+        return base * PART_WEIGHTS[part.tag]
+    if is_stopword(part.form):
+        return base * 0.7
+    return base
+
+
+def _edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     """Calculate the cost of a pair of characters."""
     if op == "equal":
         return 0.0
@@ -61,7 +73,7 @@ def edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     if rc == SEP and qc is None:
         return 0.2
     if (qc, rc) in SIMILAR_PAIRS:
-        return 0.6
+        return 0.5
     if qc is not None and qc.isdigit():
         return 1.5
     if rc is not None and rc.isdigit():
@@ -69,7 +81,7 @@ def edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     return 1.0
 
 
-def costs_similarity(costs: List[float], default: float = 0.0) -> float:
+def _costs_similarity(costs: List[float]) -> float:
     """Calculate a similarity score based on a list of costs."""
     if len(costs) == 0:
         return 0.0
@@ -78,7 +90,7 @@ def costs_similarity(costs: List[float], default: float = 0.0) -> float:
     if total_cost == 0:
         return 1.0
     if total_cost > max_cost:
-        return default
+        return 0.0
     # Normalize the score to be between 0 and 1
     return 1 - (total_cost / len(costs))
 
@@ -86,44 +98,79 @@ def costs_similarity(costs: List[float], default: float = 0.0) -> float:
 def weighted_edit_similarity(
     qry_parts: List[NamePart],
     res_parts: List[NamePart],
-) -> List[float]:
+) -> List[Match]:
     """Calculate a weighted similarity score between two sets of name parts."""
     if len(qry_parts) == 0 and len(res_parts) == 0:
         return []
     qry_text = SEP.join(p.comparable for p in qry_parts)
     res_text = SEP.join(p.comparable for p in res_parts)
 
-    qry_costs: List[Tuple[NamePart, List[float]]] = []
-    res_costs: List[Tuple[NamePart, List[float]]] = []
-    if len(qry_parts) == 0:
-        res_costs = [(p, [1.0]) for p in res_parts]
-    elif len(res_parts) == 0:
-        qry_costs = [(p, [1.0]) for p in qry_parts]
-    else:
-        qry_costs.append((qry_parts[0], []))
-        res_costs.append((res_parts[0], []))
+    # Keep track of which name parts overlap and how many characters they share in the alignment
+    # produced by rapidfuzz Levenshtein opcodes.
+    overlaps: Dict[Tuple[NamePart, NamePart], int] = defaultdict(int)
+
+    # Keep track of the costs for each name part, so we can calculate a similarity score later.
+    costs: Dict[NamePart, List[float]] = defaultdict(list)
+
+    if len(qry_parts) and len(res_parts):
+        qry_cur = qry_parts[0]
+        res_cur = res_parts[0]
         for op in Levenshtein.opcodes(qry_text, res_text):
             qry_span = qry_text[op.src_start : op.src_end]
             res_span = res_text[op.dest_start : op.dest_end]
-            for qc, rc in itertools.zip_longest(qry_span, res_span, fillvalue=None):
-                cost = edit_cost(op.tag, qc, rc)
+            for qc, rc in zip_longest(qry_span, res_span, fillvalue=None):
+                if op.tag == "equal":
+                    if qc not in (None, SEP) and rc not in (None, SEP):
+                        # TODO: should this also include "replace"?
+                        overlaps[(qry_cur, res_cur)] += 1
+                cost = _edit_cost(op.tag, qc, rc)
                 if qc is not None:
-                    qry_costs[-1][1].append(cost)
+                    costs[qry_cur].append(cost)
                     if qc == SEP:
-                        if len(qry_parts) > len(qry_costs):
-                            qry_costs.append((qry_parts[len(qry_costs)], []))
+                        next_idx = qry_parts.index(qry_cur) + 1
+                        if len(qry_parts) >= next_idx:
+                            qry_cur = qry_parts[next_idx]
                 if rc is not None:
-                    res_costs[-1][1].append(cost)
+                    costs[res_cur].append(cost)
                     if rc == SEP:
-                        if len(res_parts) > len(res_costs):
-                            res_costs.append((res_parts[len(res_costs)], []))
+                        next_idx = res_parts.index(res_cur) + 1
+                        if len(res_parts) >= next_idx:
+                            res_cur = res_parts[next_idx]
 
-    weights: List[float] = []
-    for qp, costs in qry_costs:
-        similarity = costs_similarity(costs)
-        weights.append(similarity)
+    # Use the overlaps to create matches between query and result parts.
+    matches: Dict[NamePart, Match] = {}
+    for (qp, rp), overlap in overlaps.items():
+        min_len = min(len(qp.comparable), len(rp.comparable))
+        if overlap / min_len > 0.51:
+            match = matches.get(qp, matches.get(rp, Match()))
+            if qp not in match.qps:
+                match.qps.append(qp)
+            if rp not in match.rps:
+                match.rps.append(rp)
+            qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
+            rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
+            # TODO: multiply?
+            match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
+            if len(match.qps) == 1 and len(match.rps) == 1:
+                if is_stopword(qp.form):
+                    match.weight = 0.7
+            matches[rp] = match
+            matches[qp] = match
 
-    for rp, costs in res_costs:
-        similarity = costs_similarity(costs)
-        weights.append(similarity)
-    return weights
+    # Non-matched query parts: this penalizes scenarios where name parts in the query are
+    # not matched to any name part in the result. Increasing this penalty will require queries
+    # to always be matched in full.
+    for qp in qry_parts:
+        if qp not in matches:
+            match = Match(qps=[qp])
+            match.weight = _part_weight(qp, 0.8)
+            matches[qp] = match
+
+    # Non-matched result parts
+    for rp in res_parts:
+        if rp not in matches:
+            match = Match(rps=[rp])
+            match.weight = _part_weight(rp, 0.1)
+            matches[rp] = match
+
+    return list(set(matches.values()))

@@ -1,5 +1,5 @@
 from typing import List, Optional, Set
-from rigour.names import NameTypeTag, Symbol, Name, NamePart
+from rigour.names import NameTypeTag, Name, NamePart
 from rigour.names import align_person_name_order
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
@@ -7,30 +7,13 @@ from followthemoney.types import registry
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
+from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
-from nomenklatura.matching.logic_v2.names.util import normalize_name
+from nomenklatura.matching.logic_v2.names.util import Match, normalize_name
 from nomenklatura.matching.logic_v2.util import penalize
 from nomenklatura.matching.types import FtResult, ScoringConfig
-
-SYM_WEIGHTS = {
-    Symbol.Category.ORG_CLASS: 0.75,
-    Symbol.Category.INITIAL: 0.8,
-    Symbol.Category.NAME: 0.9,
-    Symbol.Category.SYMBOL: 0.8,
-    Symbol.Category.PHONETIC: 0.6,
-}
-
-
-# def is_numeric(name: Name, part: NamePart) -> bool:
-#     # TODO: check if the extras contain numbers, apply extra penalty if so
-#     if part.form.isnumeric():
-#         return True
-#     for span in name.spans:
-#         if span.symbol.category == Symbol.Category.ORDINAL and part in span.parts:
-#             return True
-#     return False
 
 
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
@@ -58,20 +41,24 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     # name parts that are not matched to the other name during name alignment.
     retval = FtResult(score=0.0, detail=None)
     for pairing in pairings:
-        weights: List[float] = []
+        matches: List[Match] = []
 
         # Symbols add a fixed weight each to the score, depending on their category. This
         # balances out the potential length of the underlying name parts.
-        for symbol, literal in pairing.symbols.items():
-            weight = 1.0 if literal else SYM_WEIGHTS.get(symbol.category, 1.0)
-            weights.append(weight)
+        for symbol, _ in pairing.symbols.items():
+            match = Match()
+            match.text = str(symbol)
+            match.score = 1.0
+            # Some types of symbols effectively also work as soft stopwords, reducing the relevance
+            # of the match. For example, "Ltd." in an organization name is not as informative as a
+            # person's first name.
+            match.weight = SYM_WEIGHTS.get(symbol.category, 1.0)
+            matches.append(match)
 
         # Name parts that have not been tagged with a symbol:
         query_rem = pairing.query_remainder()
         result_rem = pairing.result_remainder()
 
-        query_fuzzy: Optional[str] = None
-        result_fuzzy: Optional[str] = None
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
                 alignment = align_person_name_order(query_rem, result_rem)
@@ -81,38 +68,15 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            # # Handle name parts that are not matched to the other name.
-            # # TODO: do we want to special-case ORG types and numbers here? Org types are not
-            # # as bad to be unmatched, but numbers are worse than normal name parts.
-            # for np in alignment.query_extra:
-            #     weights.append(config.get_float("nm_extra_query_name"))
-            # for np in alignment.result_extra:
-            #     weights.append(config.get_float("nm_extra_result_name"))
-
-            # # Fuzzy matching of the remaining name parts.
-            # if len(alignment.query_sorted) and len(alignment.result_sorted):
-            #     query_fuzzy = "".join([p.comparable for p in alignment.query_sorted])
-            #     result_fuzzy = "".join([p.comparable for p in alignment.result_sorted])
-            #     fuzzy_score = levenshtein_similarity(query_fuzzy, result_fuzzy)
-            #     for np in alignment.query_sorted:
-            #         # Make the score drop off more steeply with errors:
-            #         weights.append(fuzzy_score)
-            query_fuzzy = " ".join([p.comparable for p in query_rem])
-            result_fuzzy = " ".join([p.comparable for p in result_rem])
-            weights.extend(weighted_edit_similarity(query_rem, result_rem))
-
-        if query_fuzzy is None:
-            query_fuzzy = " ".join([p.comparable for p in query.parts])
-        if result_fuzzy is None:
-            result_fuzzy = " ".join([p.comparable for p in result.parts])
+            matches.extend(weighted_edit_similarity(query_rem, result_rem))
 
         # Sum up and average all the weights to get the final score for this pairing.
-        score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
+        # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
+        total_weight = sum(match.weight for match in matches)
+        total_score = sum(match.weighted_score for match in matches)
+        score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = f"{query_fuzzy} ~ {result_fuzzy}"
-            if len(pairing.symbols) > 0:
-                symbols = ", ".join((str(s) for s in pairing.symbols.keys()))
-                detail = f"{detail} (symbolic: {symbols})"
+            detail = "; ".join(str(m) for m in matches)
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
         retval.detail = f"{query.comparable} <> {result.comparable}"
