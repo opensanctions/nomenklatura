@@ -46,11 +46,12 @@ def _upsert_batch(
         lstmt = sqlite_insert(table).values(batch)
         lstmt = lstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(lstmt)
-    if dialect.name in ("postgresql", "postgres"):
+    elif dialect.name in ("postgresql", "postgres"):
         pstmt = psql_insert(table).values(batch)
         pstmt = pstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(pstmt)
-    raise NotImplementedError(f"Upsert not implemented for dialect {dialect.name}")
+    else:
+        raise NotImplementedError(f"Upsert not implemented for dialect {dialect.name}")
 
 
 def insert_dataset(
