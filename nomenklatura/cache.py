@@ -75,7 +75,11 @@ class Cache(object):
         }
         try:
             istmt = upsert(self._table).values(cache)
-            values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
+            values = dict(
+                timestamp=istmt.excluded.timestamp,
+                text=istmt.excluded.text,
+                dataset=istmt.excluded.dataset,
+            )
             stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
             self.conn.execute(stmt)
         except (OperationalError, InvalidRequestError) as exc:
