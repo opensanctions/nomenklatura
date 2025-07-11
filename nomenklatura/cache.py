@@ -13,8 +13,8 @@ from sqlalchemy.sql.expression import delete
 from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
 from rigour.time import naive_now
+from followthemoney import Dataset
 
-from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine, get_metadata
 
 

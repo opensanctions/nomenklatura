@@ -1,5 +1,6 @@
 from typing import Optional
-from nomenklatura.dataset import DS
+from followthemoney import DS
+
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 

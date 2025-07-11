@@ -7,11 +7,11 @@ from urllib.parse import urljoin
 from functools import cached_property
 from followthemoney.exc import InvalidData
 from followthemoney.namespace import Namespace
+from followthemoney import DS
 from requests import Session
 from rigour.urls import build_url
 
 from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 

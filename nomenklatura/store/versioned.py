@@ -2,11 +2,9 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Set, Tuple, Dict
-from followthemoney.property import Property
-from followthemoney.types import registry
+from followthemoney import DS, registry, Property
 
 from nomenklatura.kv import b, bv, get_redis, close_redis
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Linker, Identifier, StrIdent
@@ -344,7 +342,7 @@ class VersionedRedisView(View[DS, CE]):
             return
         if len(self.vers) == 1:
             scope_name = b(f"ents:{self.vers[0][0]}:{self.vers[0][1]}")
-        if len(self.vers) > 1:
+        else:
             version = Version.new().id + ":iter"
             scope_name = b(f"ents:{self.scope.name}:{version}")
             parts = [b(f"ents:{d}:{v}") for d, v in self.vers]

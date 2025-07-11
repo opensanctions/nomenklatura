@@ -3,11 +3,10 @@ import pickle
 import logging
 from itertools import combinations
 from typing import Any, Dict, List, Set, Tuple
-from followthemoney.types import registry
+from followthemoney import registry, DS
 from followthemoney.util import PathLike
 
 from nomenklatura.resolver import Pair, Identifier
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.index.entry import Field

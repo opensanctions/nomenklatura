@@ -1,8 +1,8 @@
 import re
 from normality import collapse_spaces
 from pathlib import Path
+from followthemoney import Dataset
 
-from nomenklatura.dataset.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1

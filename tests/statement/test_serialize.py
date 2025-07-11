@@ -1,7 +1,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from followthemoney import DefaultDataset
 
-from nomenklatura.dataset import DefaultDataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.statement import write_statements
 from nomenklatura.statement import read_path_statements

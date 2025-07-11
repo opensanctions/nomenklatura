@@ -4,8 +4,8 @@ Test if the different store implementations all behave the same.
 
 from pathlib import Path
 from typing import Any, Dict, List
+from followthemoney import Dataset
 
-from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store

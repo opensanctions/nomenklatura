@@ -6,12 +6,12 @@ import pytest
 from pathlib import Path
 from tempfile import mkdtemp
 from normality import slugify
+from followthemoney import Dataset
 
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
 from nomenklatura.db import get_engine, get_metadata
-from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index

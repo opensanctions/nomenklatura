@@ -7,12 +7,11 @@ from itertools import product
 from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 
-from followthemoney.types import registry
+from followthemoney import registry, DS
 from lxml import etree
 from requests import Session
 
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import DS
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
 from nomenklatura.entity import CE

@@ -5,6 +5,7 @@ import click
 import logging
 from pathlib import Path
 from typing import Generator, List, Optional, Tuple
+from followthemoney import Dataset, DefaultDataset, ValueEntity
 from followthemoney.cli.util import path_writer, InPath, OutPath
 from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
@@ -13,13 +14,11 @@ from nomenklatura.cache import Cache
 from nomenklatura.matching import train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
-from nomenklatura.dataset import Dataset, DefaultDataset
 from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.statement import Statement, CSV, FORMATS
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.statement import write_statements, read_path_statements
-from nomenklatura.stream import StreamEntity
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
 from nomenklatura.matching.bench import bench_matcher
@@ -118,7 +117,7 @@ def apply(path: Path, outpath: Path, dataset: Optional[str] = None) -> None:
     linker = resolver.get_linker()
     resolver.rollback()
     with path_writer(outpath) as outfh:
-        for proxy in path_entities(path, StreamEntity):
+        for proxy in path_entities(path, ValueEntity):
             proxy = linker.apply_stream(proxy)
             if dataset is not None:
                 proxy.datasets.add(dataset)
@@ -129,7 +128,7 @@ def apply(path: Path, outpath: Path, dataset: Optional[str] = None) -> None:
 @click.option("-i", "--infile", type=InPath, default="-")
 @click.option("-o", "--outfile", type=OutPath, default="-")
 def sorted_aggregate_(infile: Path, outfile: Path) -> None:
-    sorted_aggregate(infile, outfile, StreamEntity)
+    sorted_aggregate(infile, outfile, ValueEntity)
 
 
 @cli.command("make-sortable", help="Convert entities into plain-text sortable form")

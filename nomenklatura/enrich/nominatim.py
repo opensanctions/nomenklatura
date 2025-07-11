@@ -3,9 +3,9 @@ from normality import collapse_spaces
 from typing import Any, Dict, Iterable, Generator, Optional
 
 from requests import Session
+from followthemoney import DS
 
-from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
+from nomenklatura.entity import CompositeEntity, CE
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 
@@ -25,7 +25,7 @@ class NominatimEnricher(Enricher[DS]):
         super().__init__(dataset, cache, config, session)
         self.cache.preload(f"{NOMINATIM}%")
 
-    def search_nominatim(self, address: CE) -> Iterable[Dict[str, Any]]:
+    def search_nominatim(self, address: CompositeEntity) -> Iterable[Dict[str, Any]]:
         for full in address.get("full"):
             full_norm = collapse_spaces(full)
             params = {

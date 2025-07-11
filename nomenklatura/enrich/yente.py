@@ -4,13 +4,12 @@ import logging
 from banal import ensure_list
 from typing import Any, Generator, Optional, Dict, List
 from urllib.parse import urljoin
-from followthemoney.types import registry
+from followthemoney import registry, DS
 from followthemoney.namespace import Namespace
 from requests import Session
 from rigour.urls import build_url
 
 from nomenklatura.entity import CE, CompositeEntity
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentException

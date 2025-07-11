@@ -21,7 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import delete, insert, update
-from followthemoney.types import registry
+from followthemoney import registry
 from followthemoney.util import PathLike
 
 from nomenklatura.db import get_engine

@@ -3,7 +3,7 @@ from typing import Optional
 
 import orjson
 
-from nomenklatura.dataset import Dataset
+from followthemoney import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer

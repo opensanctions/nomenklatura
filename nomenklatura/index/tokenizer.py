@@ -1,10 +1,8 @@
 from normality import WS
 from rigour.ids import StrictFormat
 from typing import Generic, Generator, Tuple
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import registry, Property, DS
 
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.util import fingerprint_name
 from nomenklatura.util import name_words, clean_text_basic

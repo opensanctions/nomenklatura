@@ -1,6 +1,6 @@
 import requests_mock
+from followthemoney import Dataset
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, enrich, match, Enricher
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement

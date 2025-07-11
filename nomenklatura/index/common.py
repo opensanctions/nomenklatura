@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Generic, Iterable, List, Tuple
+from followthemoney import DS
 from nomenklatura.resolver import Identifier
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import View
 

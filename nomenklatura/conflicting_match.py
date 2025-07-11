@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
-from nomenklatura.dataset import DS
+from followthemoney import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.judgement import Judgement

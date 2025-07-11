@@ -1,10 +1,9 @@
 import logging
 from typing import List, Optional, Type
-from followthemoney.schema import Schema
+from followthemoney import Schema, DS
 from pathlib import Path
 
 from nomenklatura import Index
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement

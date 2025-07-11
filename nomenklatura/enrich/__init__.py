@@ -2,9 +2,9 @@ import logging
 from requests import Session
 from importlib import import_module
 from typing import Iterable, Generator, Optional, Type, cast
+from followthemoney.dataset import DS
 
 from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.matching import DefaultAlgorithm
 from nomenklatura.enrich.common import Enricher, EnricherConfig

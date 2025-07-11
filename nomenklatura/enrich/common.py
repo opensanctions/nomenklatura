@@ -1,20 +1,19 @@
 import os
 import json
 import logging
-import time
 import traceback
 from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException, ChunkedEncodingError
+from followthemoney import DS
 from followthemoney.types import registry
 from followthemoney.types.topic import TopicType
 from rigour.urls import build_url, ParamsType
 
 from nomenklatura import __version__
 from nomenklatura.entity import CE, CompositeEntity
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
 
@@ -150,7 +149,10 @@ class Enricher(BaseEnricher[DS], ABC):
                 # urllib3's Retry strategy will not retry on chunked encoding errors.
                 # Since urllib won't retry it, retry it here.
                 # urllib does close the connection.
-                if "Response ended prematurely" in str(rex) and retry_chunked_encoding_error > 0:
+                if (
+                    "Response ended prematurely" in str(rex)
+                    and retry_chunked_encoding_error > 0
+                ):
                     log.info("Retrying due to chunked encoding error: %s", rex)
                     return self.http_post_json_cached(
                         url,

@@ -1,13 +1,12 @@
 import logging
 from typing import Generator, Optional, Set
 from followthemoney.helpers import check_person_cutoff
-from followthemoney.types import registry
+from followthemoney import registry, DS
 from requests import Session
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
 from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.wikidata.client import WikidataClient

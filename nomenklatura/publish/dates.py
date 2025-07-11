@@ -1,6 +1,6 @@
 from functools import cache
 from typing import Iterable, List, Tuple
-from followthemoney.types import registry
+from followthemoney import registry
 
 from nomenklatura.entity import CE
 

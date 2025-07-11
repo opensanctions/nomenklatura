@@ -4,13 +4,12 @@ from normality import slugify
 from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
-from followthemoney.types import registry
+from followthemoney import registry, DS
 from requests import Session
 from requests.exceptions import RequestException
 from rigour.urls import build_url, ParamsType
 
 from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException

@@ -1,6 +1,5 @@
 from typing import Generator, Tuple
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import registry, Property
 
 from nomenklatura.entity import CE
 

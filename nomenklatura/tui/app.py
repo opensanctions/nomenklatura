@@ -9,7 +9,8 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
 
-from nomenklatura.dataset import DS
+from followthemoney import DS
+
 from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver

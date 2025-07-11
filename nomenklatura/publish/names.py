@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from rigour.names import pick_name
-from followthemoney.types import registry
+from followthemoney import registry
 
 if TYPE_CHECKING:
     from nomenklatura.entity import CompositeEntity

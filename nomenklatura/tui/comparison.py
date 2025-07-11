@@ -2,10 +2,8 @@ from typing import Optional, Union
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import DS, registry, Property
 
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CompositeEntity as Entity, CE
 from nomenklatura.store import View
 from nomenklatura.tui.util import comparison_props

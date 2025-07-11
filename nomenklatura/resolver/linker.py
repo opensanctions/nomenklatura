@@ -1,8 +1,7 @@
 from typing import Dict, Generator, Generic, Set
-from followthemoney.types import registry
+from followthemoney import registry, ValueEntity
 
 from nomenklatura.entity import CE
-from nomenklatura.stream import StreamEntity
 from nomenklatura.resolver.identifier import Identifier, StrIdent
 from nomenklatura.statement.statement import Statement
 
@@ -62,7 +61,7 @@ class Linker(Generic[CE]):
         proxy.id = self.get_canonical(proxy.id)
         return self.apply_properties(proxy)
 
-    def apply_stream(self, proxy: StreamEntity) -> StreamEntity:
+    def apply_stream(self, proxy: ValueEntity) -> ValueEntity:
         if proxy.id is None:
             return proxy
         proxy.id = self.get_canonical(proxy.id)

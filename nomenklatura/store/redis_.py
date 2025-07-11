@@ -1,10 +1,8 @@
 from redis.client import Redis, Pipeline
 from typing import Generator, List, Optional, Set, Tuple
-from followthemoney.property import Property
-from followthemoney.types import registry
+from followthemoney import DS, registry, Property
 
 from nomenklatura.kv import get_redis, close_redis, b
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 from nomenklatura.statement import Statement

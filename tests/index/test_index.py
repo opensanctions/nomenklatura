@@ -1,7 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from followthemoney import Dataset
 
-from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.index import Index
 from nomenklatura.resolver.identifier import Identifier

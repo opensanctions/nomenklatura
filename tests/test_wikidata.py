@@ -1,8 +1,8 @@
 import pytest
 import requests_mock
+from followthemoney import Dataset
 
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.wikidata import LangText, WikidataClient
 from nomenklatura.enrich.wikidata import clean_name
 from nomenklatura.entity import CompositeEntity

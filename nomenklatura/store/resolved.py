@@ -2,12 +2,10 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Tuple
-from followthemoney.property import Property
-from followthemoney.types import registry
+from followthemoney import DS, registry, Property
 from rigour.env import ENCODING as ENC
 
 from nomenklatura.kv import get_redis, close_redis
-from nomenklatura.dataset import DS
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, StrIdent
 from nomenklatura.statement import Statement

@@ -1,14 +1,13 @@
 import orjson
 import fakeredis
 from pathlib import Path
-from followthemoney import model
+from followthemoney import model, Dataset
 from datetime import datetime
 
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.versioned import VersionedRedisStore
-from nomenklatura.dataset import Dataset
 from nomenklatura.entity import CompositeEntity
 from nomenklatura.util import datetime_iso
 

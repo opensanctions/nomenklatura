@@ -2,10 +2,10 @@ import os
 import logging
 from typing import Generator, Dict, Optional
 from followthemoney.util import make_entity_id
+from followthemoney import DS
 from requests import Session
 
 from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 

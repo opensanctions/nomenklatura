@@ -1,5 +1,3 @@
-from followthemoney import model
-
 from nomenklatura.publish.names import pick_caption
 from nomenklatura.entity import CompositeEntity
 
@@ -22,9 +20,9 @@ PUTIN = [
 
 
 def test_pick_putin():
-    entity = CompositeEntity.from_dict(model, {"schema": "Person", 'id': 'putin'})
+    entity = CompositeEntity.from_dict({"schema": "Person", "id": "putin"})
     assert pick_caption(entity) == "Person"
 
-    data = {"schema": "Person", 'id': 'putin', 'properties': {'name': PUTIN}}
-    entity = CompositeEntity.from_dict(model, data)
+    data = {"schema": "Person", "id": "putin", "properties": {"name": PUTIN}}
+    entity = CompositeEntity.from_dict(data)
     assert pick_caption(entity).lower().endswith("putin"), entity.caption

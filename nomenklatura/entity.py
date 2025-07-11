@@ -11,8 +11,8 @@ from followthemoney.util import gettext
 from followthemoney.proxy import P
 from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
+from followthemoney import DS, Dataset, DefaultDataset
 
-from nomenklatura.dataset import DS, Dataset, DefaultDataset
 from nomenklatura.publish.names import pick_caption
 from nomenklatura.statement.statement import Statement
 from nomenklatura.util import BASE_ID, string_list
@@ -401,7 +401,6 @@ class CompositeEntity(EntityProxy):
     @classmethod
     def from_dict(
         cls: Type[CE],
-        model: Model,
         data: Dict[str, Any],
         cleaned: bool = True,
         default_dataset: Optional[Dataset] = None,

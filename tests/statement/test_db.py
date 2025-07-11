@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Generator
 from sqlalchemy import MetaData, select
+from followthemoney import Dataset
 
-from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine
 from nomenklatura.statement import Statement
 from nomenklatura.entity import CompositeEntity

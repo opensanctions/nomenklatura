@@ -1,7 +1,7 @@
 import logging
 from rigour.langs import PREFFERED_LANGS
 from typing import Callable, Dict, Iterable, List, Optional, Any, Set
-from followthemoney.types import registry
+from followthemoney import registry
 from normality.cleaning import remove_unsafe_chars
 
 from nomenklatura.entity import CE
