@@ -1,8 +1,7 @@
 import requests_mock
+from followthemoney import Dataset, StatementEntity
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
-from nomenklatura.entity import CompositeEntity
 
 from ..conftest import wd_read_response
 
@@ -24,7 +23,7 @@ def test_wikidata_match():
             "https://www.wikidata.org/w/api.php",
             json=wd_read_response,
         )
-        ent = CompositeEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
+        ent = StatementEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
         results = list(enricher.match(ent))
         assert len(results) == 1, results
         assert results[0].id == "Q7747", results[0]
@@ -40,7 +39,7 @@ def test_wikidata_match():
             "id": "xxx",
             "properties": {"wikidataId": ["Q7747"]},
         }
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 1, results
         res0 = results[0]
@@ -59,7 +58,7 @@ def test_wikidata_enrich():
             "https://www.wikidata.org/w/api.php",
             json=wd_read_response,
         )
-        ent = CompositeEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
+        ent = StatementEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
         adjacent = list(enricher.expand(ent, ent))
         assert len(adjacent) > 3, adjacent
     enricher.close()

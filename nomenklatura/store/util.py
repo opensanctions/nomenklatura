@@ -1,6 +1,6 @@
 import orjson
 
-from nomenklatura.statement import Statement
+from followthemoney import Statement
 from nomenklatura.util import pack_prop, unpack_prop
 
 

@@ -13,8 +13,8 @@ from sqlalchemy.sql.expression import delete
 from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
 from rigour.time import naive_now
+from followthemoney import Dataset
 
-from nomenklatura.dataset import Dataset
 from nomenklatura.db import get_engine, get_metadata
 
 
@@ -75,7 +75,11 @@ class Cache(object):
         }
         try:
             istmt = upsert(self._table).values(cache)
-            values = dict(timestamp=istmt.excluded.timestamp, text=istmt.excluded.text)
+            values = dict(
+                timestamp=istmt.excluded.timestamp,
+                text=istmt.excluded.text,
+                dataset=istmt.excluded.dataset,
+            )
             stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
             self.conn.execute(stmt)
         except (OperationalError, InvalidRequestError) as exc:

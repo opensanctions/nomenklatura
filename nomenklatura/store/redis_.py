@@ -1,22 +1,18 @@
 from redis.client import Redis, Pipeline
 from typing import Generator, List, Optional, Set, Tuple
-from followthemoney.property import Property
-from followthemoney.types import registry
+from followthemoney import DS, SE, registry, Property, Statement
 
 from nomenklatura.kv import get_redis, close_redis, b
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
-from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.store.util import pack_statement, unpack_statement
 
 
-class RedisStore(Store[DS, CE]):
+class RedisStore(Store[DS, SE]):
     def __init__(
         self,
         dataset: DS,
-        linker: Linker[CE],
+        linker: Linker[SE],
         db: Optional["Redis[bytes]"] = None,
     ):
         super().__init__(dataset, linker)
@@ -24,21 +20,21 @@ class RedisStore(Store[DS, CE]):
             db = get_redis()
         self.db = db
 
-    def writer(self) -> Writer[DS, CE]:
+    def writer(self) -> Writer[DS, SE]:
         return RedisWriter(self)
 
-    def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
+    def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return RedisView(self, scope, external=external)
 
     def close(self) -> None:
         close_redis()
 
 
-class RedisWriter(Writer[DS, CE]):
+class RedisWriter(Writer[DS, SE]):
     BATCH_STATEMENTS = 100_000
 
-    def __init__(self, store: RedisStore[DS, CE]):
-        self.store: RedisStore[DS, CE] = store
+    def __init__(self, store: RedisStore[DS, SE]):
+        self.store: RedisStore[DS, SE] = store
         self.pipeline: Optional["Pipeline[bytes]"] = None
         self.batch_size = 0
 
@@ -90,12 +86,12 @@ class RedisWriter(Writer[DS, CE]):
         return list(statements)
 
 
-class RedisView(View[DS, CE]):
+class RedisView(View[DS, SE]):
     def __init__(
-        self, store: RedisStore[DS, CE], scope: DS, external: bool = False
+        self, store: RedisStore[DS, SE], scope: DS, external: bool = False
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: RedisStore[DS, CE] = store
+        self.store: RedisStore[DS, SE] = store
 
     def has_entity(self, id: str) -> bool:
         keys = [b(f"s:{id}")]
@@ -103,7 +99,7 @@ class RedisView(View[DS, CE]):
             keys.append(b(f"x:{id}"))
         return self.store.db.exists(*keys) > 0
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         statements: List[Statement] = []
         keys = [b(f"s:{id}")]
         if self.external:
@@ -112,7 +108,7 @@ class RedisView(View[DS, CE]):
             statements.append(unpack_statement(v, id, False))  # type: ignore
         return self.store.assemble(statements)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         for v in self.store.db.smembers(b(f"i:{id}")):
             entity = self.get_entity(v.decode("utf-8"))
             if entity is None:
@@ -121,7 +117,7 @@ class RedisView(View[DS, CE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         scope_name = b(f"ds:{self.scope.name}")
         if self.scope.is_collection:
             parts = [b(f"ds:{d}") for d in self.scope.leaf_names]

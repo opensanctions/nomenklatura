@@ -1,8 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from followthemoney import Dataset, StatementEntity
 
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.index import Index
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.store import SimpleMemoryStore
@@ -102,7 +101,7 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
 def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
     """Match an entity that isn't itself in the index"""
     dx = Dataset.make({"name": "test", "title": "Test"})
-    entity = CompositeEntity.from_data(dx, VERBAND_BADEN_DATA)
+    entity = StatementEntity.from_data(dx, VERBAND_BADEN_DATA)
     matches = dindex.match(entity)
     # 9 entities in the index where some token in the query entity matches some
     # token in the index.

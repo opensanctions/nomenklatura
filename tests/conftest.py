@@ -6,13 +6,12 @@ import pytest
 from pathlib import Path
 from tempfile import mkdtemp
 from normality import slugify
+from followthemoney import Dataset, StatementEntity as Entity
 
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
 from nomenklatura.db import get_engine, get_metadata
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import Index
 from nomenklatura.cache import Cache
@@ -64,7 +63,7 @@ def donations_json(donations_path):
 
 @pytest.fixture(scope="function")
 def resolver():
-    resolver = Resolver[CompositeEntity].make_default()
+    resolver = Resolver[Entity].make_default()
     yield resolver
     resolver.rollback(force=True)
     resolver._table.drop(resolver._engine, checkfirst=True)

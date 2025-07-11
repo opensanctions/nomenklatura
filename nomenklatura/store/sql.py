@@ -1,6 +1,6 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
-from followthemoney.property import Property
+from followthemoney import DS, SE, Property, Statement
 from sqlalchemy import Table, delete, func, select
 from sqlalchemy.engine import Engine, Transaction, create_engine
 from sqlalchemy.dialects.postgresql import insert as psql_insert
@@ -8,20 +8,17 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.dataset import DS
 from nomenklatura.db import get_metadata
-from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, Identifier
-from nomenklatura.statement import Statement
-from nomenklatura.statement.db import make_statement_table
+from nomenklatura.db import make_statement_table
 from nomenklatura.store import Store, View, Writer
 
 
-class SQLStore(Store[DS, CE]):
+class SQLStore(Store[DS, SE]):
     def __init__(
         self,
         dataset: DS,
-        linker: Linker[CE],
+        linker: Linker[SE],
         uri: str = settings.DB_URL,
         **engine_kwargs: Any,
     ):
@@ -35,10 +32,10 @@ class SQLStore(Store[DS, CE]):
         self.table = make_statement_table(metadata)
         metadata.create_all(self.engine, tables=[self.table], checkfirst=True)
 
-    def writer(self) -> Writer[DS, CE]:
+    def writer(self) -> Writer[DS, SE]:
         return SQLWriter(self)
 
-    def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
+    def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return SQLView(self, scope, external=external)
 
     def _execute(
@@ -60,7 +57,7 @@ class SQLStore(Store[DS, CE]):
 
     def _iterate(
         self, q: Select[Any], stream: bool = True
-    ) -> Generator[CE, None, None]:
+    ) -> Generator[SE, None, None]:
         current_id = None
         current_stmts: list[Statement] = []
         for stmt in self._iterate_stmts(q, stream=stream):
@@ -80,11 +77,11 @@ class SQLStore(Store[DS, CE]):
                 yield proxy
 
 
-class SQLWriter(Writer[DS, CE]):
+class SQLWriter(Writer[DS, SE]):
     BATCH_STATEMENTS = 10_000
 
-    def __init__(self, store: SQLStore[DS, CE]):
-        self.store: SQLStore[DS, CE] = store
+    def __init__(self, store: SQLStore[DS, SE]):
+        self.store: SQLStore[DS, SE] = store
         self.batch: Set[Statement] = set()
         self.conn = self.store.engine.connect()
         self.tx: Optional[Transaction] = None
@@ -162,14 +159,14 @@ class SQLWriter(Writer[DS, CE]):
         return statements
 
 
-class SQLView(View[DS, CE]):
+class SQLView(View[DS, SE]):
     def __init__(
-        self, store: SQLStore[DS, CE], scope: DS, external: bool = False
+        self, store: SQLStore[DS, SE], scope: DS, external: bool = False
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: SQLStore[DS, CE] = store
+        self.store: SQLStore[DS, SE] = store
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         table = self.store.table
         q = select(table)
         q = q.where(table.c.canonical_id == id)
@@ -191,7 +188,7 @@ class SQLView(View[DS, CE]):
             else:
                 return False
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         table = self.store.table
         id_ = Identifier.get(id)
         ids = [i.id for i in self.store.linker.connected(id_)]
@@ -211,7 +208,7 @@ class SQLView(View[DS, CE]):
                         if value == id and prop.reverse is not None:
                             yield prop.reverse, entity
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)
         q = q.where(table.c.dataset.in_(self.dataset_names))

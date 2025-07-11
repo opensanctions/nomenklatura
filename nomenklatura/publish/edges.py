@@ -1,8 +1,8 @@
-from nomenklatura.entity import CE
+from followthemoney import SE
 from nomenklatura.resolver import Identifier
 
 
-def simplify_undirected(entity: CE) -> CE:
+def simplify_undirected(entity: SE) -> SE:
     """Simplify undirected edges by removing duplicate entity IDs on both
     ends."""
     # Problem: undirected relationships in which both

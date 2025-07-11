@@ -33,8 +33,8 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
     with open(pairs_file, "r") as fh:
         while line := fh.readline():
             data = json.loads(line)
-            left_entity = EntityProxy.from_dict(model, data["left"])
-            right_entity = EntityProxy.from_dict(model, data["right"])
+            left_entity = EntityProxy.from_dict(data["left"])
+            right_entity = EntityProxy.from_dict(data["right"])
             judgement = Judgement(data["judgement"])
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue

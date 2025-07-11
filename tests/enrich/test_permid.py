@@ -1,8 +1,7 @@
 import requests_mock
+from followthemoney import Dataset, StatementEntity
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
-from nomenklatura.entity import CompositeEntity
 
 PATH = "nomenklatura.enrich.permid:PermIDEnricher"
 dataset = Dataset.make({"name": "permid", "title": "PermID"})
@@ -170,7 +169,7 @@ def test_permid_match():
             "id": "xxx",
             "properties": {"name": ["NK Rosneft' PAO"]},
         }
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 1, results
         for res in results:
@@ -185,7 +184,7 @@ def test_permid_match():
             "id": "yyy",
             "properties": {"name": ["Enron"]},
         }
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 0, results
     enricher.close()
@@ -202,7 +201,7 @@ def test_permid_enrich():
             "id": "zzz",
             "properties": {"name": ["NK Rosneft' PAO"]},
         }
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 1, results
         for res in results:

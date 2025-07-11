@@ -4,16 +4,16 @@ Test if the different store implementations all behave the same.
 
 from pathlib import Path
 from typing import Any, Dict, List
+from followthemoney import Dataset
+from followthemoney import StatementEntity as Entity
 
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
 from nomenklatura.store.level import LevelDBStore
 
 
 def _run_store_test(
-    store: Store[Dataset, CompositeEntity],
+    store: Store[Dataset, Entity],
     dataset: Dataset,
     donations_json: List[Dict[str, Any]],
 ):
@@ -23,7 +23,7 @@ def _run_store_test(
 
     with store.writer() as bulk:
         for data in donations_json:
-            proxy = CompositeEntity.from_data(dataset, data)
+            proxy = Entity.from_data(dataset, data)
             bulk.add_entity(proxy)
 
     view = store.default_view()
@@ -57,7 +57,7 @@ def _run_store_test(
     # upsert
     with store.writer() as bulk:
         for data in donations_json:
-            proxy = CompositeEntity.from_data(dataset, data)
+            proxy = Entity.from_data(dataset, data)
             bulk.add_entity(proxy)
 
     proxies = [e for e in view.entities()]
@@ -72,7 +72,7 @@ def test_store_sql(
     tmp_path: Path,
     test_dataset: Dataset,
     donations_json: List[Dict[str, Any]],
-    resolver: Resolver[CompositeEntity],
+    resolver: Resolver[Entity],
 ):
     resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
@@ -84,7 +84,7 @@ def test_store_sql(
 def test_store_memory(
     test_dataset: Dataset,
     donations_json: List[Dict[str, Any]],
-    resolver: Resolver[CompositeEntity],
+    resolver: Resolver[Entity],
 ):
     resolver.begin()
     store = SimpleMemoryStore(dataset=test_dataset, linker=resolver)
@@ -95,7 +95,7 @@ def test_store_level(
     tmp_path: Path,
     test_dataset: Dataset,
     donations_json: List[Dict[str, Any]],
-    resolver: Resolver[CompositeEntity],
+    resolver: Resolver[Entity],
 ):
     resolver.begin()
     path = tmp_path / "level.db"

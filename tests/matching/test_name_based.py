@@ -1,6 +1,4 @@
-from followthemoney import model
-
-from nomenklatura.entity import CompositeEntity as Entity
+from followthemoney import ValueEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
@@ -10,7 +8,7 @@ from .util import e
 
 def _make_named(*names):
     data = {"id": "test", "schema": "Person", "properties": {"name": names}}
-    return Entity.from_dict(model, data)
+    return Entity.from_dict(data)
 
 
 def test_heuristic_scoring():

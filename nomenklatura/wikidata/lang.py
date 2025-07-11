@@ -1,10 +1,8 @@
 import logging
 from rigour.langs import PREFFERED_LANGS
 from typing import Callable, Dict, Iterable, List, Optional, Any, Set
-from followthemoney.types import registry
+from followthemoney import registry, SE
 from normality.cleaning import remove_unsafe_chars
-
-from nomenklatura.entity import CE
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ class LangText(object):
 
     def apply(
         self,
-        entity: CE,
+        entity: SE,
         prop: str,
         clean: Optional[Callable[[str], Optional[str]]] = None,
     ) -> None:
