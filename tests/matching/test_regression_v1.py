@@ -1,6 +1,5 @@
-from followthemoney import model
+from followthemoney import StatementEntity as Entity
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import RegressionV1
 
 candidate = {

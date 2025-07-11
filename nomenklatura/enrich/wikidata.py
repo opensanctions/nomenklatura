@@ -1,12 +1,11 @@
 import logging
 from typing import Generator, Optional, Set
 from followthemoney.helpers import check_person_cutoff
-from followthemoney import registry, DS
+from followthemoney import StatementEntity, registry, DS, SE
 from requests import Session
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
-from nomenklatura.entity import CE
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.wikidata.client import WikidataClient
@@ -37,12 +36,12 @@ class WikidataEnricher(Enricher[DS]):
         self.depth = self.get_config_int("depth", 1)
         self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 
-    def keep_entity(self, entity: CE) -> bool:
+    def keep_entity(self, entity: StatementEntity) -> bool:
         if check_person_cutoff(entity):
             return False
         return True
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.is_a("Person"):
             return
 
@@ -77,7 +76,7 @@ class WikidataEnricher(Enricher[DS]):
                     if proxy is not None and self.keep_entity(proxy):
                         yield proxy
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         wikidata_id = self.get_wikidata_id(match)
         if wikidata_id is None:
             return
@@ -92,7 +91,7 @@ class WikidataEnricher(Enricher[DS]):
         yield proxy
         yield from self.item_graph(proxy, item)
 
-    def get_wikidata_id(self, entity: CE) -> Optional[str]:
+    def get_wikidata_id(self, entity: SE) -> Optional[str]:
         if entity.id is not None and is_qid(entity.id):
             return str(entity.id)
         for value in entity.get("wikidataId", quiet=True):
@@ -102,7 +101,7 @@ class WikidataEnricher(Enricher[DS]):
 
     def make_link(
         self,
-        proxy: CE,
+        proxy: SE,
         claim: Claim,
         depth: int,
         seen: Set[str],
@@ -110,7 +109,7 @@ class WikidataEnricher(Enricher[DS]):
         other_schema: str,
         source_prop: str,
         target_prop: str,
-    ) -> Generator[CE, None, None]:
+    ) -> Generator[SE, None, None]:
         if depth < 1 or claim.qid is None or claim.qid in seen:
             return
         item = self.client.fetch_item(claim.qid)
@@ -160,11 +159,11 @@ class WikidataEnricher(Enricher[DS]):
 
     def item_graph(
         self,
-        proxy: CE,
+        proxy: SE,
         item: Item,
         depth: Optional[int] = None,
         seen: Optional[Set[str]] = None,
-    ) -> Generator[CE, None, None]:
+    ) -> Generator[SE, None, None]:
         if seen is None:
             seen = set()
         seen = seen.union([item.id])
@@ -197,7 +196,7 @@ class WikidataEnricher(Enricher[DS]):
                 )
                 continue
 
-    def item_proxy(self, ref: CE, item: Item, schema: str = "Person") -> Optional[CE]:
+    def item_proxy(self, ref: SE, item: Item, schema: str = "Person") -> Optional[SE]:
         proxy = self.make_entity(ref, schema)
         proxy.id = item.id
         if item.modified is None:

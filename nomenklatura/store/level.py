@@ -3,9 +3,8 @@ from pathlib import Path
 from typing import Any, Generator, List, Optional, Set, Tuple, Dict
 
 import plyvel  # type: ignore
-from followthemoney import DS, registry, Property, Statement
+from followthemoney import DS, SE, registry, Property, Statement
 
-from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.util import pack_prop, unpack_prop
@@ -60,27 +59,27 @@ def unpack_statement(data: bytes, canonical_id: str, external: bool) -> Statemen
     )
 
 
-class LevelDBStore(Store[DS, CE]):
-    def __init__(self, dataset: DS, linker: Linker[CE], path: Path):
+class LevelDBStore(Store[DS, SE]):
+    def __init__(self, dataset: DS, linker: Linker[SE], path: Path):
         super().__init__(dataset, linker)
         self.path = path
         self.db = plyvel.DB(path.as_posix(), create_if_missing=True)
 
-    def writer(self) -> Writer[DS, CE]:
+    def writer(self) -> Writer[DS, SE]:
         return LevelDBWriter(self)
 
-    def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
+    def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return LevelDBView(self, scope, external=external)
 
     def close(self) -> None:
         self.db.close()
 
 
-class LevelDBWriter(Writer[DS, CE]):
+class LevelDBWriter(Writer[DS, SE]):
     BATCH_STATEMENTS = 50_000
 
-    def __init__(self, store: LevelDBStore[DS, CE]):
-        self.store: LevelDBStore[DS, CE] = store
+    def __init__(self, store: LevelDBStore[DS, SE]):
+        self.store: LevelDBStore[DS, SE] = store
         self.batch: Optional[Any] = None
         self.last_seens: Dict[str, str] = {}
         self.batch_size = 0
@@ -146,12 +145,12 @@ class LevelDBWriter(Writer[DS, CE]):
         return list(statements)
 
 
-class LevelDBView(View[DS, CE]):
+class LevelDBView(View[DS, SE]):
     def __init__(
-        self, store: LevelDBStore[DS, CE], scope: DS, external: bool = False
+        self, store: LevelDBStore[DS, SE], scope: DS, external: bool = False
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: LevelDBStore[DS, CE] = store
+        self.store: LevelDBStore[DS, SE] = store
         self.last_seens: Dict[str, Optional[str]] = {}
 
     def has_entity(self, id: str) -> bool:
@@ -170,7 +169,7 @@ class LevelDBView(View[DS, CE]):
                     return True
         return False
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         statements: List[Statement] = []
         prefix = b(f"s:{id}:")
         with self.store.db.iterator(prefix=prefix, include_key=False) as it:
@@ -192,7 +191,7 @@ class LevelDBView(View[DS, CE]):
             stmt.last_seen = self.last_seens[stmt.dataset]
         return self.store.assemble(statements)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         prefix = b(f"i:{id}:")
         with self.store.db.iterator(prefix=prefix, include_key=False) as it:
             for v in it:
@@ -203,7 +202,7 @@ class LevelDBView(View[DS, CE]):
                     if value == id and prop.reverse is not None:
                         yield prop.reverse, entity
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         prefix = b"e:"
         with self.store.db.iterator(prefix=prefix, include_value=False) as it:
             current_id: Optional[str] = None

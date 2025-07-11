@@ -3,13 +3,13 @@ import orjson
 import fakeredis
 from pathlib import Path
 from followthemoney import model, Dataset
+from followthemoney import StatementEntity as Entity
 from datetime import datetime
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.resolved import ResolvedStore
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.util import datetime_iso
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -26,12 +26,12 @@ PERSON_EXT = {
 }
 
 
-def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+def test_store_basics(test_dataset: Dataset, resolver: Resolver[Entity]):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = ResolvedStore(test_dataset, resolver, db=redis)
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity = Entity.from_data(test_dataset, PERSON)
+    entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
     ts = datetime_iso(datetime.now())
@@ -57,7 +57,7 @@ def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 
 
 def test_graph_query(
-    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[Entity]
 ):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
@@ -67,7 +67,7 @@ def test_graph_query(
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(test_dataset, data)
+                proxy = Entity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
 
     assert len(list(store.view(test_dataset).entities())) == 474
@@ -91,7 +91,7 @@ def test_graph_query(
     assert model.get("Address") in schemata, set(schemata)
     assert model.get("Company") not in schemata, set(schemata)
 
-    ext_entity = CompositeEntity.from_data(test_dataset, PERSON)
+    ext_entity = Entity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         writer.add_entity(ext_entity)
         with pytest.raises(NotImplementedError):
@@ -107,7 +107,7 @@ def test_graph_query(
 
 
 def test_custom_functions(
-    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[Entity]
 ):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
@@ -118,7 +118,7 @@ def test_custom_functions(
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(test_dataset, data)
+                proxy = Entity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
 
     assert len(list(mem_store.view(test_dataset).entities())) == 474

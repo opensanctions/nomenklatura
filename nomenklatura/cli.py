@@ -5,7 +5,7 @@ import click
 import logging
 from pathlib import Path
 from typing import Generator, Optional, Tuple
-from followthemoney import Dataset, ValueEntity
+from followthemoney import Dataset, ValueEntity, StatementEntity as Entity
 from followthemoney.statement import Statement, CSV, FORMATS
 from followthemoney.statement import write_statements, read_path_statements
 from followthemoney.cli.util import path_writer, InPath, OutPath
@@ -16,7 +16,6 @@ from nomenklatura.cache import Cache
 from nomenklatura.matching import train_v1_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.xref import xref as run_xref

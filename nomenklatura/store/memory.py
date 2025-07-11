@@ -1,28 +1,27 @@
 from typing import Dict, Set, List, Optional, Generator, Tuple
-from followthemoney import DS, registry, Property, Statement
+from followthemoney import DS, SE, registry, Property, Statement
 
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 
 
-class MemoryStore(Store[DS, CE]):
-    def __init__(self, dataset: DS, linker: Linker[CE]):
+class MemoryStore(Store[DS, SE]):
+    def __init__(self, dataset: DS, linker: Linker[SE]):
         super().__init__(dataset, linker)
         self.stmts: Dict[str, Set[Statement]] = {}
         self.inverted: Dict[str, Set[str]] = {}
         self.entities: Dict[str, Set[str]] = {}
 
-    def writer(self) -> Writer[DS, CE]:
+    def writer(self) -> Writer[DS, SE]:
         return MemoryWriter(self)
 
-    def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
+    def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return MemoryView(self, scope, external=external)
 
 
-class MemoryWriter(Writer[DS, CE]):
-    def __init__(self, store: MemoryStore[DS, CE]):
-        self.store: MemoryStore[DS, CE] = store
+class MemoryWriter(Writer[DS, SE]):
+    def __init__(self, store: MemoryStore[DS, SE]):
+        self.store: MemoryStore[DS, SE] = store
 
     def add_statement(self, stmt: Statement) -> None:
         if stmt.entity_id is None:
@@ -58,12 +57,12 @@ class MemoryWriter(Writer[DS, CE]):
         return list(statements)
 
 
-class MemoryView(View[DS, CE]):
+class MemoryView(View[DS, SE]):
     def __init__(
-        self, store: MemoryStore[DS, CE], scope: DS, external: bool = False
+        self, store: MemoryStore[DS, SE], scope: DS, external: bool = False
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: MemoryStore[DS, CE] = store
+        self.store: MemoryStore[DS, SE] = store
 
     def has_entity(self, id: str) -> bool:
         for stmt in self.store.stmts.get(id, []):
@@ -72,7 +71,7 @@ class MemoryView(View[DS, CE]):
             return True
         return False
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         if id not in self.store.stmts:
             return None
         stmts: List[Statement] = []
@@ -82,7 +81,7 @@ class MemoryView(View[DS, CE]):
             stmts.append(stmt)
         return self.store.assemble(stmts)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         for inverted_id in self.store.inverted.get(id, []):
             entity = self.get_entity(inverted_id)
             if entity is None:
@@ -91,7 +90,7 @@ class MemoryView(View[DS, CE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         entity_ids: Set[str] = set()
         for scope in self.dataset_names:
             entity_ids.update(self.store.entities.get(scope, []))

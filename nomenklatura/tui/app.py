@@ -9,9 +9,8 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
 
-from followthemoney import DS
+from followthemoney import DS, SE
 
-from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.resolver.edge import Edge
@@ -24,8 +23,8 @@ HISTORY_LENGTH = 20
 class DedupeState(object):
     def __init__(
         self,
-        resolver: Resolver[CE],
-        store: Store[DS, CE],
+        resolver: Resolver[SE],
+        store: Store[DS, SE],
         url_base: Optional[str] = None,
     ):
         self.store = store
@@ -35,10 +34,10 @@ class DedupeState(object):
         self.latinize = False
         self.message: Optional[str] = None
         self.ignore: Set[Tuple[str, str]] = set()
-        self.left: Optional[CE] = None
-        self.right: Optional[CE] = None
+        self.left: Optional[SE] = None
+        self.right: Optional[SE] = None
         self.score = 0.0
-        self.recents: Dict[str, CE] = dict()
+        self.recents: Dict[str, SE] = dict()
 
     def load(self) -> bool:
         self.left = None

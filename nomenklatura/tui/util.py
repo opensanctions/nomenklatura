@@ -1,7 +1,5 @@
 from typing import Generator, Tuple
-from followthemoney import registry, Property
-
-from nomenklatura.entity import CE
+from followthemoney import registry, Property, SE
 
 TYPE_ORDER = {
     registry.name: -6,
@@ -13,7 +11,7 @@ TYPE_ORDER = {
 }
 
 
-def comparison_props(left: CE, right: CE) -> Generator[Property, None, None]:
+def comparison_props(left: SE, right: SE) -> Generator[Property, None, None]:
     """Return an ordered list of properties to be shown in a comparison of
     the two given entities."""
     props = set(left.iterprops())

@@ -1,11 +1,10 @@
 from typing import Dict, Generator, Generic, Set
-from followthemoney import registry, ValueEntity, Statement
+from followthemoney import registry, ValueEntity, Statement, SE
 
-from nomenklatura.entity import CE
 from nomenklatura.resolver.identifier import Identifier, StrIdent
 
 
-class Linker(Generic[CE]):
+class Linker(Generic[SE]):
     """A class to manage the canonicalisation of entities. This stores only the positive
     merges of entities and is used as a lightweight way to apply the harmonisation
     post de-duplication."""
@@ -52,7 +51,7 @@ class Linker(Generic[CE]):
             referents.add(connected.id)
         return referents
 
-    def apply(self, proxy: CE) -> CE:
+    def apply(self, proxy: SE) -> SE:
         """Replace all entity references in a given proxy with their canonical
         identifiers. This is essentially the harmonisation post de-dupe."""
         if proxy.id is None:
@@ -71,7 +70,7 @@ class Linker(Generic[CE]):
                     proxy.unsafe_add(prop, self.get_canonical(value), cleaned=True)
         return proxy
 
-    def apply_properties(self, proxy: CE) -> CE:
+    def apply_properties(self, proxy: SE) -> SE:
         for stmt in proxy._iter_stmt():
             if proxy.id is not None:
                 stmt.canonical_id = proxy.id

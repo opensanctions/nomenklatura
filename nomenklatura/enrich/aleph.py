@@ -7,11 +7,10 @@ from urllib.parse import urljoin
 from functools import cached_property
 from followthemoney.exc import InvalidData
 from followthemoney.namespace import Namespace
-from followthemoney import DS
+from followthemoney import DS, SE
 from requests import Session
 from rigour.urls import build_url
 
-from nomenklatura.entity import CE
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 
@@ -53,7 +52,7 @@ class AlephEnricher(Enricher[DS]):
             return cast(str, result["id"])
         return None
 
-    def load_aleph_entity(self, entity: CE, data: Dict[str, Any]) -> Optional[CE]:
+    def load_aleph_entity(self, entity: SE, data: Dict[str, Any]) -> Optional[SE]:
         data["referents"] = [data["id"]]
         try:
             proxy = super().load_entity(entity, data)
@@ -69,8 +68,8 @@ class AlephEnricher(Enricher[DS]):
         return proxy
 
     def convert_nested(
-        self, entity: CE, data: Dict[str, Any]
-    ) -> Generator[CE, None, None]:
+        self, entity: SE, data: Dict[str, Any]
+    ) -> Generator[SE, None, None]:
         proxy = self.load_aleph_entity(entity, data)
         if proxy is not None:
             if self._ns is not None:
@@ -113,7 +112,7 @@ class AlephEnricher(Enricher[DS]):
     #             if search_api is None:
     #                 break
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.matchable:
             return
         url = urljoin(self._base_url, "match")
@@ -133,7 +132,7 @@ class AlephEnricher(Enricher[DS]):
                     entity = self._ns.apply(entity)
                 yield proxy
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         url = urljoin(self._base_url, f"entities/{match.id}")
         for aleph_url in match.get("alephUrl", quiet=True):
             if aleph_url.startswith(self._base_url):

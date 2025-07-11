@@ -1,4 +1,4 @@
-from nomenklatura.entity import CompositeEntity as Entity
+from followthemoney import ValueEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts

@@ -1,12 +1,11 @@
 import orjson
 import tempfile
 from pathlib import Path
-from followthemoney import model, Dataset
+from followthemoney import model, Dataset, StatementEntity
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.level import LevelDBStore
-from nomenklatura.entity import CompositeEntity
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 PERSON = {
@@ -23,13 +22,13 @@ PERSON_EXT = {
 
 
 def test_leveldb_store_basics(
-    test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    test_dataset: Dataset, resolver: Resolver[StatementEntity]
 ):
     resolver.begin()
     path = Path(tempfile.mkdtemp()) / "leveldb"
     store = LevelDBStore(test_dataset, resolver, path)
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity = StatementEntity.from_data(test_dataset, PERSON)
+    entity_ext = StatementEntity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
     writer.add_entity(entity)
@@ -50,7 +49,7 @@ def test_leveldb_store_basics(
 
 
 def test_leveldb_graph_query(
-    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[StatementEntity]
 ):
     resolver.begin()
     path = Path(tempfile.mkdtemp()) / "xxx"
@@ -60,7 +59,7 @@ def test_leveldb_graph_query(
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(test_dataset, data)
+                proxy = StatementEntity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
     assert len(list(store.view(test_dataset).entities())) == 474
 
@@ -84,7 +83,7 @@ def test_leveldb_graph_query(
     assert model.get("Company") not in schemata, set(schemata)
 
     # External
-    ext_entity = CompositeEntity.from_data(test_dataset, PERSON)
+    ext_entity = StatementEntity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
             stmt.external = True

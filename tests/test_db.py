@@ -1,9 +1,8 @@
 from typing import List, Dict, Any, Generator
 from sqlalchemy import MetaData, select
-from followthemoney import Dataset, Statement
+from followthemoney import Dataset, Statement, StatementEntity
 
 from nomenklatura.db import get_engine
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.db import make_statement_table, insert_statements
 
 
@@ -11,7 +10,7 @@ def _parse_statements(
     test_dataset: Dataset, donations_json: List[Dict[str, Any]]
 ) -> Generator[Statement, None, None]:
     for item in donations_json:
-        entity = CompositeEntity.from_data(test_dataset, item)
+        entity = StatementEntity.from_data(test_dataset, item)
         yield from entity.statements
 
 

@@ -2,10 +2,9 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Set, Tuple, Dict
-from followthemoney import DS, registry, Property, Statement
+from followthemoney import DS, SE, registry, Property, Statement
 
 from nomenklatura.kv import b, bv, get_redis, close_redis
-from nomenklatura.entity import CE
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Linker, Identifier, StrIdent
 from nomenklatura.store.base import Store, View, Writer
@@ -60,11 +59,11 @@ def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statem
     )
 
 
-class VersionedRedisStore(Store[DS, CE]):
+class VersionedRedisStore(Store[DS, SE]):
     def __init__(
         self,
         dataset: DS,
-        linker: Linker[CE],
+        linker: Linker[SE],
         db: Optional["Redis[bytes]"] = None,
     ):
         super().__init__(dataset, linker)
@@ -77,7 +76,7 @@ class VersionedRedisStore(Store[DS, CE]):
         dataset: Optional[DS] = None,
         version: Optional[str] = None,
         timestamps: bool = False,
-    ) -> "VersionedRedisWriter[DS, CE]":
+    ) -> "VersionedRedisWriter[DS, SE]":
         if version is None:
             version = Version.new().id
         dataset = dataset or self.dataset
@@ -90,7 +89,7 @@ class VersionedRedisStore(Store[DS, CE]):
 
     def view(
         self, scope: DS, external: bool = False, versions: Dict[str, str] = {}
-    ) -> "VersionedRedisView[DS, CE]":
+    ) -> "VersionedRedisView[DS, SE]":
         return VersionedRedisView(self, scope, external=external, versions=versions)
 
     def update(self, id: StrIdent) -> None:
@@ -154,12 +153,12 @@ class VersionedRedisStore(Store[DS, CE]):
         close_redis()
 
 
-class VersionedRedisWriter(Writer[DS, CE]):
+class VersionedRedisWriter(Writer[DS, SE]):
     BATCH_STATEMENTS = 2_000
 
     def __init__(
         self,
-        store: VersionedRedisStore[DS, CE],
+        store: VersionedRedisStore[DS, SE],
         dataset: DS,
         version: str,
         timestamps: bool = False,
@@ -168,11 +167,11 @@ class VersionedRedisWriter(Writer[DS, CE]):
         self.dataset = dataset
         self.timestamps = timestamps
         self.ver = f"{dataset.name}:{version}"
-        self.store: VersionedRedisStore[DS, CE] = store
+        self.store: VersionedRedisStore[DS, SE] = store
         self.prev = store.get_latest(dataset.name)
         self.buffer: List[Statement] = []
 
-    def __enter__(self) -> "VersionedRedisWriter[DS, CE]":
+    def __enter__(self) -> "VersionedRedisWriter[DS, SE]":
         return self
 
     def flush(self) -> None:
@@ -231,16 +230,16 @@ class VersionedRedisWriter(Writer[DS, CE]):
         raise NotImplementedError()
 
 
-class VersionedRedisView(View[DS, CE]):
+class VersionedRedisView(View[DS, SE]):
     def __init__(
         self,
-        store: VersionedRedisStore[DS, CE],
+        store: VersionedRedisStore[DS, SE],
         scope: DS,
         external: bool = False,
         versions: Dict[str, str] = {},
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: VersionedRedisStore[DS, CE] = store
+        self.store: VersionedRedisStore[DS, SE] = store
 
         # Get the latest version for each dataset in the scope
         self.vers: List[Tuple[str, str]] = []
@@ -286,7 +285,7 @@ class VersionedRedisView(View[DS, CE]):
                 timestamps[stmt.id] = stmt.first_seen
         return timestamps
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         statements: List[Statement] = []
         for stmt in self._get_statements(id):
             if not stmt.external or self.external:
@@ -296,7 +295,7 @@ class VersionedRedisView(View[DS, CE]):
                 statements.append(stmt)
         return self.store.assemble(statements)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         keys: List[str] = []
         ident = Identifier.get(id)
         for ent_id in self.store.linker.connected(ident):
@@ -336,7 +335,7 @@ class VersionedRedisView(View[DS, CE]):
                         stmt = self.store.linker.apply_statement(stmt)
                     yield stmt
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return
         if len(self.vers) == 1:

@@ -1,9 +1,9 @@
 from followthemoney import model, Dataset
+from followthemoney import StatementEntity as Entity
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store import MemoryStore, SimpleMemoryStore
-from nomenklatura.entity import CompositeEntity
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 
@@ -20,11 +20,11 @@ PERSON_EXT = {
 }
 
 
-def test_basic_store(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+def test_basic_store(test_dataset: Dataset, resolver: Resolver[Entity]):
     resolver.begin()
     store = MemoryStore(test_dataset, resolver)
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity = Entity.from_data(test_dataset, PERSON)
+    entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     assert len(store.stmts) == 0
     writer = store.writer()
     writer.add_entity(entity)
@@ -79,7 +79,7 @@ def test_has_entity(dstore: SimpleMemoryStore, test_dataset: Dataset):
 
     assert not view.has_entity("john-doe-2")
     writer = dstore.writer()
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     writer.add_entity(entity_ext)
     writer.flush()
     assert view.has_entity("john-doe-2")

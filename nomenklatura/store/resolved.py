@@ -2,25 +2,24 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Tuple
-from followthemoney import DS, registry, Property, Statement
+from followthemoney import DS, SE, registry, Property, Statement
 from rigour.env import ENCODING as ENC
 
 from nomenklatura.kv import get_redis, close_redis
-from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, StrIdent
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)
 
 
-class ResolvedStore(Store[DS, CE]):
+class ResolvedStore(Store[DS, SE]):
     """A store implementation which is built to store fully resolved entities. This
     implementation is not designed to be updated, and cannot store individual statements."""
 
     def __init__(
         self,
         dataset: DS,
-        linker: Linker[CE],
+        linker: Linker[SE],
         prefix: Optional[str] = None,
         db: Optional["Redis[bytes]"] = None,
     ):
@@ -30,10 +29,10 @@ class ResolvedStore(Store[DS, CE]):
         self.db = db
         self.prefix = f"xre:{prefix or dataset.name}"
 
-    def writer(self) -> Writer[DS, CE]:
+    def writer(self) -> Writer[DS, SE]:
         return ResolvedWriter(self)
 
-    def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
+    def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         if external:
             raise NotImplementedError("External views not supported!")
         return ResolvedView(self, scope, external=external)
@@ -41,7 +40,7 @@ class ResolvedStore(Store[DS, CE]):
     def update(self, id: StrIdent) -> None:
         raise NotImplementedError("Entity store cannot update entities")
 
-    def assemble(self, statements: List[Statement]) -> Optional[CE]:
+    def assemble(self, statements: List[Statement]) -> Optional[SE]:
         # This is simplified because the store is considered to be fully resolved
         if not len(statements):
             return None
@@ -62,7 +61,7 @@ class ResolvedStore(Store[DS, CE]):
         if cmds > 0:
             pipeline.execute()
 
-    def derive(self, store: Store[DS, CE]) -> None:
+    def derive(self, store: Store[DS, SE]) -> None:
         """Copy all data from another store into this one."""
         writer = self.writer()
         view = store.default_view()
@@ -76,12 +75,12 @@ class ResolvedStore(Store[DS, CE]):
         close_redis()
 
 
-class ResolvedWriter(Writer[DS, CE]):
+class ResolvedWriter(Writer[DS, SE]):
     BATCH_ENTITIES = 1_000
 
-    def __init__(self, store: ResolvedStore[DS, CE]):
-        self.store: ResolvedStore[DS, CE] = store
-        self.entities: List[CE] = []
+    def __init__(self, store: ResolvedStore[DS, SE]):
+        self.store: ResolvedStore[DS, SE] = store
+        self.entities: List[SE] = []
 
     def flush(self) -> None:
         pipeline = self.store.db.pipeline()
@@ -114,7 +113,7 @@ class ResolvedWriter(Writer[DS, CE]):
     def add_statement(self, stmt: Statement) -> None:
         raise NotImplementedError("Entity store cannot add invididual statements")
 
-    def add_entity(self, entity: CE) -> None:
+    def add_entity(self, entity: SE) -> None:
         self.entities.append(entity)
         if len(self.entities) >= self.BATCH_ENTITIES:
             self.flush()
@@ -123,18 +122,18 @@ class ResolvedWriter(Writer[DS, CE]):
         raise NotImplementedError("Entity store cannot pop entities")
 
 
-class ResolvedView(View[DS, CE]):
+class ResolvedView(View[DS, SE]):
     def __init__(
-        self, store: ResolvedStore[DS, CE], scope: DS, external: bool = False
+        self, store: ResolvedStore[DS, SE], scope: DS, external: bool = False
     ) -> None:
         super().__init__(store, scope, external=external)
-        self.store: ResolvedStore[DS, CE] = store
+        self.store: ResolvedStore[DS, SE] = store
 
     def has_entity(self, id: str) -> bool:
         key = f"{self.store.prefix}:e:{id}"
         return self.store.db.exists(key) > 0
 
-    def _unpack(self, data: bytes) -> CE:
+    def _unpack(self, data: bytes) -> SE:
         obj = orjson.loads(data)
         statements: List[Statement] = []
         for stmt in obj["s"]:
@@ -171,14 +170,14 @@ class ResolvedView(View[DS, CE]):
         entity._caption = obj["c"]
         return entity
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         key = f"{self.store.prefix}:e:{id}"
         data = self.store.db.get(key.encode(ENC))
         if data is None:
             return None
         return self._unpack(data)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         key = f"{self.store.prefix}:i:{id}"
         inv_keys = self.store.db.smembers(key.encode(ENC))
         inv_data = self.store.db.mget(inv_keys)
@@ -190,7 +189,7 @@ class ResolvedView(View[DS, CE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         prefix = f"{self.store.prefix}:e:*"
         batch: List[bytes] = []
         for id in self.store.db.scan_iter(prefix, count=50_000):

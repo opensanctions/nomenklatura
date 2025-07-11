@@ -1,11 +1,11 @@
 import pytest
 import requests_mock
 from followthemoney import Dataset
+from followthemoney import StatementEntity as Entity
 
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata import LangText, WikidataClient
 from nomenklatura.enrich.wikidata import clean_name
-from nomenklatura.entity import CompositeEntity
 
 from .conftest import wd_read_response
 
@@ -21,7 +21,7 @@ def test_lang_text():
 
 def test_model_apply():
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-    ent = CompositeEntity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
+    ent = Entity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
     text = LangText("test", "en")
     text.apply(ent, "name")
     assert ent.get("name") == ["test"]

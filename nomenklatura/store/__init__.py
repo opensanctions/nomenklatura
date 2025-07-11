@@ -3,14 +3,13 @@ from typing import Optional
 
 import orjson
 
-from followthemoney import Dataset
-from nomenklatura.entity import CompositeEntity
+from followthemoney import Dataset, StatementEntity
 from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.sql import SQLStore
 
-SimpleMemoryStore = MemoryStore[Dataset, CompositeEntity]
+SimpleMemoryStore = MemoryStore[Dataset, StatementEntity]
 
 __all__ = [
     "Store",
@@ -25,7 +24,7 @@ __all__ = [
 
 def load_entity_file_store(
     path: Path,
-    resolver: Resolver[CompositeEntity],
+    resolver: Resolver[StatementEntity],
     dataset: Optional[Dataset] = None,
     cleaned: bool = True,
 ) -> SimpleMemoryStore:
@@ -37,6 +36,6 @@ def load_entity_file_store(
         with open(path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(dataset, data, cleaned=cleaned)
+                proxy = StatementEntity.from_data(dataset, data, cleaned=cleaned)
                 writer.add_entity(proxy)
     return store

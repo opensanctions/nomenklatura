@@ -1,11 +1,11 @@
 from typing import Dict, Any
-from nomenklatura.entity import CompositeEntity
+from followthemoney import StatementEntity
 from nomenklatura.publish.edges import simplify_undirected
 
 
-def _e(schema: str, **props: Dict[str, Any]) -> CompositeEntity:
+def _e(schema: str, **props: Dict[str, Any]) -> StatementEntity:
     data = {"schema": schema, "properties": props, "id": "test"}
-    return CompositeEntity.from_dict(data)
+    return StatementEntity.from_dict(data)
 
 
 def test_family_simplified():

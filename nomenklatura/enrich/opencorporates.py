@@ -4,12 +4,11 @@ from normality import slugify
 from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
-from followthemoney import registry, DS
+from followthemoney import registry, DS, SE
 from requests import Session
 from requests.exceptions import RequestException
 from rigour.urls import build_url, ParamsType
 
-from nomenklatura.entity import CE
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
@@ -71,7 +70,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
             self.cache.set(url, response)
         return json.loads(response)
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.matchable:
             return
         if entity.has("opencorporatesUrl"):
@@ -84,7 +83,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
             # yield from self.search_officers(entity)
             pass
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         clone = self.make_entity(match, match.schema.name)
         clone.id = match.id
         clone.add("opencorporatesUrl", match.get("opencorporatesUrl"))
@@ -110,8 +109,8 @@ class OpenCorporatesEnricher(Enricher[DS]):
         return str(juris).split("_", 1)[0]
 
     def company_entity(
-        self, ref: CE, data: Dict[str, Any], entity: Optional[CE] = None
-    ) -> CE:
+        self, ref: SE, data: Dict[str, Any], entity: Optional[SE] = None
+    ) -> SE:
         if "company" in data:
             data = ensure_dict(data.get("company", data))
         oc_url = cast(Optional[str], data.get("opencorporates_url"))
@@ -172,7 +171,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
     #     entity.add("retrievedAt", source.get("retrieved_at"))
     #     return entity
 
-    def search_companies(self, entity: CE) -> Generator[CE, None, None]:
+    def search_companies(self, entity: SE) -> Generator[SE, None, None]:
         countries = entity.get_type_values(registry.country)
         params = {"q": entity.caption, "sparse": True, "country_codes": countries}
         for page in range(1, 9):

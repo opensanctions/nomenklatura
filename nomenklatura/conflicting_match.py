@@ -5,15 +5,14 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
-from followthemoney import DS, Statement
-from nomenklatura.entity import CE
+from followthemoney import DS, Statement, SE
 from nomenklatura.store import View
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 
 
-class ConflictingMatchReporter(Generic[CE]):
-    def __init__(self, view: View[DS, CE], resolver: Resolver[CE], threshold: float):
+class ConflictingMatchReporter(Generic[SE]):
+    def __init__(self, view: View[DS, SE], resolver: Resolver[SE], threshold: float):
         self.console = Console()
         self.view = view
         self.resolver = resolver
@@ -38,7 +37,7 @@ class ConflictingMatchReporter(Generic[CE]):
         lang_order = 0 if stmt.lang is None else 1
         return (stmt.dataset, stmt.entity_id, prop_order, stmt.value, lang_order)
 
-    def report_conflicting_match(self, title: str, entity: CE) -> None:
+    def report_conflicting_match(self, title: str, entity: SE) -> None:
         if entity.id is None:
             return
         statements = []
