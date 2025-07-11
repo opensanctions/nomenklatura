@@ -187,7 +187,7 @@ class Statement(object):
         )
 
     @classmethod
-    def from_db_row(cls, row: Row) -> "Statement":
+    def from_db_row(cls, row: Row[Any]) -> "Statement":
         return cls(
             id=row.id,
             canonical_id=row.canonical_id,

@@ -1,13 +1,14 @@
 import logging
 from typing import Any, Iterable, List, Mapping
 
-from sqlalchemy import Boolean, Column, DateTime, MetaData, Table, Unicode
-from sqlalchemy import delete
+from sqlalchemy import delete, Connection, Dialect, Table
+from sqlalchemy import Boolean, Column, DateTime, MetaData, Unicode
 from sqlalchemy.engine import Engine
+from sqlalchemy.dialects.postgresql import insert as psql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from nomenklatura import settings
 from nomenklatura.statement.statement import Statement
-from nomenklatura.db import get_upsert_func
 
 log = logging.getLogger(__name__)
 KEY_LEN = 255
@@ -37,6 +38,21 @@ def make_statement_table(
     )
 
 
+def _upsert_batch(
+    dialect: Dialect, conn: Connection, table: Table, batch: List[Mapping[str, Any]]
+) -> None:
+    """Create an upsert statement for the given table and engine."""
+    if dialect.name == "sqlite":
+        lstmt = sqlite_insert(table).values(batch)
+        lstmt = lstmt.on_conflict_do_nothing(index_elements=["id"])
+        conn.execute(lstmt)
+    if dialect.name in ("postgresql", "postgres"):
+        pstmt = psql_insert(table).values(batch)
+        pstmt = pstmt.on_conflict_do_nothing(index_elements=["id"])
+        conn.execute(pstmt)
+    raise NotImplementedError(f"Upsert not implemented for dialect {dialect.name}")
+
+
 def insert_dataset(
     engine: Engine,
     table: Table,
@@ -46,7 +62,6 @@ def insert_dataset(
 ) -> None:
     dataset_count: int = 0
     is_postgresql = "postgres" in engine.dialect.name
-    insert_func = get_upsert_func(engine)
     with engine.begin() as conn:
         del_q = delete(table).where(table.c.dataset == dataset_name)
         conn.execute(del_q)
@@ -59,14 +74,10 @@ def insert_dataset(
             if len(batch) >= batch_size:
                 args = (len(batch), dataset_count, dataset_name)
                 log.info("Inserting batch %s statements (total: %s) into %r" % args)
-                istmt = insert_func(table).values(batch)
-                istmt = istmt.on_conflict_do_nothing(index_elements=["id"])
-                conn.execute(istmt)
+                _upsert_batch(engine.dialect, conn, table, batch)
                 batch = []
         if len(batch):
-            istmt = insert_func(table).values(batch)
-            istmt = istmt.on_conflict_do_nothing(index_elements=["id"])
-            conn.execute(istmt)
+            _upsert_batch(engine.dialect, conn, table, batch)
         log.info("Load complete: %r (%d total)" % (dataset_name, dataset_count))
 
 

@@ -3,11 +3,13 @@ from typing import Any, Generator, List, Optional, Set, Tuple
 from followthemoney.property import Property
 from sqlalchemy import Table, delete, func, select
 from sqlalchemy.engine import Engine, Transaction, create_engine
+from sqlalchemy.dialects.postgresql import insert as psql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
 from nomenklatura.dataset import DS
-from nomenklatura.db import get_metadata, get_upsert_func
+from nomenklatura.db import get_metadata
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, Identifier
 from nomenklatura.statement import Statement
@@ -39,7 +41,9 @@ class SQLStore(Store[DS, CE]):
     def view(self, scope: DS, external: bool = False) -> View[DS, CE]:
         return SQLView(self, scope, external=external)
 
-    def _execute(self, q: Select, stream: bool = True) -> Generator[Any, None, None]:
+    def _execute(
+        self, q: Select[Any], stream: bool = True
+    ) -> Generator[Any, None, None]:
         # execute any read query against sql backend
         with self.engine.connect() as conn:
             if stream:
@@ -49,12 +53,14 @@ class SQLStore(Store[DS, CE]):
                 yield from rows
 
     def _iterate_stmts(
-        self, q: Select, stream: bool = True
+        self, q: Select[Any], stream: bool = True
     ) -> Generator[Statement, None, None]:
         for row in self._execute(q, stream=stream):
             yield Statement.from_db_row(row)
 
-    def _iterate(self, q: Select, stream: bool = True) -> Generator[CE, None, None]:
+    def _iterate(
+        self, q: Select[Any], stream: bool = True
+    ) -> Generator[CE, None, None]:
         current_id = None
         current_stmts: list[Statement] = []
         for stmt in self._iterate_stmts(q, stream=stream):
@@ -80,7 +86,6 @@ class SQLWriter(Writer[DS, CE]):
     def __init__(self, store: SQLStore[DS, CE]):
         self.store: SQLStore[DS, CE] = store
         self.batch: Set[Statement] = set()
-        self.upsert = get_upsert_func(self.store.engine)
         self.conn = self.store.engine.connect()
         self.tx: Optional[Transaction] = None
 
@@ -88,21 +93,39 @@ class SQLWriter(Writer[DS, CE]):
         if not len(self.batch):
             return
         values = [s.to_db_row() for s in self.batch]
-        istmt = self.upsert(self.store.table).values(values)
-        stmt = istmt.on_conflict_do_update(
-            index_elements=["id"],
-            set_=dict(
-                canonical_id=istmt.excluded.canonical_id,
-                schema=istmt.excluded.schema,
-                prop_type=istmt.excluded.prop_type,
-                lang=istmt.excluded.lang,
-                original_value=istmt.excluded.original_value,
-                last_seen=istmt.excluded.last_seen,
-            ),
-        )
         if self.tx is None:
             self.tx = self.conn.begin()
-        self.conn.execute(stmt)
+        if self.store.engine.dialect.name == "sqlite":
+            ilstmt = sqlite_insert(self.store.table).values(values)
+            lstmt = ilstmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_=dict(
+                    canonical_id=ilstmt.excluded.canonical_id,
+                    schema=ilstmt.excluded.schema,
+                    prop_type=ilstmt.excluded.prop_type,
+                    lang=ilstmt.excluded.lang,
+                    original_value=ilstmt.excluded.original_value,
+                    last_seen=ilstmt.excluded.last_seen,
+                ),
+            )
+            self.conn.execute(lstmt)
+        elif self.store.engine.dialect.name in ("postgresql", "postgres"):
+            ipstmt = psql_insert(self.store.table).values(values)
+            pstmt = ipstmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_=dict(
+                    canonical_id=ipstmt.excluded.canonical_id,
+                    schema=ipstmt.excluded.schema,
+                    prop_type=ipstmt.excluded.prop_type,
+                    lang=ipstmt.excluded.lang,
+                    original_value=ipstmt.excluded.original_value,
+                    last_seen=ipstmt.excluded.last_seen,
+                ),
+            )
+            self.conn.execute(pstmt)
+        else:
+            msg = f"Upsert not implemented for dialect {self.store.engine.dialect.name}"
+            raise NotImplementedError(msg)
         self.batch = set()
 
     def flush(self) -> None:
