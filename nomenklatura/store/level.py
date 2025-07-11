@@ -3,11 +3,10 @@ from pathlib import Path
 from typing import Any, Generator, List, Optional, Set, Tuple, Dict
 
 import plyvel  # type: ignore
-from followthemoney import DS, registry, Property
+from followthemoney import DS, registry, Property, Statement
 
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
-from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.util import pack_prop, unpack_prop
 

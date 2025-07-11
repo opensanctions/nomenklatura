@@ -1,11 +1,10 @@
 from typing import List, Dict, Any, Generator
 from sqlalchemy import MetaData, select
-from followthemoney import Dataset
+from followthemoney import Dataset, Statement
 
 from nomenklatura.db import get_engine
-from nomenklatura.statement import Statement
 from nomenklatura.entity import CompositeEntity
-from nomenklatura.statement.db import make_statement_table, insert_dataset
+from nomenklatura.db import make_statement_table, insert_statements
 
 
 def _parse_statements(
@@ -22,7 +21,7 @@ def test_statement_db(test_dataset: Dataset, donations_json: List[Dict[str, Any]
     table = make_statement_table(metadata)
     metadata.create_all(bind=engine, tables=[table])
     statements = _parse_statements(test_dataset, donations_json)
-    insert_dataset(engine, table, test_dataset.name, statements)
+    insert_statements(engine, table, test_dataset.name, statements)
 
     with engine.connect() as conn:
         q = select(table)

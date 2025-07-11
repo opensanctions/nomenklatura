@@ -1,12 +1,11 @@
 import pytest
 from rigour.time import utc_now
 from typing import Any, Dict, List
-from followthemoney import registry, Dataset
+from followthemoney import registry, Dataset, Statement
 from followthemoney.exc import InvalidData
 
 from nomenklatura.store import SimpleMemoryStore
 from nomenklatura.entity import CompositeEntity
-from nomenklatura.statement.statement import Statement
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 EXAMPLE = {

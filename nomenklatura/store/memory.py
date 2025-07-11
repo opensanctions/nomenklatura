@@ -1,8 +1,7 @@
 from typing import Dict, Set, List, Optional, Generator, Tuple
-from followthemoney import DS, registry, Property
+from followthemoney import DS, registry, Property, Statement
 
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.statement import Statement
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker
 

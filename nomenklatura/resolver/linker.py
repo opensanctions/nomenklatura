@@ -1,9 +1,8 @@
 from typing import Dict, Generator, Generic, Set
-from followthemoney import registry, ValueEntity
+from followthemoney import registry, ValueEntity, Statement
 
 from nomenklatura.entity import CE
 from nomenklatura.resolver.identifier import Identifier, StrIdent
-from nomenklatura.statement.statement import Statement
 
 
 class Linker(Generic[CE]):

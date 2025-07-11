@@ -1,6 +1,6 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
-from followthemoney import DS, Property
+from followthemoney import DS, Property, Statement
 from sqlalchemy import Table, delete, func, select
 from sqlalchemy.engine import Engine, Transaction, create_engine
 from sqlalchemy.dialects.postgresql import insert as psql_insert
@@ -11,8 +11,7 @@ from nomenklatura import settings
 from nomenklatura.db import get_metadata
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, Identifier
-from nomenklatura.statement import Statement
-from nomenklatura.statement.db import make_statement_table
+from nomenklatura.db import make_statement_table
 from nomenklatura.store import Store, View, Writer
 
 

@@ -5,12 +5,11 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
-from followthemoney import DS
+from followthemoney import DS, Statement
 from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.statement.statement import Statement
 
 
 class ConflictingMatchReporter(Generic[CE]):

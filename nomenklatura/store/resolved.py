@@ -2,13 +2,12 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Tuple
-from followthemoney import DS, registry, Property
+from followthemoney import DS, registry, Property, Statement
 from rigour.env import ENCODING as ENC
 
 from nomenklatura.kv import get_redis, close_redis
 from nomenklatura.entity import CE
 from nomenklatura.resolver import Linker, StrIdent
-from nomenklatura.statement import Statement
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)

@@ -21,7 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import delete, insert, update
-from followthemoney import registry
+from followthemoney import registry, Statement
 from followthemoney.util import PathLike
 
 from nomenklatura.db import get_engine
@@ -30,7 +30,6 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
 from nomenklatura.resolver.linker import Linker
-from nomenklatura.statement.statement import Statement
 
 
 log = logging.getLogger(__name__)

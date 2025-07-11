@@ -2,19 +2,15 @@ from hashlib import sha1
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from typing import Generator, Iterable, Tuple, Type, TypeVar
-from followthemoney import model
-from followthemoney.model import Model
+from followthemoney import model, Statement, Property, registry
 from followthemoney.exc import InvalidData
 from followthemoney.types.common import PropertyType
-from followthemoney.property import Property
 from followthemoney.util import gettext
 from followthemoney.proxy import P
-from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
 from followthemoney import DS, Dataset, DefaultDataset
 
 from nomenklatura.publish.names import pick_caption
-from nomenklatura.statement.statement import Statement
 from nomenklatura.util import BASE_ID, string_list
 
 if TYPE_CHECKING:

@@ -1,9 +1,8 @@
 from types import TracebackType
 from typing import Optional, Generator, List, Tuple, Generic, Type, cast
-from followthemoney import registry, Property, DS
+from followthemoney import registry, Property, DS, Statement
 
 from nomenklatura.resolver import Linker, StrIdent
-from nomenklatura.statement import Statement
 from nomenklatura.entity import CE, CompositeEntity
 
 
