@@ -3,12 +3,10 @@ import pickle
 import logging
 from itertools import combinations
 from typing import Any, Dict, List, Set, Tuple
-from followthemoney.types import registry
+from followthemoney import registry, DS, SE
 from followthemoney.util import PathLike
 
 from nomenklatura.resolver import Pair, Identifier
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
 from nomenklatura.store import View
 from nomenklatura.index.entry import Field
 from nomenklatura.index.tokenizer import NAME_PART_FIELD, WORD_FIELD, Tokenizer
@@ -17,7 +15,7 @@ from nomenklatura.index.common import BaseIndex
 log = logging.getLogger(__name__)
 
 
-class Index(BaseIndex[DS, CE]):
+class Index(BaseIndex[DS, SE]):
     """
     An in-memory search index to match entities against a given dataset.
 
@@ -45,13 +43,13 @@ class Index(BaseIndex[DS, CE]):
 
     __slots__ = "view", "fields", "tokenizer", "entities"
 
-    def __init__(self, view: View[DS, CE], data_dir: Path):
+    def __init__(self, view: View[DS, SE], data_dir: Path):
         self.view = view
-        self.tokenizer = Tokenizer[DS, CE]()
+        self.tokenizer = Tokenizer[DS, SE]()
         self.fields: Dict[str, Field] = {}
         self.entities: Set[Identifier] = set()
 
-    def index(self, entity: CE) -> None:
+    def index(self, entity: SE) -> None:
         """Index one entity. This is not idempotent, you need to remove the
         entity before re-indexing it."""
         if not entity.schema.matchable or entity.id is None:
@@ -110,7 +108,7 @@ class Index(BaseIndex[DS, CE]):
 
         return sorted(pairs.items(), key=lambda p: p[1], reverse=True)[:max_pairs]
 
-    def match(self, entity: CE) -> List[Tuple[Identifier, float]]:
+    def match(self, entity: SE) -> List[Tuple[Identifier, float]]:
         """Match an entity against the index, returning a list of
         (entity_id, score) pairs."""
         scores: Dict[Identifier, float] = {}
@@ -132,7 +130,7 @@ class Index(BaseIndex[DS, CE]):
             pickle.dump(self.to_dict(), fh)
 
     @classmethod
-    def load(cls, view: View[DS, CE], path: Path, data_dir: Path) -> "Index[DS, CE]":
+    def load(cls, view: View[DS, SE], path: Path, data_dir: Path) -> "Index[DS, SE]":
         index = Index(view, data_dir)
         if not path.exists():
             log.debug("Cannot load: %r", index)

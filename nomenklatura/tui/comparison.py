@@ -2,11 +2,9 @@ from typing import Optional, Union
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import DS, registry, Property
+from followthemoney import SE, StatementEntity as Entity
 
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CompositeEntity as Entity, CE
 from nomenklatura.store import View
 from nomenklatura.tui.util import comparison_props
 
@@ -18,7 +16,7 @@ def render_column(entity: Entity) -> Text:
 
 
 def render_values(
-    view: View[DS, CE], prop: Property, entity: CE, other: CE, latinize: bool
+    view: View[DS, SE], prop: Property, entity: SE, other: SE, latinize: bool
 ) -> Text:
     values = entity.get(prop, quiet=True)
     other_values = other.get_type_values(prop.type)
@@ -47,9 +45,9 @@ def render_values(
 
 
 def render_comparison(
-    view: View[DS, CE],
-    left: CE,
-    right: CE,
+    view: View[DS, SE],
+    left: SE,
+    right: SE,
     score: float,
     latinize: bool = False,
     url_base: Optional[str] = None,

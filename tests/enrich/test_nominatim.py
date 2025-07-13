@@ -1,8 +1,7 @@
 import requests_mock
+from followthemoney import Dataset, StatementEntity
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, enrich, match, Enricher
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 
@@ -74,7 +73,7 @@ def test_nominatim_match():
         m.get("/search.php", json=RESPONSE)
         full = "Kopenhagener Str. 47, Berlin"
         data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 1, results
         assert results[0].id == "osm-node-2140755199", results[0]
@@ -82,19 +81,19 @@ def test_nominatim_match():
         m.get("/search.php", json=[])
         full = "Jupiter Surface Space Station"
         data = {"schema": "Address", "id": "yyy", "properties": {"full": [full]}}
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         results = list(enricher.match(ent))
         assert len(results) == 0, results
     enricher.close()
 
 
-def test_nominatim_match_list(resolver: Resolver[CompositeEntity]):
+def test_nominatim_match_list(resolver: Resolver[StatementEntity]):
     resolver.begin()
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_data(dataset, data)
+    ent = StatementEntity.from_data(dataset, data)
 
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
@@ -111,7 +110,7 @@ def test_nominatim_enrich():
     enricher = load_enricher()
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_data(dataset, data)
+    ent = StatementEntity.from_data(dataset, data)
     with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         adjacent = list(enricher.expand(ent, ent))
@@ -119,13 +118,13 @@ def test_nominatim_enrich():
     enricher.close()
 
 
-def test_nominatim_enrich_list(resolver: Resolver[CompositeEntity]):
+def test_nominatim_enrich_list(resolver: Resolver[StatementEntity]):
     resolver.begin()
     enricher = load_enricher()
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
-    ent = CompositeEntity.from_data(dataset, data)
+    ent = StatementEntity.from_data(dataset, data)
     assert ent.id is not None, ent.id
 
     with requests_mock.Mocker(real_http=False) as m:

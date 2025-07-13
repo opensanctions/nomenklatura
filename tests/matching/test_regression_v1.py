@@ -1,6 +1,5 @@
-from followthemoney import model
+from followthemoney import StatementEntity as Entity
 
-from nomenklatura.entity import CompositeEntity as Entity
 from nomenklatura.matching import RegressionV1
 
 candidate = {
@@ -44,9 +43,9 @@ def test_explain_matcher():
 
 
 def test_compare_entities():
-    cand = Entity.from_dict(model, candidate)
-    match = Entity.from_dict(model, putin)
-    mismatch = Entity.from_dict(model, saddam)
+    cand = Entity.from_dict(candidate)
+    match = Entity.from_dict(putin)
+    mismatch = Entity.from_dict(saddam)
 
     res_match = RegressionV1.compare(cand, match)
     res_mismatch = RegressionV1.compare(cand, mismatch)
@@ -56,8 +55,8 @@ def test_compare_entities():
 
 
 def test_compare_features():
-    cand = Entity.from_dict(model, candidate)
-    match = Entity.from_dict(model, putin)
+    cand = Entity.from_dict(candidate)
+    match = Entity.from_dict(putin)
     ref_match = RegressionV1.compare(cand, match)
     ref_score = ref_match.score
 

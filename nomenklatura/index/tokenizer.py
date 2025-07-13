@@ -1,11 +1,8 @@
 from normality import WS
 from rigour.ids import StrictFormat
 from typing import Generic, Generator, Tuple
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import registry, Property, DS, SE
 
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
 from nomenklatura.util import fingerprint_name
 from nomenklatura.util import name_words, clean_text_basic
 
@@ -28,7 +25,7 @@ TEXT_TYPES = (
 )
 
 
-class Tokenizer(Generic[DS, CE]):
+class Tokenizer(Generic[DS, SE]):
     def value(
         self, prop: Property, value: str
     ) -> Generator[Tuple[str, str], None, None]:
@@ -63,7 +60,7 @@ class Tokenizer(Generic[DS, CE]):
             for word in name_words(clean_text_basic(value), min_length=3):
                 yield WORD_FIELD, word
 
-    def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
+    def entity(self, entity: SE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         for prop, value in entity.itervalues():
             for field, token in self.value(prop, value):

@@ -1,12 +1,12 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from followthemoney import Statement
 
 from nomenklatura import settings
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.resolver import Resolver
-from nomenklatura.statement import Statement
 
 
 def test_identifier():

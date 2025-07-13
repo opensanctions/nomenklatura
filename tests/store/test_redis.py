@@ -1,13 +1,12 @@
 import orjson
 import fakeredis
 from pathlib import Path
-from followthemoney import model
+from followthemoney import model, Dataset
+from followthemoney import StatementEntity as Entity
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.redis_ import RedisStore
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 PERSON = {
@@ -23,12 +22,12 @@ PERSON_EXT = {
 }
 
 
-def test_redis_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+def test_redis_store_basics(test_dataset: Dataset, resolver: Resolver[Entity]):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = RedisStore(test_dataset, resolver, db=redis)
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity = Entity.from_data(test_dataset, PERSON)
+    entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
     writer.add_entity(entity)
@@ -49,7 +48,7 @@ def test_redis_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeE
 
 
 def test_leveldb_graph_query(
-    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[Entity]
 ):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
@@ -59,7 +58,7 @@ def test_leveldb_graph_query(
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(test_dataset, data)
+                proxy = Entity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
     assert len(list(store.view(test_dataset).entities())) == 474
 
@@ -82,7 +81,7 @@ def test_leveldb_graph_query(
     assert model.get("Address") in schemata, set(schemata)
     assert model.get("Company") not in schemata, set(schemata)
 
-    ext_entity = CompositeEntity.from_data(test_dataset, PERSON)
+    ext_entity = Entity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
             stmt.external = True

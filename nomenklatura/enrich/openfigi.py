@@ -2,10 +2,9 @@ import os
 import logging
 from typing import Generator, Dict, Optional
 from followthemoney.util import make_entity_id
+from followthemoney import DS, SE
 from requests import Session
 
-from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 
@@ -61,7 +60,7 @@ class OpenFIGIEnricher(Enricher[DS]):
             if next is None:
                 break
 
-    def match_organization(self, entity: CE) -> Generator[CE, None, None]:
+    def match_organization(self, entity: SE) -> Generator[SE, None, None]:
         for name in entity.get("name"):
             for match in self.search(name):
                 match_name = match.get("name", None)
@@ -73,7 +72,7 @@ class OpenFIGIEnricher(Enricher[DS]):
                 other.add("topics", "corp.public")
                 yield other
 
-    def match_security(self, entity: CE) -> Generator[CE, None, None]:
+    def match_security(self, entity: SE) -> Generator[SE, None, None]:
         for isin in entity.get("isin"):
             cache_key = f"{self.MAPPING_URL}:ISIN:{isin}"
             query = [{"idType": "ID_ISIN", "idValue": isin}]
@@ -92,13 +91,13 @@ class OpenFIGIEnricher(Enricher[DS]):
                     security.add("type", item["securityType"])
                     yield security
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if entity.schema.is_a("Organization"):
             yield from self.match_organization(entity)
         if entity.schema.is_a("Security"):
             yield from self.match_security(entity)
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         if match.schema.is_a("Security"):
             yield match
         if match.schema.is_a("Organization"):

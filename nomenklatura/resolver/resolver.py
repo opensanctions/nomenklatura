@@ -21,16 +21,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import delete, insert, update
-from followthemoney.types import registry
+from followthemoney import registry, Statement, SE
 from followthemoney.util import PathLike
 
 from nomenklatura.db import get_engine
-from nomenklatura.entity import CE
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
 from nomenklatura.resolver.linker import Linker
-from nomenklatura.statement.statement import Statement
 
 
 log = logging.getLogger(__name__)
@@ -40,7 +38,7 @@ def timestamp() -> str:
     return utc_now().isoformat()[:28]
 
 
-class Resolver(Linker[CE]):
+class Resolver(Linker[SE]):
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(
@@ -131,7 +129,7 @@ class Resolver(Linker[CE]):
                         del self.nodes[node]
 
     @classmethod
-    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[CE]":
+    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[SE]":
         if engine is None:
             engine = get_engine()
         meta = MetaData()
@@ -192,7 +190,7 @@ class Resolver(Linker[CE]):
             raise RuntimeError("No transaction in progress.")
         return self._conn
 
-    def get_linker(self) -> Linker[CE]:
+    def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
         """

@@ -3,8 +3,8 @@ from rich.console import Console
 from rich.table import Table
 import yaml
 
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity as Entity
+from followthemoney import StatementEntity as Entity
+from followthemoney import Dataset
 
 
 class Check:
