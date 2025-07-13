@@ -53,6 +53,7 @@ dev = [
     "types-setuptools",
     "types-requests",
     "types-redis",
+    "types-PyYAML",
     "lxml-stubs",
     "requests-mock",
     "fakeredis",
