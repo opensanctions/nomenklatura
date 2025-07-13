@@ -1,9 +1,8 @@
 import re
 from normality import collapse_spaces
 from pathlib import Path
+from followthemoney import Dataset, StatementEntity
 
-from nomenklatura.dataset.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.regression_v1.model import RegressionV1
 from nomenklatura.resolver import Resolver
@@ -12,7 +11,7 @@ from nomenklatura.xref import xref
 
 
 def test_xref_candidates(
-    index_path: Path, resolver: Resolver[CompositeEntity], dstore: SimpleMemoryStore
+    index_path: Path, resolver: Resolver[StatementEntity], dstore: SimpleMemoryStore
 ):
     xref(resolver, dstore, index_path)
     view = dstore.default_view(external=True)
@@ -32,12 +31,12 @@ def test_xref_candidates(
 def test_xref_potential_conflicts(
     index_path: Path,
     test_dataset: Dataset,
-    resolver: Resolver[CompositeEntity],
+    resolver: Resolver[StatementEntity],
     capsys,
 ):
     resolver.begin()
     store = SimpleMemoryStore(test_dataset, resolver)
-    a = CompositeEntity.from_data(
+    a = StatementEntity.from_data(
         test_dataset,
         {
             "id": "a",
@@ -48,7 +47,7 @@ def test_xref_potential_conflicts(
             },
         },
     )
-    b = CompositeEntity.from_data(
+    b = StatementEntity.from_data(
         test_dataset,
         {
             "id": "b",
@@ -59,7 +58,7 @@ def test_xref_potential_conflicts(
             },
         },
     )
-    c = CompositeEntity.from_data(
+    c = StatementEntity.from_data(
         test_dataset,
         {
             "id": "c",

@@ -2,9 +2,8 @@ import logging
 from requests import Session
 from importlib import import_module
 from typing import Iterable, Generator, Optional, Type, cast
+from followthemoney import DS, SE
 
-from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.matching import DefaultAlgorithm
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -47,10 +46,10 @@ def make_enricher(
 # nk dedupe -i entities-with-matches.json -r resolver.json
 def match(
     enricher: Enricher[DS],
-    resolver: Resolver[CE],
-    entities: Iterable[CE],
+    resolver: Resolver[SE],
+    entities: Iterable[SE],
     config: Optional[ScoringConfig] = None,
-) -> Generator[CE, None, None]:
+) -> Generator[SE, None, None]:
     if config is None:
         config = ScoringConfig.defaults()
     for entity in entities:
@@ -75,8 +74,8 @@ def match(
 
 # nk enrich -i entities.json -r resolver.json -o combined.json
 def enrich(
-    enricher: Enricher[DS], resolver: Resolver[CE], entities: Iterable[CE]
-) -> Generator[CE, None, None]:
+    enricher: Enricher[DS], resolver: Resolver[SE], entities: Iterable[SE]
+) -> Generator[SE, None, None]:
     for entity in entities:
         try:
             for match in enricher.match_wrapped(entity):

@@ -3,9 +3,9 @@ from normality import collapse_spaces
 from typing import Any, Dict, Iterable, Generator, Optional
 
 from requests import Session
+from followthemoney import DS, SE
+from followthemoney import StatementEntity
 
-from nomenklatura.entity import CE
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 
@@ -25,7 +25,7 @@ class NominatimEnricher(Enricher[DS]):
         super().__init__(dataset, cache, config, session)
         self.cache.preload(f"{NOMINATIM}%")
 
-    def search_nominatim(self, address: CE) -> Iterable[Dict[str, Any]]:
+    def search_nominatim(self, address: StatementEntity) -> Iterable[Dict[str, Any]]:
         for full in address.get("full"):
             full_norm = collapse_spaces(full)
             params = {
@@ -42,7 +42,7 @@ class NominatimEnricher(Enricher[DS]):
                 # FIXME: only best result for now.
                 return
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.is_a("Address"):
             return
 
@@ -65,5 +65,5 @@ class NominatimEnricher(Enricher[DS]):
             addr.add("postalCode", addr_data.get("postcode"))
             yield addr
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         yield match

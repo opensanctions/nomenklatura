@@ -1,11 +1,9 @@
 import logging
 from typing import List, Optional, Type
-from followthemoney.schema import Schema
+from followthemoney import Schema, DS, SE
 from pathlib import Path
 
 from nomenklatura import Index
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -29,10 +27,10 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
 
 
 def xref(
-    resolver: Resolver[CE],
-    store: Store[DS, CE],
+    resolver: Resolver[SE],
+    store: Store[DS, SE],
     index_dir: Path,
-    index_type: Type[BaseIndex[DS, CE]] = Index,
+    index_type: Type[BaseIndex[DS, SE]] = Index,
     limit: int = 5000,
     limit_factor: int = 10,
     scored: bool = True,
@@ -87,11 +85,10 @@ def xref(
             if scored:
                 result = algorithm.compare(left, right, config)
                 score = result.score
+                if conflict_reporter is not None:
+                    conflict_reporter.check_match(result.score, left_id, right_id)
 
             scores.append(score)
-
-            if conflict_reporter is not None:
-                conflict_reporter.check_match(score, left_id, right_id)
 
             if len(left.datasets.intersection(right.datasets)) > 0:
                 score = score * discount_internal

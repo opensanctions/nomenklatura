@@ -4,13 +4,12 @@ import logging
 from banal import ensure_list
 from typing import Any, Generator, Optional, Dict, List
 from urllib.parse import urljoin
-from followthemoney.types import registry
+from followthemoney import registry, DS, SE
+from followthemoney import StatementEntity
 from followthemoney.namespace import Namespace
 from requests import Session
 from rigour.urls import build_url
 
-from nomenklatura.entity import CE, CompositeEntity
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentException
@@ -46,10 +45,10 @@ class YenteEnricher(Enricher[DS]):
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
 
-    def make_url(self, entity: CompositeEntity) -> str:
+    def make_url(self, entity: StatementEntity) -> str:
         return urljoin(self._api, f"entities/{entity.id}")
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.matchable:
             return
         url = urljoin(self._api, f"match/{self._yente_dataset}")
@@ -89,7 +88,7 @@ class YenteEnricher(Enricher[DS]):
                     raise
                 time.sleep((retry + 1) ** 2)
 
-    def _traverse_nested(self, entity: CE, response: Any) -> Generator[CE, None, None]:
+    def _traverse_nested(self, entity: SE, response: Any) -> Generator[SE, None, None]:
         entity = self.load_entity(entity, response)
         if self._ns is not None:
             entity = self._ns.apply(entity)
@@ -107,7 +106,7 @@ class YenteEnricher(Enricher[DS]):
                         value["properties"][reverse].append(entity.id)
                     yield from self._traverse_nested(entity, value)
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         url = self.make_url(match)
         for source_url in match.get("sourceUrl", quiet=True):
             if source_url.startswith(self._api):

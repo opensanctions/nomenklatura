@@ -4,11 +4,8 @@ from rigour.ids import StrictFormat
 from rigour.names import tokenize_name
 from rigour.names import remove_person_prefixes
 from rigour.names.org_types import replace_org_types_display
-from followthemoney.types import registry
-from followthemoney.property import Property
+from followthemoney import registry, Property, DS, SE
 
-from nomenklatura.dataset import DS
-from nomenklatura.entity import CE
 
 WORD_FIELD = "word"
 NAME_PART_FIELD = "namepart"
@@ -38,7 +35,7 @@ def normalize_name(name: Optional[str]) -> Optional[str]:
     return ascii_text(cleaned)
 
 
-class Tokenizer(Generic[DS, CE]):
+class Tokenizer(Generic[DS, SE]):
     def value(
         self, prop: Property, value: str
     ) -> Generator[Tuple[str, str], None, None]:
@@ -86,7 +83,7 @@ class Tokenizer(Generic[DS, CE]):
                     if len(word) >= 3:
                         yield WORD_FIELD, word
 
-    def entity(self, entity: CE) -> Generator[Tuple[str, str], None, None]:
+    def entity(self, entity: SE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0
         for prop, value in entity.itervalues():
             for field, token in self.value(prop, value):

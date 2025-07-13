@@ -7,16 +7,14 @@ from itertools import product
 from typing import cast, Set, Generator, Optional, Dict, Any
 from urllib.parse import urljoin
 
-from followthemoney.types import registry
+from followthemoney import StatementEntity, registry, DS, SE
 from lxml import etree
 from requests import Session
 
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import DS
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
 from nomenklatura.matching.compat import fingerprint_name
-from nomenklatura.entity import CE, CompositeEntity
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ class PermIDEnricher(Enricher[DS]):
             log.warning("PermID has no API token (%s)" % token_var)
         self.quota_exceeded = False
 
-    def entity_to_queries(self, entity: CompositeEntity) -> bytes:
+    def entity_to_queries(self, entity: StatementEntity) -> bytes:
         names = entity.get_type_values(registry.name, matchable=True)
         countries = entity.get("jurisdiction", quiet=True)
         if not len(countries):
@@ -111,7 +109,7 @@ class PermIDEnricher(Enricher[DS]):
             self.http_remove_cache(url, params=params)
             return None
 
-    def fetch_perm_org(self, entity: CE, url: str) -> Optional[CE]:
+    def fetch_perm_org(self, entity: SE, url: str) -> Optional[SE]:
         res = self.fetch_permid(url)
         if res is None:
             return None
@@ -161,7 +159,7 @@ class PermIDEnricher(Enricher[DS]):
                 match.add("topics", "corp.public")
         return match
 
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         if self.quota_exceeded:
             return
         if not entity.schema.is_a("Organization"):
@@ -199,5 +197,5 @@ class PermIDEnricher(Enricher[DS]):
             self.quota_exceeded = True
             log.warning("PermID quota exceeded: %s", exc)
 
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         yield match

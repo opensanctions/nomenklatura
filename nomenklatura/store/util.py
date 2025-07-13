@@ -1,7 +1,7 @@
 import orjson
 
-from nomenklatura.statement import Statement
-from nomenklatura.util import pack_prop, unpack_prop
+from followthemoney import Statement
+from followthemoney.statement.util import pack_prop, unpack_prop
 
 
 def pack_statement(stmt: Statement) -> bytes:

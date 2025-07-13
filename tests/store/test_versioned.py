@@ -1,16 +1,14 @@
 import orjson
 import fakeredis
 from pathlib import Path
-from followthemoney import model
+from followthemoney import model, Dataset, StatementEntity as Entity
 from datetime import datetime
+from rigour.time import datetime_iso
 
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.versioned import VersionedRedisStore
-from nomenklatura.dataset import Dataset
-from nomenklatura.entity import CompositeEntity
-from nomenklatura.util import datetime_iso
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 PERSON = {
@@ -26,13 +24,13 @@ PERSON_EXT = {
 }
 
 
-def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+def test_store_basics(test_dataset: Dataset, resolver: Resolver[Entity]):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = VersionedRedisStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).statements())) == 0
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
-    entity_ext = CompositeEntity.from_data(test_dataset, PERSON_EXT)
+    entity = Entity.from_data(test_dataset, PERSON)
+    entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
     ts = datetime_iso(datetime.now())
@@ -63,7 +61,7 @@ def test_store_basics(test_dataset: Dataset, resolver: Resolver[CompositeEntity]
 
 
 def test_graph_query(
-    donations_path: Path, test_dataset: Dataset, resolver: Resolver[CompositeEntity]
+    donations_path: Path, test_dataset: Dataset, resolver: Resolver[Entity]
 ):
     resolver.begin()
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
@@ -73,7 +71,7 @@ def test_graph_query(
         with open(donations_path, "rb") as fh:
             while line := fh.readline():
                 data = orjson.loads(line)
-                proxy = CompositeEntity.from_data(test_dataset, data)
+                proxy = Entity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
         writer.release()
 
@@ -98,7 +96,7 @@ def test_graph_query(
     assert model.get("Address") in schemata, set(schemata)
     assert model.get("Company") not in schemata, set(schemata)
 
-    ext_entity = CompositeEntity.from_data(test_dataset, PERSON)
+    ext_entity = Entity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
             stmt.external = True
@@ -119,11 +117,11 @@ def test_graph_query(
     assert len(list(entity.statements)) == len(list(ext_entity.statements))
 
 
-def test_versioning(test_dataset: Dataset, resolver: Resolver[CompositeEntity]):
+def test_versioning(test_dataset: Dataset, resolver: Resolver[Entity]):
     store = VersionedRedisStore(test_dataset, resolver)
     assert store.get_latest(test_dataset.name) is None
     assert len(store.get_history(test_dataset.name)) == 0
-    entity = CompositeEntity.from_data(test_dataset, PERSON)
+    entity = Entity.from_data(test_dataset, PERSON)
     version_a = Version.new().id
     assert not store.has_version(test_dataset.name, version_a)
     with store.writer(version=version_a) as writer:

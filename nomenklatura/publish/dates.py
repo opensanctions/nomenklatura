@@ -1,14 +1,13 @@
 from functools import cache
 from typing import Iterable, List, Tuple
-from followthemoney.types import registry
+from followthemoney import registry, SE
 
-from nomenklatura.entity import CE
 
 PROV_MIN_DATES = ("createdAt", "authoredAt", "publishedAt")
 PROV_MAX_DATES = ("modifiedAt", "retrievedAt")
 
 
-def simplify_dates(entity: CE) -> CE:
+def simplify_dates(entity: SE) -> SE:
     """If an entity has multiple values for a date field, you may
     want to remove all those that are prefixes of others. For example,
     if a Person has both a birthDate of 1990 and of 1990-05-01, we'd

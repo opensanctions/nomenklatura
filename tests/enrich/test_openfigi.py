@@ -1,8 +1,7 @@
 import requests_mock
+from followthemoney import Dataset, StatementEntity
 from nomenklatura.cache import Cache
-from nomenklatura.dataset import Dataset
 from nomenklatura.enrich import make_enricher, Enricher
-from nomenklatura.entity import CompositeEntity
 
 
 PATH = "nomenklatura.enrich.openfigi:OpenFIGIEnricher"
@@ -54,7 +53,7 @@ def test_figi_match():
             "id": "xxx",
             "properties": {"name": ["Bank of Russia"]},
         }
-        ent = CompositeEntity.from_data(dataset, data)
+        ent = StatementEntity.from_data(dataset, data)
         m_results = list(enricher.match(ent))
         assert len(m_results) == 2, m_results
         m1 = m_results[0]

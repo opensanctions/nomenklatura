@@ -1,34 +1,31 @@
 from types import TracebackType
 from typing import Optional, Generator, List, Tuple, Generic, Type, cast
-from followthemoney.property import Property
-from followthemoney.types import registry
+from followthemoney import registry, Property, DS, Statement
+from followthemoney import StatementEntity, SE
 
-from nomenklatura.dataset import DS
 from nomenklatura.resolver import Linker, StrIdent
-from nomenklatura.statement import Statement
-from nomenklatura.entity import CE, CompositeEntity
 
 
-class Store(Generic[DS, CE]):
+class Store(Generic[DS, SE]):
     """A data storage and retrieval mechanism for statement-based entity data.
     Essentially, this is a triple store which can be implemented using various
     backends."""
 
-    def __init__(self, dataset: DS, linker: Linker[CE]):
+    def __init__(self, dataset: DS, linker: Linker[SE]):
         self.dataset = dataset
         self.linker = linker
-        self.entity_class = cast(Type[CE], CompositeEntity)
+        self.entity_class = cast(Type[SE], StatementEntity)
 
-    def writer(self) -> "Writer[DS, CE]":
+    def writer(self) -> "Writer[DS, SE]":
         raise NotImplementedError()
 
-    def view(self, scope: DS, external: bool = False) -> "View[DS, CE]":
+    def view(self, scope: DS, external: bool = False) -> "View[DS, SE]":
         raise NotImplementedError()
 
-    def default_view(self, external: bool = False) -> "View[DS, CE]":
+    def default_view(self, external: bool = False) -> "View[DS, SE]":
         return self.view(self.dataset, external=external)
 
-    def assemble(self, statements: List[Statement]) -> Optional[CE]:
+    def assemble(self, statements: List[Statement]) -> Optional[SE]:
         if not len(statements):
             return None
         for stmt in statements:
@@ -54,16 +51,16 @@ class Store(Generic[DS, CE]):
         return f"<{type(self).__name__}({self.dataset.name!r})>"
 
 
-class Writer(Generic[DS, CE]):
+class Writer(Generic[DS, SE]):
     """Bulk writing operations."""
 
-    def __init__(self, store: Store[DS, CE]):
+    def __init__(self, store: Store[DS, SE]):
         self.store = store
 
     def add_statement(self, stmt: Statement) -> None:
         raise NotImplementedError()
 
-    def add_entity(self, entity: CE) -> None:
+    def add_entity(self, entity: SE) -> None:
         for stmt in entity.statements:
             self.add_statement(stmt)
 
@@ -76,7 +73,7 @@ class Writer(Generic[DS, CE]):
     def close(self) -> None:
         self.store.close()
 
-    def __enter__(self) -> "Writer[DS, CE]":
+    def __enter__(self) -> "Writer[DS, SE]":
         return self
 
     def __exit__(
@@ -91,8 +88,8 @@ class Writer(Generic[DS, CE]):
         return f"<{type(self).__name__}({self.store!r})>"
 
 
-class View(Generic[DS, CE]):
-    def __init__(self, store: Store[DS, CE], scope: DS, external: bool = False):
+class View(Generic[DS, SE]):
+    def __init__(self, store: Store[DS, SE], scope: DS, external: bool = False):
         self.store = store
         self.scope = scope
         self.dataset_names = scope.leaf_names
@@ -101,15 +98,15 @@ class View(Generic[DS, CE]):
     def has_entity(self, id: str) -> bool:
         raise NotImplementedError()
 
-    def get_entity(self, id: str) -> Optional[CE]:
+    def get_entity(self, id: str) -> Optional[SE]:
         raise NotImplementedError()
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, CE], None, None]:
+    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         raise NotImplementedError()
 
     def get_adjacent(
-        self, entity: CE, inverted: bool = True
-    ) -> Generator[Tuple[Property, CE], None, None]:
+        self, entity: SE, inverted: bool = True
+    ) -> Generator[Tuple[Property, SE], None, None]:
         for prop, value in entity.itervalues():
             if prop.type == registry.entity:
                 child = self.get_entity(value)
@@ -120,7 +117,7 @@ class View(Generic[DS, CE]):
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
-    def entities(self) -> Generator[CE, None, None]:
+    def entities(self) -> Generator[SE, None, None]:
         raise NotImplementedError()
 
     def __repr__(self) -> str:

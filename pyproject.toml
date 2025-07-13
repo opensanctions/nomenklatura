@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nomenklatura"
-version = "3.17.3"
+version = "3.17.5"
 description = "Make record linkages in followthemoney data."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -18,17 +18,16 @@ classifiers = [
 ]
 requires-python = ">= 3.11"
 dependencies = [
-    "followthemoney >= 3.8.1, < 4.0.0",
-    "rigour >= 0.13.0, < 1.0.0",
+    "followthemoney >= 4.0.0, < 5.0.0",
+    "rigour >= 1.0.0, < 2.0.0",
     "shortuuid >= 1.0.11, < 2.0.0",
-    "jellyfish >= 1.0.0, < 2.0.0",
     "rich >= 13.0.0, < 15.0.0",
     "textual >= 3.0.0, < 4.0.0",
     "sqlalchemy >= 2.0.0",
-    "scikit-learn == 1.6.1",
+    "scikit-learn == 1.7.0",
     "pydantic > 2.0.0, < 3.0.0",
     "click < 9.0.0",
-    "lxml > 4.0.0, < 6.0.0",
+    "lxml > 4.0.0, < 7.0.0",
 ]
 
 [project.urls]
@@ -53,15 +52,16 @@ dev = [
     "types-setuptools",
     "types-requests",
     "types-redis",
+    "types-PyYAML",
     "lxml-stubs",
     "requests-mock",
     "fakeredis",
     "plyvel < 2.0.0",
-    "redis > 5.0.0, < 6.0.0",
+    "redis > 5.0.0, < 7.0.0",
     "psycopg2-binary",
 ]
 leveldb = ["plyvel < 2.0.0"]
-redis = ["redis > 5.0.0, < 6.0.0"]
+redis = ["redis > 5.0.0, < 7.0.0"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["nomenklatura", "LICENSE", "README.md"]

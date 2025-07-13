@@ -1,20 +1,18 @@
 import os
 import json
 import logging
-import time
 import traceback
 from banal import as_bool
 from typing import Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException, ChunkedEncodingError
-from followthemoney.types import registry
+from followthemoney import DS, registry
+from followthemoney import StatementEntity, SE
 from followthemoney.types.topic import TopicType
 from rigour.urls import build_url, ParamsType
 
 from nomenklatura import __version__
-from nomenklatura.entity import CE, CompositeEntity
-from nomenklatura.dataset import DS
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
 
@@ -53,7 +51,7 @@ class BaseEnricher(Generic[DS]):
     def get_config_bool(self, name: str, default: Union[bool, str] = False) -> int:
         return as_bool(self.config.get(name, default))
 
-    def _filter_entity(self, entity: CompositeEntity) -> bool:
+    def _filter_entity(self, entity: StatementEntity) -> bool:
         """Check if the given entity should be filtered out. Filters
         can be applied by schema or by topic."""
         if len(self._filter_schemata):
@@ -150,7 +148,10 @@ class Enricher(BaseEnricher[DS], ABC):
                 # urllib3's Retry strategy will not retry on chunked encoding errors.
                 # Since urllib won't retry it, retry it here.
                 # urllib does close the connection.
-                if "Response ended prematurely" in str(rex) and retry_chunked_encoding_error > 0:
+                if (
+                    "Response ended prematurely" in str(rex)
+                    and retry_chunked_encoding_error > 0
+                ):
                     log.info("Retrying due to chunked encoding error: %s", rex)
                     return self.http_post_json_cached(
                         url,
@@ -177,39 +178,39 @@ class Enricher(BaseEnricher[DS], ABC):
         return resp_data
 
     def _make_data_entity(
-        self, entity: CE, data: Dict[str, Any], cleaned: bool = True
-    ) -> CE:
-        """Create an entity which is of the same sub-type of CE as the given
+        self, entity: SE, data: Dict[str, Any], cleaned: bool = True
+    ) -> SE:
+        """Create an entity which is of the same sub-type of SE as the given
         query entity."""
         return type(entity).from_data(self.dataset, data, cleaned=cleaned)
 
-    def load_entity(self, entity: CE, data: Dict[str, Any]) -> CE:
+    def load_entity(self, entity: SE, data: Dict[str, Any]) -> SE:
         proxy = self._make_data_entity(entity, data, cleaned=False)
         for prop in proxy.iterprops():
             if prop.stub:
                 proxy.pop(prop)
         return proxy
 
-    def make_entity(self, entity: CE, schema: str) -> CE:
+    def make_entity(self, entity: SE, schema: str) -> SE:
         """Create a new entity of the given schema."""
         return self._make_data_entity(entity, {"schema": schema})
 
-    def match_wrapped(self, entity: CE) -> Generator[CE, None, None]:
+    def match_wrapped(self, entity: SE) -> Generator[SE, None, None]:
         if not self._filter_entity(entity):
             return
         yield from self.match(entity)
 
-    def expand_wrapped(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand_wrapped(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         if not self._filter_entity(entity):
             return
         yield from self.expand(entity, match)
 
     @abstractmethod
-    def match(self, entity: CE) -> Generator[CE, None, None]:
+    def match(self, entity: SE) -> Generator[SE, None, None]:
         raise NotImplementedError()
 
     @abstractmethod
-    def expand(self, entity: CE, match: CE) -> Generator[CE, None, None]:
+    def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         raise NotImplementedError()
 
     def close(self) -> None:
