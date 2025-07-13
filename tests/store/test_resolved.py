@@ -5,12 +5,12 @@ from pathlib import Path
 from followthemoney import model, Dataset
 from followthemoney import StatementEntity as Entity
 from datetime import datetime
+from rigour.time import datetime_iso
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.resolved import ResolvedStore
-from nomenklatura.util import datetime_iso
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
 PERSON = {

@@ -4,10 +4,10 @@ from typing import Any, Generator, List, Optional, Set, Tuple, Dict
 
 import plyvel  # type: ignore
 from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney.statement.util import pack_prop, unpack_prop
 
 from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.util import pack_prop, unpack_prop
 
 
 def b(s: str) -> bytes:

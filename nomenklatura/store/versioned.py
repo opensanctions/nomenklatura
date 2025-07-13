@@ -3,12 +3,12 @@ import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Set, Tuple, Dict
 from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney.statement.util import pack_prop, unpack_prop
 
 from nomenklatura.kv import b, bv, get_redis, close_redis
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Linker, Identifier, StrIdent
 from nomenklatura.store.base import Store, View, Writer
-from nomenklatura.util import pack_prop, unpack_prop
 
 log = logging.getLogger(__name__)
 
