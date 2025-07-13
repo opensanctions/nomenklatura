@@ -9,6 +9,7 @@ from nomenklatura.matching import DefaultAlgorithm
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
 from nomenklatura.judgement import Judgement
+from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.resolver import Resolver
 
 log = logging.getLogger(__name__)
@@ -44,8 +45,13 @@ def make_enricher(
 # then:
 # nk dedupe -i entities-with-matches.json -r resolver.json
 def match(
-    enricher: Enricher[DS], resolver: Resolver[SE], entities: Iterable[SE]
+    enricher: Enricher[DS],
+    resolver: Resolver[SE],
+    entities: Iterable[SE],
+    config: Optional[ScoringConfig] = None,
 ) -> Generator[SE, None, None]:
+    if config is None:
+        config = ScoringConfig.defaults()
     for entity in entities:
         yield entity
         try:
@@ -56,7 +62,7 @@ def match(
                     continue
                 if not entity.schema.can_match(match.schema):
                     continue
-                result = DefaultAlgorithm.compare(entity, match)
+                result = DefaultAlgorithm.compare(entity, match, config)
                 log.info("Match [%s]: %.2f -> %s", entity, result.score, match)
                 resolver.suggest(entity.id, match.id, result.score)
                 match.datasets.add(enricher.dataset.name)
