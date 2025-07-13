@@ -1,7 +1,6 @@
 from banal import hash_data, ensure_list
 from typing import List, TypedDict, Dict, Union
-from followthemoney.proxy import EntityProxy
-from followthemoney import model
+from followthemoney import EntityProxy
 import pytest
 
 from nomenklatura.matching.logic_v2.model import LogicV2
@@ -249,7 +248,7 @@ def _make_entity(schema: str, data: Props) -> EntityProxy:
     entity_id = hash_data((schema, data))
     props = {k: ensure_list(v) for k, v in data.items()}
     entity = {"schema": schema, "id": entity_id, "properties": props}
-    return EntityProxy.from_dict(model, entity, cleaned=False)
+    return EntityProxy.from_dict(entity, cleaned=False)
 
 
 @pytest.mark.parametrize("case", CASES)
