@@ -1,6 +1,6 @@
 from typing import List, Optional, Set
 from rigour.names import NameTypeTag, Name, NamePart
-from rigour.names import align_person_name_order
+from rigour.names import align_person_name_order, normalize_name
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -11,7 +11,7 @@ from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
-from nomenklatura.matching.logic_v2.names.util import Match, normalize_name
+from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.logic_v2.util import penalize
 from nomenklatura.matching.types import FtResult, ScoringConfig
 
@@ -61,9 +61,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
 
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
-                alignment = align_person_name_order(query_rem, result_rem)
-                query_rem = alignment.query_sorted + alignment.query_extra
-                result_rem = alignment.result_sorted + alignment.result_extra
+                query_rem, result_rem = align_person_name_order(query_rem, result_rem)
             else:
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
@@ -88,7 +86,8 @@ def _get_object_names(entity: EntityProxy) -> Set[str]:
     names = entity.get_type_values(registry.name, matchable=True)
     if not names:
         return set()
-    return set([normalize_name(name) for name in names])
+    normalized = [normalize_name(name) for name in names]
+    return set([n for n in normalized if n is not None])
 
 
 def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:

@@ -179,8 +179,8 @@ class Feature(BaseModel):
             func = cast(FeatureCompareConfigured, self.func)
             return func(query, result, config)
         else:
-            func = cast(FeatureCompareFunction, self.func)
-            return func(query, result)
+            func = cast(FeatureCompareFunction, self.func)  # type: ignore
+            return func(query, result)  # type: ignore
 
 
 class HeuristicAlgorithm(ScoringAlgorithm):

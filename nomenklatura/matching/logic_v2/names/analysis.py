@@ -2,12 +2,10 @@ from typing import Set
 from rigour.names import NameTypeTag, NamePartTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
 from rigour.names import remove_person_prefixes, remove_org_prefixes
-from rigour.names import tag_org_name, tag_person_name
+from rigour.names import tag_org_name, tag_person_name, normalize_name
 from followthemoney.proxy import EntityProxy
 from followthemoney.schema import Schema
 from followthemoney.types import registry
-
-from nomenklatura.matching.logic_v2.names.util import normalize_name
 
 PROP_MAPPINGS = (
     ("firstName", NamePartTag.GIVEN),

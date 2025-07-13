@@ -4,7 +4,7 @@ from itertools import zip_longest, chain
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein
 from rigour.names import NamePart, is_stopword
-from rigour.text.distance import dam_levenshtein, levenshtein
+from rigour.text.distance import levenshtein
 from nomenklatura.matching.logic_v2.names.magic import PART_WEIGHTS
 from nomenklatura.matching.logic_v2.names.util import Match
 
@@ -20,25 +20,6 @@ SIMILAR_PAIRS = [
     ("c", "k"),
 ]
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
-
-
-def levenshtein_similarity(query: str, result: str) -> float:
-    if len(query) == 0 or len(result) == 0:
-        return 0.0
-    if query == result:
-        return 1.0
-    max_len = max(len(query), len(result))
-    max_edits = math.floor(math.log(max(max_len - 2, 1)))
-    if max_edits < 1:
-        return 0.0
-    distance = dam_levenshtein(query, result, max_edits=max_edits)
-    if distance > max_edits:
-        return 0.0
-    score = 1 - (distance / max_len)
-    score = score**2
-    if score < 0.5:
-        score = 0.0
-    return score
 
 
 def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
