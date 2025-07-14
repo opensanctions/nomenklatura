@@ -133,7 +133,7 @@ def test_versioning(test_dataset: Dataset, resolver: Resolver[Entity]):
     assert store.has_version(test_dataset.name, version_a)
     assert store.get_latest(test_dataset.name) == version_a
     assert len(store.get_history(test_dataset.name)) == 1
-    version_b = Version.new().id
+    version_b = Version.new().id + "x"
     with store.writer(version=version_b) as writer:
         writer.add_entity(entity)
         writer.flush()
