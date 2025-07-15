@@ -55,7 +55,12 @@ class LevelDBStore(Store[DS, SE]):
     def __init__(self, dataset: DS, linker: Linker[SE], path: Path):
         super().__init__(dataset, linker)
         self.path = path
-        self.db = plyvel.DB(path.as_posix(), create_if_missing=True)
+        self.db = plyvel.DB(
+            path.as_posix(),
+            create_if_missing=True,
+            write_buffer_size=64 * 1024 * 1024,
+            max_open_files=2000,
+        )
 
     def writer(self) -> Writer[DS, SE]:
         return LevelDBWriter(self)
@@ -68,7 +73,7 @@ class LevelDBStore(Store[DS, SE]):
 
 
 class LevelDBWriter(Writer[DS, SE]):
-    BATCH_STATEMENTS = 50_000
+    BATCH_STATEMENTS = 100_000
 
     def __init__(self, store: LevelDBStore[DS, SE]):
         self.store: LevelDBStore[DS, SE] = store

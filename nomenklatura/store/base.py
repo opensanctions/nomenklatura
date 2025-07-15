@@ -2,6 +2,7 @@ from types import TracebackType
 from typing import Optional, Generator, List, Tuple, Generic, Type, cast
 from followthemoney import registry, Property, DS, Statement
 from followthemoney import StatementEntity, SE
+from followthemoney.statement.util import get_prop_type
 
 from nomenklatura.resolver import Linker, StrIdent
 
@@ -29,7 +30,7 @@ class Store(Generic[DS, SE]):
         if not len(statements):
             return None
         for stmt in statements:
-            if stmt.prop_type == registry.entity.name:
+            if get_prop_type(stmt.schema, stmt.prop) == registry.entity.name:
                 stmt.value = self.linker.get_canonical(stmt.value)
         entity = self.entity_class.from_statements(self.dataset, statements)
         if entity.id is not None:
