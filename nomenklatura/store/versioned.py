@@ -2,7 +2,7 @@ import orjson
 import logging
 from redis.client import Redis
 from typing import Generator, List, Optional, Set, Tuple, Dict
-from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney import DS, SE, Schema, registry, Property, Statement
 from followthemoney.statement.util import pack_prop, unpack_prop
 
 from nomenklatura.kv import b, bv, get_redis, close_redis
@@ -335,7 +335,7 @@ class VersionedRedisView(View[DS, SE]):
                         stmt = self.store.linker.apply_statement(stmt)
                     yield stmt
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return
         if len(self.vers) == 1:
@@ -363,6 +363,8 @@ class VersionedRedisView(View[DS, SE]):
                     seen.add(canonical_id)
                 entity = self.get_entity(entity_id)
                 if entity is not None:
+                    if len(schemata) and entity.schema not in schemata:
+                        continue
                     yield entity
         finally:
             if len(self.vers) > 1:

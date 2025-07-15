@@ -64,6 +64,11 @@ def test_get_entity(dstore: SimpleMemoryStore):
     ds = entity.datasets.pop()
     assert "donations" in ds, ds
 
+    assert len(list(view.entities())) == 474
+    schema = model.get("Address")
+    assert schema is not None, schema
+    assert len(list(view.entities(schemata=[schema]))) == 89
+
     adjacent = list(view.get_adjacent(entity))
     assert len(adjacent) == 10, len(adjacent)
     schemata = [e.schema for (_, e) in adjacent]

@@ -1,6 +1,6 @@
 from types import TracebackType
 from typing import Optional, Generator, List, Tuple, Generic, Type, cast
-from followthemoney import registry, Property, DS, Statement
+from followthemoney import Schema, registry, Property, DS, Statement
 from followthemoney import StatementEntity, SE
 from followthemoney.statement.util import get_prop_type
 
@@ -118,7 +118,10 @@ class View(Generic[DS, SE]):
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
+        """Iterate over all entities in the view. If `schemata` is provided, only entities
+        of the provided schemata will be returned. Not that `schemata` will not be expanded
+        via "is_a" relationships. If `schemata` is empty, all entities will be returned."""
         raise NotImplementedError()
 
     def __repr__(self) -> str:

@@ -7,16 +7,20 @@
 # * Not calling a helper to byte-encode values.
 # * Not having a helper method for building entities.
 import orjson
+import logging
 from pathlib import Path
 from typing import Any, Generator, List, Optional, Set, Tuple
 from rigour.env import ENCODING as E
 
 import plyvel  # type: ignore
-from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney import model, DS, SE, Schema, registry, Property, Statement
+from followthemoney.exc import InvalidData
 from followthemoney.statement.util import get_prop_type
 
 from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
+
+log = logging.getLogger(__name__)
 
 
 def unpack_statement(
@@ -184,9 +188,11 @@ class LevelDBView(View[DS, SE]):
                     if value == id and prop.reverse is not None:
                         yield prop.reverse, entity
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
         with self.store.db.iterator(prefix=b"s:", fill_cache=False) as it:
             current_id: Optional[str] = None
+            current_schema: Optional[Schema] = None
+            current_fail: bool = False
             statements: List[Statement] = []
             for k, v in it:
                 keys = k.decode(E).split(":")
@@ -195,16 +201,38 @@ class LevelDBView(View[DS, SE]):
                     continue
                 if dataset not in self.dataset_names:
                     continue
-                # canonical_id = self.store.linker.get_canonical(canonical_id)
                 if canonical_id != current_id:
-                    if len(statements) > 0:
+                    if len(schemata) and current_schema not in schemata:
+                        statements = []
+                    if len(statements) > 0 and not current_fail:
                         entity = self.store.assemble(statements)
                         if entity is not None:
                             yield entity
                     current_id = canonical_id
+                    current_schema = None
+                    current_fail = False
                     statements = []
+
+                # TODO: is this really bad performance-wise when schemata is empty?
+                if current_schema is None:
+                    current_schema = model.get(schema)
+                    if current_schema is None:
+                        log.error("Unknown schema %r: %s", (schema, current_id))
+                        current_fail = True
+                        continue
+                elif current_schema.name != schema:
+                    try:
+                        current_schema = model.common_schema(current_schema, schema)
+                    except InvalidData as inv:
+                        msg = "Invalid schema %s for %r: %s" % (schema, current_id, inv)
+                        log.error(msg)
+                        current_fail = True
+                        continue
+
                 statements.append(unpack_statement(keys, v))
-            if len(statements) > 0:
+            if len(schemata) and current_schema not in schemata:
+                statements = []
+            if len(statements) > 0 and not current_fail:
                 entity = self.store.assemble(statements)
                 if entity is not None:
                     yield entity

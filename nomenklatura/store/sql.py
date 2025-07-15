@@ -1,6 +1,6 @@
 from typing import Any, Generator, List, Optional, Set, Tuple
 
-from followthemoney import DS, SE, Property, Statement
+from followthemoney import DS, SE, Property, Schema, Statement
 from sqlalchemy import Table, delete, func, select
 from sqlalchemy.engine import Engine, Transaction, create_engine
 from sqlalchemy.dialects.postgresql import insert as psql_insert
@@ -208,9 +208,12 @@ class SQLView(View[DS, SE]):
                         if value == id and prop.reverse is not None:
                             yield prop.reverse, entity
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)
         q = q.where(table.c.dataset.in_(self.dataset_names))
         q = q.order_by(table.c.canonical_id)
-        yield from self.store._iterate(q, stream=True)
+        for entity in self.store._iterate(q, stream=True):
+            if len(schemata) and entity.schema not in schemata:
+                continue
+            yield entity

@@ -1,6 +1,6 @@
 from redis.client import Redis, Pipeline
 from typing import Generator, List, Optional, Set, Tuple
-from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney import DS, SE, Schema, registry, Property, Statement
 
 from nomenklatura.kv import get_redis, close_redis, b
 from nomenklatura.resolver import Linker
@@ -117,7 +117,7 @@ class RedisView(View[DS, SE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
         scope_name = b(f"ds:{self.scope.name}")
         if self.scope.is_collection:
             parts = [b(f"ds:{d}") for d in self.scope.leaf_names]
@@ -126,4 +126,6 @@ class RedisView(View[DS, SE]):
         for id in self.store.db.sscan_iter(scope_name):
             entity = self.get_entity(id.decode("utf-8"))
             if entity is not None:
+                if len(schemata) and entity.schema not in schemata:
+                    continue
                 yield entity

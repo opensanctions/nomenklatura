@@ -1,5 +1,5 @@
 from typing import Dict, Set, List, Optional, Generator, Tuple
-from followthemoney import DS, SE, registry, Property, Statement
+from followthemoney import DS, SE, Schema, registry, Property, Statement
 
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.resolver import Linker
@@ -90,11 +90,13 @@ class MemoryView(View[DS, SE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self) -> Generator[SE, None, None]:
+    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
         entity_ids: Set[str] = set()
         for scope in self.dataset_names:
             entity_ids.update(self.store.entities.get(scope, []))
         for entity_id in entity_ids:
             entity = self.get_entity(entity_id)
             if entity is not None:
+                if len(schemata) and entity.schema not in schemata:
+                    continue
                 yield entity
