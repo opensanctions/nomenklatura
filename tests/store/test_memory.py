@@ -67,7 +67,7 @@ def test_get_entity(dstore: SimpleMemoryStore):
     assert len(list(view.entities())) == 474
     schema = model.get("Address")
     assert schema is not None, schema
-    assert len(list(view.entities(schemata=[schema]))) == 89
+    assert len(list(view.entities(include_schemata=[schema]))) == 89
 
     adjacent = list(view.get_adjacent(entity))
     assert len(adjacent) == 10, len(adjacent)

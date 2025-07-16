@@ -66,7 +66,7 @@ def test_leveldb_graph_query(
 
     schema = model.get("Address")
     assert schema is not None, schema
-    assert len(list(tview.entities(schemata=[schema]))) == 89
+    assert len(list(tview.entities(include_schemata=[schema]))) == 89
 
     view = store.default_view()
     entity = view.get_entity("banana")
