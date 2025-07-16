@@ -188,7 +188,7 @@ class LevelDBView(View[DS, SE]):
                     if value == id and prop.reverse is not None:
                         yield prop.reverse, entity
 
-    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
+    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
         with self.store.db.iterator(prefix=b"s:", fill_cache=False) as it:
             current_id: Optional[str] = None
             current_schema: Optional[Schema] = None
@@ -197,12 +197,15 @@ class LevelDBView(View[DS, SE]):
             for k, v in it:
                 keys = k.decode(E).split(":")
                 _, canonical_id, ext, dataset, schema, _ = keys
+
                 if ext == "x" and not self.external:
                     continue
                 if dataset not in self.dataset_names:
                     continue
+
+                # If we're seeing a new canonical ID, yield the previous entity
                 if canonical_id != current_id:
-                    if len(schemata) and current_schema not in schemata:
+                    if include_schemata is not None and current_schema not in include_schemata:
                         statements = []
                     if len(statements) > 0 and not current_fail:
                         entity = self.store.assemble(statements)
@@ -213,24 +216,33 @@ class LevelDBView(View[DS, SE]):
                     current_fail = False
                     statements = []
 
-                # TODO: is this really bad performance-wise when schemata is empty?
-                if current_schema is None:
-                    current_schema = model.get(schema)
+                # If we're not filtering on schemata, we can skip the expensive-ish schema building here
+                # The checking is done by store.assemble() anyway
+                if include_schemata is not None:
                     if current_schema is None:
-                        log.error("Unknown schema %r: %s", (schema, current_id))
-                        current_fail = True
-                        continue
-                elif current_schema.name != schema:
-                    try:
-                        current_schema = model.common_schema(current_schema, schema)
-                    except InvalidData as inv:
-                        msg = "Invalid schema %s for %r: %s" % (schema, current_id, inv)
-                        log.error(msg)
-                        current_fail = True
-                        continue
+                        current_schema = model.get(schema)
+                        # If the statement is of an unknown schema
+                        if current_schema is None:
+                            log.error("Unknown schema %r: %s", (schema, current_id))
+                            # Mark the entity as failed, but we need to iterate through the rest of the statements
+                            current_fail = True
+                            continue
+                    # If the schema of the statement does not exactly match the schema of the current entity,
+                    # find a common parent schema.
+                    elif current_schema.name != schema:
+                        try:
+                            current_schema = model.common_schema(current_schema, schema)
+                        except InvalidData as inv:
+                            msg = "Invalid schema %s for %r: %s" % (schema, current_id, inv)
+                            log.error(msg)
+                            # Mark the entity as failed, but we need to iterate through the rest of the statements
+                            current_fail = True
+                            continue
 
                 statements.append(unpack_statement(keys, v))
-            if len(schemata) and current_schema not in schemata:
+
+            # Handle the last entity at the end of the iterator
+            if include_schemata is not None and current_schema not in include_schemata:
                 statements = []
             if len(statements) > 0 and not current_fail:
                 entity = self.store.assemble(statements)

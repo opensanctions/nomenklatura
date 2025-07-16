@@ -118,10 +118,12 @@ class View(Generic[DS, SE]):
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
-    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
-        """Iterate over all entities in the view. If `schemata` is provided, only entities
-        of the provided schemata will be returned. Not that `schemata` will not be expanded
-        via "is_a" relationships. If `schemata` is empty, all entities will be returned."""
+    def entities(self, include_schemata: List[Schema] = []) -> Generator[SE, None, None]:
+        """Iterate over all entities in the view.
+
+        If `include_schemata` is provided, only entities of the provided schemata will be returned.
+        Note that `schemata` will not be expanded via "is_a" relationships."""
+
         raise NotImplementedError()
 
     def __repr__(self) -> str:

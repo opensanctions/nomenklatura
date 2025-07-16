@@ -90,13 +90,13 @@ class MemoryView(View[DS, SE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
+    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
         entity_ids: Set[str] = set()
         for scope in self.dataset_names:
             entity_ids.update(self.store.entities.get(scope, []))
         for entity_id in entity_ids:
             entity = self.get_entity(entity_id)
             if entity is not None:
-                if len(schemata) and entity.schema not in schemata:
+                if include_schemata is not None and entity.schema not in include_schemata:
                     continue
                 yield entity

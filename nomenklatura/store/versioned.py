@@ -335,7 +335,7 @@ class VersionedRedisView(View[DS, SE]):
                         stmt = self.store.linker.apply_statement(stmt)
                     yield stmt
 
-    def entities(self, schemata: List[Schema] = []) -> Generator[SE, None, None]:
+    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return
         if len(self.vers) == 1:
@@ -363,7 +363,7 @@ class VersionedRedisView(View[DS, SE]):
                     seen.add(canonical_id)
                 entity = self.get_entity(entity_id)
                 if entity is not None:
-                    if len(schemata) and entity.schema not in schemata:
+                    if include_schemata is not None and entity.schema not in include_schemata:
                         continue
                     yield entity
         finally:
