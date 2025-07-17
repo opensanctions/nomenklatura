@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from functools import cache
-from typing import Any, Generator, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Generator, Iterable, List, Mapping, Optional, cast
 import logging
 
 from followthemoney import Statement
@@ -112,8 +112,11 @@ def insert_statements(
         batch: List[Mapping[str, Any]] = []
 
         for stmt in statements:
-            row = stmt.to_dict() if is_postgresql else stmt.to_db_row()
-            row["prop_type"] = get_prop_type(row["schema"], row["prop"])
+            if is_postgresql:
+                row = cast(Dict[str, Any], stmt.to_dict())
+                row["prop_type"] = get_prop_type(row["schema"], row["prop"])
+            else:
+                row = stmt.to_db_row()
             batch.append(row)
             dataset_count += 1
             if len(batch) >= batch_size:
