@@ -4,6 +4,7 @@ from typing import Any, Generator, Iterable, List, Mapping, Optional
 import logging
 
 from followthemoney import Statement
+from followthemoney.statement.util import get_prop_type
 from sqlalchemy import (
     Boolean,
     Column,
@@ -112,7 +113,7 @@ def insert_statements(
 
         for stmt in statements:
             row = stmt.to_dict() if is_postgresql else stmt.to_db_row()
-            row["prop_type"] = stmt.prop_type
+            row["prop_type"] = get_prop_type(row["schema"], row["prop"])
             batch.append(row)
             dataset_count += 1
             if len(batch) >= batch_size:
