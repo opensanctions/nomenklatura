@@ -62,8 +62,8 @@ class LevelDBStore(Store[DS, SE]):
         self.db = plyvel.DB(
             path.as_posix(),
             create_if_missing=True,
-            write_buffer_size=64 * 1024 * 1024,
-            max_open_files=2000,
+            # write_buffer_size=64 * 1024 * 1024,
+            max_open_files=1000,
         )
 
     def writer(self) -> Writer[DS, SE]:
@@ -188,7 +188,9 @@ class LevelDBView(View[DS, SE]):
                     if value == id and prop.reverse is not None:
                         yield prop.reverse, entity
 
-    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
+    def entities(
+        self, include_schemata: Optional[List[Schema]] = None
+    ) -> Generator[SE, None, None]:
         with self.store.db.iterator(prefix=b"s:", fill_cache=False) as it:
             current_id: Optional[str] = None
             current_schema: Optional[Schema] = None
@@ -205,7 +207,10 @@ class LevelDBView(View[DS, SE]):
 
                 # If we're seeing a new canonical ID, yield the previous entity
                 if canonical_id != current_id:
-                    if include_schemata is not None and current_schema not in include_schemata:
+                    if (
+                        include_schemata is not None
+                        and current_schema not in include_schemata
+                    ):
                         statements = []
                     if len(statements) > 0 and not current_fail:
                         entity = self.store.assemble(statements)
@@ -233,7 +238,11 @@ class LevelDBView(View[DS, SE]):
                         try:
                             current_schema = model.common_schema(current_schema, schema)
                         except InvalidData as inv:
-                            msg = "Invalid schema %s for %r: %s" % (schema, current_id, inv)
+                            msg = "Invalid schema %s for %r: %s" % (
+                                schema,
+                                current_id,
+                                inv,
+                            )
                             log.error(msg)
                             # Mark the entity as failed, but we need to iterate through the rest of the statements
                             current_fail = True
