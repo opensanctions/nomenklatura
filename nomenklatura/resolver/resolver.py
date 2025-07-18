@@ -437,7 +437,7 @@ class Resolver(Linker[SE]):
             edge.score = None
 
         ustmt = update(self._table)
-        ustmt = ustmt.values({"deleted_at": timestamp()})
+        ustmt = ustmt.values({"deleted_at": edge.created_at})
         ustmt = ustmt.where(self._table.c.source == edge.source.id)
         ustmt = ustmt.where(self._table.c.target == edge.target.id)
         ustmt = ustmt.where(self._table.c.deleted_at.is_(None))
