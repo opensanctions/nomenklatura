@@ -1,3 +1,5 @@
+import re
+
 from typing import List, Optional, Any
 from rigour.names import NamePart
 
@@ -47,3 +49,13 @@ class Match:
             return f"[={rps_str}]"
         score_str = f"{self.score:.2f}".lstrip("0")
         return f"[{qps_str}~{score_str}~{rps_str}]"
+
+
+NUMERIC = re.compile(r"\d{1,}")
+
+
+def numbers_mismatch(query: str, result: str) -> bool:
+    """Check if the number of numerals in two names is different."""
+    query_nums = set(NUMERIC.findall(query))
+    result_nums = set(NUMERIC.findall(result))
+    return len(query_nums.difference(result_nums)) > 0

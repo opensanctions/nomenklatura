@@ -87,6 +87,8 @@ def _opcodes(qry_text: str, res_text: str) -> Opcodes:
 def weighted_edit_similarity(
     qry_parts: List[NamePart],
     res_parts: List[NamePart],
+    extra_query_part_weight: float = 0.8,
+    extra_result_part_weight: float = 0.1,
 ) -> List[Match]:
     """Calculate a weighted similarity score between two sets of name parts. This function implements custom
     frills within the context of a simple Levenshtein distance calculation. For example:
@@ -158,14 +160,14 @@ def weighted_edit_similarity(
     for qp in qry_parts:
         if qp not in matches:
             match = Match(qps=[qp])
-            match.weight = _part_weight(qp, 0.8)
+            match.weight = _part_weight(qp, extra_query_part_weight)
             matches[qp] = match
 
     # Non-matched result parts
     for rp in res_parts:
         if rp not in matches:
             match = Match(rps=[rp])
-            match.weight = _part_weight(rp, 0.1)
+            match.weight = _part_weight(rp, extra_result_part_weight)
             matches[rp] = match
 
     return list(set(matches.values()))

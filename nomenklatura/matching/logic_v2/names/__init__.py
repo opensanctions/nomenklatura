@@ -7,13 +7,11 @@ from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
-from nomenklatura.matching.logic_v2.names.util import Match
-from nomenklatura.matching.logic_v2.util import penalize
+from nomenklatura.matching.logic_v2.names.util import Match, numbers_mismatch
 from nomenklatura.matching.types import FtResult, ScoringConfig
 
 
@@ -40,6 +38,8 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     # symbolic match (some types of symbols are considered less strong matches than others) and
     # the fuzzy match of the remaining name parts. Special scoring is also applied for extra
     # name parts that are not matched to the other name during name alignment.
+    extra_query_part_weight = config.get_float("nm_extra_query_name")
+    extra_result_part_weight = config.get_float("nm_extra_result_name")
     retval = FtResult(score=0.0, detail=None)
     for pairing in pairings:
         matches: List[Match] = []
@@ -67,7 +67,13 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            matches.extend(weighted_edit_similarity(query_rem, result_rem))
+            _matches = weighted_edit_similarity(
+                query_rem,
+                result_rem,
+                extra_query_part_weight=extra_query_part_weight,
+                extra_result_part_weight=extra_result_part_weight,
+            )
+            matches.extend(_matches)
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
@@ -94,6 +100,7 @@ def _get_object_names(entity: EntityProxy) -> Set[str]:
 def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match the names of two objects, such as vessels or assets."""
     result_names = _get_object_names(result)
+    mismatch_penalty = 1 - config.get_float("nm_number_mismatch")
     best_result = FtResult(score=0.0, detail=None)
     for query_name in _get_object_names(query):
         for result_name in result_names:
@@ -101,7 +108,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
             # Things like Vessels, Airplanes, Securities, etc.
             detail = f"{query_name} ~ {result_name}"
             if numbers_mismatch(query_name, result_name):
-                score = penalize(score, config.get_float("nm_number_mismatch"))
+                score = score * mismatch_penalty
                 detail = "Number mismatch in name"
             if score > best_result.score:
                 best_result = FtResult(score=score, detail=detail)
