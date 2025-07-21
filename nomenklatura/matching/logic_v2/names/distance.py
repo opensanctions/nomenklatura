@@ -1,8 +1,9 @@
+from functools import lru_cache
 import math
 from collections import defaultdict
 from itertools import zip_longest, chain
 from typing import Dict, List, Optional, Tuple
-from rapidfuzz.distance import Levenshtein
+from rapidfuzz.distance import Levenshtein, Opcodes
 from rigour.names import NamePart, is_stopword
 from rigour.text.distance import levenshtein
 from nomenklatura.matching.logic_v2.names.magic import PART_WEIGHTS
@@ -22,6 +23,7 @@ SIMILAR_PAIRS = [
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
 
 
+@lru_cache(maxsize=512)
 def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     """Calculate the string distance between two strings."""
     if left == right:
@@ -76,11 +78,23 @@ def _costs_similarity(costs: List[float]) -> float:
     return 1 - (total_cost / len(costs))
 
 
+@lru_cache(maxsize=512)
+def _opcodes(qry_text: str, res_text: str) -> Opcodes:
+    """Get the opcodes for the Levenshtein distance between two strings."""
+    return Levenshtein.opcodes(qry_text, res_text)
+
+
 def weighted_edit_similarity(
     qry_parts: List[NamePart],
     res_parts: List[NamePart],
 ) -> List[Match]:
-    """Calculate a weighted similarity score between two sets of name parts."""
+    """Calculate a weighted similarity score between two sets of name parts. This function implements custom
+    frills within the context of a simple Levenshtein distance calculation. For example:
+
+    * The result is returned as a list of Match objects, which contain a score, but also a weight.
+    * Removals of full tokens are penalized more lightly than intra-token edits.
+    * Some edits inside of words are considered more similar than others, e.g. "o" and "0".
+    """
     if len(qry_parts) == 0 and len(res_parts) == 0:
         return []
     qry_text = SEP.join(p.comparable for p in qry_parts)
@@ -96,7 +110,7 @@ def weighted_edit_similarity(
     if len(qry_parts) and len(res_parts):
         qry_cur = qry_parts[0]
         res_cur = res_parts[0]
-        for op in Levenshtein.opcodes(qry_text, res_text):
+        for op in _opcodes(qry_text, res_text):
             qry_span = qry_text[op.src_start : op.src_end]
             res_span = res_text[op.dest_start : op.dest_end]
             for qc, rc in zip_longest(qry_span, res_span, fillvalue=None):

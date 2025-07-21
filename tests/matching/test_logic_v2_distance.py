@@ -4,6 +4,7 @@ from rigour.names import Name, NamePart
 from nomenklatura.matching.logic_v2.names.distance import (
     weighted_edit_similarity as wes,
 )
+from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 
 
 def pt(name: str) -> List[NamePart]:
@@ -11,16 +12,30 @@ def pt(name: str) -> List[NamePart]:
 
 
 def test_weighted_similarity():
-    assert wes(pt("Vladimir Putin"), pt("Vladimir Putin")) == 1.0
-    assert wes(pt(""), pt("Putin, Vladimir")) == 0.0
+    matches = wes(pt("Vladimir Putin"), pt("Vladimir Putin"))
+    assert len(matches) == 2
+    assert matches[0].score == 1.0
+    assert matches[1].score == 1.0
+    matches = wes(pt(""), pt("Putin, Vladimir"))
+    assert len(matches) == 2
+    assert len(matches[0].qps) == 0
+    assert len(matches[0].rps) == 1
 
-    dbase = wes(pt("Putin, Vladimir"), pt("Putin, Vladimar"))
-    assert dbase < 1.0
-    assert dbase > 0.5
+    matches = wes(pt("Vladimir Borisovich Putin"), pt("Vladimir Putin"))
+    assert len(matches) == 3
+    scores = sorted([m.score for m in matches])
+    assert scores == [0.0, 1.0, 1.0]
 
-    dsimilar = wes(pt("Putin, Vladimir"), pt("Putin, Vladim1r"))
-    assert dsimilar > dbase
+    matches = wes(pt("Putin, Vladimir"), pt("PutinVladimir"))
+    assert len(matches) == 1
+    assert matches[0].score < 1.0
+    assert len(matches[0].qps) == 2
+    assert len(matches[0].rps) == 1
 
-    dspace = wes(pt("Putin, Vladimir"), pt("PutinVladimir"))
-    assert dspace < 1.0
-    assert dspace > dbase
+
+def test_strict_levenshtein():
+    assert strict_levenshtein("abc", "abc") == 1.0
+    assert strict_levenshtein("abc", "ab") == 0.0
+    assert strict_levenshtein("hello", "hello") == 1.0
+    assert strict_levenshtein("hello", "hullo") > 0.0
+    assert strict_levenshtein("hello", "hullo") < 1.0

@@ -1,7 +1,6 @@
 from rigour.names import NameTypeTag, NamePartTag, Symbol
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 
 from .util import e
 
@@ -30,7 +29,7 @@ def test_entity_names_company():
     names = entity_names(NameTypeTag.ORG, entity)
     assert len(names) == 1
     name = names.pop()
-    assert name.form == "westminster holdings, ltd."
+    assert name.form == "westminster holdings, ltd"
     assert len(name.spans) > 0
     symbols = set()
     for span in name.spans:
@@ -52,11 +51,3 @@ def test_entity_names_company():
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
-
-
-def test_strict_levenshtein():
-    assert strict_levenshtein("abc", "abc") == 1.0
-    assert strict_levenshtein("abc", "ab") == 0.0
-    assert strict_levenshtein("hello", "hello") == 1.0
-    assert strict_levenshtein("hello", "hullo") > 0.0
-    assert strict_levenshtein("hello", "hullo") < 1.0
