@@ -199,6 +199,16 @@ CASES = [
             "name": "Brigade 44",
         },
     },
+    {
+        "schema": "Organization",
+        "matches": True,
+        "query": {
+            "swiftBic": "COBADEFFXXX",
+        },
+        "result": {
+            "registrationNumber": "COBADEFF",
+        },
+    },
     # Vessels
     {
         "schema": "Vessel",

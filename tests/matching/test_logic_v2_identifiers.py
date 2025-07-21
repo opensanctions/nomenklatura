@@ -54,5 +54,8 @@ def test_imo_match():
     result = e("Vessel", imoNumber="9929429")
     assert vessel_imo_mmsi_match(query, result) == 1.0
 
+    result = e("Vessel", registrationNumber="9929429")
+    assert vessel_imo_mmsi_match(query, result) == 1.0
+
     result = e("Vessel", imoNumber="992942")
     assert vessel_imo_mmsi_match(query, result) == 0.0
