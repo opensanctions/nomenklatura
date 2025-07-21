@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Dict, Generator, Generic, Set
 from followthemoney import registry, ValueEntity, Statement, SE
 
@@ -19,6 +20,7 @@ class Linker(Generic[SE]):
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._entities.get(node, set([node]))
 
+    @lru_cache(maxsize=1024)
     def get_canonical(self, entity_id: StrIdent) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)

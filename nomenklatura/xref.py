@@ -65,6 +65,9 @@ def xref(
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
 
+            if suggested % 1000 == 0 and suggested > 0:
+                resolver.commit()
+
             left_id = resolver.get_canonical(left_id_)
             right_id = resolver.get_canonical(right_id_)
             if not resolver.check_candidate(left_id, right_id):
@@ -112,9 +115,9 @@ def xref(
                 break
             suggested += 1
         _print_stats(idx, suggested, scores)
+        resolver.commit()
 
         if conflict_reporter is not None:
             conflict_reporter.report()
-
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
