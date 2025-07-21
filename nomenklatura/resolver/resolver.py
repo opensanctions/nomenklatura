@@ -156,7 +156,9 @@ class Resolver(Linker[SE]):
 
     def commit(self) -> None:
         if self._transaction is None or self._conn is None:
-            raise RuntimeError("No transaction to commit.")
+            self._transaction = None
+            self._conn = None
+            return
 
         # Swipe up all NO JUDGEMENT edges that have been deleted:
         clean_stmt = delete(self._table)
@@ -171,19 +173,26 @@ class Resolver(Linker[SE]):
         self._conn.close()
         self._conn = None
 
-    def rollback(self, force: bool = False) -> None:
+    def rollback(self) -> None:
         if self._transaction is not None:
             self._transaction.rollback()
             self._transaction = None
-        else:
-            if not force:
-                raise RuntimeError("No transaction to rollback.")
         if self._conn is not None:
             self._conn.close()
             self._conn = None
-        else:
-            if not force:
-                raise RuntimeError("No connection to close.")
+
+    def close(self) -> None:
+        """Close the resolver connection."""
+        if self._transaction is not None:
+            self._transaction.rollback()
+            self._transaction = None
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+        self.edges.clear()
+        self.nodes.clear()
+        self._max_ts = None
+        self._invalidate()
 
     def _get_connection(self) -> Connection:
         if self._transaction is None or self._conn is None:

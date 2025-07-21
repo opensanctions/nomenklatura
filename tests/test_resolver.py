@@ -232,8 +232,8 @@ def test_update_from_db(resolver):
         # pprint(r1._get_connection().execute(text("SELECT * FROM resolver")).fetchall())
         # assert False
     finally:
-        r1.rollback(force=True)
-        r2.rollback(force=True)
+        r1.rollback()
+        r2.rollback()
         r1._table.drop(r1._engine)
 
 

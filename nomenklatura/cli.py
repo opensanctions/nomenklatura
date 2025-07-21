@@ -15,7 +15,7 @@ from followthemoney.cli.aggregate import sorted_aggregate
 from nomenklatura.cache import Cache
 from nomenklatura.matching import train_v1_matcher
 from nomenklatura.store import load_entity_file_store
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.xref import xref as run_xref
@@ -38,6 +38,13 @@ def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
         if enricher is None:
             raise TypeError("Could not load enricher")
         return dataset, enricher
+
+
+def _get_linker() -> Linker[Entity]:
+    resolver = Resolver[Entity].make_default()
+    linker = resolver.get_linker()
+    resolver.close()
+    return linker
 
 
 @click.group(help="Nomenklatura data integration")
@@ -111,10 +118,7 @@ def xref_prune() -> None:
     help="Add a dataset to the entity metadata",
 )
 def apply(path: Path, outpath: Path, dataset: Optional[str] = None) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    linker = resolver.get_linker()
-    resolver.rollback()
+    linker = _get_linker()
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, ValueEntity):
             proxy = linker.apply_stream(proxy)
@@ -210,10 +214,7 @@ def enrich_command(
 @click.option("-o", "--outpath", type=OutPath, default="-")
 @click.option("-f", "--format", type=click.Choice(FORMATS), default=CSV)
 def statements_apply(infile: Path, outpath: Path, format: str) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    linker = resolver.get_linker()
-    resolver.rollback()
+    linker = _get_linker()
 
     def _generate() -> Generator[Statement, None, None]:
         for stmt in read_path_statements(infile, format=format):

@@ -65,7 +65,7 @@ def donations_json(donations_path):
 def resolver():
     resolver = Resolver[Entity].make_default()
     yield resolver
-    resolver.rollback(force=True)
+    resolver.rollback()
     resolver._table.drop(resolver._engine, checkfirst=True)
 
 
@@ -75,7 +75,7 @@ def other_table_resolver():
     meta = MetaData()
     resolver = Resolver(engine, meta, create=True, table_name="another_table")
     yield resolver
-    resolver.rollback(force=True)
+    resolver.rollback()
     resolver._table.drop(engine)
 
 

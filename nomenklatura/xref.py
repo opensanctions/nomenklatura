@@ -57,13 +57,15 @@ def xref(
         scores: List[float] = []
         suggested = 0
         idx = 0
+        resolver.begin()
         pairs = index.pairs(max_pairs=limit * limit_factor)
         for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
 
-            if suggested % 1000 == 0 and suggested > 0:
+            if suggested % 10000 == 0 and suggested > 0:
                 resolver.commit()
+                resolver.begin()
 
             left_id = resolver.get_canonical(left_id_)
             right_id = resolver.get_canonical(right_id_)
