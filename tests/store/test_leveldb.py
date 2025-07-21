@@ -61,6 +61,7 @@ def test_leveldb_graph_query(
                 data = orjson.loads(line)
                 proxy = StatementEntity.from_data(test_dataset, data)
                 writer.add_entity(proxy)
+    store.optimize()
     tview = store.view(test_dataset)
     assert len(list(tview.entities())) == 474
 

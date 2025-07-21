@@ -68,7 +68,7 @@ class LevelDBStore(Store[DS, SE]):
 
     def optimize(self) -> None:
         """Optimize the database by compacting it."""
-        self.db.compact_range(b"", b"")
+        self.db.compact_range()
         self.db.close()
         self.db = plyvel.DB(
             self.path.as_posix(),
