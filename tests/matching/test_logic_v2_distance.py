@@ -32,6 +32,13 @@ def test_weighted_similarity():
     assert len(matches[0].qps) == 2
     assert len(matches[0].rps) == 1
 
+    matches = wes(pt("platonovich"), pt("plat ono vich"))
+    assert len(matches) == 1
+    assert matches[0].score < 1.0
+    assert matches[0].score > 0.8
+    assert len(matches[0].qps) == 1
+    assert len(matches[0].rps) == 3
+
 
 def test_strict_levenshtein():
     assert strict_levenshtein("abc", "abc") == 1.0
