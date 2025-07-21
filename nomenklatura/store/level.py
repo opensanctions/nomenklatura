@@ -6,6 +6,7 @@
 # Specific examples:
 # * Not calling a helper to byte-encode values.
 # * Not having a helper method for building entities.
+import gc
 import orjson
 import logging
 from pathlib import Path
@@ -70,6 +71,7 @@ class LevelDBStore(Store[DS, SE]):
         """Optimize the database by compacting it."""
         self.db.compact_range()
         self.db.close()
+        gc.collect()
         self.db = plyvel.DB(
             self.path.as_posix(),
             create_if_missing=False,
