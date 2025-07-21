@@ -21,6 +21,7 @@ from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)
+MAX_OPEN_FILES = 1000
 
 
 def unpack_statement(
@@ -62,9 +63,19 @@ class LevelDBStore(Store[DS, SE]):
         self.db = plyvel.DB(
             path.as_posix(),
             create_if_missing=True,
-            # write_buffer_size=64 * 1024 * 1024,
-            max_open_files=1000,
+            max_open_files=MAX_OPEN_FILES,
         )
+
+    def optimize(self) -> None:
+        """Optimize the database by compacting it."""
+        self.db.compact_range(b"", b"")
+        self.db.close()
+        self.db = plyvel.DB(
+            self.path.as_posix(),
+            create_if_missing=False,
+            max_open_files=MAX_OPEN_FILES,
+        )
+        log.info("Optimized LevelDB at %s", self.path)
 
     def writer(self) -> Writer[DS, SE]:
         return LevelDBWriter(self)
