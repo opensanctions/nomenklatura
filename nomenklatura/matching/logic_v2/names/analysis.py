@@ -1,39 +1,12 @@
 from typing import Set
-from rigour.names import NameTypeTag, NamePartTag, Name
+from rigour.names import NameTypeTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
 from rigour.names import remove_person_prefixes, remove_org_prefixes
 from rigour.names import tag_org_name, tag_person_name, normalize_name
-from followthemoney.proxy import EntityProxy
-from followthemoney.schema import Schema
-from followthemoney.types import registry
-
-PROP_MAPPINGS = (
-    ("firstName", NamePartTag.GIVEN),
-    ("lastName", NamePartTag.FAMILY),
-    ("secondName", NamePartTag.MIDDLE),
-    ("middleName", NamePartTag.MIDDLE),
-    ("fatherName", NamePartTag.PATRONYMIC),
-    ("motherName", NamePartTag.MATRONYMIC),
-    ("title", NamePartTag.HONORIFIC),
-    ("nameSuffix", NamePartTag.SUFFIX),
-    ("weakAlias", NamePartTag.NICK),
-)
+from followthemoney import registry, EntityProxy
+from followthemoney.names import PROP_PART_TAGS
 
 
-def schema_type_tag(schema: Schema) -> NameTypeTag:
-    if schema.is_a("Person"):
-        return NameTypeTag.PER
-    elif schema.is_a("Organization"):
-        return NameTypeTag.ORG
-    elif schema.is_a("LegalEntity"):
-        return NameTypeTag.ENT
-    elif schema.name in ("Vessel", "Asset", "Airplane", "Security"):
-        return NameTypeTag.OBJ
-    else:
-        return NameTypeTag.UNK
-
-
-# @lru_cache(maxsize=128)  # Cache the query when doing multiple comparisons
 def entity_names(
     type_tag: NameTypeTag, entity: EntityProxy, is_query: bool = False
 ) -> Set[Name]:
@@ -62,7 +35,7 @@ def entity_names(
         seen.add(form)
         sname = Name(name, form=form, tag=type_tag)
         # tag name parts from properties:
-        for prop, tag in PROP_MAPPINGS:
+        for prop, tag in PROP_PART_TAGS:
             for value in entity.get(prop, quiet=True):
                 sname.tag_text(prenormalize_name(value), tag)
 
@@ -73,7 +46,7 @@ def entity_names(
         if type_tag == NameTypeTag.PER:
             tag_person_name(sname, normalize_name, any_initials=is_query)
 
-        # TODO: should we tag phonetic names here?
+        # TODO: should we tag phonetic tokens here?
         names.add(sname)
 
     # Remove short names that are contained in longer names. This is meant to prevent a scenario

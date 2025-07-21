@@ -1,5 +1,5 @@
-from collections import defaultdict
 import math
+from collections import defaultdict
 from itertools import zip_longest, chain
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein

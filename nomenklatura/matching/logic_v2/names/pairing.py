@@ -1,7 +1,6 @@
 from typing import Dict, List, Set
 
-from rigour.names import NamePart
-from rigour.names import Symbol, Name, Span
+from rigour.names import NamePart, Symbol, Name, Span
 
 
 class Pairing:

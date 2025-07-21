@@ -4,8 +4,9 @@ from rigour.names import align_person_name_order, normalize_name
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
+from followthemoney.names import schema_type_tag
 
-from nomenklatura.matching.logic_v2.names.analysis import entity_names, schema_type_tag
+from nomenklatura.matching.logic_v2.names.analysis import entity_names
 from nomenklatura.matching.logic_v2.names.heuristics import numbers_mismatch
 from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
@@ -74,7 +75,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = "; ".join(str(m) for m in matches)
+            detail = " ".join(str(m) for m in matches)
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
         retval.detail = f"{query.comparable} <> {result.comparable}"

@@ -3,6 +3,9 @@ from rigour.names import NamePart
 
 
 class Match:
+    """A Match combines query and result name parts, along with a score and weight. It is one
+    part of the matching result, which is eventually aggregated into a final score."""
+
     __slots__ = ["qps", "rps", "text", "score", "weight"]
 
     def __init__(self, qps: List[NamePart] = [], rps: List[NamePart] = []) -> None:
@@ -37,9 +40,10 @@ class Match:
         qps_str = " ".join(part.comparable for part in self.qps)
         rps_str = " ".join(part.comparable for part in self.rps)
         if not len(qps_str):
-            return f"r:{rps_str}"
+            return f"[r:{rps_str}]"
         if not len(rps_str):
-            return f"q:{qps_str}"
+            return f"[q:{qps_str}]"
         if self.score == 1.0:
-            return f"={rps_str}"
-        return f"{qps_str}~{self.score:.2f}~{rps_str}"
+            return f"[={rps_str}]"
+        score_str = f"{self.score:.2f}".lstrip("0")
+        return f"[{qps_str}~{score_str}~{rps_str}]"
