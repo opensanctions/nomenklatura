@@ -1,6 +1,6 @@
 # nomenklatura
 
-Nomenklatura de-duplicates and integrates different [Follow the Money](https://followthemoney.rtfd.org/) entities. It serves to clean up messy data and to find links between different datasets.
+Nomenklatura de-duplicates and integrates different [Follow the Money](https://followthemoney.tech/) entities. It serves to clean up messy data and to find links between different datasets.
 
 ![screenshot](./docs/screenshot.png)
 
@@ -14,7 +14,7 @@ $ pip install nomenklatura
 
 ### Command-line usage
 
-Much of the functionality of `nomenklatura` can be used as a command-line tool. In the following example, we'll assume that you have a file containing [Follow the Money](https://followthemoney.rtfd.org/) entities in your local directory, named `entities.ijson`. If you just want try it out, you can use the file `tests/fixtures/donations.ijson` in this repository for testing (it contains German campaign finance data).
+Much of the functionality of `nomenklatura` can be used as a command-line tool. In the following example, we'll assume that you have a file containing [Follow the Money](https://followthemoney.tech/) entities in your local directory, named `entities.ijson`. If you just want try it out, you can use the file `tests/fixtures/donations.ijson` in this repository for testing (it contains German campaign finance data).
 
 With the file in place, you will cross-reference the entities to generate de-duplication candidates, then run the interactive de-duplication UI in your console, and eventually apply the judgements to generate a new file with merged entities:
 
