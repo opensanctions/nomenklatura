@@ -51,3 +51,10 @@ def test_entity_names_company():
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
+
+
+# def test_specific():
+#     left = e("Company", name="N.A.B.C Company")
+#     right = e("Company", name="A.B.C. Company")
+#     config = LogicV2.default_config()
+#     assert not name_match(left, right, config)

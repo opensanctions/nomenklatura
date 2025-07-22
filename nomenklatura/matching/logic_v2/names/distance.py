@@ -56,7 +56,7 @@ def _edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     if rc == SEP and qc is None:
         return 0.2
     if (qc, rc) in SIMILAR_PAIRS:
-        return 0.5
+        return 0.7
     if qc is not None and qc.isdigit():
         return 1.5
     if rc is not None and rc.isdigit():

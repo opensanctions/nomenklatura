@@ -15,13 +15,15 @@ class Match:
         qps: List[NamePart] = [],
         rps: List[NamePart] = [],
         symbol: Optional[Symbol] = None,
+        score: float = 0.0,
+        weight: float = 1.0,
     ) -> None:
         """Initialize the Match object with query and result parts."""
         self.qps = list(qps)
         self.rps = list(rps)
         self.symbol: Optional[Symbol] = symbol
-        self.score = 0.0
-        self.weight = 1.0
+        self.score = score
+        self.weight = weight
 
     @property
     def weighted_score(self) -> float:
@@ -30,7 +32,7 @@ class Match:
 
     def __hash__(self) -> int:
         """Hash the Match object based on query and result parts."""
-        return hash((tuple(self.qps), tuple(self.rps)))
+        return hash((self.symbol, tuple(self.qps), tuple(self.rps)))
 
     def __eq__(self, other: Any) -> bool:
         """Check equality of two Match objects based on query and result parts."""
@@ -44,13 +46,13 @@ class Match:
         """String representation of the Match object for debugging."""
         if self.symbol is not None:
             return str(self.symbol)
-        qps_str = " ".join(part.comparable for part in self.qps)
-        rps_str = " ".join(part.comparable for part in self.rps)
-        if not len(self.qps):
-            return f"[r:{rps_str}]"
-        if not len(self.rps):
-            return f"[q:{qps_str}]"
-        if self.score == 1.0:
+        qps_str = " ".join([part.comparable for part in self.qps])
+        rps_str = " ".join([part.comparable for part in self.rps])
+        if not len(qps_str):
+            return f"[+{rps_str}]"
+        if not len(rps_str):
+            return f"[-{qps_str}]"
+        if qps_str == rps_str:
             return f"[={rps_str}]"
         score_str = f"{self.score:.2f}".lstrip("0")
         return f"[{qps_str}<{score_str}>{rps_str}]"

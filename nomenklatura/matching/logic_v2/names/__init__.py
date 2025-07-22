@@ -82,10 +82,10 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = " ".join([str(m) for m in matches])
+            detail = " ".join(str(m) for m in matches)
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
-        retval.detail = f"{query.comparable} </> {result.comparable}"
+        retval.detail = f"{query.comparable} / {result.comparable}"
     return retval
 
 
@@ -106,8 +106,11 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
     for query_name in _get_object_names(query):
         for result_name in result_names:
             score = strict_levenshtein(query_name, result_name, max_rate=5)
-            # Things like Vessels, Airplanes, Securities, etc.
-            detail = f"{query_name} ~ {result_name}"
+            if score == 1.0:
+                detail = f"[={result_name}]"
+            else:
+                score_det = ("%.2f" % score).lstrip("0")
+                detail = f"[{query_name}<{score_det}>{result_name}]"
             if numbers_mismatch(query_name, result_name):
                 score = score * mismatch_penalty
                 detail = "Number mismatch"

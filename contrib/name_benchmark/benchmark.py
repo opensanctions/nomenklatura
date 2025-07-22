@@ -1,5 +1,6 @@
 from typing import Callable, Dict, List
 from rich.console import Console
+from rich.text import Text
 from rich.table import Table
 import yaml
 
@@ -102,7 +103,7 @@ def run_benchmark(
             str(result.is_match),
             "%.2f" % result.score,
             "%.2f" % result.loss,
-            result.detail if result.detail else "<no detail>",
+            Text(result.detail, style="none"),
         )
     if len(failures.rows) > 0:
         console.print(failures)
