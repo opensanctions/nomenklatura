@@ -1,5 +1,5 @@
-from typing import List, Optional, Set
-from rigour.names import NameTypeTag, Name, NamePart
+from typing import List, Set
+from rigour.names import NameTypeTag, Name, NamePart, Symbol
 from rigour.names import align_person_name_order, normalize_name
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
@@ -46,14 +46,15 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
 
         # Symbols add a fixed weight each to the score, depending on their category. This
         # balances out the potential length of the underlying name parts.
-        for symbol, _ in pairing.symbols.items():
-            match = Match()
-            match.text = str(symbol)
+        for symbol, literal_match in pairing.symbols.items():
+            match = Match(symbol=symbol)
             match.score = 1.0
             # Some types of symbols effectively also work as soft stopwords, reducing the relevance
             # of the match. For example, "Ltd." in an organization name is not as informative as a
             # person's first name.
             match.weight = SYM_WEIGHTS.get(symbol.category, 1.0)
+            if literal_match and symbol.category in (Symbol.Category.ORG_CLASS,):
+                match.weight = 1.0
             matches.append(match)
 
         # Name parts that have not been tagged with a symbol:
@@ -81,10 +82,10 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = " ".join(str(m) for m in matches)
+            detail = " ".join([str(m) for m in matches])
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
-        retval.detail = f"{query.comparable} <> {result.comparable}"
+        retval.detail = f"{query.comparable} </> {result.comparable}"
     return retval
 
 
@@ -109,7 +110,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
             detail = f"{query_name} ~ {result_name}"
             if numbers_mismatch(query_name, result_name):
                 score = score * mismatch_penalty
-                detail = "Number mismatch in name"
+                detail = "Number mismatch"
             if score > best_result.score:
                 best_result = FtResult(score=score, detail=detail)
     return best_result
@@ -119,20 +120,21 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match two entities by analyzing and comparing their names."""
     schema = model.common_schema(query.schema, result.schema)
     type_tag = schema_type_tag(schema)
+    best = FtResult(score=0.0, detail=None)
     if type_tag == NameTypeTag.UNK:
         # Name matching is not supported for entities that are not listed
         # as a person, organization, or a thing.
-        return FtResult(score=0.0, detail=None)
+        best.detail = "Unsuited for name matching: %s" % schema.name
+        return best
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
     query_names = entity_names(type_tag, query, is_query=True)
     result_names = entity_names(type_tag, result)
-    best: Optional[FtResult] = None
     for query_name in query_names:
         for result_name in result_names:
             ftres = match_name_symbolic(query_name, result_name, config)
-            if best is None or ftres.score > best.score:
+            if ftres.score >= best.score:
                 best = ftres
-    if best is None:
-        return FtResult(score=0.0, detail="No names available for matching.")
+    if best.detail is None:
+        best.detail = "No names available for matching"
     return best

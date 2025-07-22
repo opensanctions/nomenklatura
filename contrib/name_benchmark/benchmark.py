@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 from rich.console import Console
 from rich.table import Table
 import yaml
@@ -17,17 +17,15 @@ class Check:
 
 
 class Result:
-    def __init__(
-        self, check: Check, score: float, detail: Optional[str], threshold: float
-    ):
+    def __init__(self, check: Check, ft: FtResult, threshold: float):
         self.check = check
-        self.score = score
-        self.detail = detail
+        self.score = ft.score
+        self.detail = str(ft.detail) if ft.detail else None
         self.threshold = threshold
         self.true_score = 1.0 if check.is_match else 0.0
-        self.is_match = score >= threshold
+        self.is_match = ft.score >= threshold
         self.is_correct = self.is_match == check.is_match
-        self.loss = abs(self.true_score - score)
+        self.loss = abs(self.true_score - ft.score)
 
 
 def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
@@ -80,7 +78,7 @@ def run_benchmark(
     print("Running benchmark for: %s (threshold: %.2f)" % (func.__name__, threshold))
     for check in checks:
         ftres = func(check.query, check.candidate)
-        result = Result(check, ftres.score, ftres.detail, threshold)
+        result = Result(check, ftres, threshold)
         results.append(result)
 
     console = Console()
@@ -104,7 +102,7 @@ def run_benchmark(
             str(result.is_match),
             "%.2f" % result.score,
             "%.2f" % result.loss,
-            result.detail if result.detail else "",
+            result.detail if result.detail else "<no detail>",
         )
     if len(failures.rows) > 0:
         console.print(failures)

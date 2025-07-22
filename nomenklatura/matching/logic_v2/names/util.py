@@ -1,20 +1,25 @@
 import re
 
 from typing import List, Optional, Any
-from rigour.names import NamePart
+from rigour.names import NamePart, Symbol
 
 
 class Match:
     """A Match combines query and result name parts, along with a score and weight. It is one
     part of the matching result, which is eventually aggregated into a final score."""
 
-    __slots__ = ["qps", "rps", "text", "score", "weight"]
+    __slots__ = ["qps", "rps", "symbol", "score", "weight"]
 
-    def __init__(self, qps: List[NamePart] = [], rps: List[NamePart] = []) -> None:
+    def __init__(
+        self,
+        qps: List[NamePart] = [],
+        rps: List[NamePart] = [],
+        symbol: Optional[Symbol] = None,
+    ) -> None:
         """Initialize the Match object with query and result parts."""
         self.qps = list(qps)
         self.rps = list(rps)
-        self.text: Optional[str] = None
+        self.symbol: Optional[Symbol] = symbol
         self.score = 0.0
         self.weight = 1.0
 
@@ -37,18 +42,18 @@ class Match:
 
     def __str__(self) -> str:
         """String representation of the Match object for debugging."""
-        if self.text is not None:
-            return self.text
+        if self.symbol is not None:
+            return str(self.symbol)
         qps_str = " ".join(part.comparable for part in self.qps)
         rps_str = " ".join(part.comparable for part in self.rps)
-        if not len(qps_str):
+        if not len(self.qps):
             return f"[r:{rps_str}]"
-        if not len(rps_str):
+        if not len(self.rps):
             return f"[q:{qps_str}]"
         if self.score == 1.0:
             return f"[={rps_str}]"
         score_str = f"{self.score:.2f}".lstrip("0")
-        return f"[{qps_str}~{score_str}~{rps_str}]"
+        return f"[{qps_str}<{score_str}>{rps_str}]"
 
 
 NUMERIC = re.compile(r"\d{1,}")
