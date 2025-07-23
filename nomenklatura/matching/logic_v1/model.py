@@ -10,7 +10,6 @@ from nomenklatura.matching.compare.names import person_name_jaro_winkler
 from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
 from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.compare.multi import numbers_mismatch
 from nomenklatura.matching.compare.addresses import address_entity_match
 from nomenklatura.matching.logic_v1.phonetic import person_name_phonetic_match
 from nomenklatura.matching.logic_v1.phonetic import name_soundex_match
@@ -21,6 +20,7 @@ from nomenklatura.matching.logic_v1.identifiers import isin_security_match
 from nomenklatura.matching.logic_v1.identifiers import lei_code_match
 from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.logic_v1.identifiers import orgid_disjoint
+from nomenklatura.matching.logic_v1.multi import numbers_mismatch
 from nomenklatura.matching.util import FNUL
 
 
@@ -54,7 +54,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.2, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
         Feature(func=orgid_disjoint, weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(numbers_mismatch), weight=-0.1, qualifier=True),
+        Feature(func=numbers_mismatch, weight=-0.1, qualifier=True),
     ]
 
     @classmethod
