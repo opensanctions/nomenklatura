@@ -5,7 +5,6 @@ from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
 from nomenklatura.matching.types import ConfigVar, ConfigVarType
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 from nomenklatura.matching.compare.identifiers import identifier_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
@@ -34,7 +33,7 @@ class LogicV2(HeuristicAlgorithm):
     features = [
         Feature(func=name_match, weight=1.0),
         Feature(func=address_entity_match, weight=0.98),
-        Feature(func=FtResult.wrap(crypto_wallet_address), weight=0.98),
+        Feature(func=crypto_wallet_address, weight=0.98),
         Feature(func=FtResult.wrap(isin_security_match), weight=0.98),
         Feature(func=FtResult.wrap(lei_code_match), weight=0.95),
         Feature(func=FtResult.wrap(ogrn_code_match), weight=0.95),
@@ -43,14 +42,13 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
         Feature(func=FtResult.wrap(uei_code_match), weight=0.95),
         Feature(func=FtResult.wrap(npi_code_match), weight=0.95),
-        Feature(func=FtResult.wrap(identifier_match), weight=0.85),
+        Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
         Feature(func=address_prop_match, weight=0.2, qualifier=True),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
         Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.25, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
     ]
     CONFIG = {
         "nm_number_mismatch": ConfigVar(

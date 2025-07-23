@@ -1,49 +1,29 @@
 from rigour.ids import StrictFormat
-from followthemoney.proxy import E
-from followthemoney.types import registry
-from rigour.text.distance import levenshtein
+from followthemoney import E, registry
 
-from nomenklatura.matching.util import type_pair, props_pair, has_schema, max_in_sets
-from nomenklatura.matching.compare.util import has_overlap, clean_map
+from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import type_pair, props_pair, has_schema
+from nomenklatura.matching.compare.util import clean_map
 
 
-def crypto_wallet_address(query: E, result: E) -> float:
+def crypto_wallet_address(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two cryptocurrency wallets have the same public key."""
     if not has_schema(query, result, "CryptoWallet"):
-        return 0.0
+        return FtResult(score=0.0, detail=None)
     lv, rv = props_pair(query, result, ["publicKey"])
     for key in lv.intersection(rv):
         if len(key) > 10:
-            return 1.0
-    return 0.0
+            return FtResult(score=1.0, detail="Matched address: %s" % key)
+    return FtResult(score=0.0, detail=None)
 
 
-def orgid_disjoint(query: E, result: E) -> float:
-    """Two companies or organizations have different tax identifiers or registration
-    numbers."""
-    # used by name-qualified
-    if not has_schema(query, result, "Organization"):
-        return 0.0
-    query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
-    query_ids = clean_map(query_ids_, StrictFormat.normalize)
-    result_ids = clean_map(result_ids_, StrictFormat.normalize)
-    if not len(query_ids) or not len(result_ids):
-        return 0.0
-    if len(query_ids.intersection(result_ids)) > 0:
-        return 0.0
-    return 1 - max_in_sets(query_ids, result_ids, _nq_compare_identifiers)
-
-
-def identifier_match(query: E, result: E) -> float:
+def identifier_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities have the same tax or registration identifier."""
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
     query_ids = clean_map(query_ids_, StrictFormat.normalize)
     result_ids = clean_map(result_ids_, StrictFormat.normalize)
-    return 1.0 if has_overlap(query_ids, result_ids) else 0.0
-
-
-def _nq_compare_identifiers(query: str, result: str) -> float:
-    """Overly clever method for comparing tax and company identifiers."""
-    distance = levenshtein(query, result)
-    ratio = 1.0 - (distance / float(max(len(query), len(result))))
-    return ratio if ratio > 0.7 else 0.0
+    common = query_ids.intersection(result_ids)
+    if len(common) > 0:
+        detail = "Matched identifiers: %s" % ", ".join(common)
+        return FtResult(score=1.0, detail=detail)
+    return FtResult(score=0.0, detail=None)

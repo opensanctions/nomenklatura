@@ -1,3 +1,4 @@
+from itertools import product
 from typing import Iterable, Set
 from prefixdate import Precision
 from followthemoney.proxy import E
@@ -7,7 +8,7 @@ from rigour.ids import StrictFormat
 
 from nomenklatura.matching.compare.util import clean_map
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import has_schema, props_pair, type_pair, max_in_sets
+from nomenklatura.matching.util import has_schema, props_pair, type_pair
 
 
 def _dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
@@ -58,27 +59,28 @@ def dob_year_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     return FtResult(score=1.0, detail="Birth year mis-match")
 
 
-def _nq_compare_identifiers(query: str, result: str) -> float:
-    """Overly clever method for comparing tax and company identifiers."""
-    distance = levenshtein(query, result)
-    ratio = 1.0 - (distance / float(max(len(query), len(result))))
-    return ratio if ratio > 0.7 else 0.0
-
-
 def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two companies or organizations have different tax identifiers or registration
     numbers."""
-    # used by name-qualified
     if not has_schema(query, result, "Organization"):
-        return FtResult(score=0.0, detail="Not an organization")
+        return FtResult(score=0.0, detail="Neither entity is an organization")
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
     query_ids = clean_map(query_ids_, StrictFormat.normalize)
     result_ids = clean_map(result_ids_, StrictFormat.normalize)
     if not len(query_ids) or not len(result_ids):
-        return FtResult(score=0.0, detail="No identifiers provided")
-    overlap = query_ids.intersection(result_ids)
-    if len(overlap) > 0:
-        detail = f"Identifiers match: {', '.join(overlap)}"
-        return FtResult(score=0.0, detail=detail)
-    score = 1 - max_in_sets(query_ids, result_ids, _nq_compare_identifiers)
-    return FtResult(score=score, detail="Identifiers mis-match")
+        return FtResult(score=0.0, detail="Neither entity has identifiers")
+    common = query_ids.intersection(result_ids)
+    if len(common) > 0:
+        return FtResult(score=0.0, detail="Common identifiers: %s" % ", ".join(common))
+    max_ratio = 0.0
+    for query_id, result_id in product(query_ids, result_ids):
+        distance = levenshtein(query_id, result_id)
+        max_len = max(len(query_id), len(result_id))
+        ratio = 1.0 - (distance / float(max_len))
+        if ratio > 0.7:
+            max_ratio = max(max_ratio, ratio)
+    detail = "Mismatched identifiers: %s vs %s" % (
+        ", ".join(query_ids),
+        ", ".join(result_ids),
+    )
+    return FtResult(score=1 - max_ratio, detail=detail)

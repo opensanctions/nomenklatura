@@ -3,7 +3,6 @@ from typing import Dict, List
 from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.identifiers import orgid_disjoint
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 from nomenklatura.matching.compare.identifiers import identifier_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
@@ -21,6 +20,7 @@ from nomenklatura.matching.logic_v1.identifiers import inn_code_match, ogrn_code
 from nomenklatura.matching.logic_v1.identifiers import isin_security_match
 from nomenklatura.matching.logic_v1.identifiers import lei_code_match
 from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
+from nomenklatura.matching.logic_v1.identifiers import orgid_disjoint
 from nomenklatura.matching.util import FNUL
 
 
@@ -39,21 +39,21 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=FtResult.wrap(name_metaphone_match), weight=FNUL),
         Feature(func=FtResult.wrap(name_soundex_match), weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
-        Feature(func=FtResult.wrap(crypto_wallet_address), weight=0.98),
-        Feature(func=FtResult.wrap(isin_security_match), weight=0.98),
-        Feature(func=FtResult.wrap(lei_code_match), weight=0.95),
-        Feature(func=FtResult.wrap(ogrn_code_match), weight=0.95),
-        Feature(func=FtResult.wrap(vessel_imo_mmsi_match), weight=0.95),
-        Feature(func=FtResult.wrap(inn_code_match), weight=0.95),
-        Feature(func=FtResult.wrap(bic_code_match), weight=0.95),
-        Feature(func=FtResult.wrap(identifier_match), weight=0.85),
+        Feature(func=crypto_wallet_address, weight=0.98),
+        Feature(func=isin_security_match, weight=0.98),
+        Feature(func=lei_code_match, weight=0.95),
+        Feature(func=ogrn_code_match, weight=0.95),
+        Feature(func=vessel_imo_mmsi_match, weight=0.95),
+        Feature(func=inn_code_match, weight=0.95),
+        Feature(func=bic_code_match, weight=0.95),
+        Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(dob_year_disjoint), weight=-0.15, qualifier=True),
         Feature(func=FtResult.wrap(dob_day_disjoint), weight=-0.2, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(orgid_disjoint), weight=-0.2, qualifier=True),
+        Feature(func=orgid_disjoint, weight=-0.2, qualifier=True),
         Feature(func=FtResult.wrap(numbers_mismatch), weight=-0.1, qualifier=True),
     ]
 

@@ -2,6 +2,7 @@ from followthemoney import ValueEntity as Entity
 from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
+from nomenklatura.matching.name_based.misc import orgid_disjoint
 from nomenklatura.matching.types import ScoringConfig
 
 from .util import e
@@ -66,6 +67,7 @@ def test_heuristic_overrides():
     b = e("Company", name="CRYSTALORD LTD")
     result = NameQualifiedMatcher.compare(a, b, config)
     assert result.score == 0.0
+    assert len(result.explanations) == 3
     overrides = {
         jaro_name_parts.__name__: 1.0,
         soundex_name_parts.__name__: 0.0,
@@ -98,3 +100,18 @@ def test_single_name():
 
     other = e("Person", name="Hannibol")
     assert soundex_name_parts(name, other, config).score == 1.0
+
+
+def test_orgid_disjoint():
+    query = e("Company", registrationNumber="77401103")
+    result = e("Company", registrationNumber="77401103")
+    assert orgid_disjoint(query, result, config).score == 0.0
+    result = e("Company", idNumber="77401103")
+    assert orgid_disjoint(query, result, config).score == 0.0
+    result = e("Company", name="BLA CORP")
+    assert orgid_disjoint(query, result, config).score == 0.0
+    result = e("Company", registrationNumber="E77401103")
+    assert orgid_disjoint(query, result, config).score > 0.0
+    assert orgid_disjoint(query, result, config).score < 1.0
+    result = e("Company", registrationNumber="83743878")
+    assert orgid_disjoint(query, result, config).score == 1.0
