@@ -2,7 +2,7 @@ from itertools import product
 from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC
 from rigour.ids import StrictFormat
 from rigour.text.distance import levenshtein
-from followthemoney.proxy import E, registry
+from followthemoney import E, registry
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import has_schema, type_pair

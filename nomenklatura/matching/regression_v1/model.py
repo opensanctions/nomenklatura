@@ -44,7 +44,7 @@ class RegressionV1(ScoringAlgorithm):
         identifier_match,
         dob_matches,
         dob_year_matches,
-        dob_year_disjoint,
+        FtResult.unwrap(dob_year_disjoint),
         first_name_match,
         family_name_match,
         birth_place,

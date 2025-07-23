@@ -250,6 +250,18 @@ CASES = [
             "name": "Snow Storm 2",
         },
     },
+    {
+        "schema": "Vessel",
+        "matches": True,
+        "query": {
+            "name": "Snow Storm 1",
+            "imoNumber": "9929429",
+        },
+        "result": {
+            "name": "Snow Storm 2",
+            "imoNumber": "IMO9929429",
+        },
+    },
 ]
 
 
