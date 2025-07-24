@@ -1,5 +1,4 @@
 from typing import Dict, List
-from rigour.names.tagging import _get_org_tagger, _get_person_tagger
 
 from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.types import ConfigVar, ConfigVarType
@@ -67,12 +66,6 @@ class LogicV2(HeuristicAlgorithm):
             default=0.1,
         ),
     }
-
-    @classmethod
-    def init(cls) -> None:
-        """Initialize the algorithm, if necessary."""
-        _get_org_tagger()
-        _get_person_tagger()
 
     @classmethod
     def compute_score(

@@ -129,11 +129,6 @@ class ScoringAlgorithm(object):
     CONFIG: Dict[str, ConfigVar] = {}
 
     @classmethod
-    def init(cls) -> None:
-        """Initialize the algorithm."""
-        pass
-
-    @classmethod
     def compare(cls, query: E, result: E, config: ScoringConfig) -> MatchingResult:
         """Compare the two entities and return a score and feature comparison."""
         raise NotImplementedError
