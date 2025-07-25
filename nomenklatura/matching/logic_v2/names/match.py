@@ -35,6 +35,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         if span.symbol not in result_map:
             result_map[span.symbol] = []
         result_map[span.symbol].append(span)
+    seen: Set[int] = set()
     for part in query.parts:
         next_pairings: List[Pairing] = []
         for qspan in query.spans:
@@ -43,8 +44,14 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             if part not in qspan.parts:
                 continue
             for rspan in result_map.get(qspan.symbol, []):
+                # This assumes that these are the only factors for weighting the
+                # resulting match:
+                key = hash((qspan.parts, rspan.parts, qspan.symbol.category))
+                if key in seen:
+                    continue
                 for pairing in pairings:
                     if pairing.can_pair(qspan, rspan):
+                        seen.add(key)
                         next_pairing = pairing.add(qspan, rspan)
                         next_pairings.append(next_pairing)
         if len(next_pairings):
