@@ -148,6 +148,11 @@ class ScoringAlgorithm(object):
             features=cls.get_feature_docs(),
         )
 
+    @classmethod
+    def default_config(cls) -> ScoringConfig:
+        """Return the default configuration for the algorithm."""
+        return ScoringConfig.defaults()
+
 
 class Feature(BaseModel):
     func: Union[FeatureCompareFunction, FeatureCompareConfigured]
