@@ -146,11 +146,10 @@ class Resolver(Linker[SE]):
 
         https://docs.sqlalchemy.org/en/20/core/connections.html#begin-once
         """
-        if self._conn is not None or self._transaction is not None:
-            log.warning("Transaction already open: %s", self)
-            return
-        self._conn = self._engine.connect()
-        self._transaction = self._conn.begin()
+        if self._conn is None:
+            self._conn = self._engine.connect()
+        if self._transaction is None:
+            self._transaction = self._conn.begin()
         self._update_from_db()
         self._invalidate()
 
