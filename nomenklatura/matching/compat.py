@@ -1,11 +1,12 @@
 import re
+import sys
 import logging
-from typing import Iterable, List, Optional
-from functools import lru_cache
+from typing import Dict, Iterable, List, Optional
+from functools import cache, lru_cache
 from normality import squash_spaces, ascii_text, category_replace
 from normality.constants import WS
+from rigour.text.dictionary import Replacer
 from rigour.names import remove_person_prefixes
-from rigour.names.org_types import replace_org_types_compare
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +28,42 @@ def clean_name_ascii(text: Optional[str]) -> Optional[str]:
     if len(text) < 2:
         return None
     return text
+
+
+@cache
+def _org_replacer() -> Replacer:
+    """Get a replacer for the names of organization types, mapping them to generic types like LLC, JSC."""
+    from rigour.data.names.org_types import ORG_TYPES
+    from rigour.data.names.data import ORG_SYMBOLS
+
+    mapping: Dict[str, str] = {}
+    for org_type in ORG_TYPES:
+        display_norm = clean_name_ascii(org_type.get("display"))
+        generic_norm = clean_name_ascii(org_type.get("generic"))
+        norm_key = generic_norm or display_norm
+        if norm_key is None:
+            continue
+        norm_key = sys.intern(norm_key)
+        if display_norm is not None:
+            mapping[display_norm] = norm_key
+
+        for alias in org_type.get("aliases", []):
+            alias_norm = clean_name_ascii(alias)
+            if alias_norm is None:
+                continue
+            # if alias_norm in mapping and mapping[alias_norm] != generic_norm:
+            #     continue
+            mapping[alias_norm] = norm_key
+
+    for symbol, values in ORG_SYMBOLS.items():
+        symbol = sys.intern(symbol)
+        for value in values:
+            value_norm = clean_name_ascii(value)
+            if value_norm is None:
+                continue
+            mapping[value_norm] = symbol
+
+    return Replacer(mapping, ignore_case=True)
 
 
 @lru_cache(maxsize=2000)
@@ -51,9 +88,9 @@ def fingerprint_name(original: str) -> Optional[str]:
     cleaned = clean_name_ascii(text)
     if cleaned is None:
         return text
-    replaced = replace_org_types_compare(
-        cleaned, normalizer=clean_name_ascii, generic=True
-    )
+    replaced = _org_replacer()(cleaned)
+    if replaced is None:
+        return None
     replaced = squash_spaces(replaced)
     if len(replaced) < 2:
         return None
