@@ -10,7 +10,7 @@ from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjo
 from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.compare.addresses import address_entity_match
 from nomenklatura.matching.compare.addresses import address_prop_match
-from nomenklatura.matching.logic_v2.names import name_match
+from nomenklatura.matching.logic_v2.names.match import name_match
 from nomenklatura.matching.logic_v2.identifiers import bic_code_match
 from nomenklatura.matching.logic_v2.identifiers import inn_code_match, ogrn_code_match
 from nomenklatura.matching.logic_v2.identifiers import isin_security_match

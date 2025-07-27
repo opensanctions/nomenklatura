@@ -165,7 +165,7 @@ def run_benchmark(
 
 def wrap_matcher(query: Entity, candidate: Entity) -> FtResult:
     """Wrap the matcher function to match the expected signature."""
-    from nomenklatura.matching.logic_v2.names import name_match
+    from nomenklatura.matching.logic_v2.names.match import name_match
     from nomenklatura.matching.logic_v2.model import LogicV2
 
     config = LogicV2.default_config()
