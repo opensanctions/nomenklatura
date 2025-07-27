@@ -49,7 +49,7 @@ class Pairing:
 
         # If the text is actually identical, we do not need to establish
         # a pairing, as it is already a match.
-        # nb. This doesn't work because it knocks out the stopword-like functionality of
+        # revised: This doesn't work because it knocks out the stopword-like functionality of
         # symbolic matching.
         # if query_span.form == result_span.form:
         #     return False

@@ -30,6 +30,16 @@ CASES = [
     },
     {
         "schema": "Person",
+        "matches": False,
+        "query": {
+            "name": "John Doe",
+        },
+        "result": {
+            "name": "Juan Doe",
+        },
+    },
+    {
+        "schema": "Person",
         "matches": True,
         "query": {
             "name": "John Doeburg",

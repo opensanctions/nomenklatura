@@ -7,7 +7,7 @@ from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS
+from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS, SYM_SCORES
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
@@ -71,13 +71,13 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         # balances out the potential length of the underlying name parts.
         for symbol, literal_match in pairing.symbols.items():
             match = Match(symbol=symbol)
-            match.score = 1.0
+            match.score = SYM_SCORES.get(symbol.category, 1.0)
+            if literal_match:
+                match.score = 1.0
             # Some types of symbols effectively also work as soft stopwords, reducing the relevance
             # of the match. For example, "Ltd." in an organization name is not as informative as a
             # person's first name.
             match.weight = SYM_WEIGHTS.get(symbol.category, 1.0)
-            if literal_match and symbol.category in (Symbol.Category.ORG_CLASS,):
-                match.weight = 1.0
             matches.append(match)
 
         # Name parts that have not been tagged with a symbol:

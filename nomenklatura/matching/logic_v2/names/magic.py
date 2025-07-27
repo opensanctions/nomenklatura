@@ -11,6 +11,14 @@ SYM_WEIGHTS = {
     # Symbol.Category.PHONETIC: 0.6,
 }
 
+SYM_SCORES = {
+    Symbol.Category.ORG_CLASS: 0.8,
+    Symbol.Category.INITIAL: 0.9,
+    Symbol.Category.NAME: 0.9,
+    Symbol.Category.SYMBOL: 0.9,
+    Symbol.Category.ORDINAL: 0.9,
+}
+
 
 PART_WEIGHTS: Dict[NamePartTag, float] = {
     NamePartTag.NUM: 3.0,
