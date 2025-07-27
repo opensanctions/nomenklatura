@@ -31,8 +31,11 @@ def normalize_name(name: Optional[str]) -> Optional[str]:
     if name is None:
         return None
     name = name.lower()
-    cleaned = " ".join(tokenize_name(name))
-    return ascii_text(cleaned)
+    name = " ".join(tokenize_name(name))
+    name = ascii_text(name)
+    if len(name) < 2:
+        return None
+    return name
 
 
 class Tokenizer(Generic[DS, SE]):
@@ -78,10 +81,9 @@ class Tokenizer(Generic[DS, SE]):
         if type in TEXT_TYPES:
             text = value.lower()
             replaced = category_replace(text)
-            if replaced is not None:
-                for word in replaced.split(WS):
-                    if len(word) >= 3:
-                        yield WORD_FIELD, word
+            for word in replaced.split(WS):
+                if len(word) >= 3:
+                    yield WORD_FIELD, word
 
     def entity(self, entity: SE) -> Generator[Tuple[str, str], None, None]:
         # yield f"d:{entity.dataset.name}", 0.0

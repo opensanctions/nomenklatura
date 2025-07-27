@@ -1,5 +1,5 @@
 import logging
-from normality import collapse_spaces
+from normality import squash_spaces
 from typing import Any, Dict, Iterable, Generator, Optional
 
 from requests import Session
@@ -27,7 +27,10 @@ class NominatimEnricher(Enricher[DS]):
 
     def search_nominatim(self, address: StatementEntity) -> Iterable[Dict[str, Any]]:
         for full in address.get("full"):
-            full_norm = collapse_spaces(full)
+            full_norm = squash_spaces(full)
+            if len(full_norm) < 5:
+                log.warning("Skipping tiny address: %s", full)
+                continue
             params = {
                 "q": full_norm,
                 "countrycodes": address.get("country"),

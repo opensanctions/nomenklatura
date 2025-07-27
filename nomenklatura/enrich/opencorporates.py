@@ -1,6 +1,6 @@
 import json
 import logging
-from normality import slugify
+from normality import slugify_text
 from typing import cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
@@ -100,7 +100,8 @@ class OpenCorporatesEnricher(Enricher[DS]):
 
     def make_entity_id(self, url: str) -> str:
         parsed = urlparse(url)
-        path = slugify(parsed.path, sep="-")
+        path = slugify_text(parsed.path, sep="-")
+        assert path is not None, "Invalid OpenCorporates URL: %s" % url
         return f"oc-{path}"
 
     def jurisdiction_to_country(self, juris: Optional[Any]) -> Optional[str]:

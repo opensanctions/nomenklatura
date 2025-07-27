@@ -2,7 +2,7 @@ import re
 import logging
 from typing import Iterable, List, Optional
 from functools import lru_cache
-from normality import collapse_spaces, ascii_text, category_replace
+from normality import squash_spaces, ascii_text, category_replace
 from normality.constants import WS
 from rigour.names import remove_person_prefixes
 from rigour.names.org_types import replace_org_types_compare
@@ -16,17 +16,17 @@ CHARACTERS_REMOVE_RE = re.compile(r"[\.\'’]")
 def clean_name_ascii(text: Optional[str]) -> Optional[str]:
     """Super-hardcore string scrubbing."""
     # transliterate to ascii
-    text = ascii_text(text)
     if text is None:
         return None
+    text = text.lower()
+    text = ascii_text(text)
     # replace punctuation and symbols
     text = CHARACTERS_REMOVE_RE.sub("", text)
-    text = text.lower()
-    cleaned = category_replace(text)
-    cleaned = collapse_spaces(cleaned)
-    if cleaned is None or len(cleaned) < 2:
+    text = category_replace(text)
+    text = squash_spaces(text)
+    if len(text) < 2:
         return None
-    return cleaned
+    return text
 
 
 @lru_cache(maxsize=2000)
@@ -36,8 +36,8 @@ def clean_name_light(text: str) -> Optional[str]:
     text = CHARACTERS_REMOVE_RE.sub("", text)
     text = text.lower()
     cleaned = category_replace(text)
-    cleaned = collapse_spaces(cleaned)
-    if cleaned is None or len(cleaned) < 2:
+    cleaned = squash_spaces(cleaned)
+    if len(cleaned) < 2:
         return None
     return cleaned
 
@@ -54,7 +54,10 @@ def fingerprint_name(original: str) -> Optional[str]:
     replaced = replace_org_types_compare(
         cleaned, normalizer=clean_name_ascii, generic=True
     )
-    return collapse_spaces(replaced)
+    replaced = squash_spaces(replaced)
+    if len(replaced) < 2:
+        return None
+    return replaced
 
 
 def names_word_list(

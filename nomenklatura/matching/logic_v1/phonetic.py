@@ -4,7 +4,7 @@ from itertools import product
 from normality import ascii_text
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.scripts import is_modern_alphabet
+from rigour.text.scripts import can_latinize
 from rigour.text.distance import is_levenshtein_plausible
 from rigour.text.phonetics import metaphone, soundex
 from rigour.names import tokenize_name
@@ -17,11 +17,11 @@ from nomenklatura.matching.compat import fingerprint_name, name_words
 class NameTokenPhonetic:
     def __init__(self, token: str):
         self.token = token
-        self.ascii = ascii_text(token)
+        self.ascii = ascii_text(token) if can_latinize(token) else None
 
     @cached_property
     def metaphone(self) -> Optional[str]:
-        if is_modern_alphabet(self.token) and self.ascii is not None:
+        if self.ascii is not None:
             phoneme = metaphone(self.ascii)
             if len(phoneme) >= 3:
                 return phoneme
@@ -70,7 +70,7 @@ def compare_parts_phonetic(left: NameTokenPhonetic, right: NameTokenPhonetic) ->
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:
     """Normalize a legal entity name without transliteration."""
-    if not is_modern_alphabet(original):
+    if not can_latinize(original):
         return None
     return fingerprint_name(original)
 

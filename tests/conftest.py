@@ -5,7 +5,7 @@ import yaml
 import pytest
 from pathlib import Path
 from tempfile import mkdtemp
-from normality import slugify
+from normality import slugify_text
 from followthemoney import Dataset, StatementEntity as Entity
 
 from nomenklatura import settings
@@ -114,7 +114,8 @@ def dindex(index_path: Path, dstore: SimpleMemoryStore):
 def wd_read_response(request, context):
     """Read a local file if it exists, otherwise download it. This is not
     so much a mocker as a test disk cache."""
-    file_name = slugify(request.url.split("/w/")[-1], sep="_")
+    file_name = slugify_text(request.url.split("/w/")[-1], sep="_")
+    assert file_name is not None, "Invalid Wikidata URL: %s" % request.url
     path = FIXTURES_PATH / f"wikidata/{file_name}.json"
     if not path.exists():
         import urllib.request
