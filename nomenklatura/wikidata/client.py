@@ -3,7 +3,7 @@ import logging
 from functools import lru_cache
 from typing import Any, List, Optional, Dict
 from requests import Session
-from normality import collapse_spaces
+from normality import squash_spaces
 from rigour.urls import build_url
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
@@ -81,8 +81,8 @@ class WikidataClient(object):
 
     def query(self, query_text: str) -> SparqlResponse:
         """Query the Wikidata SPARQL endpoint."""
-        clean_text: Optional[str] = collapse_spaces(query_text)
-        if clean_text is None or len(clean_text) == 0:
+        clean_text = squash_spaces(query_text)
+        if len(clean_text) == 0:
             raise RuntimeError("Invalid query: %r" % query_text)
         params = {"query": clean_text}
         url = build_url(self.QUERY_API, params=params)

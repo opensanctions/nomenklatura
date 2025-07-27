@@ -8,7 +8,7 @@ from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.index import BaseIndex
-from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm
+from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm, ScoringConfig
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
 log = logging.getLogger(__name__)
@@ -41,9 +41,12 @@ def xref(
     conflicting_match_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
+    config: Optional[ScoringConfig] = None,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
+    if config is None:
+        config = ScoringConfig.defaults()
     view = store.default_view(external=external)
     index = index_type(view, index_dir)
     index.build()
@@ -85,7 +88,7 @@ def xref(
                     continue
 
             if scored:
-                result = algorithm.compare(left, right)
+                result = algorithm.compare(left, right, config)
                 score = result.score
                 if conflict_reporter is not None:
                     conflict_reporter.check_match(result.score, left_id, right_id)

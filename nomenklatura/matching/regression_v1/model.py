@@ -13,12 +13,18 @@ from nomenklatura.matching.regression_v1.misc import phone_match, email_match
 from nomenklatura.matching.regression_v1.misc import address_match, address_numbers
 from nomenklatura.matching.regression_v1.misc import identifier_match, birth_place
 from nomenklatura.matching.regression_v1.misc import org_identifier_match
-from nomenklatura.matching.compare.countries import country_mismatch
-from nomenklatura.matching.compare.gender import gender_mismatch
+from nomenklatura.matching.regression_v1.misc import gender_mismatch
+from nomenklatura.matching.regression_v1.misc import country_mismatch
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_year_disjoint
-from nomenklatura.matching.types import FeatureDocs, FeatureDoc, MatchingResult
-from nomenklatura.matching.types import CompareFunction, Encoded, ScoringAlgorithm
+from nomenklatura.matching.types import (
+    FeatureDocs,
+    FeatureDoc,
+    MatchingResult,
+    ScoringConfig,
+)
+from nomenklatura.matching.types import CompareFunction, FtResult
+from nomenklatura.matching.types import Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
 from nomenklatura.util import DATA_PATH
 
@@ -38,7 +44,7 @@ class RegressionV1(ScoringAlgorithm):
         identifier_match,
         dob_matches,
         dob_year_matches,
-        dob_year_disjoint,
+        FtResult.unwrap(dob_year_disjoint),
         first_name_match,
         family_name_match,
         birth_place,
@@ -56,7 +62,6 @@ class RegressionV1(ScoringAlgorithm):
         with open(cls.MODEL_PATH, "wb") as fh:
             fh.write(mdl)
         cls.load.cache_clear()
-        cls.explain.cache_clear()
 
     @classmethod
     @cache
@@ -72,8 +77,7 @@ class RegressionV1(ScoringAlgorithm):
         return pipe, coefficients
 
     @classmethod
-    @cache
-    def explain(cls) -> FeatureDocs:
+    def get_feature_docs(cls) -> FeatureDocs:
         """Return an explanation of the features and their coefficients."""
         features: FeatureDocs = {}
         _, coefficients = cls.load()
@@ -87,17 +91,18 @@ class RegressionV1(ScoringAlgorithm):
         return features
 
     @classmethod
-    def compare(
-        cls, query: E, match: E, override_weights: Dict[str, float] = {}
-    ) -> MatchingResult:
+    def compare(cls, query: E, result: E, config: ScoringConfig) -> MatchingResult:
         """Use a regression model to compare two entities."""
         pipe, _ = cls.load()
-        encoded = cls.encode_pair(query, match)
+        encoded = cls.encode_pair(query, result)
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
         score = cast(float, pred[0][1])
-        features = {f.__name__: float(c) for f, c in zip(cls.FEATURES, encoded)}
-        return MatchingResult.make(score=score, features=features)
+        explanations: Dict[str, FtResult] = {}
+        for feature, coeff in zip(cls.FEATURES, encoded):
+            name = feature.__name__
+            explanations[name] = FtResult(score=float(coeff), detail=None)
+        return MatchingResult.make(score=score, explanations=explanations)
 
     @classmethod
     def encode_pair(cls, left: E, right: E) -> Encoded:

@@ -4,22 +4,24 @@ from itertools import product
 from normality import ascii_text
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.scripts import is_modern_alphabet
+from rigour.text.scripts import can_latinize
 from rigour.text.distance import is_levenshtein_plausible
 from rigour.text.phonetics import metaphone, soundex
 from rigour.names import tokenize_name
-from nomenklatura.util import name_words, list_intersection, fingerprint_name
+from rigour.util import list_intersection
+
 from nomenklatura.matching.util import type_pair, has_schema
+from nomenklatura.matching.compat import fingerprint_name, name_words
 
 
 class NameTokenPhonetic:
     def __init__(self, token: str):
         self.token = token
-        self.ascii = ascii_text(token)
+        self.ascii = ascii_text(token) if can_latinize(token) else None
 
     @cached_property
     def metaphone(self) -> Optional[str]:
-        if is_modern_alphabet(self.token) and self.ascii is not None:
+        if self.ascii is not None:
             phoneme = metaphone(self.ascii)
             if len(phoneme) >= 3:
                 return phoneme
@@ -68,7 +70,7 @@ def compare_parts_phonetic(left: NameTokenPhonetic, right: NameTokenPhonetic) ->
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:
     """Normalize a legal entity name without transliteration."""
-    if not is_modern_alphabet(original):
+    if not can_latinize(original):
         return None
     return fingerprint_name(original)
 
@@ -80,7 +82,7 @@ def _token_names_compare(
     for q, r in product(query_names, result_names):
         # length = max(2.0, (len(q) + len(r)) / 2.0)
         length = max(2.0, len(q))
-        combo = list_intersection(q, r) / float(length)
+        combo = len(list_intersection(q, r)) / float(length)
         score = max(score, combo)
     return score
 

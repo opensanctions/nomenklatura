@@ -1,5 +1,5 @@
 import re
-from normality import collapse_spaces
+from normality import squash_spaces
 from pathlib import Path
 from followthemoney import Dataset, StatementEntity
 
@@ -88,7 +88,7 @@ def test_xref_potential_conflicts(
 
     assert "Potential conflicting matches found:" in stdout, stdout
     assert "Candidate:\nc\n" in stdout, stdout
-    flat = collapse_spaces(stdout)
+    flat = squash_spaces(stdout)
     assert re.search(r"Left side of negative decision: (b|a)", flat), stdout
     assert re.search(r"Right side of negative decision: (b|a)", flat), stdout
     assert a.get("name")[0] in flat, stdout

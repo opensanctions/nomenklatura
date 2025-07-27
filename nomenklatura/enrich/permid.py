@@ -14,7 +14,7 @@ from requests import Session
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.enrich.common import EnrichmentAbort
-from nomenklatura.util import fingerprint_name
+from nomenklatura.matching.compat import fingerprint_name
 
 log = logging.getLogger(__name__)
 

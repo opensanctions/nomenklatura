@@ -1,10 +1,12 @@
 from typing import Callable, Dict, List
 from rich.console import Console
+from rich.text import Text
 from rich.table import Table
 import yaml
 
 from followthemoney import StatementEntity as Entity
 from followthemoney import Dataset
+from nomenklatura.matching.types import FtResult
 
 
 class Check:
@@ -16,14 +18,15 @@ class Check:
 
 
 class Result:
-    def __init__(self, check: Check, score: float, threshold: float):
+    def __init__(self, check: Check, ft: FtResult, threshold: float):
         self.check = check
-        self.score = score
+        self.score = ft.score
+        self.detail = str(ft.detail) if ft.detail else None
         self.threshold = threshold
         self.true_score = 1.0 if check.is_match else 0.0
-        self.is_match = score >= threshold
+        self.is_match = ft.score >= threshold
         self.is_correct = self.is_match == check.is_match
-        self.loss = abs(self.true_score - score)
+        self.loss = abs(self.true_score - ft.score)
 
 
 def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
@@ -68,15 +71,15 @@ def stub_compare(query: Entity, candidate: Entity) -> float:
 
 
 def run_benchmark(
-    func: Callable[[Entity, Entity], float], threshold: float = 0.8
+    func: Callable[[Entity, Entity], FtResult], threshold: float = 0.8
 ) -> None:
     """Run the benchmark."""
     checks = load_checks()
     results = []
     print("Running benchmark for: %s (threshold: %.2f)" % (func.__name__, threshold))
     for check in checks:
-        score = func(check.query, check.candidate)
-        result = Result(check, score, threshold)
+        ftres = func(check.query, check.candidate)
+        result = Result(check, ftres, threshold)
         results.append(result)
 
     console = Console()
@@ -84,9 +87,11 @@ def run_benchmark(
     failures = Table(title="Failed results")
     failures.add_column("Query", justify="left")
     failures.add_column("Candidate", justify="left")
-    failures.add_column("Truth", justify="right")
+    failures.add_column("Correct", justify="right")
+    failures.add_column("Result", justify="right")
     failures.add_column("Score", justify="right")
     failures.add_column("Loss", justify="right")
+    failures.add_column("Detail", justify="right")
 
     for result in results:
         if result.is_correct:
@@ -94,9 +99,11 @@ def run_benchmark(
         failures.add_row(
             result.check.query.first("name"),
             result.check.candidate.first("name"),
+            str(result.check.is_match),
             str(result.is_match),
             "%.2f" % result.score,
             "%.2f" % result.loss,
+            Text(result.detail, style="none"),
         )
     if len(failures.rows) > 0:
         console.print(failures)
@@ -156,5 +163,14 @@ def run_benchmark(
     console.print(table)
 
 
+def wrap_matcher(query: Entity, candidate: Entity) -> FtResult:
+    """Wrap the matcher function to match the expected signature."""
+    from nomenklatura.matching.logic_v2.names.match import name_match
+    from nomenklatura.matching.logic_v2.model import LogicV2
+
+    config = LogicV2.default_config()
+    return name_match(query, candidate, config)
+
+
 if __name__ == "__main__":
-    run_benchmark(stub_compare, threshold=0.8)
+    run_benchmark(wrap_matcher, threshold=0.7)

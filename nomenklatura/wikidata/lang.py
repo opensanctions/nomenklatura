@@ -18,7 +18,9 @@ class LangText(object):
     ) -> None:
         if text is None or len(text.strip()) == 0:
             text = None
-        self.text = remove_unsafe_chars(text)
+        if text is not None:
+            text = remove_unsafe_chars(text)
+        self.text = text
         self.lang: Optional[str] = None
         if lang is not None:
             self.lang = registry.language.clean_text(lang)
