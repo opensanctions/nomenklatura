@@ -1,6 +1,7 @@
 from typing import Dict, List, Set
 from rigour.names import NameTypeTag, Name, NamePart, Span, Symbol
 from rigour.names import align_person_name_order, normalize_name
+from rigour.names import remove_obj_prefixes
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -127,7 +128,9 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
     mismatch_penalty = 1 - config.get_float("nm_number_mismatch")
     best_result = FtResult(score=0.0, detail=None)
     for query_name in _get_object_names(query):
+        query_name = remove_obj_prefixes(query_name)
         for result_name in result_names:
+            result_name = remove_obj_prefixes(result_name)
             score = strict_levenshtein(query_name, result_name, max_rate=5)
             if score == 1.0:
                 detail = f"[={result_name}]"
