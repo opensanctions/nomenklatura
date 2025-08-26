@@ -1,3 +1,4 @@
+import itertools
 from typing import Set
 from rigour.names import NameTypeTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
@@ -52,8 +53,14 @@ def entity_names(
     # Remove short names that are contained in longer names. This is meant to prevent a scenario
     # where a short version of of a name ("John Smith") is matched to a query ("John K Smith"), where
     # a longer version would have disqualified the match ("John K Smith" != "John R Smith").
-    for name_obj in list(names):
-        for other in list(names):
-            if name_obj.contains(other):
-                names.remove(other)
-    return names
+    # We call these super_names because they are (non-strict) supersets of names.
+    super_names = set(names)
+    for name, other in itertools.combinations(names, 2):
+        # Check if name is still in super_names, otherwise two equal names
+        # will remove each other with none being left.
+        if name in super_names and name.contains(other):
+            # Use discard instead of remove here because other may already have been kicked out
+            # by another name of which it was a subset.
+            super_names.discard(other)
+        
+    return super_names

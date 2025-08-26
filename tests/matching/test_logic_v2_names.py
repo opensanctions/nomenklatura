@@ -1,4 +1,4 @@
-from rigour.names import NameTypeTag, NamePartTag, Symbol
+from rigour.names import NameTypeTag, NamePartTag, Symbol, Name
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
 
@@ -51,6 +51,15 @@ def test_entity_names_company():
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
+
+
+def test_entity_names_super_names():
+    entity = e("Person", name=["John Smith", "Smith, John", "Smith"])
+    names = entity_names(NameTypeTag.PER, entity)
+    # We expect one of the longest names to be returned
+    assert len(names) == 1
+    name = names.pop()
+    assert set(name.parts) == set(Name("John Smith").parts)
 
 
 # def test_specific():
