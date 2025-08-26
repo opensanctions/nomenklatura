@@ -50,10 +50,11 @@ def _identifier_format_match(
     if len(right_common) > 0:
         detail = f"Matched {format.TITLE}: {', '.join(right_common)}"
         return FtResult(score=1.0, detail=detail)
-    non_common = query_identifiers.intersection(result_identifiers)
-    if len(non_common) > 0:
-        detail = f"Out-of-format match: {', '.join(non_common)}"
-        return FtResult(score=0.8, detail=detail)
+    if format.STRONG:
+        non_common = query_identifiers.intersection(result_identifiers)
+        if len(non_common) > 0:
+            detail = f"Out-of-format match: {', '.join(non_common)}"
+            return FtResult(score=0.8, detail=detail)
     return FtResult(score=0.0, detail=f"No {format.TITLE} match")
 
 
