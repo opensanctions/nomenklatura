@@ -22,6 +22,7 @@ from nomenklatura.matching.types import FtResult, ScoringConfig
 
 
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
+    # For literal matches, return early instead of performing all the full magic.
     if query.norm_form == result.norm_form:
         return FtResult(score=1.0, detail=f"[={query.norm_form}]")
 
