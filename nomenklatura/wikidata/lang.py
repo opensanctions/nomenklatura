@@ -1,7 +1,7 @@
 import logging
-from rigour.langs import PREFFERED_LANGS
+from rigour.langs import PREFERRED_LANGS
 from typing import Callable, Dict, Iterable, List, Optional, Any, Set
-from followthemoney import registry, SE
+from followthemoney import registry, StatementEntity
 from normality.cleaning import remove_unsafe_chars
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class LangText(object):
 
     def apply(
         self,
-        entity: SE,
+        entity: StatementEntity,
         prop: str,
         clean: Optional[Callable[[str], Optional[str]]] = None,
     ) -> None:
@@ -54,7 +54,7 @@ class LangText(object):
 
     @classmethod
     def pick(cls, texts: Iterable["LangText"]) -> Optional["LangText"]:
-        for lang in PREFFERED_LANGS:
+        for lang in PREFERRED_LANGS:
             for lt in texts:
                 if lt.lang == lang:
                     return lt
