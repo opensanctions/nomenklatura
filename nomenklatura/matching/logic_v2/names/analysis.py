@@ -49,11 +49,8 @@ def entity_names(
         # TODO: should we tag phonetic tokens here?
         names.add(sname)
 
-    # Remove short names that are contained in longer names. This is meant to prevent a scenario
-    # where a short version of of a name ("John Smith") is matched to a query ("John K Smith"), where
-    # a longer version would have disqualified the match ("John K Smith" != "John R Smith").
-    for name_obj in list(names):
-        for other in list(names):
-            if name_obj.contains(other):
-                names.remove(other)
-    return names
+    # Remove short names that are contained in longer names.
+    # This prevents a scenario where a short version of a name ("John
+    # Smith") is matched to a query ("John K Smith"), where a longer version
+    # ("John K Smith" != "John R Smith") would have disqualified the match.
+    return Name.consolidate_names(names)
