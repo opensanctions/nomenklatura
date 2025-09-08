@@ -98,7 +98,7 @@ class MatchingResult(BaseModel):
     def make(cls, score: float, explanations: Dict[str, FtResult]) -> "MatchingResult":
         """Create a new matching result."""
         explanations = {k: v for k, v in explanations.items() if not v.empty()}
-        features = {k: v.score for k, v in explanations.items()}
+        features = {k: v.score for k, v in explanations.items() if v.score != FNUL}
         return cls(score=score, features=features, explanations=explanations)
 
     def __repr__(self) -> str:
