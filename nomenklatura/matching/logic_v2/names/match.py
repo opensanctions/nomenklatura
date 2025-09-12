@@ -24,7 +24,8 @@ from nomenklatura.matching.types import FtResult, ScoringConfig
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
     # For literal matches, return early instead of performing all the full magic.
     if query.norm_form == result.norm_form:
-        return FtResult(score=1.0, detail=f"[={query.norm_form}]")
+        match = Match(symbol=None, qps=query.parts, rps=result.parts, score=1.0, weight=1.0)
+        retval = FtResult(score=1.0, detail=str(match))
 
     # Stage 1: We create a set of pairings between the symbols that have been annotated as spans
     # on both names. This will try to determine the maximum, non-overlapping set of name
