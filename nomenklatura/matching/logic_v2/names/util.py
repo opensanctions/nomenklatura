@@ -1,6 +1,6 @@
 import re
 
-from typing import List, Optional, Any
+from typing import Optional, Any, Sequence
 from rigour.names import NamePart, Symbol
 
 
@@ -12,8 +12,8 @@ class Match:
 
     def __init__(
         self,
-        qps: List[NamePart] = [],
-        rps: List[NamePart] = [],
+        qps: Sequence[NamePart] = [],
+        rps: Sequence[NamePart] = [],
         symbol: Optional[Symbol] = None,
         score: float = 0.0,
         weight: float = 1.0,
@@ -47,7 +47,7 @@ class Match:
         qps_str = " ".join([part.comparable for part in self.qps])
         rps_str = " ".join([part.comparable for part in self.rps])
         if self.symbol is not None:
-            explanation = f"{qps_str!r}≈{rps_str!r} symbolMatch({self.symbol})"
+            explanation = f"{qps_str!r}≈{rps_str!r} symbolMatch {self.symbol}"
         elif not len(qps_str):
             explanation = f"{rps_str!r} extraResultPart"
         elif not len(rps_str):

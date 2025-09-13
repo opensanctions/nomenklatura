@@ -8,7 +8,6 @@ from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS, SYM_SCORES
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
@@ -26,7 +25,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     # on both names. This will try to determine the maximum, non-overlapping set of name
     # parts that can be explained using pre-defined symbols.
     query_symbols: Set[Symbol] = set(span.symbol for span in query.spans)
-    pairings = [Pairing.create(query, result)]
+    pairings = [Pairing.empty()]
     result_map: Dict[Symbol, List[Span]] = {}
     for span in result.spans:
         if span.symbol not in query_symbols:
@@ -64,24 +63,11 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     extra_result_part_weight = config.get_float("nm_extra_result_name")
     retval = FtResult(score=0.0, detail=None)
     for pairing in pairings:
-        matches: List[Match] = []
-
-        # Symbols add a fixed weight each to the score, depending on their category. This
-        # balances out the potential length of the underlying name parts.
-        for symbol, literal_match in pairing.symbols.items():
-            match = Match(symbol=symbol)
-            match.score = SYM_SCORES.get(symbol.category, 1.0)
-            if literal_match:
-                match.score = 1.0
-            # Some types of symbols effectively also work as soft stopwords, reducing the relevance
-            # of the match. For example, "Ltd." in an organization name is not as informative as a
-            # person's first name.
-            match.weight = SYM_WEIGHTS.get(symbol.category, 1.0)
-            matches.append(match)
+        matches: List[Match] = pairing.matches
 
         # Name parts that have not been tagged with a symbol:
-        query_rem = pairing.query_remainder()
-        result_rem = pairing.result_remainder()
+        query_rem = [part for part in query.parts if part not in pairing.query_used]
+        result_rem = [part for part in result.parts if part not in pairing.result_used]
 
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
