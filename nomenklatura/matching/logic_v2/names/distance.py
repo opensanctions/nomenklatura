@@ -146,7 +146,6 @@ def weighted_edit_similarity(
                 match.rps.append(rp)
             qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
             rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-            # TODO: multiply?
             match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
             if len(match.qps) == 1 and len(match.rps) == 1:
                 if is_stopword(qp.form):
