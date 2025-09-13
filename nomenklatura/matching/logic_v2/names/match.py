@@ -22,11 +22,6 @@ from nomenklatura.matching.types import FtResult, ScoringConfig
 
 
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
-    # For literal matches, return early instead of performing all the full magic.
-    if query.norm_form == result.norm_form:
-        match = Match(symbol=None, qps=query.parts, rps=result.parts, score=1.0, weight=1.0)
-        retval = FtResult(score=1.0, detail=str(match))
-
     # Stage 1: We create a set of pairings between the symbols that have been annotated as spans
     # on both names. This will try to determine the maximum, non-overlapping set of name
     # parts that can be explained using pre-defined symbols.
@@ -165,13 +160,20 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = entity_names(type_tag, query, is_query=True)
     result_names = entity_names(type_tag, result)
 
-    query_comparable = {name.comparable for name in query_names}
-    result_comparable = {name.comparable for name in result_names}
-    # For literal matches, return early instead of performing all the full magic.
-    common = query_comparable.intersection(result_comparable)
+    # For literal matches, return early instead of performing all the magic. This addresses
+    # a user surprise where literal matches can score below 1.0 after name de-duplication has
+    # only left a superset name on one side.
+    query_comparable = {name.comparable: name for name in query_names}
+    result_comparable = {name.comparable: name for name in result_names}
+    common = set(query_comparable).intersection(result_comparable)
     if len(common) > 0:
         longest = max(common, key=len)
-        return FtResult(score=1.0, detail=f"[{longest!r} literalMatch]")
+        match = Match(
+            qps=query_comparable[longest].parts,
+            rps=result_comparable[longest].parts,
+            score=1.0,
+        )
+        return FtResult(score=match.score, detail=str(match))
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John
