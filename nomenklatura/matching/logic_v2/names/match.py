@@ -107,7 +107,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             detail = " ".join(str(m) for m in matches)
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
-        retval.detail = f"{query.comparable} / {result.comparable}"
+        retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
     return retval
 
 
@@ -131,10 +131,9 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
             result_name = remove_obj_prefixes(result_name)
             score = strict_levenshtein(query_name, result_name, max_rate=5)
             if score == 1.0:
-                detail = f"[={result_name}]"
+                detail = f"[{result_name!r} literalMatch]"
             else:
-                score_det = ("%.2f" % score).lstrip("0")
-                detail = f"[{query_name}<{score_det}>{result_name}]"
+                detail = f"[{query_name!r}≈{result_name!r}, fuzzyMatch: {score:.2f}]"
             if numbers_mismatch(query_name, result_name):
                 score = score * mismatch_penalty
                 detail = "Number mismatch"
