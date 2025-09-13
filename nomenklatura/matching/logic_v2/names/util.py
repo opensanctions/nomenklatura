@@ -56,8 +56,6 @@ class Match:
             explanation = f"{rps_str!r} literalMatch"
         else:
             explanation = f"{qps_str!r}≈{rps_str!r} fuzzyMatch"
-        # score_str = f"{self.score:.2f}".lstrip("0")
-        # return f"[{qps_str}<{score_str}>{rps_str}]"
         return f"[{explanation}: {self.score:.2f}, weight {self.weight:.2f}]"
 
 
