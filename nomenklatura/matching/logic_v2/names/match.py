@@ -26,8 +26,6 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     # on both names. This will try to determine the maximum, non-overlapping set of name
     # parts that can be explained using pre-defined symbols.
     query_symbols: Set[Symbol] = set(span.symbol for span in query.spans)
-    # result_symbols: Set[Symbol] = set(span.symbol for span in result.spans)
-    # common_symbols = query_symbols.intersection(result_symbols)
     pairings = [Pairing.create(query, result)]
     result_map: Dict[Symbol, List[Span]] = {}
     for span in result.spans:
