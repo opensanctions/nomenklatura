@@ -21,11 +21,11 @@ SYM_SCORES = {
     Symbol.Category.LOCATION: 0.9,
 }
 
-
-PART_WEIGHTS: Dict[NamePartTag, float] = {
+EXTRA_PART_WEIGHTS: Dict[NamePartTag, float] = {
     NamePartTag.NUM: 3.0,
-    NamePartTag.LEGAL: 0.9,
+    NamePartTag.LEGAL: 0.8,
     NamePartTag.PATRONYMIC: 0.9,
     NamePartTag.MATRONYMIC: 0.9,
     NamePartTag.MIDDLE: 0.9,
+    NamePartTag.STOP: 0.7,
 }
