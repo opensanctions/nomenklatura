@@ -9,6 +9,7 @@ from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import is_disjoint, clean_map
 from nomenklatura.matching.compat import clean_name_ascii, clean_name_light
 from nomenklatura.matching.compat import fingerprint_name, name_words, names_word_list
+from nomenklatura.matching.util import FNUL
 
 
 def _name_parts(name: str) -> List[str]:
@@ -54,7 +55,7 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
 def person_name_jaro_winkler(query: E, result: E) -> float:
     """Compare two persons' names using the Jaro-Winkler string similarity algorithm."""
     if not has_schema(query, result, "Person"):
-        return 0.0
+        return FNUL
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_name_parts(n) for n in query_names_]
     result_names = [_name_parts(n) for n in result_names_]
@@ -73,9 +74,9 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
     if has_schema(query, result, "Person"):
-        return 0.0
+        return FNUL
     query_names, result_names = type_pair(query, result, registry.name)
-    max_score = 0.0
+    max_score = FNUL
     for qn, rn in product(query_names, result_names):
         score = levenshtein_similarity(qn, rn)
         max_score = max(max_score, score)
@@ -94,10 +95,14 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         scores: Dict[Tuple[str, str], float] = {}
         # compute all pairwise scores for name parts:
         for q, r in product(set(qtokens), set(rtokens)):
-            scores[(q, r)] = levenshtein_similarity(q, r)
+            scores[(q, r)] = levenshtein_similarity(
+                q, r, max_edits=None, max_percent=1.0
+            )
         aligned: List[Tuple[str, str, float]] = []
         # find the best pairing for each name part by score:
-        for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
+        for (q, r), score in sorted(
+            scores.items(), key=lambda i: (i[1], i[0]), reverse=True
+        ):
             # one name part can only be used once, but can show up multiple times:
             while q in qtokens and r in rtokens:
                 qtokens.remove(q)
@@ -120,7 +125,7 @@ def name_literal_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     rnames = clean_map(result_names, clean_name_light)
     overlap = qnames.intersection(rnames)
     if len(overlap) == 0:
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     detail = f"Identical names: {', '.join(overlap)}"
     return FtResult(score=1.0, detail=detail)
 
@@ -133,7 +138,7 @@ def last_name_mismatch(query: E, result: E) -> float:
     # TODO: levenshtein
     # for (qn, rn) in product(qvt, rvt):
     #     similarity = levenshtein_similarity(qn, rn)
-    return 1.0 if is_disjoint(qvt, rvt) else 0.0
+    return 1.0 if is_disjoint(qvt, rvt) else FNUL
 
 
 def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -147,6 +152,6 @@ def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     rnames = clean_map(result_names, clean_name_light)
     overlap = qnames.intersection(rnames)
     if len(overlap) == 0:
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     detail = f"Matched weak alias: {', '.join(overlap)}"
     return FtResult(score=1.0, detail=detail)

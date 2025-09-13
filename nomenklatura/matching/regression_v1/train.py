@@ -62,7 +62,7 @@ def train_matcher(pairs_file: PathLike) -> None:
     negative = len([p for p in pairs if p.judgement == Judgement.NEGATIVE])
     log.info("Total pairs loaded: %d (%d pos/%d neg)", len(pairs), positive, negative)
     X, y = pairs_to_arrays(pairs)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30)
     # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
     # logreg = LogisticRegression(penalty="l1", solver="liblinear")
     logreg = LogisticRegression(penalty="l2")
@@ -72,6 +72,7 @@ def train_matcher(pairs_file: PathLike) -> None:
     coef = logreg.coef_[0]
     coefficients = {n.__name__: c for n, c in zip(RegressionV1.FEATURES, coef)}
     RegressionV1.save(pipe, coefficients)
+    print("Written to: %s" % RegressionV1.MODEL_PATH.as_posix())
     print("Coefficients:")
     pprint(coefficients)
     y_pred = pipe.predict(X_test)

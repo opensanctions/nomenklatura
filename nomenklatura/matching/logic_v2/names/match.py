@@ -164,6 +164,22 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
         return match_object_names(query, result, config)
     query_names = entity_names(type_tag, query, is_query=True)
     result_names = entity_names(type_tag, result)
+
+    query_comparable = {name.comparable for name in query_names}
+    result_comparable = {name.comparable for name in result_names}
+    # For literal matches, return early instead of performing all the full magic.
+    common = query_comparable.intersection(result_comparable)
+    if len(common) > 0:
+        longest = max(common, key=len)
+        return FtResult(score=1.0, detail=f"[{longest!r} literalMatch]")
+
+    # Remove short names that are contained in longer names.
+    # This prevents a scenario where a short version of a name ("John
+    # Smith") is matched to a query ("John K Smith"), where a longer version
+    # ("John K Smith" != "John R Smith") would have disqualified the match.
+    query_names = Name.consolidate_names(query_names)
+    result_names = Name.consolidate_names(result_names)
+
     for query_name in query_names:
         for result_name in result_names:
             ftres = match_name_symbolic(query_name, result_name, config)

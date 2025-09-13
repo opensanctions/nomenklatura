@@ -2,6 +2,7 @@ from followthemoney.proxy import E
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import props_pair
+from nomenklatura.matching.util import FNUL
 
 
 def gender_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -11,4 +12,4 @@ def gender_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
         if len(set(qv).intersection(rv)) == 0:
             detail = f"Different genders: {qv} / {rv}"
             return FtResult(score=1.0, detail=detail)
-    return FtResult(score=0.0, detail=None)
+    return FtResult(score=FNUL, detail=None)
