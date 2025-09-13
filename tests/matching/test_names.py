@@ -215,6 +215,16 @@ def test_name_fingerprint_levenshtein():
     assert name_fingerprint_levenshtein(query, result) < 0.85
     assert name_fingerprint_levenshtein(query, result) > 0.5
 
+    # Regression test of #234
+    # The score for this comparison was 0, 0.8 or 0.86 depending on how
+    # the pairs with the same score were ordered, and apparently consistent
+    # within a process but different across processes.
+    # So failure would be intermittent.
+    query = e("Company", name="construction ltd")
+    result = e("Company", name="LLC CONSTRUCTION DREDGING COMPANY")
+    assert name_fingerprint_levenshtein(query, result) > 0.5
+    assert name_fingerprint_levenshtein(query, result) < 0.9
+
 
 def test_org_name_partial_match():
     query = e("Company", name="CRYSTALORD LIMITED")

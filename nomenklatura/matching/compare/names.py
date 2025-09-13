@@ -95,10 +95,14 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         scores: Dict[Tuple[str, str], float] = {}
         # compute all pairwise scores for name parts:
         for q, r in product(set(qtokens), set(rtokens)):
-            scores[(q, r)] = levenshtein_similarity(q, r)
+            scores[(q, r)] = levenshtein_similarity(
+                q, r, max_edits=None, max_percent=1.0
+            )
         aligned: List[Tuple[str, str, float]] = []
         # find the best pairing for each name part by score:
-        for (q, r), score in sorted(scores.items(), key=lambda i: i[1], reverse=True):
+        for (q, r), score in sorted(
+            scores.items(), key=lambda i: (i[1], i[0]), reverse=True
+        ):
             # one name part can only be used once, but can show up multiple times:
             while q in qtokens and r in rtokens:
                 qtokens.remove(q)
