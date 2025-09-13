@@ -8,7 +8,6 @@ from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.magic import SYM_WEIGHTS, SYM_SCORES
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
@@ -22,17 +21,11 @@ from nomenklatura.matching.types import FtResult, ScoringConfig
 
 
 def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
-    # For literal matches, return early instead of performing all the full magic.
-    if query.norm_form == result.norm_form:
-        return FtResult(score=1.0, detail=f"[={query.norm_form}]")
-
     # Stage 1: We create a set of pairings between the symbols that have been annotated as spans
     # on both names. This will try to determine the maximum, non-overlapping set of name
     # parts that can be explained using pre-defined symbols.
     query_symbols: Set[Symbol] = set(span.symbol for span in query.spans)
-    # result_symbols: Set[Symbol] = set(span.symbol for span in result.spans)
-    # common_symbols = query_symbols.intersection(result_symbols)
-    pairings = [Pairing.create(query, result)]
+    pairings = [Pairing.empty()]
     result_map: Dict[Symbol, List[Span]] = {}
     for span in result.spans:
         if span.symbol not in query_symbols:
@@ -70,24 +63,11 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     extra_result_part_weight = config.get_float("nm_extra_result_name")
     retval = FtResult(score=0.0, detail=None)
     for pairing in pairings:
-        matches: List[Match] = []
-
-        # Symbols add a fixed weight each to the score, depending on their category. This
-        # balances out the potential length of the underlying name parts.
-        for symbol, literal_match in pairing.symbols.items():
-            match = Match(symbol=symbol)
-            match.score = SYM_SCORES.get(symbol.category, 1.0)
-            if literal_match:
-                match.score = 1.0
-            # Some types of symbols effectively also work as soft stopwords, reducing the relevance
-            # of the match. For example, "Ltd." in an organization name is not as informative as a
-            # person's first name.
-            match.weight = SYM_WEIGHTS.get(symbol.category, 1.0)
-            matches.append(match)
+        matches: List[Match] = pairing.matches
 
         # Name parts that have not been tagged with a symbol:
-        query_rem = pairing.query_remainder()
-        result_rem = pairing.result_remainder()
+        query_rem = [part for part in query.parts if part not in pairing.query_used]
+        result_rem = [part for part in result.parts if part not in pairing.result_used]
 
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
@@ -113,7 +93,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             detail = " ".join(str(m) for m in matches)
             retval = FtResult(score=score, detail=detail)
     if retval.detail is None:
-        retval.detail = f"{query.comparable} / {result.comparable}"
+        retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
     return retval
 
 
@@ -137,10 +117,9 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
             result_name = remove_obj_prefixes(result_name)
             score = strict_levenshtein(query_name, result_name, max_rate=5)
             if score == 1.0:
-                detail = f"[={result_name}]"
+                detail = f"[{result_name!r} literalMatch]"
             else:
-                score_det = ("%.2f" % score).lstrip("0")
-                detail = f"[{query_name}<{score_det}>{result_name}]"
+                detail = f"[{query_name!r}≈{result_name!r}, fuzzyMatch: {score:.2f}]"
             if numbers_mismatch(query_name, result_name):
                 score = score * mismatch_penalty
                 detail = "Number mismatch"
@@ -164,13 +143,20 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = entity_names(type_tag, query, is_query=True)
     result_names = entity_names(type_tag, result)
 
-    query_comparable = {name.comparable for name in query_names}
-    result_comparable = {name.comparable for name in result_names}
-    # For literal matches, return early instead of performing all the full magic.
-    common = query_comparable.intersection(result_comparable)
+    # For literal matches, return early instead of performing all the magic. This addresses
+    # a user surprise where literal matches can score below 1.0 after name de-duplication has
+    # only left a superset name on one side.
+    query_comparable = {name.comparable: name for name in query_names}
+    result_comparable = {name.comparable: name for name in result_names}
+    common = set(query_comparable).intersection(result_comparable)
     if len(common) > 0:
         longest = max(common, key=len)
-        return FtResult(score=1.0, detail=f"[{longest!r} literalMatch]")
+        match = Match(
+            qps=query_comparable[longest].parts,
+            rps=result_comparable[longest].parts,
+            score=1.0,
+        )
+        return FtResult(score=match.score, detail=str(match))
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John

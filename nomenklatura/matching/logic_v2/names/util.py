@@ -1,6 +1,6 @@
 import re
 
-from typing import List, Optional, Any
+from typing import Optional, Any, Sequence
 from rigour.names import NamePart, Symbol
 
 
@@ -12,8 +12,8 @@ class Match:
 
     def __init__(
         self,
-        qps: List[NamePart] = [],
-        rps: List[NamePart] = [],
+        qps: Sequence[NamePart] = [],
+        rps: Sequence[NamePart] = [],
         symbol: Optional[Symbol] = None,
         score: float = 0.0,
         weight: float = 1.0,
@@ -44,18 +44,19 @@ class Match:
 
     def __str__(self) -> str:
         """String representation of the Match object for debugging."""
-        if self.symbol is not None:
-            return str(self.symbol)
         qps_str = " ".join([part.comparable for part in self.qps])
         rps_str = " ".join([part.comparable for part in self.rps])
-        if not len(qps_str):
-            return f"[+{rps_str}]"
-        if not len(rps_str):
-            return f"[-{qps_str}]"
-        if qps_str == rps_str:
-            return f"[={rps_str}]"
-        score_str = f"{self.score:.2f}".lstrip("0")
-        return f"[{qps_str}<{score_str}>{rps_str}]"
+        if self.symbol is not None:
+            explanation = f"{qps_str!r}≈{rps_str!r} symbolMatch {self.symbol}"
+        elif not len(qps_str):
+            explanation = f"{rps_str!r} extraResultPart"
+        elif not len(rps_str):
+            explanation = f"{qps_str!r} extraQueryPart"
+        elif qps_str == rps_str:
+            explanation = f"{rps_str!r} literalMatch"
+        else:
+            explanation = f"{qps_str!r}≈{rps_str!r} fuzzyMatch"
+        return f"[{explanation}: {self.score:.2f}, weight {self.weight:.2f}]"
 
 
 NUMERIC = re.compile(r"\d{1,}")

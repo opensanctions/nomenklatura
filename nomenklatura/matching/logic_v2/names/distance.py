@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
 from rigour.names import NamePart, is_stopword
 from rigour.text.distance import levenshtein
-from nomenklatura.matching.logic_v2.names.magic import PART_WEIGHTS
+from nomenklatura.matching.logic_v2.names.magic import EXTRA_PART_WEIGHTS
 from nomenklatura.matching.logic_v2.names.util import Match
 
 SEP = " "
@@ -38,12 +38,10 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     return (1 - (distance / max_len)) ** max_edits
 
 
-def _part_weight(part: NamePart, base: float) -> float:
+def _extra_part_weight(part: NamePart, base: float) -> float:
     """Calculate the weight of a name part based on its tag."""
-    if part.tag in PART_WEIGHTS:
-        return base * PART_WEIGHTS[part.tag]
-    if is_stopword(part.form):
-        return base * 0.7
+    if part.tag in EXTRA_PART_WEIGHTS:
+        return base * EXTRA_PART_WEIGHTS[part.tag]
     return base
 
 
@@ -135,39 +133,49 @@ def weighted_edit_similarity(
                             res_cur = res_parts[next_idx]
 
     # Use the overlaps to create matches between query and result parts.
-    matches: Dict[NamePart, Match] = {}
+    part_matches: Dict[NamePart, Match] = {}
     for (qp, rp), overlap in overlaps.items():
         min_len = min(len(qp.comparable), len(rp.comparable))
         if overlap / min_len > 0.51:
-            match = matches.get(qp, matches.get(rp, Match()))
+            match = part_matches.get(qp, part_matches.get(rp, Match()))
             if qp not in match.qps:
                 match.qps.append(qp)
             if rp not in match.rps:
                 match.rps.append(rp)
+            part_matches[rp] = match
+            part_matches[qp] = match
+
+    # Compute the scores where an overlap was applied
+    matches = set(part_matches.values())
+    for match in matches:
+        # Score down stopwords:
+        if len(match.qps) == 1 and len(match.rps) == 1:
+            if is_stopword(match.qps[0].form):
+                match.weight = 0.7
+
+        qstr = SEP.join(p.comparable for p in match.qps)
+        rstr = SEP.join(p.comparable for p in match.rps)
+        if qstr == rstr:
+            match.score = 1.0
+        else:
             qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
             rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-            # TODO: multiply?
             match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
-            if len(match.qps) == 1 and len(match.rps) == 1:
-                if is_stopword(qp.form):
-                    match.weight = 0.7
-            matches[rp] = match
-            matches[qp] = match
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries
     # to always be matched in full.
     for qp in qry_parts:
-        if qp not in matches:
+        if qp not in part_matches:
             match = Match(qps=[qp])
-            match.weight = _part_weight(qp, extra_query_part_weight)
-            matches[qp] = match
+            match.weight = _extra_part_weight(qp, extra_query_part_weight)
+            matches.add(match)
 
     # Non-matched result parts
     for rp in res_parts:
-        if rp not in matches:
+        if rp not in part_matches:
             match = Match(rps=[rp])
-            match.weight = _part_weight(rp, extra_result_part_weight)
-            matches[rp] = match
+            match.weight = _extra_part_weight(rp, extra_result_part_weight)
+            matches.add(match)
 
-    return list(set(matches.values()))
+    return list(matches)
