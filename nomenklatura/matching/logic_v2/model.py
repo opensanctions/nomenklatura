@@ -28,7 +28,7 @@ class LogicV2(HeuristicAlgorithm):
     a different set of features and consolidates name matching into a single
     feature, which uses a versatile and complex name matching algorithm."""
 
-    NAME = "UNSTABLE-logic-v2"
+    NAME = "logic-v2"
     features = [
         Feature(func=name_match, weight=1.0),
         Feature(func=address_entity_match, weight=0.98),
