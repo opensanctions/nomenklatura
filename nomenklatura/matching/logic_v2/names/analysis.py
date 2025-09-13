@@ -48,9 +48,4 @@ def entity_names(
 
         # TODO: should we tag phonetic tokens here?
         names.add(sname)
-
-    # Remove short names that are contained in longer names.
-    # This prevents a scenario where a short version of a name ("John
-    # Smith") is matched to a query ("John K Smith"), where a longer version
-    # ("John K Smith" != "John R Smith") would have disqualified the match.
-    return Name.consolidate_names(names)
+    return names
