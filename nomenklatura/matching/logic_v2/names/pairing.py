@@ -52,7 +52,7 @@ class Pairing:
             if len(query_span.parts[0]) > 1 and len(result_span.parts[0]) > 1:
                 return False
 
-        if query_span.symbol.category == Symbol.Category.NAME:
+        if query_span.symbol.category in (Symbol.Category.NAME, Symbol.Category.NICK):
             # This may not be correct for many tokens since it's expected that the bulk
             # of filtered items will be single-part span.
             for qp, rp in zip(query_span.parts, result_span.parts):

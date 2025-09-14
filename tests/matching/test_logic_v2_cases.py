@@ -98,6 +98,30 @@ CASES = [
             "name": "Nursultan Naza",
         },
     },
+    {
+        "schema": "Person",
+        "matches": True,
+        "query": {
+            "name": "Ted Doe",
+        },
+        "result": {
+            "name": "Theodore Doe",
+        },
+    },
+    {
+        "schema": "Person",
+        "matches": False,
+        "query": {
+            "name": "Ted Doe",
+            "firstName": "Doe",
+            "lastName": "Ted",
+        },
+        "result": {
+            "name": "Theodore Doe",
+            "firstName": "Theodore",
+            "lastName": "Doe",
+        },
+    },
     # Organizations
     {
         "schema": "Company",
