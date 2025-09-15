@@ -8,6 +8,7 @@ from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
+from nomenklatura.matching.logic_v2.names.magic import weight_extra_match
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
@@ -59,8 +60,9 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     # symbolic match (some types of symbols are considered less strong matches than others) and
     # the fuzzy match of the remaining name parts. Special scoring is also applied for extra
     # name parts that are not matched to the other name during name alignment.
-    extra_query_part_weight = config.get_float("nm_extra_query_name")
-    extra_result_part_weight = config.get_float("nm_extra_result_name")
+    extra_query_weight = config.get_float("nm_extra_query_name")
+    extra_result_weight = config.get_float("nm_extra_result_name")
+    family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=0.0, detail=None)
     for pairing in pairings:
         matches: List[Match] = pairing.matches
@@ -76,19 +78,21 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            _matches = weighted_edit_similarity(
-                query_rem,
-                result_rem,
-                extra_query_part_weight=extra_query_part_weight,
-                extra_result_part_weight=extra_result_part_weight,
-            )
-            matches.extend(_matches)
+            matches.extend(weighted_edit_similarity(query_rem, result_rem))
 
+        # Apply additional weight and score normalisation to the generated matches based
+        # on contextual clues.
         for match in matches:
             if match.score < 1.0 and match.qstr == match.rstr:
                 match.score = 1.0
             if match.is_family_name():
-                match.weight *= config.get_float("nm_family_name_weight")
+                match.weight *= family_name_weight
+            elif len(match.qps) == 0:
+                match.weight = weight_extra_match(
+                    match.rps, result, extra_result_weight
+                )
+            elif len(match.rps) == 0:
+                match.weight = weight_extra_match(match.qps, query, extra_query_weight)
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
