@@ -9,6 +9,7 @@ SYM_WEIGHTS = {
     Symbol.Category.ORG_CLASS: 0.7,
     Symbol.Category.INITIAL: 0.5,
     Symbol.Category.NICK: 0.8,
+    # in "A B International" and "X International", we don't want to give too much weight to the symbol
     Symbol.Category.SYMBOL: 0.3,
     Symbol.Category.NUMERIC: 1.3,
     Symbol.Category.LOCATION: 0.8,
