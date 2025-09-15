@@ -19,9 +19,7 @@ SYM_WEIGHTS = {
 # the impact of the extra name part on the score.
 EXTRAS_WEIGHTS = {
     Symbol.Category.ORG_CLASS: 0.7,
-    Symbol.Category.NICK: 0.8,
     Symbol.Category.SYMBOL: 0.7,
-    Symbol.Category.INITIAL: 0.9,
     Symbol.Category.NUMERIC: 1.3,
     Symbol.Category.LOCATION: 0.8,
 }
@@ -46,8 +44,6 @@ def weight_extra_match(parts: List[NamePart], name: Name) -> float:
     weight = 1.0
     categories = set()
     for span in name.spans:
-        if span.symbol.category in (Symbol.Category.INITIAL, Symbol.Category.NICK):
-            continue
         if sparts == hash(tuple(span.parts)):
             categories.add(span.symbol.category)
             weight = weight * EXTRAS_WEIGHTS.get(span.symbol.category, 1.0)
