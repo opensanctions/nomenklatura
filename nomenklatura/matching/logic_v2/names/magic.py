@@ -50,6 +50,9 @@ def weight_extra_match(parts: List[NamePart], name: Name) -> float:
     weight = 1.0
     categories = set()
     for span in name.spans:
+        if span.symbol.category == Symbol.Category.NUMERIC:
+            if not span.comparable.isnumeric() and len(span.comparable) < 2:
+                continue
         if sparts == hash(tuple(span.parts)):
             categories.add(span.symbol.category)
             weight = weight * EXTRAS_WEIGHTS.get(span.symbol.category, 1.0)
