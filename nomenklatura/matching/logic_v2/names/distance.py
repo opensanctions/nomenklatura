@@ -4,7 +4,7 @@ from collections import defaultdict
 from itertools import zip_longest, chain
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
-from rigour.names import NamePart, is_stopword
+from rigour.names import NamePart, NamePartTag, is_stopword
 from rigour.text.distance import levenshtein
 from nomenklatura.matching.logic_v2.names.magic import EXTRA_PART_WEIGHTS
 from nomenklatura.matching.logic_v2.names.util import Match
@@ -40,6 +40,9 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
 
 def _extra_part_weight(part: NamePart, base: float) -> float:
     """Calculate the weight of a name part based on its tag."""
+    # TODO: we want to down-rank symbols here but that seems complicated to get to.
+    if is_stopword(part.form):
+        return base * EXTRA_PART_WEIGHTS[NamePartTag.STOP]
     if part.tag in EXTRA_PART_WEIGHTS:
         return base * EXTRA_PART_WEIGHTS[part.tag]
     return base
@@ -153,14 +156,9 @@ def weighted_edit_similarity(
             if is_stopword(match.qps[0].form):
                 match.weight = 0.7
 
-        qstr = SEP.join(p.comparable for p in match.qps)
-        rstr = SEP.join(p.comparable for p in match.rps)
-        if qstr == rstr:
-            match.score = 1.0
-        else:
-            qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
-            rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-            match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
+        qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
+        rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
+        match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries

@@ -84,6 +84,12 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             )
             matches.extend(_matches)
 
+        for match in matches:
+            if match.score < 1.0 and match.qstr == match.rstr:
+                match.score = 1.0
+            if match.is_family_name():
+                match.weight *= config.get_float("nm_family_name_weight")
+
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
         total_weight = sum(match.weight for match in matches)

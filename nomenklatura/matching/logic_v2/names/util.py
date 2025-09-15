@@ -1,7 +1,7 @@
 import re
 
 from typing import Optional, Any, Sequence
-from rigour.names import NamePart, Symbol
+from rigour.names import NamePart, Symbol, NamePartTag
 
 
 class Match:
@@ -30,6 +30,26 @@ class Match:
         """Calculate the weighted score."""
         return self.score * self.weight
 
+    @property
+    def qstr(self) -> str:
+        """Get the query string representation."""
+        return " ".join([part.comparable for part in self.qps])
+
+    @property
+    def rstr(self) -> str:
+        """Get the result string representation."""
+        return " ".join([part.comparable for part in self.rps])
+
+    def is_family_name(self) -> bool:
+        """Check if the match represents a family name."""
+        for np in self.qps:
+            if np.tag == NamePartTag.FAMILY:
+                return True
+        for np in self.rps:
+            if np.tag == NamePartTag.FAMILY:
+                return True
+        return False
+
     def __hash__(self) -> int:
         """Hash the Match object based on query and result parts."""
         return hash((self.symbol, tuple(self.qps), tuple(self.rps)))
@@ -44,8 +64,8 @@ class Match:
 
     def __str__(self) -> str:
         """String representation of the Match object for debugging."""
-        qps_str = " ".join([part.comparable for part in self.qps])
-        rps_str = " ".join([part.comparable for part in self.rps])
+        qps_str = self.qstr
+        rps_str = self.rstr
         if self.symbol is not None:
             explanation = f"{qps_str!r}≈{rps_str!r} symbolMatch {self.symbol}"
         elif not len(qps_str):

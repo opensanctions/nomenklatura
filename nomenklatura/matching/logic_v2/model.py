@@ -63,7 +63,12 @@ class LogicV2(HeuristicAlgorithm):
         "nm_extra_result_name": ConfigVar(
             type=ConfigVarType.FLOAT,
             description="Weight for name parts in the result not matched to the query.",
-            default=0.1,
+            default=0.2,
+        ),
+        "nm_family_name_weight": ConfigVar(
+            type=ConfigVarType.FLOAT,
+            description="Extra weight for family name in person matches.",
+            default=1.3,
         ),
     }
 
