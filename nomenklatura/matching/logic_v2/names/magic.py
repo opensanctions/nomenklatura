@@ -11,16 +11,22 @@ SYM_WEIGHTS = {
     Symbol.Category.NICK: 0.8,
     # in "A B International" and "X International", we don't want to give too much weight to the symbol
     Symbol.Category.SYMBOL: 0.3,
+    # Vessel 1 vs. Vessel 2 are very different.
     Symbol.Category.NUMERIC: 1.3,
     Symbol.Category.LOCATION: 0.8,
 }
 
 # Used when a match is one-sided (e.g. "international" in the query but not the result), to modify
 # the impact of the extra name part on the score.
+# For the categories not listed here, we give a weight of 1.0 (see weight_extra_match below)
 EXTRAS_WEIGHTS = {
+    # Siemens AG vs. Siemens, sometimes the org class is omitted
     Symbol.Category.ORG_CLASS: 0.7,
     Symbol.Category.SYMBOL: 0.7,
+    # PE Fund 1 vs. PE Fund, often investments funds are numbered and that's quite important
     Symbol.Category.NUMERIC: 1.3,
+    # Siemens Russia vs. Siemens: we don't care that much because in a local context,
+    # it's common to omit the suffix of the local subsidiary.
     Symbol.Category.LOCATION: 0.8,
 }
 
