@@ -67,7 +67,7 @@ class LogicV2(HeuristicAlgorithm):
         ),
         "nm_family_name_weight": ConfigVar(
             type=ConfigVarType.FLOAT,
-            description="Extra weight for family name in person matches.",
+            description="Extra weight multiplier for family name in person matches (John Smith vs. John Gruber is clearly distinct).",
             default=1.3,
         ),
     }

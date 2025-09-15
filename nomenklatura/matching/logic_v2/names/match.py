@@ -88,11 +88,11 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             if match.is_family_name():
                 match.weight *= family_name_weight
             elif len(match.qps) == 0:
-                match.weight = weight_extra_match(
-                    match.rps, result, extra_result_weight
-                )
+                bias = weight_extra_match(match.rps, result)
+                match.weight = extra_result_weight * bias
             elif len(match.rps) == 0:
-                match.weight = weight_extra_match(match.qps, query, extra_query_weight)
+                bias = weight_extra_match(match.qps, query)
+                match.weight = extra_query_weight * bias
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
