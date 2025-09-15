@@ -6,7 +6,6 @@ from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
 from rigour.names import NamePart, is_stopword
 from rigour.text.distance import levenshtein
-from nomenklatura.matching.logic_v2.names.magic import EXTRA_PART_WEIGHTS
 from nomenklatura.matching.logic_v2.names.util import Match
 
 SEP = " "
@@ -36,13 +35,6 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     if distance > max_edits:
         return 0.0
     return (1 - (distance / max_len)) ** max_edits
-
-
-def _extra_part_weight(part: NamePart, base: float) -> float:
-    """Calculate the weight of a name part based on its tag."""
-    if part.tag in EXTRA_PART_WEIGHTS:
-        return base * EXTRA_PART_WEIGHTS[part.tag]
-    return base
 
 
 def _edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
@@ -83,10 +75,7 @@ def _opcodes(qry_text: str, res_text: str) -> Opcodes:
 
 
 def weighted_edit_similarity(
-    qry_parts: List[NamePart],
-    res_parts: List[NamePart],
-    extra_query_part_weight: float = 0.8,
-    extra_result_part_weight: float = 0.1,
+    qry_parts: List[NamePart], res_parts: List[NamePart]
 ) -> List[Match]:
     """Calculate a weighted similarity score between two sets of name parts. This function implements custom
     frills within the context of a simple Levenshtein distance calculation. For example:
@@ -153,14 +142,9 @@ def weighted_edit_similarity(
             if is_stopword(match.qps[0].form):
                 match.weight = 0.7
 
-        qstr = SEP.join(p.comparable for p in match.qps)
-        rstr = SEP.join(p.comparable for p in match.rps)
-        if qstr == rstr:
-            match.score = 1.0
-        else:
-            qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
-            rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-            match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
+        qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
+        rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
+        match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries
@@ -168,14 +152,12 @@ def weighted_edit_similarity(
     for qp in qry_parts:
         if qp not in part_matches:
             match = Match(qps=[qp])
-            match.weight = _extra_part_weight(qp, extra_query_part_weight)
             matches.add(match)
 
     # Non-matched result parts
     for rp in res_parts:
         if rp not in part_matches:
             match = Match(rps=[rp])
-            match.weight = _extra_part_weight(rp, extra_result_part_weight)
             matches.add(match)
 
     return list(matches)

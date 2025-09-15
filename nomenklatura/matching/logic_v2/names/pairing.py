@@ -74,9 +74,6 @@ class Pairing:
             score=SYM_SCORES.get(symbol.category, 1.0),
             weight=SYM_WEIGHTS.get(symbol.category, 1.0),
         )
-        if match.score < 1.0 and query_span.comparable == result_span.comparable:
-            match.score = 1.0
-
         return Pairing(
             self.query_used.union(query_span.parts),
             self.result_used.union(result_span.parts),
