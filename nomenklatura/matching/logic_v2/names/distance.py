@@ -13,11 +13,16 @@ SIMILAR_PAIRS = [
     ("0", "o"),
     ("1", "i"),
     ("g", "9"),
+    ("q", "9"),
+    ("b", "6"),
+    ("5", "s"),
     ("e", "i"),
     ("1", "l"),
     ("o", "u"),
     ("i", "j"),
+    ("i", "y"),
     ("c", "k"),
+    ("n", "h"),
 ]
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
 
