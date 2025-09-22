@@ -83,22 +83,27 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         # Apply additional weight and score normalisation to the generated matches based
         # on contextual clues.
         for match in matches:
-            # We have types of symbol matches and where we never score 1.0, but for
-            # literal matches, we always want to score 1.0
-            if match.score < 1.0 and match.qstr == match.rstr:
-                match.score = 1.0
-            # We treat family names as more important (but configurable) because they're
-            # just globally less murky and changeable than given names.
-            if match.is_family_name():
-                match.weight *= family_name_weight
+            # Matches with one side empty, i.e. unmatched parts
             # unmatched result part
-            elif len(match.qps) == 0:
+            if len(match.qps) == 0:
                 bias = weight_extra_match(match.rps, result)
                 match.weight = extra_result_weight * bias
+                continue
             # unmatched query part
             elif len(match.rps) == 0:
                 bias = weight_extra_match(match.qps, query)
                 match.weight = extra_query_weight * bias
+                continue
+
+            # We have types of symbol matches and where we never score 1.0, but for
+            # literal matches, we always want to score 1.0
+            if match.score < 1.0 and match.qstr == match.rstr:
+                match.score = 1.0
+            # We treat family names matches as more important (but configurable) because
+            # they're just globally less murky and changeable than given names.
+            if match.is_family_name():
+                match.weight *= family_name_weight
+
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
