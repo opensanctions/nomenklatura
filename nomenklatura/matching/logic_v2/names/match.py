@@ -88,12 +88,11 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             if len(match.qps) == 0:
                 bias = weight_extra_match(match.rps, result)
                 match.weight = extra_result_weight * bias
-                continue
             # unmatched query part
             elif len(match.rps) == 0:
                 bias = weight_extra_match(match.qps, query)
                 match.weight = extra_query_weight * bias
-                continue
+            # We fall through here to apply the family-name boost to unmatched parts too.
 
             # We have types of symbol matches and where we never score 1.0, but for
             # literal matches, we always want to score 1.0
