@@ -70,6 +70,13 @@ class LogicV2(HeuristicAlgorithm):
             description="Extra weight multiplier for family name in person matches (John Smith vs. John Gruber is clearly distinct).",
             default=1.3,
         ),
+        "nm_name_fuzzy_match_trigger_bias": ConfigVar(
+            type=ConfigVarType.FLOAT,
+            description="Extra multiplier for when a fuzzy match is triggered in name matching. "
+            "Below a certain threshold, a fuzzy match is considered as a non-match (score = 0.0). "
+            "Adjusting this multiplier will raise this threshold, making a fuzzy match trigger more leniently.",
+            default=1.0,
+        ),
     }
 
     @classmethod

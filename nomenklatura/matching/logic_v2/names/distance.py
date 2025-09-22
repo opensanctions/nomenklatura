@@ -7,6 +7,7 @@ from rapidfuzz.distance import Levenshtein, Opcodes
 from rigour.names import NamePart, is_stopword
 from rigour.text.distance import levenshtein
 from nomenklatura.matching.logic_v2.names.util import Match
+from nomenklatura.matching.types import ScoringConfig
 
 SEP = " "
 SIMILAR_PAIRS = [
@@ -54,11 +55,18 @@ def _edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     return 1.0
 
 
-def _costs_similarity(costs: List[float]) -> float:
+def _costs_similarity(costs: List[float], max_cost_bias: float = 1.0) -> float:
     """Calculate a similarity score based on a list of costs."""
     if len(costs) == 0:
         return 0.0
-    max_cost = math.log(max(len(costs) - 2, 1))
+    # max_cost defines how many edits we allow for a given length.
+    # We use a log here because for very long names, we don't want an anything goes
+    # policy for very long name strings (~hundreds of characters).
+    # The log-base is a bit of a magic number. We adjusted it so that for
+    # len 8 it allows ~2 edits. That seems reasonable, but is also entirely arbitrary.
+    # We use log(x-2) to disable fuzzy-matching completely for very short
+    # names (often Chinese names in practice).
+    max_cost = math.log(max(len(costs) - 2, 1), 2.35) * max_cost_bias
     total_cost = sum(costs)
     if total_cost == 0:
         return 1.0
@@ -75,7 +83,7 @@ def _opcodes(qry_text: str, res_text: str) -> Opcodes:
 
 
 def weighted_edit_similarity(
-    qry_parts: List[NamePart], res_parts: List[NamePart]
+    qry_parts: List[NamePart], res_parts: List[NamePart], config: ScoringConfig
 ) -> List[Match]:
     """Calculate a weighted similarity score between two sets of name parts. This function implements custom
     frills within the context of a simple Levenshtein distance calculation. For example:
@@ -144,7 +152,11 @@ def weighted_edit_similarity(
 
         qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
         rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-        match.score = _costs_similarity(qcosts) * _costs_similarity(rcosts)
+        match.score = _costs_similarity(
+            qcosts, max_cost_bias=config.get_float("nm_name_fuzzy_match_trigger_bias")
+        ) * _costs_similarity(
+            rcosts, max_cost_bias=config.get_float("nm_name_fuzzy_match_trigger_bias")
+        )
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries
