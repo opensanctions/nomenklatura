@@ -16,3 +16,6 @@ htmlcov/
 textual.log
 .nk_cache.db
 nomenklatura.db
+/uv.lock
+/.envrc
+/.vscode
