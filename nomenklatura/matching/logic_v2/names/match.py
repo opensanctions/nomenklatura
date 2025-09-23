@@ -78,7 +78,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            matches.extend(weighted_edit_similarity(query_rem, result_rem))
+            matches.extend(weighted_edit_similarity(query_rem, result_rem, config))
 
         # Apply additional weight and score normalisation to the generated matches based
         # on contextual clues.
