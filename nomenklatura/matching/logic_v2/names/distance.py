@@ -153,9 +153,9 @@ def weighted_edit_similarity(
         qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
         rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
         match.score = _costs_similarity(
-            qcosts, max_cost_bias=config.get_float("nm_name_fuzzy_match_trigger_bias")
+            qcosts, max_cost_bias=config.get_float("nm_fuzzy_cutoff_factor")
         ) * _costs_similarity(
-            rcosts, max_cost_bias=config.get_float("nm_name_fuzzy_match_trigger_bias")
+            rcosts, max_cost_bias=config.get_float("nm_fuzzy_cutoff_factor")
         )
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
