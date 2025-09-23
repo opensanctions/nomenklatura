@@ -49,3 +49,16 @@ def test_strict_levenshtein():
     assert strict_levenshtein("hello", "hello") == 1.0
     assert strict_levenshtein("hello", "hullo") > 0.0
     assert strict_levenshtein("hello", "hullo") < 1.0
+
+
+def test_weighted_edit_similarity_manjit_manjeet():
+    # Test with default config (nm_fuzzy_cutoff_factor=1.0)
+    matches = wes(pt("Manjit"), pt("Manjeet"), CONFIG)
+    assert 0.6 < matches[0].score < 0.7
+    
+    # Test with stricter cutoff factor (nm_fuzzy_cutoff_factor=0.9)
+    strict_config = LogicV2.default_config()
+    strict_config.config["nm_fuzzy_cutoff_factor"] = 0.9
+    matches = wes(pt("Manjit"), pt("Manjeet"), strict_config)
+    assert matches[0].score == 0.0
+
