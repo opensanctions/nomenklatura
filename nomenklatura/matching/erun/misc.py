@@ -1,25 +1,55 @@
+from typing import List, Optional, Set
 from followthemoney import registry, E
 
-from nomenklatura.matching.erun.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import has_overlap, extract_numbers, is_disjoint
-from nomenklatura.matching.util import props_pair, type_pair
-from nomenklatura.matching.util import max_in_sets, has_schema
-from nomenklatura.matching.compat import clean_name_ascii
+from nomenklatura.matching.compare.util import extract_numbers
+from nomenklatura.matching.util import type_pair
+from nomenklatura.matching.util import has_schema
+
+from rigour.addresses import normalize_address, shorten_address_keywords
+
+OTHER = registry.gender.OTHER
+
+
+def _norm_address(addr: str, latinize: bool = True) -> Optional[str]:
+    addr = normalize_address(addr, latinize=latinize, min_length=4)
+    if addr is not None:
+        addr = shorten_address_keywords(addr, latinize=latinize)
+    return addr
+
+
+def _norm_place(places: List[str]) -> Set[str]:
+    parts = set()
+    for place in places:
+        norm_place = _norm_address(place)
+        if norm_place is not None:
+            for part in norm_place.split(" "):
+                parts.add(part)
+    return parts
 
 
 def birth_place(query: E, result: E) -> float:
     """Same place of birth."""
-    lv, rv = tokenize_pair(props_pair(query, result, ["birthPlace"]))
-    tokens = min(len(lv), len(rv))
-    return float(len(lv.intersection(rv))) / float(max(2.0, tokens))
+    if not has_schema(query, result, "Person"):
+        return 0.0
+    lparts = _norm_place(query.get("birthPlace", quiet=True))
+    rparts = _norm_place(result.get("birthPlace", quiet=True))
+    overlap = len(lparts.intersection(rparts))
+    base_length = max(1.0, min(len(lparts), len(rparts)))
+    return overlap / base_length
 
 
 def address_match(query: E, result: E) -> float:
     """Text similarity between addresses."""
     lv, rv = type_pair(query, result, registry.address)
-    lvn = [clean_name_ascii(v) for v in lv]
-    rvn = [clean_name_ascii(v) for v in rv]
-    return max_in_sets(lvn, rvn, compare_levenshtein)
+    lvn = _norm_place(lv)
+    rvn = _norm_place(rv)
+    if len(lvn) == 0 or len(rvn) == 0:
+        return 0.0
+    overlap = len(lvn.intersection(rvn))
+    tokens = max(1.0, min(len(lvn), len(rvn)))
+    if overlap == 0:
+        return 0.0
+    return float(overlap) / float(tokens)
 
 
 def address_numbers(query: E, result: E) -> float:
@@ -32,43 +62,10 @@ def address_numbers(query: E, result: E) -> float:
     return common - disjoint
 
 
-def phone_match(query: E, result: E) -> float:
-    """Matching phone numbers between the two entities."""
-    lv, rv = type_pair(query, result, registry.phone)
-    return 1.0 if has_overlap(lv, rv) else 0.0
-
-
-def email_match(query: E, result: E) -> float:
-    """Matching email addresses between the two entities."""
-    lv, rv = type_pair(query, result, registry.email)
-    return 1.0 if has_overlap(lv, rv) else 0.0
-
-
-def identifier_match(query: E, result: E) -> float:
-    """Matching identifiers (e.g. passports, national ID cards, registration or
-    tax numbers) between the two entities."""
-    if has_schema(query, result, "Organization"):
-        return 0.0
-    lv, rv = type_pair(query, result, registry.identifier)
-    return 1.0 if has_overlap(lv, rv) else 0.0
-
-
-def org_identifier_match(query: E, result: E) -> float:
-    """Matching identifiers (e.g. registration or tax numbers) between two
-    organizations or companies."""
-    if not has_schema(query, result, "Organization"):
-        return 0.0
-    lv, rv = type_pair(query, result, registry.identifier)
-    return 1.0 if has_overlap(lv, rv) else 0.0
-
-
 def gender_mismatch(query: E, result: E) -> float:
     """Both entities have a different gender associated with them."""
-    qv, rv = props_pair(query, result, ["gender"])
-    return 1.0 if is_disjoint(qv, rv) else 0.0
-
-
-def country_mismatch(query: E, result: E) -> float:
-    """Both entities are linked to different countries."""
-    qv, rv = type_pair(query, result, registry.country)
-    return 1.0 if is_disjoint(qv, rv) else 0.0
+    qv = {v for v in query.get("gender", quiet=True) if v != OTHER}
+    rv = {v for v in result.get("gender", quiet=True) if v != OTHER}
+    if len(qv) == 1 and len(rv) == 1 and len(qv.intersection(rv)) == 0:
+        return 1.0
+    return 0.0

@@ -5,16 +5,18 @@ from functools import cache
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney import E
 
-from nomenklatura.matching.erun.names import first_name_match
-from nomenklatura.matching.erun.names import family_name_match
-from nomenklatura.matching.erun.names import name_levenshtein, name_match
+from nomenklatura.matching.erun.names import name_levenshtein, family_name_match
 from nomenklatura.matching.erun.names import name_token_overlap, name_numbers
-from nomenklatura.matching.erun.misc import phone_match, email_match
+from nomenklatura.matching.erun.names import obj_name_levenshtein
 from nomenklatura.matching.erun.misc import address_match, address_numbers
-from nomenklatura.matching.erun.misc import identifier_match, birth_place
-from nomenklatura.matching.erun.misc import org_identifier_match
+from nomenklatura.matching.erun.misc import birth_place
 from nomenklatura.matching.erun.misc import gender_mismatch
-from nomenklatura.matching.erun.misc import country_mismatch
+from nomenklatura.matching.erun.countries import (
+    org_obj_country_match,
+    per_country_mismatch,
+)
+from nomenklatura.matching.erun.identifiers import strong_identifier_match
+from nomenklatura.matching.erun.identifiers import weak_identifier_match
 from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
 from nomenklatura.matching.compare.dates import dob_year_disjoint
 from nomenklatura.matching.types import (
@@ -35,22 +37,20 @@ class EntityResolveRegression(ScoringAlgorithm):
     NAME = "er-unstable"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
     FEATURES: List[CompareFunction] = [
-        name_match,
         name_token_overlap,
         name_numbers,
         name_levenshtein,
-        phone_match,
-        email_match,
-        identifier_match,
+        strong_identifier_match,
+        weak_identifier_match,
         dob_matches,
         dob_year_matches,
         FtResult.unwrap(dob_year_disjoint),
-        first_name_match,
         family_name_match,
         birth_place,
         gender_mismatch,
-        country_mismatch,
-        org_identifier_match,
+        per_country_mismatch,
+        org_obj_country_match,
+        obj_name_levenshtein,
         address_match,
         address_numbers,
     ]
