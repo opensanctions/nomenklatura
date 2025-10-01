@@ -32,7 +32,7 @@ from nomenklatura.util import DATA_PATH
 
 
 class EntityResolveRegression(ScoringAlgorithm):
-    """UNSTABLE: Entity resolution matcher."""
+    """Entity resolution matcher. Do not use this in (regulated) screening scenarios."""
 
     NAME = "er-unstable"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")

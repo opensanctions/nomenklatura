@@ -1,20 +1,17 @@
-from normality.constants import WS
+from normality import ascii_text
 from typing import Iterable, Set, Tuple
 from rigour.text.distance import levenshtein
-
-from nomenklatura.matching.compat import clean_name_ascii
+from rigour.names import tokenize_name
 
 
 def tokenize(texts: Iterable[str]) -> Set[str]:
     tokens: Set[str] = set()
     for text in texts:
-        cleaned = clean_name_ascii(text)
-        if cleaned is None:
-            continue
-        for token in cleaned.split(WS):
-            token = token.strip()
-            if len(token) > 2:
-                tokens.add(token)
+        text = text.casefold()
+        for token in tokenize_name(text):
+            ascii_token = ascii_text(token)
+            if ascii_token is not None and len(ascii_token) > 2:
+                tokens.add(ascii_token)
     return tokens
 
 
