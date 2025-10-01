@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nomenklatura"
-version = "4.1.7"
+version = "4.1.8"
 description = "Make record linkages in followthemoney data."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -19,7 +19,7 @@ classifiers = [
 requires-python = ">= 3.11"
 dependencies = [
     "followthemoney >= 4.1.1, < 5.0.0",
-    "rigour >= 1.3.5, < 2.0.0",
+    "rigour >= 1.3.8, < 2.0.0",
     "fingerprints >= 1.3.1, < 2.0.0",
     "shortuuid >= 1.0.11, < 2.0.0",
     "rich >= 13.0.0, < 15.0.0",
@@ -60,6 +60,7 @@ dev = [
     "plyvel < 2.0.0",
     "redis > 5.0.0, < 7.0.0",
     "psycopg2-binary",
+    "bump2version",
 ]
 leveldb = ["plyvel < 2.0.0"]
 redis = ["redis > 5.0.0, < 7.0.0"]
