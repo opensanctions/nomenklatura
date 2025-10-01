@@ -1,6 +1,5 @@
 import json
 from typing import Generator, Dict, Any
-from followthemoney import model
 from followthemoney.proxy import EntityProxy
 from followthemoney.util import PathLike
 
@@ -11,7 +10,7 @@ class JudgedPair(object):
     """A pair of two entities which have been judged to be the same
     (or not) by a user."""
 
-    __slots__ = ("left", "right", "judgement")
+    __slots__ = ("left", "right", "weight", "judgement")
 
     def __init__(
         self, left: EntityProxy, right: EntityProxy, judgement: Judgement
@@ -19,12 +18,14 @@ class JudgedPair(object):
         self.left = left
         self.right = right
         self.judgement = judgement
+        self.weight = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "left": self.left.to_dict(),
             "right": self.right.to_dict(),
             "judgement": self.judgement.value,
+            "weight": self.weight,
         }
 
 

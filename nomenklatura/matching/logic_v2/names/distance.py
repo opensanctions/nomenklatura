@@ -1,13 +1,15 @@
-from functools import lru_cache
 import math
+from functools import lru_cache
 from collections import defaultdict
-from itertools import zip_longest, chain
+from itertools import zip_longest
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
 from rigour.names import NamePart, is_stopword
 from rigour.text.distance import levenshtein
+
 from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.types import ScoringConfig
+from nomenklatura.util import unroll
 
 SEP = " "
 SIMILAR_PAIRS = [
@@ -148,6 +150,7 @@ def weighted_edit_similarity(
             part_matches[qp] = match
 
     # Compute the scores where an overlap was applied
+    bias = config.get_float("nm_fuzzy_cutoff_factor")
     matches = set(part_matches.values())
     for match in matches:
         # Score down stopwords:
@@ -155,12 +158,10 @@ def weighted_edit_similarity(
             if is_stopword(match.qps[0].form):
                 match.weight = 0.7
 
-        qcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.qps))
-        rcosts = list(chain.from_iterable(costs.get(p, [1.0]) for p in match.rps))
-        match.score = _costs_similarity(
-            qcosts, max_cost_bias=config.get_float("nm_fuzzy_cutoff_factor")
-        ) * _costs_similarity(
-            rcosts, max_cost_bias=config.get_float("nm_fuzzy_cutoff_factor")
+        qcosts = unroll(costs.get(p, [1.0]) for p in match.qps)
+        rcosts = unroll(costs.get(p, [1.0]) for p in match.rps)
+        match.score = _costs_similarity(qcosts, max_cost_bias=bias) * _costs_similarity(
+            rcosts, max_cost_bias=bias
         )
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
