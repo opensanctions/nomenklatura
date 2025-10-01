@@ -11,10 +11,10 @@ OTHER = registry.gender.OTHER
 
 
 def _norm_address(addr: str, latinize: bool = True) -> Optional[str]:
-    addr = normalize_address(addr, latinize=latinize, min_length=4)
-    if addr is not None:
-        addr = shorten_address_keywords(addr, latinize=latinize)
-    return addr
+    norm_addr = normalize_address(addr, latinize=latinize, min_length=4)
+    if norm_addr is not None:
+        norm_addr = shorten_address_keywords(norm_addr, latinize=latinize)
+    return norm_addr
 
 
 def _norm_place(places: List[str]) -> Set[str]:
