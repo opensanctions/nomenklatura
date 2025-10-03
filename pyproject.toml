@@ -23,7 +23,7 @@ dependencies = [
     "fingerprints >= 1.3.1, < 2.0.0",
     "shortuuid >= 1.0.11, < 2.0.0",
     "rich >= 13.0.0, < 15.0.0",
-    "textual >= 3.0.0, < 5.0.0",
+    "textual >= 3.0.0, < 7.0.0",
     "sqlalchemy >= 2.0.0",
     "scikit-learn == 1.7.2",
     "pydantic > 2.0.0, < 3.0.0",
