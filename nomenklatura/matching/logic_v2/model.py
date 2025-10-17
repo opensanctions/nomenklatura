@@ -24,9 +24,10 @@ from nomenklatura.matching.util import FNUL
 class LogicV2(HeuristicAlgorithm):
     """A rule-based matching system that generates a set of basic scores via
     name and identifier-based matching, and then qualifies that score using
-    supporting or contradicting features of the two entities. Version 2 uses
-    a different set of features and consolidates name matching into a single
-    feature, which uses a versatile and complex name matching algorithm."""
+    supporting or contradicting features of the two entities. Its name matcher
+    uses a versatile matching algorithm that uses cultural reference data for
+    precise and explainable cross-language and cross-script matching.
+    """
 
     NAME = "logic-v2"
     features = [
