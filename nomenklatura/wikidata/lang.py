@@ -63,6 +63,17 @@ class LangText(object):
         return None
 
     @classmethod
+    def sorted(cls, texts: Iterable["LangText"]) -> List["LangText"]:
+        def sort_key(lt: LangText) -> Any:
+            if lt.lang is None or lt.lang not in PREFERRED_LANGS:
+                index = len(PREFERRED_LANGS)
+            else:
+                index = PREFERRED_LANGS.index(lt.lang) + 1
+            return (index, lt.text or "")
+
+        return sorted(texts, key=sort_key)
+
+    @classmethod
     def from_dict(cls, data: Dict[str, List[Dict[str, str]]]) -> Set["LangText"]:
         langs: Set[LangText] = set()
         for objs in data.values():

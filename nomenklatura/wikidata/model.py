@@ -111,6 +111,14 @@ class Item(object):
             return label
         return LangText.pick(self.aliases)
 
+    @property
+    def sorted_labels(self) -> List[LangText]:
+        return LangText.sorted(self.labels)
+
+    @property
+    def sorted_aliases(self) -> List[LangText]:
+        return LangText.sorted(self.aliases)
+
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:
             if claim.property == "P31" and claim.qid == qid:

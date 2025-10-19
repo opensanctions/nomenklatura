@@ -91,7 +91,7 @@ class WikidataEnricher(Enricher[DS]):
         yield proxy
         yield from self.item_graph(proxy, item)
 
-    def get_wikidata_id(self, entity: SE) -> Optional[str]:
+    def get_wikidata_id(self, entity: StatementEntity) -> Optional[str]:
         if entity.id is not None and is_qid(entity.id):
             return str(entity.id)
         for value in entity.get("wikidataId", quiet=True):
@@ -204,20 +204,27 @@ class WikidataEnricher(Enricher[DS]):
         # proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
         names: Set[str] = set()
-        for label in item.labels:
+        for label in item.sorted_labels:
+            if label.text is None:
+                continue
+            ltext = label.text.casefold()
+            if ltext in names:
+                continue
             label.apply(proxy, "name", clean=clean_name)
-            if label.text is not None:
-                names.add(label.text.lower())
+            names.add(ltext)
         if item.description is not None:
             item.description.apply(proxy, "notes")
-        for alias in item.aliases:
-            if alias.text is None or alias.text.lower() in names:
+        for alias in item.sorted_aliases:
+            if alias.text is None:
                 continue
-            _strong = is_alias_strong(alias.text, names)
-            prop = "alias" if _strong else "weakAlias"
-            alias.apply(proxy, prop, clean=clean_name)
-            if _strong:
-                names.add(alias.text.lower())
+            ltext = alias.text.casefold()
+            if ltext in names:
+                continue
+            if is_alias_strong(alias.text, names):
+                alias.apply(proxy, "alias", clean=clean_name)
+                names.add(ltext)
+            else:
+                alias.apply(proxy, "weakAlias", clean=clean_name)
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
             log.debug("Person is not a Q5 [%s]: %s", item.id, item.labels)
