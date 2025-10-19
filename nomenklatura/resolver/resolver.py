@@ -554,6 +554,7 @@ class Resolver(Linker[SE]):
                 edge.source.canonical
                 and edge.target.canonical
                 and edge.judgement == Judgement.POSITIVE
+                and edge.created_at is not None
                 and edge.created_at < cutoff_ts
             ):
                 canonical = Identifier.get(self.get_canonical(edge.source))
