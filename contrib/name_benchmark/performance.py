@@ -54,7 +54,7 @@ def run_benchmark() -> None:
     config = LogicV2.default_config()
     func = LogicV2.compare
     print("Running benchmark for: %s" % (func.__name__))
-    for i in range(100):
+    for i in range(1000):
         for check in checks:
             func(check.query, check.candidate, config)
 
