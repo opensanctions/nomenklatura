@@ -136,7 +136,7 @@ class Resolver(Linker[SE]):
         return cls(engine, meta, create=True)
 
     def _invalidate(self) -> None:
-        self.connected.cache_clear()
+        # self.connected.cache_clear()
         self.get_canonical.cache_clear()
 
     def begin(self) -> None:
