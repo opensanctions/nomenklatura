@@ -133,7 +133,7 @@ class ScoringConfig(BaseModel):
         return str(value)
 
     def __hash__(self) -> int:
-        return hash((hash(self.weights), hash(self.config)))
+        return hash(self.model_dump_json())
 
 
 class ScoringAlgorithm(object):

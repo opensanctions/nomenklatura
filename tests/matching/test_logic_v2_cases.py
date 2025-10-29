@@ -7,7 +7,7 @@ from nomenklatura.matching.logic_v2.model import LogicV2
 from nomenklatura.matching.types import ScoringConfig
 
 Props = Dict[str, Union[str, List[str]]]
-config = LogicV2.default_config()
+DefaultConfig = LogicV2.default_config()
 
 
 class MatchCase(TypedDict):
@@ -134,7 +134,7 @@ CASES = [
         "result": {
             "alias": "John Doe",
         },
-        config: ScoringConfig(weights={}, config={"nm_name_property": "name"}),
+        "config": ScoringConfig(weights={}, config={"nm_name_property": "name"}),
     },
     # Organizations
     {
@@ -325,6 +325,7 @@ def _make_entity(schema: str, data: Props) -> EntityProxy:
 def test_match_cases(case: MatchCase) -> None:
     query = _make_entity(case["schema"], case["query"])
     result = _make_entity(case["schema"], case["result"])
+    config = case.get("config") or DefaultConfig
     res = LogicV2().compare(query, result, config)
     if case["matches"]:
         assert res.score > 0.7, res
