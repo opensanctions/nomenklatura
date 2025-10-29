@@ -1,4 +1,5 @@
-from typing import Set
+from functools import lru_cache
+from typing import Optional, Set
 from rigour.names import NameTypeTag, Name
 from rigour.names import replace_org_types_compare, prenormalize_name
 from rigour.names import remove_person_prefixes, remove_org_prefixes
@@ -7,8 +8,12 @@ from followthemoney import registry, EntityProxy
 from followthemoney.names import PROP_PART_TAGS
 
 
+@lru_cache(maxsize=50)
 def entity_names(
-    type_tag: NameTypeTag, entity: EntityProxy, is_query: bool = False
+    type_tag: NameTypeTag,
+    entity: EntityProxy,
+    prop: Optional[str] = None,
+    is_query: bool = False,
 ) -> Set[Name]:
     """This will transform the entity into a set of names with tags applied. The idea
     is to tag the names with the type of entity they are, e.g. person, organization,
@@ -16,9 +21,17 @@ def entity_names(
     etc. Some extra heuristics and de-duplication are applied to reduce the number of
     comparisons needed to find the best match.
     """
+    # nb. Putting an @lru_cache here does not make sense for an individual use of the matcher,
+    # but will cache the name objects for the `query` entity across multiple possible `results`.
+    # It also requires for the `entity` to have an ID so that hashing it does not raise an
+    # exception.
     seen: Set[str] = set()
     names: Set[Name] = set()
-    for name in entity.get_type_values(registry.name, matchable=True):
+    if prop is not None:
+        raw_names = entity.get(prop, quiet=True)
+    else:
+        raw_names = entity.get_type_values(registry.name, matchable=True)
+    for name in raw_names:
         # Remove prefix like "Mr.", "Ms.", "Dr." from the name:
         if type_tag == NameTypeTag.PER:
             name = remove_person_prefixes(name)

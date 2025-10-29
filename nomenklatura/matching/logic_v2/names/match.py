@@ -103,7 +103,6 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
             if match.is_family_name():
                 match.weight *= family_name_weight
 
-
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
         total_weight = sum(match.weight for match in matches)
@@ -160,8 +159,9 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
         return best
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
-    query_names = entity_names(type_tag, query, is_query=True)
-    result_names = entity_names(type_tag, result)
+    name_prop = config.get_optional_string("nm_name_property")
+    query_names = entity_names(type_tag, query, prop=name_prop, is_query=True)
+    result_names = entity_names(type_tag, result, prop=name_prop)
 
     # For literal matches, return early instead of performing all the magic. This addresses
     # a user surprise where literal matches can score below 1.0 after name de-duplication has
