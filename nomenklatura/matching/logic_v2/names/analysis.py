@@ -36,7 +36,7 @@ def entity_names(
         sname = Name(name, form=form, tag=type_tag)
         # tag name parts from properties:
         for prop, tag in PROP_PART_TAGS:
-            for value in entity.get(prop, quiet=True):
+            for value in entity._properties.get(prop, []):
                 sname.tag_text(prenormalize_name(value), tag)
 
         # tag organization types and symbols:
