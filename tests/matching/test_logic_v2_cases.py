@@ -1,12 +1,13 @@
 from banal import hash_data, ensure_list
-from typing import List, TypedDict, Dict, Union
+from typing import List, Optional, TypedDict, Dict, Union
 from followthemoney import EntityProxy
 import pytest
 
 from nomenklatura.matching.logic_v2.model import LogicV2
+from nomenklatura.matching.types import ScoringConfig
 
 Props = Dict[str, Union[str, List[str]]]
-config = LogicV2.default_config()
+DefaultConfig = LogicV2.default_config()
 
 
 class MatchCase(TypedDict):
@@ -14,6 +15,7 @@ class MatchCase(TypedDict):
     matches: bool
     query: Props
     result: Props
+    config: Optional[ScoringConfig]
 
 
 CASES = [
@@ -121,6 +123,18 @@ CASES = [
             "firstName": "Theodore",
             "lastName": "Doe",
         },
+    },
+    # Config settings
+    {
+        "schema": "Person",
+        "matches": False,
+        "query": {
+            "name": "John Doe",
+        },
+        "result": {
+            "alias": "John Doe",
+        },
+        "config": ScoringConfig(weights={}, config={"nm_name_property": "name"}),
     },
     # Organizations
     {
@@ -311,6 +325,7 @@ def _make_entity(schema: str, data: Props) -> EntityProxy:
 def test_match_cases(case: MatchCase) -> None:
     query = _make_entity(case["schema"], case["query"])
     result = _make_entity(case["schema"], case["result"])
+    config = case.get("config") or DefaultConfig
     res = LogicV2().compare(query, result, config)
     if case["matches"]:
         assert res.score > 0.7, res

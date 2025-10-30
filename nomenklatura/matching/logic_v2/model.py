@@ -51,6 +51,11 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
     ]
     CONFIG = {
+        "nm_name_property": ConfigVar(
+            type=ConfigVarType.STRING,
+            description="The property to use for name matching. If not set, all name properties are used.",
+            default=None,
+        ),
         "nm_number_mismatch": ConfigVar(
             type=ConfigVarType.FLOAT,
             description="Penalty for mismatching numbers in object or company names.",

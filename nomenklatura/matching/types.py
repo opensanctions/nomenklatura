@@ -27,6 +27,7 @@ FeatureDocs = Dict[str, FeatureDoc]
 class ConfigVarType(str, Enum):
     """The type of a configuration variable."""
 
+    STRING = "string"
     INTEGER = "integer"
     FLOAT = "float"
     BOOLEAN = "boolean"
@@ -37,7 +38,7 @@ class ConfigVar(BaseModel):
 
     type: ConfigVarType = ConfigVarType.FLOAT
     description: Optional[str] = None
-    default: Union[str, int, float, bool] = 0
+    default: Union[str, int, float, bool, None] = 0
 
 
 class AlgorithmDocs(BaseModel):
@@ -110,7 +111,7 @@ class ScoringConfig(BaseModel):
     """Configuration for a scoring algorithm."""
 
     weights: Dict[str, float]
-    config: Dict[str, Union[str, int, float, bool]]
+    config: Dict[str, Union[str, int, float, bool, None]]
 
     @classmethod
     def defaults(cls) -> "ScoringConfig":
@@ -119,7 +120,20 @@ class ScoringConfig(BaseModel):
 
     def get_float(self, key: str) -> float:
         """Get a float value from the configuration."""
-        return float(self.config[key])
+        value = self.config.get(key)
+        if value is None:
+            raise ValueError(f"{key} cannot be None")
+        return float(value)
+
+    def get_optional_string(self, key: str) -> Optional[str]:
+        """Get a string value from the configuration."""
+        value = self.config.get(key)
+        if value is None:
+            return value
+        return str(value)
+
+    def __hash__(self) -> int:
+        return hash(self.model_dump_json())
 
 
 class ScoringAlgorithm(object):
