@@ -136,7 +136,7 @@ class Resolver(Linker[SE]):
         return cls(engine, meta, create=True)
 
     def _invalidate(self) -> None:
-        self.connected.cache_clear()
+        # self.connected.cache_clear()
         self.get_canonical.cache_clear()
 
     def begin(self) -> None:
@@ -241,7 +241,7 @@ class Resolver(Linker[SE]):
                 connected.update(rec)
         return connected
 
-    @lru_cache(maxsize=200000)
+    # @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 

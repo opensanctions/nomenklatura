@@ -1,22 +1,21 @@
-from typing import Set, Type
+from typing import Optional, Set
 
-from rigour.ids import get_identifier_format, IdentifierFormat
-from followthemoney import model
-from followthemoney.property import Property
+from rigour.ids import get_identifier_format
 from followthemoney.types import registry
 from followthemoney.proxy import EntityProxy
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import FNUL
 
 
-def _format_normalize(
-    format: Type[IdentifierFormat], entity: EntityProxy, prop: Property
-) -> Set[str]:
+def format_values(entity: EntityProxy, format_name: Optional[str]) -> Set[str]:
+    """Get all identifier values of a given format from an entity."""
     values: Set[str] = set()
-    for value in entity.get(prop, quiet=True):
-        norm_value = format.normalize(value)
-        if norm_value is not None:
-            values.add(norm_value)
+    for prop in entity.iterprops():
+        if prop.type != registry.identifier or not prop.matchable:
+            continue
+        if prop.format == format_name:
+            values.update(entity.get(prop))
     return values
 
 
@@ -24,38 +23,28 @@ def _identifier_format_match(
     format_name: str, query: EntityProxy, result: EntityProxy
 ) -> FtResult:
     """Check if the identifier format is the same for two entities."""
-    schema = model.common_schema(query.schema, result.schema)
     format = get_identifier_format(format_name)
-    query_identifiers: Set[str] = set()
-    query_format: Set[str] = set()
-    result_identifiers: Set[str] = set()
-    result_format: Set[str] = set()
-    for prop in schema.properties.values():
-        if prop.type != registry.identifier or not prop.matchable:
-            continue
-        if prop.format is not None and get_identifier_format(prop.format) != format:
-            continue
-        query_values = _format_normalize(format, query, prop)
-        query_identifiers.update(query_values)
-        result_values = _format_normalize(format, result, prop)
-        result_identifiers.update(result_values)
-        if prop.format is not None and get_identifier_format(prop.format) == format:
-            query_format.update(query_values)
-            result_format.update(result_values)
-    left_common = query_format.intersection(result_identifiers)
-    if len(left_common) > 0:
-        detail = f"Matched {format.TITLE}: {', '.join(left_common)}"
+    if format is None:
+        raise RuntimeError(f"Unknown identifier format: {format_name}")
+    query_format = format_values(query, format_name)
+    result_format = format_values(result, format_name)
+    if len(query_format) == 0 and len(result_format) == 0:
+        return FtResult(score=FNUL, detail=f"No {format.TITLE} match")
+    common = query_format.intersection(result_format)
+    if len(common) > 0:
+        detail = f"Matched {format.TITLE}: {', '.join(common)}"
         return FtResult(score=1.0, detail=detail)
-    right_common = result_format.intersection(query_identifiers)
-    if len(right_common) > 0:
-        detail = f"Matched {format.TITLE}: {', '.join(right_common)}"
-        return FtResult(score=1.0, detail=detail)
-    if format.STRONG:
-        non_common = query_identifiers.intersection(result_identifiers)
-        if len(non_common) > 0:
-            detail = f"Out-of-format match: {', '.join(non_common)}"
-            return FtResult(score=0.8, detail=detail)
-    return FtResult(score=0.0, detail=f"No {format.TITLE} match")
+    if len(query_format) > 0:
+        result_generic = [format.normalize(f) for f in format_values(result, None)]
+        if len(set(query_format).intersection(result_generic)) > 0:
+            detail = f"Matched {format.TITLE}: {', '.join(common)}"
+            return FtResult(score=1.0, detail=detail)
+    if len(result_format) > 0:
+        query_generic = [format.normalize(f) for f in format_values(query, None)]
+        if len(set(result_format).intersection(query_generic)) > 0:
+            detail = f"Matched {format.TITLE}: {', '.join(common)}"
+            return FtResult(score=1.0, detail=detail)
+    return FtResult(score=FNUL, detail=f"No {format.TITLE} match")
 
 
 def lei_code_match(
