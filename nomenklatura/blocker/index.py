@@ -33,11 +33,11 @@ import orjson
 import logging
 from pathlib import Path
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Tuple, cast
 from rigour.reset import reset_caches
 
-from followthemoney import Dataset, StatementEntity, model, registry
-from nomenklatura.settings import DUCKDB_MEMORY
+from followthemoney import DS, SE, StatementEntity, model, registry
+from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
 from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
@@ -91,7 +91,7 @@ class Index(object):
 
     def __init__(
         self,
-        view: View[Dataset, StatementEntity],
+        view: View[DS, SE],
         data_dir: Path,
         options: Dict[str, Any] = {},
     ):
@@ -108,12 +108,13 @@ class Index(object):
         tmp_dir.mkdir(parents=True, exist_ok=True)
         self.duckdb_config = {
             "preserve_insertion_order": False,
-            # > If you have a limited amount of memory, try to limit the number of threads
-            # "threads": int(settings.XREF_THREADS),
-            "threads": 1,
             "temp_directory": tmp_dir.as_posix(),
         }
-        self.memory_budget = int(options.get("memory", DUCKDB_MEMORY))
+        if DUCKDB_THREADS is not None:
+            # > If you have a limited amount of memory, try to limit the number of threads
+            # "threads": int(settings.XREF_THREADS),
+            self.duckdb_config["threads"] = int(DUCKDB_THREADS)
+        self.memory_budget = options.get("memory", DUCKDB_MEMORY)
         """Memory budget in megabytes"""
         # https://duckdb.org/docs/guides/performance/environment
         # > For ideal performance,
@@ -122,13 +123,14 @@ class Index(object):
         # > Aim for 5-10 GB memory per thread.
         if self.memory_budget is not None:
             self.duckdb_config["memory_limit"] = f"{self.memory_budget}MB"
-            self.duckdb_config["max_memory"] = f"{self.memory_budget}MB"
         log.info("DuckDB index configured: %r", self.duckdb_config)
         self.duckdb_path = (self.data_dir / "index.duckdb").as_posix()
         self._init_db()
 
     def _init_db(self) -> None:
-        self.con = duckdb.connect(self.duckdb_path, config=self.duckdb_config)
+        # FIXME: remove when duckdb 1.4.2 comes out
+        HACK_config = cast(Dict[str, str], self.duckdb_config)
+        self.con = duckdb.connect(self.duckdb_path, config=HACK_config)
 
     def _clear(self) -> None:
         self.con.execute("CHECKPOINT")
