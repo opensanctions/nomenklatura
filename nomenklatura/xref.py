@@ -6,7 +6,7 @@ from pathlib import Path
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.blocker.index import Index
+from nomenklatura.blocker import Index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm, ScoringConfig
 
 log = logging.getLogger(__name__)
