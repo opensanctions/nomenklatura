@@ -36,9 +36,8 @@ from collections import defaultdict
 from typing import Any, Dict, Generator, Iterable, List, Tuple
 from rigour.reset import reset_caches
 
-from followthemoney import Dataset, StatementEntity, model, registry, DS, SE
+from followthemoney import Dataset, StatementEntity, model, registry
 from nomenklatura.settings import DUCKDB_MEMORY
-from nomenklatura.index.common import BaseIndex
 from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
@@ -53,7 +52,7 @@ BlockingMatches = List[Tuple[Identifier, float]]
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = 10000
+BATCH_SIZE = 10_000
 # Reducing these increases memory usage
 DEFAULT_STOPWORDS_PCT = 0.8
 DEFAULT_FIELD_STOPWORDS_PCT = {
@@ -70,7 +69,7 @@ DEFAULT_FIELD_STOPWORDS_PCT = {
 }
 
 
-class DuckDBIndex(BaseIndex[DS, SE]):
+class Index(object):
     """
     An index using DuckDB for token matching and scoring, keeping data in memory
     until it needs to spill to disk as it approaches the configured memory limit.
@@ -89,8 +88,6 @@ class DuckDBIndex(BaseIndex[DS, SE]):
         registry.address.name: 1.0,
         registry.identifier.name: 10.0,
     }
-
-    __slots__ = "view", "fields", "tokenizer", "entities"
 
     def __init__(
         self,
@@ -173,6 +170,16 @@ class DuckDBIndex(BaseIndex[DS, SE]):
         self.con.execute(f"COPY {table} FROM '{path}'")
         # path.unlink(missing_ok=True)
         self._clear()
+
+    def entity_count(self, table: str) -> int:
+        # check the table exists:
+        tables_ = self.con.execute("PRAGMA show_tables").fetchall()
+        tables = {t[0] for t in tables_}
+        if table not in tables:
+            return 0
+        q = f"SELECT COUNT(DISTINCT id) FROM {table}"
+        res = self.con.execute(q).fetchone()
+        return res[0] if res is not None else 0
 
     def build(self) -> None:
         """Index all entities in the dataset."""
@@ -287,7 +294,7 @@ class DuckDBIndex(BaseIndex[DS, SE]):
         self._clear()
 
     def pairs(
-        self, max_pairs: int = BaseIndex.MAX_PAIRS
+        self, max_pairs: int = 10_000
     ) -> Iterable[Tuple[Tuple[Identifier, Identifier], float]]:
         log.info("Generating pairs...")
         pairs_query = """

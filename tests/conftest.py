@@ -1,5 +1,6 @@
 import json
 import shutil
+from typing import Any, Dict, Generator, List
 from sqlalchemy import MetaData
 import yaml
 import pytest
@@ -13,7 +14,7 @@ from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
 from nomenklatura.db import get_engine, get_metadata
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import Index
+from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
@@ -53,7 +54,7 @@ def donations_path() -> Path:
 
 
 @pytest.fixture(scope="module")
-def donations_json(donations_path):
+def donations_json(donations_path: Path) -> List[Dict[str, Any]]:
     data = []
     with open(donations_path, "r") as fh:
         for line in fh.readlines():
@@ -62,7 +63,7 @@ def donations_json(donations_path):
 
 
 @pytest.fixture(scope="function")
-def resolver():
+def resolver() -> Generator[Resolver[Entity], None, None]:
     resolver = Resolver[Entity].make_default()
     yield resolver
     resolver.rollback()
@@ -98,14 +99,14 @@ def test_cache(test_dataset: Dataset) -> Cache:
 
 
 @pytest.fixture(scope="function")
-def index_path():
+def index_path() -> Generator[Path, None, None]:
     index_path = Path(mkdtemp()) / "index-dir"
     yield index_path
     shutil.rmtree(index_path, ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
-def dindex(index_path: Path, dstore: SimpleMemoryStore):
+def dindex(index_path: Path, dstore: SimpleMemoryStore) -> Index:
     index = Index(dstore.default_view(), index_path)
     index.build()
     return index

@@ -3,11 +3,10 @@ from typing import List, Optional, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
 
-from nomenklatura import Index
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.index import BaseIndex
+from nomenklatura.blocker.index import Index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm, ScoringConfig
 from nomenklatura.conflicting_match import ConflictingMatchReporter
 
@@ -30,7 +29,6 @@ def xref(
     resolver: Resolver[SE],
     store: Store[DS, SE],
     index_dir: Path,
-    index_type: Type[BaseIndex[DS, SE]] = Index,
     limit: int = 5000,
     limit_factor: int = 10,
     scored: bool = True,
@@ -48,7 +46,7 @@ def xref(
     if config is None:
         config = ScoringConfig.defaults()
     view = store.default_view(external=external)
-    index = index_type(view, index_dir)
+    index = Index(view, index_dir)
     index.build()
     conflict_reporter = None
     if conflicting_match_threshold is not None:

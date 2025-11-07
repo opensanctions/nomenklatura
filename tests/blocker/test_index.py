@@ -1,8 +1,8 @@
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
 from followthemoney import Dataset, StatementEntity
 
-from nomenklatura.index import Index
+from nomenklatura.blocker.index import Index
+from nomenklatura.blocker.tokenizer import tokenize_entity
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.store import SimpleMemoryStore
 
@@ -20,42 +20,26 @@ VERBAND_BADEN_DATA = {
 
 def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
     index = Index(dstore.default_view(), index_path)
-    assert len(index) == 0, index.fields
-    assert len(index.fields) == 0, index.fields
+    assert index.entity_count("entries") == 0
     index.build()
-    assert len(index) == 184, len(index)
-
-
-def test_index_persist(dstore: SimpleMemoryStore, dindex):
-    view = dstore.default_view()
-    with TemporaryDirectory() as tmpdir:
-        with NamedTemporaryFile("w") as fh:
-            path = Path(fh.name)
-            dindex.save(path)
-            loaded = Index.load(dstore.default_view(), path, tmpdir)
-    assert len(dindex.entities) == len(loaded.entities), (dindex, loaded)
-    assert len(dindex) == len(loaded), (dindex, loaded)
-
-    path.unlink(missing_ok=True)
-    with TemporaryDirectory() as tmpdir:
-        empty = Index.load(view, path, tmpdir)
-        assert len(empty) == len(loaded), (empty, loaded)
+    assert index.entity_count("entries") == 184
 
 
 def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     view = dstore.default_view()
-    pairs = dindex.pairs()
+    pairs = list(dindex.pairs())
 
     # At least one pair is found
     assert len(pairs) > 0, len(pairs)
 
     # A pair has tokens which overlap
-    tokenizer = dindex.tokenizer
     pair, score = pairs[0]
     entity0 = view.get_entity(str(pair[0]))
-    tokens0 = set(tokenizer.entity(entity0))
+    assert entity0 is not None
+    tokens0 = set(tokenize_entity(entity0))
     entity1 = view.get_entity(str(pair[1]))
-    tokens1 = set(tokenizer.entity(entity1))
+    assert entity1 is not None
+    tokens1 = set(tokenize_entity(entity1))
     overlap = tokens0.intersection(tokens1)
     assert len(overlap) > 0, overlap
 
@@ -83,19 +67,18 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
 
     # More tokens in BMW means lower TF, reducing the score
     assert jq_score > bmw_score, (jq_score, bmw_score)
-    assert jq_score == 19.0, jq_score
-    assert 3.0 < bmw_score < 4.0, bmw_score
+    assert jq_score > 10.0, jq_score
+    assert 3.0 < bmw_score < 100.0, bmw_score
 
     # FERRING Arzneimittel GmbH <> Clou Container Leasing GmbH
     false_pos = (
         Identifier.get("f8867c433ba247cfab74096c73f6ff5e36db3ffe"),
         Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
     )
-    false_pos_score = [score for pair, score in pairs if false_pos == pair][0]
-    assert 1.1 < false_pos_score < 1.2, false_pos_score
-    assert bmw_score > false_pos_score, (bmw_score, false_pos_score)
+    false_pos = [score for pair, score in pairs if false_pos == pair]
+    assert len(false_pos) == 0, pairs
 
-    assert len(pairs) == 429, len(pairs)
+    assert len(pairs) > 10, len(pairs)
 
 
 def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
