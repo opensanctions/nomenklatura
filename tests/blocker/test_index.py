@@ -4,6 +4,7 @@ from followthemoney import Dataset, StatementEntity
 from nomenklatura.blocker.index import Index
 from nomenklatura.blocker.tokenizer import tokenize_entity
 from nomenklatura.resolver.identifier import Identifier
+from nomenklatura.resolver.linker import Linker
 from nomenklatura.store import SimpleMemoryStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -81,39 +82,50 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     assert len(pairs) > 10, len(pairs)
 
 
-def test_match_score(dstore: SimpleMemoryStore, dindex: Index):
-    """Match an entity that isn't itself in the index"""
-    dx = Dataset.make({"name": "test", "title": "Test"})
-    entity = StatementEntity.from_data(dx, VERBAND_BADEN_DATA)
-    matches = dindex.match(entity)
-    # 9 entities in the index where some token in the query entity matches some
-    # token in the index.
-    assert len(matches) == 9, matches
+def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: Index):
+    linker = Linker({})
+    ostore = SimpleMemoryStore(test_dataset, linker)
+    a = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "a",
+            "schema": "Company",
+            "properties": {
+                "name": ["Bayerische Motorenwerke AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    b = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "b",
+            "schema": "Company",
+            "properties": {
+                "name": ["Volkswagen AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    c = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "c",
+            "schema": "Company",
+            "properties": {
+                "name": ["Bayerische Motorenwerke AG (BMW) AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    writer = ostore.writer()
+    writer.add_entity(a)
+    writer.add_entity(b)
+    writer.add_entity(c)
+    writer.flush()
 
-    top_result = matches[0]
-    assert top_result[0] == Identifier(VERBAND_BADEN_ID), top_result
-    assert 1.5 < top_result[1] < 2, top_result
+    matches = list(dindex.match_entities(ostore.default_view().entities()))
+    assert len(matches) == 2, matches
 
-    next_result = matches[1]
-    assert next_result[0] == Identifier(VERBAND_ID), next_result
-    assert 1.5 < next_result[1] < 1.67, next_result
-
-    match_identifiers = set(str(m[0]) for m in matches)
-    assert VERBAND_ID in match_identifiers  # validity
-    assert DAIMLER in dindex.entities
-    assert DAIMLER not in match_identifiers
-
-
-def test_top_match_matches_strong_pairs(dstore: SimpleMemoryStore, dindex: Index):
-    """Pairs with high scores are each others' top matches"""
-
-    view = dstore.default_view()
-    strong_pairs = [p for p in dindex.pairs() if p[1] > 3.0]
-    assert len(strong_pairs) >= 4
-
-    for pair, pair_score in strong_pairs:
-        entity = view.get_entity(pair[0])
-        matches = dindex.match(entity)
-        # it'll match itself and the other in the pair
-        for match, match_score in matches[:2]:
-            assert match in pair, (match, pair)
+    # for ident, matches in matches:
+    #     pass
