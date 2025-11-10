@@ -105,7 +105,7 @@ def build_dataset(
     # log.info("Training pairs after downsampling: %d", len(pairs))
     schemata: Dict[str, int] = {}
     for pair in pairs:
-        schemata[pair.schema] = schemata.get(pair.schema, 0) + 1
+        schemata[pair.schema.name] = schemata.get(pair.schema.name, 0) + 1
     log.info("Schemata distribution: %r", schemata)
     return pairs_to_arrays(pairs)
 
