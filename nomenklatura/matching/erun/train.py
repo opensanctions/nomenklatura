@@ -3,7 +3,7 @@ import multiprocessing
 import random
 from concurrent.futures import ProcessPoolExecutor
 from pprint import pprint
-from typing import Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 from followthemoney import registry, EntityProxy
@@ -76,7 +76,7 @@ def build_dataset(
     pairs_file: PathLike,
 ) -> Tuple[NDArray[np.float32], NDArray[np.float32]]:
     """Load and balance a dataset from a JSON file."""
-    pairs = []
+    pairs: List[JudgedPair] = []
     for pair in read_pairs(pairs_file):
         if not pair.left.schema.matchable or not pair.right.schema.matchable:
             continue
@@ -93,16 +93,20 @@ def build_dataset(
         len(positive),
         len(negative),
     )
-    min_class = min(len(positive), len(negative))
-    log.info("Downsampling to %d per class", min_class)
-    if len(positive) > min_class:
-        positive = weighted_pair_sort(positive)
-        pairs = positive[:min_class] + negative
-    else:
-        negative = weighted_pair_sort(negative)
-        pairs = positive + negative[:min_class]
+    # min_class = min(len(positive), len(negative))
+    # log.info("Downsampling to %d per class", min_class)
+    # if len(positive) > min_class:
+    #     # positive = weighted_pair_sort(positive)
+    #     pairs = positive[:min_class] + negative
+    # else:
+    #     # negative = weighted_pair_sort(negative)
+    #     pairs = positive + negative[:min_class]
     random.shuffle(pairs)
-    log.info("Training pairs after downsampling: %d", len(pairs))
+    # log.info("Training pairs after downsampling: %d", len(pairs))
+    schemata: Dict[str, int] = {}
+    for pair in pairs:
+        schemata[pair.schema] = schemata.get(pair.schema, 0) + 1
+    log.info("Schemata distribution: %r", schemata)
     return pairs_to_arrays(pairs)
 
 
