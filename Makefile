@@ -15,7 +15,7 @@ data/pairs-v1.json:
 train-v1: data/pairs-v1.json
 	nomenklatura train-v1-matcher data/pairs-v1.json
 
-train-er-unstable:
+train-erun: data/pairs-erun.json
 	nomenklatura train-erun-matcher data/pairs-erun.json
 
 fixtures:
