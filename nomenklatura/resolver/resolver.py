@@ -1,6 +1,7 @@
 #
 # Don't forget to call self._invalidate from methods that modify edges.
 #
+from datetime import timedelta
 import getpass
 import logging
 from collections import defaultdict
@@ -505,7 +506,7 @@ class Resolver(Linker[SE]):
         self._invalidate()
         return affected
 
-    def prune(self) -> None:
+    def prune(self, cleanup_after: timedelta = timedelta(days=6 * 30)) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges."""
         # database
         stmt = delete(self._table)
@@ -518,6 +519,81 @@ class Resolver(Linker[SE]):
             if edge.judgement == Judgement.NO_JUDGEMENT:
                 edge.deleted_at = now
                 self._update_edge(edge)
+
+        cutoff = utc_now() - cleanup_after
+        cutoff_ts = cutoff.isoformat()[:28]
+
+        for edge in list(self.edges.values()):
+            if edge.deleted_at is not None:
+                continue
+
+            # Cleanup job 1: Positive merges where the target is not canonical.
+            if edge.judgement == Judgement.POSITIVE and not edge.target.canonical:
+                nu_target = Identifier.get(self.get_canonical(edge.target))
+                if not nu_target.canonical:
+                    log.warning("Invalid target: %s -> %s" % (edge.source, edge.target))
+                    continue
+                log.info(
+                    "Rewriting edge: %s = %s -> %s"
+                    % (edge.target, edge.source, nu_target)
+                )
+                nu_edge = Edge(
+                    left_id=edge.source,
+                    right_id=nu_target,
+                    judgement=Judgement.POSITIVE,
+                    user=edge.user,
+                    created_at=now,
+                )
+                self._remove_edge(edge)
+                self._register(nu_edge)
+
+            # Cleanup job 2: Positive merges older than cutoff where both sides
+            # are canonical. These can be simplified and the intermediate canonical IDs
+            # removed.
+            if (
+                edge.source.canonical
+                and edge.target.canonical
+                and edge.judgement == Judgement.POSITIVE
+                and edge.created_at is not None
+                and edge.created_at < cutoff_ts
+            ):
+                canonical = Identifier.get(self.get_canonical(edge.source))
+                log.info(
+                    "Removing intermediate merge: %s -> %s (%s)"
+                    % (edge.source, edge.target, canonical)
+                )
+                linked = self.nodes.get(edge.source, set())
+                for linked_edge in list(linked):
+                    if linked_edge == edge:
+                        continue
+                    if linked_edge.deleted_at is not None:
+                        continue
+                    if linked_edge.other(edge.source) == canonical:
+                        log.warning(
+                            " -> Skipping self-referential edge: %s" % linked_edge
+                        )
+                    else:
+                        log.info(
+                            " -> Rewriting edge: %s <-> %s -> %s (%s)"
+                            % (
+                                edge.source,
+                                linked_edge.other(edge.source),
+                                canonical,
+                                linked_edge.judgement,
+                            )
+                        )
+                        nu_edge = Edge(
+                            left_id=linked_edge.other(edge.source),
+                            right_id=canonical,
+                            judgement=linked_edge.judgement,
+                            user=linked_edge.user,
+                            created_at=now,
+                        )
+                        self._register(nu_edge)
+                    self._remove_edge(linked_edge)
+                self._remove_edge(edge)
+
+        self._invalidate()
 
     def apply_statement(self, stmt: Statement) -> Statement:
         """Canonicalise Statement Entity IDs and ID values"""
