@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Type
+from typing import Callable, List, Optional, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
 
@@ -10,6 +10,7 @@ from nomenklatura.blocker import Index
 from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm, ScoringConfig
 
 log = logging.getLogger(__name__)
+Heuristic = Callable[[Resolver[SE], SE, SE, float], Optional[float]]
 
 
 def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
@@ -37,6 +38,7 @@ def xref(
     auto_threshold: Optional[float] = None,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
+    heuristic: Optional[Heuristic] = None,
     config: Optional[ScoringConfig] = None,
     user: Optional[str] = None,
 ) -> None:
@@ -90,6 +92,12 @@ def xref(
                 score = result.score
                 if len(left.datasets.intersection(right.datasets)) > 0:
                     score = score * discount_internal
+
+            if heuristic is not None:
+                hscore = heuristic(resolver, left, right, score)
+                if hscore is None:
+                    continue
+                score = hscore
 
             scores.append(score)
 
