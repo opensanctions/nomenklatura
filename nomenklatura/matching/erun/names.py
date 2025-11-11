@@ -119,7 +119,7 @@ def _compare_strict_levenshtein(left: str, right: str) -> float:
 
 def obj_name_levenshtein(left: E, right: E) -> float:
     """Very strict name comparison on object (Vessel, RealEstate, Security) names."""
-    if has_schema(left, right, "LegalEntity"):
+    if has_schema(left, right, "LegalEntity", "Security", "RealEstate", "CryptoWallet"):
         return 0.0
     left_names = {n.comparable for n in _entity_names(left)}
     right_names = {n.comparable for n in _entity_names(right)}

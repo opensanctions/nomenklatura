@@ -1,6 +1,7 @@
 import json
 from typing import Generator, Dict, Any
-from followthemoney.proxy import EntityProxy
+from followthemoney import model, EntityProxy
+from followthemoney.exc import InvalidData
 from followthemoney.util import PathLike
 
 from nomenklatura.judgement import Judgement
@@ -10,13 +11,14 @@ class JudgedPair(object):
     """A pair of two entities which have been judged to be the same
     (or not) by a user."""
 
-    __slots__ = ("left", "right", "weight", "judgement")
+    __slots__ = ("left", "right", "schema", "weight", "judgement")
 
     def __init__(
         self, left: EntityProxy, right: EntityProxy, judgement: Judgement
     ) -> None:
         self.left = left
         self.right = right
+        self.schema = model.common_schema(left.schema, right.schema)
         self.judgement = judgement
         self.weight = 0.0
 
@@ -39,4 +41,7 @@ def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
             judgement = Judgement(data["judgement"])
             if judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
                 continue
-            yield JudgedPair(left_entity, right_entity, judgement)
+            try:
+                yield JudgedPair(left_entity, right_entity, judgement)
+            except InvalidData:
+                continue

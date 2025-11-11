@@ -9,11 +9,13 @@ from nomenklatura.matching.erun.names import name_levenshtein, family_name_match
 from nomenklatura.matching.erun.names import name_token_overlap, name_numbers
 from nomenklatura.matching.erun.names import obj_name_levenshtein
 from nomenklatura.matching.erun.misc import address_match, address_numbers
-from nomenklatura.matching.erun.misc import birth_place
-from nomenklatura.matching.erun.misc import gender_mismatch
+from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
+from nomenklatura.matching.erun.misc import contact_match
+from nomenklatura.matching.erun.misc import security_isin_match
 from nomenklatura.matching.erun.countries import (
     org_obj_country_match,
     per_country_mismatch,
+    pos_country_mismatch,
 )
 from nomenklatura.matching.erun.identifiers import strong_identifier_match
 from nomenklatura.matching.erun.identifiers import weak_identifier_match
@@ -44,12 +46,15 @@ class EntityResolveRegression(ScoringAlgorithm):
         weak_identifier_match,
         dob_matches,
         dob_year_matches,
+        contact_match,
         FtResult.unwrap(dob_year_disjoint),
         family_name_match,
         birth_place,
         gender_mismatch,
         per_country_mismatch,
         org_obj_country_match,
+        pos_country_mismatch,
+        security_isin_match,
         obj_name_levenshtein,
         address_match,
         address_numbers,
