@@ -29,6 +29,7 @@ dependencies = [
     "pydantic > 2.0.0, < 3.0.0",
     "click < 9.0.0",
     "lxml > 4.0.0, < 7.0.0",
+    "duckdb >= 1.2.0, < 2.0.0",
 ]
 
 [project.urls]

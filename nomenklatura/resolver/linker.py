@@ -18,7 +18,10 @@ class Linker(Generic[SE]):
         self._entities: Dict[Identifier, Set[Identifier]] = entities
 
     def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._entities.get(node, set([node]))
+        nodes = self._entities.get(node)
+        if nodes is None:
+            return {node}
+        return nodes
 
     @lru_cache(maxsize=1024)
     def get_canonical(self, entity_id: StrIdent) -> str:
@@ -98,4 +101,4 @@ class Linker(Generic[SE]):
         return stmt
 
     def __repr__(self) -> str:
-        return f"<Merger({len(self._entities)})>"
+        return f"<Linker({len(self._entities)})>"

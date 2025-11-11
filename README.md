@@ -40,21 +40,21 @@ The command-line use of `nomenklatura` is targeted at small datasets which need 
 
 * `nomenklatura.Dataset` - implements a basic dataset for describing a set of entities.
 * `nomenklatura.Store` - a general purpose access mechanism for entities. By default, a store is used to access entity data stored in files as an in-memory cache, but the store can be subclassed to work with entities from a database system.
-* `nomenklatura.Index` - a full-text in-memory search index for FtM entities. In the application, this is used to block de-duplication candidates, but the index can also be used to drive an API etc.
-* `nomenklatura.index.TantivyIndex` - a wrapper around Tantivy for indexing and matching FtM entities.
+* `nomenklatura.blocker.Index` - a cross-reference blocker for correlating entities inside of a dataset, or across different datasets.
 * `nomenklatura.Resolver` - the core of the de-duplication process, the resolver is essentially a graph with edges made out of entity judgements. The resolver can be used to store judgements or get the canonical ID for a given entity.
 
 All of the API classes have extensive type annotations, which should make their integration in any modern Python API simpler.
 
 ## Design
 
-This package offers an implementation of an in-memory data deduplication framework centered around the FtM data model. The idea is the following workflow:
+This package offers an implementation of a data deduplication framework centered around the FtM data model. The idea is the following workflow:
 
-* Accept FtM-shaped entities from a given loader (e.g. a JSON file, or a database)
-* Build an in-memory inverted index of the entities for dedupe blocking
+* Accept FtM-shaped entities from a given source (e.g. a JSON file, or a database)
+* Build an inverted index of the entities for dedupe blocking
 * Generate merge candidates using the blocking index and FtM compare
-* Provide a file-based storage format for merge challenges and decisions
+* Provide a SQL persistence abstraction for merge challenges and decisions
 * Provide a text-based user interface to let users make merge decisions
+* Export consolidated entities that cluster source entity data
 
 Later on, the following might be added:
 
@@ -62,12 +62,7 @@ Later on, the following might be added:
 
 ### Resolver graph
 
-The key implementation detail of nomenklatura is the `Resolver`, a graph structure that
-manages user decisions regarding entity identity. Edges are `Judgements` of whether
-two entity IDs are the same, not the same, or undecided. The resolver implements an
-algorithm for computing connected components, which can the be used to find the best
-available ID for a cluster of entities. It can also be used to evaluate transitive
-judgements, e.g. if A <> B, and B = C, then we don't need to ask if A = C.
+The key implementation detail of nomenklatura is the `Resolver`, a graph structure that manages user decisions regarding entity identity. Edges are `Judgements` of whether two entity IDs are the same, not the same, or undecided. The resolver implements an algorithm for computing connected components, which can the be used to find the best available ID for a cluster of entities. It can also be used to evaluate transitive judgements, e.g. if A <> B, and B = C, then we don't need to ask if A = C.
 
 ## Reading
 

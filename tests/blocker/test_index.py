@@ -1,0 +1,131 @@
+from pathlib import Path
+from followthemoney import Dataset, StatementEntity
+
+from nomenklatura.blocker.index import Index
+from nomenklatura.blocker.tokenizer import tokenize_entity
+from nomenklatura.resolver.identifier import Identifier
+from nomenklatura.resolver.linker import Linker
+from nomenklatura.store import SimpleMemoryStore
+
+DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
+VERBAND_ID = "62ad0fe6f56dbbf6fee57ce3da76e88c437024d5"
+VERBAND_BADEN_ID = "69401823a9f0a97cfdc37afa7c3158374e007669"
+VERBAND_BADEN_DATA = {
+    "id": "bla",
+    "schema": "Company",
+    "properties": {
+        "name": ["VERBAND DER METALL UND ELEKTROINDUSTRIE BADEN WURTTEMBERG"]
+    },
+}
+
+
+def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
+    index = Index(dstore.default_view(), index_path)
+    assert index.entity_count("entries") == 0
+    index.build()
+    assert index.entity_count("entries") == 184
+
+
+def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
+    view = dstore.default_view()
+    pairs = list(dindex.pairs())
+
+    # At least one pair is found
+    assert len(pairs) > 0, len(pairs)
+
+    # A pair has tokens which overlap
+    pair, score = pairs[0]
+    entity0 = view.get_entity(str(pair[0]))
+    assert entity0 is not None
+    tokens0 = set(tokenize_entity(entity0))
+    entity1 = view.get_entity(str(pair[1]))
+    assert entity1 is not None
+    tokens1 = set(tokenize_entity(entity1))
+    overlap = tokens0.intersection(tokens1)
+    assert len(overlap) > 0, overlap
+
+    # A pair has non-zero score
+    assert score > 0
+    # pairs are in descending score order
+    last_score = pairs[0][1]
+    for pair in pairs[1:]:
+        assert pair[1] <= last_score
+        last_score = pair[1]
+
+    #  Johanna Quandt <> Frau Johanna Quandt
+    jq = (
+        Identifier.get("9add84cbb7bb48c7552f8ec7ae54de54eed1e361"),
+        Identifier.get("2d3e50433e36ebe16f3d906b684c9d5124c46d76"),
+    )
+    jq_score = [score for pair, score in pairs if jq == pair][0]
+
+    #  Bayerische Motorenwerke AG <> Bayerische Motorenwerke (BMW) AG
+    bmw = (
+        Identifier.get("21cc81bf3b960d2847b66c6c862e7aa9b5e4f487"),
+        Identifier.get("12570ee94b8dc23bcc080e887539d3742b2a5237"),
+    )
+    bmw_score = [score for pair, score in pairs if bmw == pair][0]
+
+    # More tokens in BMW means lower TF, reducing the score
+    assert jq_score > bmw_score, (jq_score, bmw_score)
+    assert jq_score > 10.0, jq_score
+    assert 3.0 < bmw_score < 100.0, bmw_score
+
+    # FERRING Arzneimittel GmbH <> Clou Container Leasing GmbH
+    false_pos = (
+        Identifier.get("f8867c433ba247cfab74096c73f6ff5e36db3ffe"),
+        Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
+    )
+    false_pos = [score for pair, score in pairs if false_pos == pair]
+    assert len(false_pos) == 0, pairs
+
+    assert len(pairs) > 10, len(pairs)
+
+
+def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: Index):
+    linker = Linker({})
+    ostore = SimpleMemoryStore(test_dataset, linker)
+    a = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "a",
+            "schema": "Company",
+            "properties": {
+                "name": ["Bayerische Motorenwerke AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    b = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "b",
+            "schema": "Company",
+            "properties": {
+                "name": ["Volkswagen AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    c = StatementEntity.from_data(
+        test_dataset,
+        {
+            "id": "c",
+            "schema": "Company",
+            "properties": {
+                "name": ["Bayerische Motorenwerke AG (BMW) AG"],
+                "address": ["Moscow"],
+            },
+        },
+    )
+    writer = ostore.writer()
+    writer.add_entity(a)
+    writer.add_entity(b)
+    writer.add_entity(c)
+    writer.flush()
+
+    matches = list(dindex.match_entities(ostore.default_view().entities()))
+    assert len(matches) == 2, matches
+
+    # for ident, matches in matches:
+    #     pass
