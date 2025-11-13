@@ -15,7 +15,7 @@ It should yield any potential matches found in the enrichment source.
 
 ## Expand
 
-The expand step is called to discover entities related to the enrichment store.
+The expand step is called to discover entities related to a matched entity in the enrichment source.
 It is called for any candidates that have been deemed a true match.
 
 At a minimum, the match should be yielded. Additionally, related entities found
