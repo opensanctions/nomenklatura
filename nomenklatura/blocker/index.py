@@ -48,6 +48,7 @@ from nomenklatura.blocker.tokenizer import (
     tokenize_entity,
 )
 
+DuckDBConfig = Dict[str, str | bool | int | float | list[str]]
 BlockingMatches = List[Tuple[Identifier, float]]
 
 log = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ class Index(object):
         #     rmtree(self.data_dir)
         tmp_dir = self.data_dir / "tmp"
         tmp_dir.mkdir(parents=True, exist_ok=True)
-        self.duckdb_config = {
+        self.duckdb_config: DuckDBConfig = {
             "preserve_insertion_order": False,
             "temp_directory": tmp_dir.as_posix(),
         }
@@ -128,9 +129,7 @@ class Index(object):
         self._init_db()
 
     def _init_db(self) -> None:
-        # FIXME: remove when duckdb 1.4.2 comes out
-        HACK_config = cast(Dict[str, str], self.duckdb_config)
-        self.con = duckdb.connect(self.duckdb_path, config=HACK_config)
+        self.con = duckdb.connect(self.duckdb_path, config=self.duckdb_config)
 
     def _clear(self) -> None:
         self.con.execute("CHECKPOINT")
