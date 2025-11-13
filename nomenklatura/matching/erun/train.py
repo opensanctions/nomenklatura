@@ -93,16 +93,18 @@ def build_dataset(
         len(positive),
         len(negative),
     )
-    # min_class = min(len(positive), len(negative))
-    # log.info("Downsampling to %d per class", min_class)
-    # if len(positive) > min_class:
-    #     # positive = weighted_pair_sort(positive)
-    #     pairs = positive[:min_class] + negative
-    # else:
-    #     # negative = weighted_pair_sort(negative)
-    #     pairs = positive + negative[:min_class]
+    min_class = min(len(positive), len(negative))
+    log.info("Downsampling to %d per class", min_class)
+    if len(positive) > min_class:
+        # positive = weighted_pair_sort(positive)
+        random.shuffle(positive)
+        pairs = positive[:min_class] + negative
+    else:
+        # negative = weighted_pair_sort(negative)
+        random.shuffle(negative)
+        pairs = positive + negative[:min_class]
     random.shuffle(pairs)
-    # log.info("Training pairs after downsampling: %d", len(pairs))
+    log.info("Training pairs after downsampling: %d", len(pairs))
     schemata: Dict[str, int] = {}
     for pair in pairs:
         schemata[pair.schema.name] = schemata.get(pair.schema.name, 0) + 1
