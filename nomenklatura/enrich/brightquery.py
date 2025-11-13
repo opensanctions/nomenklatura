@@ -29,7 +29,9 @@ class BrightQueryEnricher(Enricher[DS]):
         user = os.environ.get("BRIGHTQUERY_USER")
         password = os.environ.get("BRIGHTQUERY_PASS")
         if not user or not password:
-            raise ValueError("Missing BrightQuery credentials: BQ_USER and/or BQ_PASS")
+            raise ValueError(
+                "Missing BrightQuery credentials: BRIGHTQUERY_USER and/or BRIGHTQUERY_PASS"
+            )
 
         self.session.auth = (user, password)
 
@@ -48,48 +50,75 @@ class BrightQueryEnricher(Enricher[DS]):
                     "address": address,
                 }
 
-                cache_id = entity.id or hash_data(payload)
+                cache_id = hash_data(payload)
                 cache_key = f"{self.BASE_URL}:{cache_id}"
 
-                # Try cache first
+                # We have to re-implement http_post_json_cached here because the endpoint doesn't
+                # return JSON when there are no results.
                 resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
                 if not resp_data:
                     response = self.session.post(
                         self.BASE_URL, json=payload, timeout=15
                     )
+                    # When no results are found, the API helpfully doesn't return JSON
+                    # but just a 204 with an empty response body.
                     if response.status_code == 204:
                         log.info("No data for entity %s (204)", entity.id)
+                        # Cache the empty result to avoid hitting the API again
+                        # for the same query.
+                        self.cache.set_json(cache_key, {})
                         continue
                     response.raise_for_status()
                     resp_data = response.json()
-                    # Cache the successful result
-                    if resp_data:
-                        self.cache.set_json(cache_key, resp_data)
-
+                    self.cache.set_json(cache_key, resp_data)
+                # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
                 children = resp_data.get("root", {}).get("children", [])
                 for child in children:
-                    company_name = child.get("bq_organization_name")
+                    # Primary, most common name of the Organization, which equals the name of
+                    # the ultimate parent or sole entity that comprises the Organization.
+                    org_name = child.get("bq_organization_name")
+                    # Some records do not have Legal Entity names. Then we fall back to the org_name.
+                    name = child.get("bq_legal_entity_name") or org_name
+                    if not name:
+                        log.warning(
+                            "BrightQuery record without name: %s",
+                            child.get("bq_legal_entity_id"),
+                        )
+                        continue
+                    # Unique ID of the Organization. An Organization is the concept of a company,
+                    # which is constructed as a collection of Legal Entities (child and parent entities)
+                    # and Locations (e.g., offices, stores).
+                    bq_org_id = child.get("bq_organization_id")
+                    # Unique ID of the Legal Entity. A Legal Entity is part of an Organization and is
+                    # registered with the Secretary of State of a jurisdiction.
+                    # LegalEntity is the primary object of interest for our processing.
+                    bq_entity_id = child.get("bq_legal_entity_id")
                     proxy = self.make_entity(entity, "Company")
-                    proxy.id = make_entity_id(child.get("bq_organization_id"))
-                    proxy.add("name", company_name)
-                    proxy.add("website", child.get("bq_organization_website"))
-                    proxy.add("website", child.get("bq_organization_linkedin_url"))
+                    proxy.id = f"brightquery-{make_entity_id(name, bq_entity_id)}"
+                    # Legal name of the Legal Entity
+                    proxy.add("name", name)
+                    # We add it as a weak alias not to match on it, in some cases it's a parent company name.
+                    # And in some cases it's the same as the legal entity name.
+                    if org_name != proxy.get("name")[0]:
+                        proxy.add("weakAlias", org_name)
+                    proxy.add("brightQueryOrgId", bq_org_id)
+                    proxy.add("brightQueryId", bq_entity_id)
+                    # Link to the Organization's primary website.
+                    proxy.add("website", child.get("bq_website"))
                     proxy.add("address", child.get("bq_legal_entity_address_summary"))
+                    # Jurisdiction code (2-digit state name) in which the Legal Entity is registered,
+                    # typically with the Secretary of State.
                     proxy.add(
-                        "registrationNumber",
-                        child.get("bq_organization_company_number"),
+                        "jurisdiction", child.get("bq_legal_entity_jurisdiction_code")
                     )
+                    # Date on which the Legal Entity was registered with the Secretary of State.
                     proxy.add(
                         "incorporationDate",
-                        child.get("bq_organization_date_founded"),
+                        child.get("bq_legal_entity_date_founded"),
                     )
                     # proxy.add("topics", "corp.public")
 
                     yield proxy
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
-        if match.schema.is_a("Organization"):
-            name = match.first("name")
-            if name is None:
-                return
-            yield match
+        yield match
