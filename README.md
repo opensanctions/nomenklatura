@@ -56,6 +56,8 @@ This package offers an implementation of a data deduplication framework centered
 * Provide a text-based user interface to let users make merge decisions
 * Export consolidated entities that cluster source entity data
 
+The [Enrichment](nomenklatura/enrich/README.md) framework enables linking entities to records in other data sources, and enriching them with information from those records.
+
 Later on, the following might be added:
 
 * A web application to let users make merge decisions on the web
