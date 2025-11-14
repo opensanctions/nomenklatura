@@ -74,42 +74,45 @@ class BrightQueryEnricher(Enricher[DS]):
         )
         yield proxy
 
+    def process_payload(self, payload: dict, entity: SE) -> Generator[SE, None, None]:
+        cache_id = hash_data(payload)
+        cache_key = f"{self.BASE_URL}:{cache_id}"
+
+        # We have to re-implement http_post_json_cached here because the endpoint doesn't
+        # return JSON when there are no results.
+        resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
+        if not resp_data:
+            response = self.session.post(self.BASE_URL, json=payload, timeout=15)
+            # When no results are found, the API helpfully doesn't return JSON
+            # but just a 204 with an empty response body.
+            if response.status_code == 204:
+                log.info("No data for entity %s (204)", entity.id)
+                # Cache the empty result to avoid hitting the API again
+                # for the same query.
+                self.cache.set_json(cache_key, {})
+                return
+            response.raise_for_status()
+            resp_data = response.json()
+            self.cache.set_json(cache_key, resp_data)
+        # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
+        children = resp_data.get("root", {}).get("children", [])
+        for child in children:
+            yield from self.create_proxy(entity, child)
+
     def match(self, entity: SE) -> Generator[SE, None, None]:
         # Get the name and address to search
         names = entity.get("name")
         addresses = entity.get("address")
         for name in names:
-            for address in addresses:
-                payload = {
-                    "company_name": name,
-                    "address": address,
-                }
-
-                cache_id = hash_data(payload)
-                cache_key = f"{self.BASE_URL}:{cache_id}"
-
-                # We have to re-implement http_post_json_cached here because the endpoint doesn't
-                # return JSON when there are no results.
-                resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
-                if not resp_data:
-                    response = self.session.post(
-                        self.BASE_URL, json=payload, timeout=15
-                    )
-                    # When no results are found, the API helpfully doesn't return JSON
-                    # but just a 204 with an empty response body.
-                    if response.status_code == 204:
-                        log.info("No data for entity %s (204)", entity.id)
-                        # Cache the empty result to avoid hitting the API again
-                        # for the same query.
-                        self.cache.set_json(cache_key, {})
-                        continue
-                    response.raise_for_status()
-                    resp_data = response.json()
-                    self.cache.set_json(cache_key, resp_data)
-                # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
-                children = resp_data.get("root", {}).get("children", [])
-                for child in children:
-                    yield from self.create_proxy(entity, child)
+            if addresses:
+                # If we have an address, we can search by both name and address
+                for address in addresses:
+                    payload = {"company_name": name, "address": address}
+                    yield from self.process_payload(payload, entity)
+            else:
+                # If we don't have an address, just search by name
+                payload = {"company_name": name}
+                yield from self.process_payload(payload, entity)
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         yield match
