@@ -36,10 +36,6 @@ class BrightQueryEnricher(Enricher[DS]):
         self.session.auth = (user, password)
 
     def match(self, entity: SE) -> Generator[SE, None, None]:
-        if not any(
-            entity.schema.is_a(t) for t in ("Company", "Organization", "LegalEntity")
-        ):
-            return
         # Get the name and address to search
         names = entity.get("name")
         addresses = entity.get("address")
