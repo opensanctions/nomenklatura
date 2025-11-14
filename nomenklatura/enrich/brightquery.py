@@ -2,7 +2,7 @@ import os
 import requests
 import logging
 from banal import hash_data
-from typing import Generator, Optional
+from typing import Generator, Optional, Dict, Any
 from followthemoney.util import make_entity_id
 from followthemoney import DS, SE
 
@@ -35,7 +35,9 @@ class BrightQueryEnricher(Enricher[DS]):
 
         self.session.auth = (user, password)
 
-    def create_proxy(self, entity: SE, child) -> Generator[SE, None, None]:
+    def create_proxy(
+        self, entity: SE, child: Dict[str, Any]
+    ) -> Generator[SE, None, None]:
         # Primary, most common name of the Organization, which equals the name of
         # the ultimate parent or sole entity that comprises the Organization.
         org_name = child.get("bq_organization_name")
@@ -74,7 +76,9 @@ class BrightQueryEnricher(Enricher[DS]):
         )
         yield proxy
 
-    def process_payload(self, payload: dict, entity: SE) -> Generator[SE, None, None]:
+    def process_payload(
+        self, payload: dict[str, Any], entity: SE
+    ) -> Generator[SE, None, None]:
         cache_id = hash_data(payload)
         cache_key = f"{self.BASE_URL}:{cache_id}"
 
