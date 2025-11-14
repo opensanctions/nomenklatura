@@ -35,6 +35,45 @@ class BrightQueryEnricher(Enricher[DS]):
 
         self.session.auth = (user, password)
 
+    def create_proxy(self, entity: SE, child) -> Generator[SE, None, None]:
+        # Primary, most common name of the Organization, which equals the name of
+        # the ultimate parent or sole entity that comprises the Organization.
+        org_name = child.get("bq_organization_name")
+        # Some records do not have Legal Entity names. Then we fall back to the org_name.
+        name = child.get("bq_legal_entity_name") or org_name
+        if not name:
+            log.warning(
+                "BrightQuery record without name: %s",
+                child.get("bq_legal_entity_id"),
+            )
+            return
+        # Unique ID of the Organization. An Organization is the concept of a company,
+        # which is constructed as a collection of Legal Entities (child and parent entities)
+        # and Locations (e.g., offices, stores).
+        bq_org_id = child.get("bq_organization_id")
+        # Unique ID of the Legal Entity. A Legal Entity is part of an Organization and is
+        # registered with the Secretary of State of a jurisdiction.
+        # LegalEntity is the primary object of interest for our processing.
+        bq_entity_id = child.get("bq_legal_entity_id")
+        proxy = self.make_entity(entity, "Company")
+        proxy.id = f"brightquery-{make_entity_id(name, bq_entity_id)}"
+        # Legal name of the Legal Entity
+        proxy.add("name", name)
+        proxy.add("brightQueryOrgId", bq_org_id)
+        proxy.add("brightQueryId", bq_entity_id)
+        # Link to the Organization's primary website.
+        proxy.add("website", child.get("bq_website"))
+        proxy.add("address", child.get("bq_legal_entity_address_summary"))
+        # Jurisdiction code (2-digit state name) in which the Legal Entity is registered,
+        # typically with the Secretary of State.
+        proxy.add("jurisdiction", child.get("bq_legal_entity_jurisdiction_code"))
+        # Date on which the Legal Entity was registered with the Secretary of State.
+        proxy.add(
+            "incorporationDate",
+            child.get("bq_legal_entity_date_founded"),
+        )
+        yield proxy
+
     def match(self, entity: SE) -> Generator[SE, None, None]:
         # Get the name and address to search
         names = entity.get("name")
@@ -70,51 +109,7 @@ class BrightQueryEnricher(Enricher[DS]):
                 # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
                 children = resp_data.get("root", {}).get("children", [])
                 for child in children:
-                    # Primary, most common name of the Organization, which equals the name of
-                    # the ultimate parent or sole entity that comprises the Organization.
-                    org_name = child.get("bq_organization_name")
-                    # Some records do not have Legal Entity names. Then we fall back to the org_name.
-                    name = child.get("bq_legal_entity_name") or org_name
-                    if not name:
-                        log.warning(
-                            "BrightQuery record without name: %s",
-                            child.get("bq_legal_entity_id"),
-                        )
-                        continue
-                    # Unique ID of the Organization. An Organization is the concept of a company,
-                    # which is constructed as a collection of Legal Entities (child and parent entities)
-                    # and Locations (e.g., offices, stores).
-                    bq_org_id = child.get("bq_organization_id")
-                    # Unique ID of the Legal Entity. A Legal Entity is part of an Organization and is
-                    # registered with the Secretary of State of a jurisdiction.
-                    # LegalEntity is the primary object of interest for our processing.
-                    bq_entity_id = child.get("bq_legal_entity_id")
-                    proxy = self.make_entity(entity, "Company")
-                    proxy.id = f"brightquery-{make_entity_id(name, bq_entity_id)}"
-                    # Legal name of the Legal Entity
-                    proxy.add("name", name)
-                    # We add it as a weak alias not to match on it, in some cases it's a parent company name.
-                    # And in some cases it's the same as the legal entity name.
-                    if org_name != proxy.get("name")[0]:
-                        proxy.add("weakAlias", org_name)
-                    proxy.add("brightQueryOrgId", bq_org_id)
-                    proxy.add("brightQueryId", bq_entity_id)
-                    # Link to the Organization's primary website.
-                    proxy.add("website", child.get("bq_website"))
-                    proxy.add("address", child.get("bq_legal_entity_address_summary"))
-                    # Jurisdiction code (2-digit state name) in which the Legal Entity is registered,
-                    # typically with the Secretary of State.
-                    proxy.add(
-                        "jurisdiction", child.get("bq_legal_entity_jurisdiction_code")
-                    )
-                    # Date on which the Legal Entity was registered with the Secretary of State.
-                    proxy.add(
-                        "incorporationDate",
-                        child.get("bq_legal_entity_date_founded"),
-                    )
-                    # proxy.add("topics", "corp.public")
-
-                    yield proxy
+                    yield from self.create_proxy(entity, child)
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         yield match
