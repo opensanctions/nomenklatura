@@ -1,4 +1,3 @@
-import os
 import requests
 import logging
 from banal import hash_data
@@ -26,14 +25,14 @@ class BrightQueryEnricher(Enricher[DS]):
     ):
         super().__init__(dataset, cache, config, session)
 
-        user = os.environ.get("BRIGHTQUERY_USER")
-        password = os.environ.get("BRIGHTQUERY_PASS")
-        if not user or not password:
+        self._user = self.get_config_expand("brightquery_user")
+        self._password = self.get_config_expand("brightquery_pass")
+        if not self._user or not self._password:
             raise ValueError(
-                "Missing BrightQuery credentials: BRIGHTQUERY_USER and/or BRIGHTQUERY_PASS"
+                "Missing BrightQuery credentials: brightquery_user and/or brightquery_pass"
             )
 
-        self.session.auth = (user, password)
+        self.session.auth = (self._user, self._password)
 
     def create_proxy(
         self, entity: SE, child: Dict[str, Any]
