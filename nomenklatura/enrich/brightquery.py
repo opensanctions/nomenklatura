@@ -76,9 +76,9 @@ class BrightQueryEnricher(Enricher[DS]):
         )
         yield proxy
 
-    def process_payload(
-        self, payload: dict[str, Any], entity: SE
-    ) -> Generator[SE, None, None]:
+    def search(
+        self, payload: dict[str, Any], entity
+    ) -> Generator[Dict[str, str], None, None]:
         cache_id = hash_data(payload)
         cache_key = f"{self.BASE_URL}:{cache_id}"
 
@@ -100,8 +100,7 @@ class BrightQueryEnricher(Enricher[DS]):
             self.cache.set_json(cache_key, resp_data)
         # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
         children = resp_data.get("root", {}).get("children", [])
-        for child in children:
-            yield from self.create_proxy(entity, child)
+        yield from children
 
     def match(self, entity: SE) -> Generator[SE, None, None]:
         # Get the name and address to search
@@ -113,12 +112,12 @@ class BrightQueryEnricher(Enricher[DS]):
                 for address in addresses:
                     payload = {"company_name": name, "address": address}
                     for match in self.search(payload, entity):
-                        yield self.create_proxy(match)
+                        yield from self.create_proxy(entity, match)
             else:
                 # If we don't have an address, just search by name
                 payload = {"company_name": name}
-                for match in self.search(payload, entity)
-                    yield create_proxy(match)
+                for match in self.search(payload, entity):
+                    yield from self.create_proxy(entity, match)
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         yield match
