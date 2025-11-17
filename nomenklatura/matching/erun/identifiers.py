@@ -2,9 +2,9 @@ from typing import Set, Tuple
 from rigour.ids import get_strong_format_names
 
 from followthemoney import EntityProxy, registry
+from nomenklatura.matching.util import has_schema
 
-
-HONORARY_STRONG = {registry.phone, registry.email, registry.checksum}
+# HONORARY_STRONG = {registry.phone, registry.email, registry.checksum}
 STRONG_FORMATS = get_strong_format_names()
 
 
@@ -15,8 +15,8 @@ def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
             continue
         if prop.format in STRONG_FORMATS:
             strong_ids.add((prop.format, value))
-        elif prop.type in HONORARY_STRONG:
-            strong_ids.add((prop.name, value))
+        # elif prop.type in HONORARY_STRONG:
+        #     strong_ids.add((prop.name, value))
     return strong_ids
 
 
@@ -33,6 +33,8 @@ def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
 
 def strong_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
     """Check if two entities share any strong identifiers."""
+    # if has_schema(left, right, "Security"):
+    #     return 0.0
     left_strong = _get_strong_identifiers(left)
     right_strong = _get_strong_identifiers(right)
     if len(left_strong) == 0 or len(right_strong) == 0:
@@ -53,6 +55,8 @@ def strong_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
 
 def weak_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
     """Check if two entities share any weak identifiers."""
+    if not has_schema(left, right, "LegalEntity"):
+        return 0.0
     left_ids = _get_weak_identifiers(left)
     right_ids = _get_weak_identifiers(right)
     if left_ids.intersection(right_ids):

@@ -1,11 +1,6 @@
-from nomenklatura.resolver import Resolver
+from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.store import Store, View
-from nomenklatura.index import Index
+from nomenklatura.judgement import Judgement
 
-__version__ = "4.1.10"
-__all__ = [
-    "Resolver",
-    "Index",
-    "Store",
-    "View",
-]
+__version__ = "4.2.0"
+__all__ = ["Resolver", "Store", "View", "Judgement", "Linker"]

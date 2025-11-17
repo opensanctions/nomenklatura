@@ -1,5 +1,5 @@
 from pathlib import Path
-from rigour.env import env_str, env_int
+from rigour.env import env_str, env_opt, env_int
 
 TESTING = False
 
@@ -15,3 +15,6 @@ REDIS_URL = env_str("NOMENKLATURA_REDIS_URL", "")
 
 STATEMENT_TABLE = env_str("NOMENKLATURA_STATEMENT_TABLE", "statement")
 STATEMENT_BATCH = env_int("NOMENKLATURA_STATEMENT_BATCH", 1500)
+
+DUCKDB_MEMORY = env_opt("NOMENKLATURA_DUCKDB_MEMORY")
+DUCKDB_THREADS = env_opt("NOMENKLATURA_DUCKDB_THREADS")

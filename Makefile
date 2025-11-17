@@ -15,6 +15,9 @@ data/pairs-v1.json:
 train-v1: data/pairs-v1.json
 	nomenklatura train-v1-matcher data/pairs-v1.json
 
+train-erun: data/pairs-erun.json
+	nomenklatura train-erun-matcher data/pairs-erun.json
+
 fixtures:
 	ftm map-csv -i tests/fixtures/donations.csv -o tests/fixtures/donations.frag.ijson tests/fixtures/donations.yml
 	ftm aggregate -i tests/fixtures/donations.frag.ijson -o tests/fixtures/donations.ijson

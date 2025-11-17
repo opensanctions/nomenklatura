@@ -13,10 +13,11 @@ CODE_PATH = DATA_PATH.joinpath("..").resolve()
 FNUL = 0.0
 
 
-def has_schema(left: E, right: E, schema: str) -> bool:
+def has_schema(left: E, right: E, *schemata: str) -> bool:
     """Check if one of the entities has the required schema."""
-    if left.schema.is_a(schema) or right.schema.is_a(schema):
-        return True
+    for schema in schemata:
+        if left.schema.is_a(schema) or right.schema.is_a(schema):
+            return True
     return False
 
 
