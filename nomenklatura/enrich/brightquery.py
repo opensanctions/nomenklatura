@@ -24,9 +24,10 @@ class BrightQueryEnricher(Enricher[DS]):
         session: Optional[requests.Session] = None,
     ):
         super().__init__(dataset, cache, config, session)
-
-        self._user = self.get_config_expand("brightquery_user")
-        self._password = self.get_config_expand("brightquery_pass")
+        user_var = "${BRIGHTQUERY_USERNAME}"
+        pass_var = "${BRIGHTQUERY_PASSWORD}"
+        self._user = self.get_config_expand("username", user_var)
+        self._password = self.get_config_expand("password", pass_var)
         if not self._user or not self._password:
             raise ValueError(
                 "Missing BrightQuery credentials: brightquery_user and/or brightquery_pass"
