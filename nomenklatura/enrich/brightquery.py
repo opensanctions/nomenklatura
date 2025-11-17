@@ -75,9 +75,7 @@ class BrightQueryEnricher(Enricher[DS]):
         )
         yield proxy
 
-    def search(
-        self, payload: dict[str, Any], entity
-    ) -> Generator[Dict[str, str], None, None]:
+    def search(self, payload: dict[str, Any]) -> Generator[Dict[str, str], None, None]:
         cache_id = hash_data(payload)
         cache_key = f"{self.BASE_URL}:{cache_id}"
 
@@ -89,7 +87,6 @@ class BrightQueryEnricher(Enricher[DS]):
             # When no results are found, the API helpfully doesn't return JSON
             # but just a 204 with an empty response body.
             if response.status_code == 204:
-                log.info("No data for entity %s (204)", entity.id)
                 # Cache the empty result to avoid hitting the API again
                 # for the same query.
                 self.cache.set_json(cache_key, {})
