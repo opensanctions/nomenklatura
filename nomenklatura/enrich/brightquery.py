@@ -107,12 +107,12 @@ class BrightQueryEnricher(Enricher[DS]):
                 # If we have an address, we can search by both name and address
                 for address in addresses:
                     payload = {"company_name": name, "address": address}
-                    for match in self.search(payload, entity):
+                    for match in self.search(payload):
                         yield from self.create_proxy(entity, match)
             else:
                 # If we don't have an address, just search by name
                 payload = {"company_name": name}
-                for match in self.search(payload, entity):
+                for match in self.search(payload):
                     yield from self.create_proxy(entity, match)
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
