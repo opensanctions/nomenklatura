@@ -4,6 +4,8 @@ from typing import Any, Dict, Generator, List
 from sqlalchemy import MetaData
 import yaml
 import pytest
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 from pathlib import Path
 from tempfile import mkdtemp
 from normality import slugify_text
@@ -18,6 +20,10 @@ from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
+FIXTURE_FETCH_HEADERS = {
+    "User-Agent": "followthemoney.tech/nomenklatura (https://github.com/opensanctions/nomenklatura)",
+    "Accept": "application/json",
+}
 settings.TESTING = True
 
 
@@ -119,9 +125,12 @@ def wd_read_response(request, context):
     assert file_name is not None, "Invalid Wikidata URL: %s" % request.url
     path = FIXTURES_PATH / f"wikidata/{file_name}.json"
     if not path.exists():
-        import urllib.request
-
-        data = json.load(urllib.request.urlopen(request.url))
+        try:
+            req = Request(request.url, headers=FIXTURE_FETCH_HEADERS)
+            data = json.load(urlopen(req))
+        except HTTPError as exc:
+            print("URL", request.url, "failed:", exc, exc.read())
+            raise
         for _, value in data["entities"].items():
             value.pop("sitelinks", None)
             for sect in ["labels", "aliases", "descriptions"]:
