@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
+MIN_DATE = "1001"
 PRECISION = {
     11: Precision.DAY,
     10: Precision.MONTH,
@@ -31,6 +32,13 @@ def snak_value_to_string(
             return LangText(None)
         time = raw_time.strip("+")
         prec_id = cast(int, value.get("precision"))
+        # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
+        if prec_id >= 9:
+            if time < "1900":
+                # Hacky, but set all old dates to the minimum date so persons
+                # with historical birth dates are filtered out.
+                return LangText(MIN_DATE, original=raw_time)
+            return LangText(None, original=raw_time)
         prec = PRECISION.get(prec_id, Precision.DAY)
         time = time[: prec.value]
 
@@ -40,7 +48,7 @@ def snak_value_to_string(
             time = time[:4]
 
         # Date limit in FtM. These will be removed by the death filter:
-        time = max("1001", time)
+        time = max(MIN_DATE, time)
         return LangText(time, original=raw_time)
     elif value_type == "wikibase-entityid":
         qid = value.get("id")
