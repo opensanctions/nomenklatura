@@ -11,6 +11,8 @@ SYM_WEIGHTS = {
     Symbol.Category.NICK: 0.8,
     # in "A B International" and "X International", we don't want to give too much weight to the symbol
     Symbol.Category.SYMBOL: 0.3,
+    # in "A B Medical" and "A B Casino", the symbol is a stronger signal than "International" or "Company"
+    Symbol.Category.DOMAIN: 0.7,
     # Vessel 1 vs. Vessel 2 are very different.
     Symbol.Category.NUMERIC: 1.3,
     Symbol.Category.LOCATION: 0.8,
@@ -36,6 +38,7 @@ SYM_SCORES = {
     Symbol.Category.NAME: 0.9,
     Symbol.Category.NICK: 0.6,
     Symbol.Category.SYMBOL: 0.9,
+    Symbol.Category.DOMAIN: 0.9,
     Symbol.Category.NUMERIC: 0.9,
     Symbol.Category.LOCATION: 0.9,
 }
