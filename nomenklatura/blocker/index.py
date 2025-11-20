@@ -33,7 +33,7 @@ import orjson
 import logging
 from pathlib import Path
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Tuple, cast
+from typing import Any, Dict, Generator, Iterable, List, Tuple
 from rigour.reset import reset_caches
 
 from followthemoney import DS, SE, StatementEntity, model, registry
@@ -57,16 +57,16 @@ BATCH_SIZE = 10_000
 # Reducing these increases memory usage
 DEFAULT_STOPWORDS_PCT = 0.8
 DEFAULT_FIELD_STOPWORDS_PCT = {
-    registry.name.name: 0.2,
+    registry.name.name: 0.1,
     registry.phone.name: 0.0,
     registry.identifier.name: 0.0,
     registry.country.name: 90.0,
     registry.address.name: 10.0,
     registry.date.name: 30.0,
     PHONETIC_FIELD: 30.0,
-    WORD_FIELD: 10.0,
-    NAME_PART_FIELD: 1.0,
-    SYMBOL_FIELD: 20.0,
+    WORD_FIELD: 5.0,
+    NAME_PART_FIELD: 2.0,
+    SYMBOL_FIELD: 10.0,
 }
 
 
