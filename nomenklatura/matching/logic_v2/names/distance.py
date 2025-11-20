@@ -62,22 +62,23 @@ def _edit_cost(op: str, qc: Optional[str], rc: Optional[str]) -> float:
     return 1.0
 
 
-def _costs_similarity(costs: List[float], max_cost_bias: float = 1.0) -> float:
-    """Calculate a similarity score based on a list of costs."""
-    if len(costs) == 0:
-        return 0.0
-    # max_cost defines how many edits we allow for a given length.
+def _max_allowed_cost(length: int, max_cost_bias: float = 1.0) -> float:
     # We use a log here because for very long names, we don't want an anything goes
     # policy for very long name strings (~hundreds of characters).
     # The log-base is a bit of a magic number. We adjusted it so that for
     # len 8 it allows ~2 edits. That seems reasonable, but is also entirely arbitrary.
     # We use log(x-2) to disable fuzzy-matching completely for very short
     # names (often Chinese names in practice).
-    max_cost = math.log(max(len(costs) - 2, 1), 2.35) * max_cost_bias
+    return math.log(max(length - 2, 1), 2.35) * max_cost_bias
+
+def _costs_similarity(costs: List[float], max_cost: float | None) -> float:
+    """Calculate a similarity score based on a list of costs."""
+    if len(costs) == 0:
+        return 0.0
     total_cost = sum(costs)
     if total_cost == 0:
         return 1.0
-    if total_cost > max_cost:
+    if max_cost is not None and total_cost > max_cost:
         return 0.0
     # Normalize the score to be between 0 and 1
     return 1 - (total_cost / len(costs))
@@ -160,9 +161,20 @@ def weighted_edit_similarity(
 
         qcosts = unroll(costs.get(p, [1.0]) for p in match.qps)
         rcosts = unroll(costs.get(p, [1.0]) for p in match.rps)
-        match.score = _costs_similarity(qcosts, max_cost_bias=bias) * _costs_similarity(
-            rcosts, max_cost_bias=bias
-        )
+        
+        q_max_cost = _max_allowed_cost(len(qcosts))
+        r_max_cost = _max_allowed_cost(len(rcosts))
+        # If we've falled below the threshold for fuzzy matching, but one is a prefix of the other,
+        # allow a fuzzy match anyway. So this will not allow (Li, Lu), but will allow
+        # (Li, Liu) or (Bob, Bobb), (In, Inc)
+        if q_max_cost == 0 or r_max_cost == 0:
+            if match.qstr.startswith(match.rstr) or match.rstr.startswith(match.qstr):
+                q_max_cost = None
+                r_max_cost = None
+                # Downscore cause this whole things is a bit sketchy
+                match.weight = 0.7
+
+        match.score = _costs_similarity(qcosts, max_cost=q_max_cost) * _costs_similarity(rcosts, max_cost=r_max_cost)
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries
