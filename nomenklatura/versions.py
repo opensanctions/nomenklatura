@@ -1,10 +1,12 @@
-import os
 import json
-import string
+import os
 import random
-from rigour.time import utc_now
-from typing import Any, List, Iterator, Optional
+import string
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Iterator, List, Optional
+
+from rigour.time import utc_now
 
 ALPHABET = string.ascii_lowercase
 
@@ -79,20 +81,21 @@ class Version(object):
         return hash(self.id)
 
 
+@dataclass
 class VersionHistory(object):
     """A class to represent a history of dataset versions."""
 
     LENGTH = 100
 
-    def __init__(self, items: List[Version], max_length: int = LENGTH) -> None:
-        self.items = items
-        self.max_length = max_length
+    items: List[Version]
+    last_successful: Optional[Version] = None
+    max_length: int = LENGTH
 
     def append(self, version: Version) -> "VersionHistory":
         """Creates a new history with the given RunID appended."""
         items = list(self.items)
         items.append(version)
-        return VersionHistory(items[-self.max_length :])
+        return VersionHistory(items[-self.max_length :], self.last_successful)
 
     @property
     def latest(self) -> Optional[Version]:
@@ -103,14 +106,25 @@ class VersionHistory(object):
     def to_json(self) -> str:
         """Return a JSON representation of the version history."""
         items = [str(run) for run in self.items[-self.LENGTH :]]
-        return json.dumps({"items": items})
+        return json.dumps(
+            {
+                "items": items,
+                "last_successful": self.last_successful.id
+                if self.last_successful
+                else None,
+            }
+        )
 
     @classmethod
     def from_json(cls, data: str) -> "VersionHistory":
         """Create a run history from a JSON representation."""
-        items = json.loads(data).get("items", [])
-        items = [Version.from_string(item) for item in items]
-        return cls(items)
+        items_raw = json.loads(data).get("items", [])
+        last_successful_raw = json.loads(data).get("last_successful", None)
+        items = [Version.from_string(item_raw) for item_raw in items_raw]
+        last_successful = (
+            Version.from_string(last_successful_raw) if last_successful_raw else None
+        )
+        return cls(items=items, last_successful=last_successful)
 
     def __iter__(self) -> Iterator[Version]:
         return iter(self.items)
