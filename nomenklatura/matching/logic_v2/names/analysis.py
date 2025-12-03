@@ -8,7 +8,7 @@ from followthemoney import registry, EntityProxy
 from followthemoney.names import PROP_PART_TAGS
 
 
-@lru_cache(maxsize=50)
+#@lru_cache(maxsize=50)
 def entity_names(
     type_tag: NameTypeTag,
     entity: EntityProxy,
