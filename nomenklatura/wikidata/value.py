@@ -36,17 +36,13 @@ def snak_value_to_string(
         prec_id = cast(int, value.get("precision"))
 
         # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
-        # Even old dates have 
-        # Atilla the Hun:
-        #   "time": "+0395-00-00T00:00:00Z",
-        #   "precision": 9
-        # His daughter born 5th century, precision 7, time="+0500-01-01..."
-        # So century precision still has millennium zero padding.
+        # precision=6 1st millennium and precision=7 5th centrury both have 4 digit years
+        # https://www.wikidata.org/wiki/Special:EntityData/Q15967019.json
+        # https://www.wikidata.org/wiki/Special:EntityData/Q449672.json
 
         # Precision less than millennium
         if prec_id < 6:
-            return LangText(None, original=raw_time) 
-        #  before 1900
+            return LangText(None, original=raw_time)
         if time < "1900":
             # Hacky, but set all old dates to the minimum date so persons
             # with historical birth dates are filtered out.
