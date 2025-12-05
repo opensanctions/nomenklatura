@@ -30,15 +30,23 @@ def snak_value_to_string(
         raw_time = cast(Optional[str], value.get("time"))
         if raw_time is None:
             return LangText(None)
+        if raw_time.startswith("-"):
+            return LangText(None, original=raw_time)  # No BC dates
         time = raw_time.strip("+")
         prec_id = cast(int, value.get("precision"))
+
         # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
-        if prec_id >= 9:
-            if time < "1900":
-                # Hacky, but set all old dates to the minimum date so persons
-                # with historical birth dates are filtered out.
-                return LangText(MIN_DATE, original=raw_time)
+        # precision=6 1st millennium and precision=7 5th centrury both have 4 digit years
+        # https://www.wikidata.org/wiki/Special:EntityData/Q15967019.json
+        # https://www.wikidata.org/wiki/Special:EntityData/Q449672.json
+
+        # Precision less than millennium
+        if prec_id < 6:
             return LangText(None, original=raw_time)
+        if time < "1900":
+            # Hacky, but set all old dates to the minimum date so persons
+            # with historical birth dates are filtered out.
+            return LangText(MIN_DATE, original=raw_time)
         prec = PRECISION.get(prec_id, Precision.DAY)
         time = time[: prec.value]
 
