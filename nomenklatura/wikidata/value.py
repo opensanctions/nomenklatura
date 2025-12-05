@@ -30,10 +30,24 @@ def snak_value_to_string(
         raw_time = cast(Optional[str], value.get("time"))
         if raw_time is None:
             return LangText(None)
+        if raw_time.startswith("-"):
+            return LangText(None, original=raw_time)  # No BC dates
         time = raw_time.strip("+")
         prec_id = cast(int, value.get("precision"))
+
         # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
-        if prec_id >= 9 and time < "1900":
+        # Even old dates have 
+        # Atilla the Hun:
+        #   "time": "+0395-00-00T00:00:00Z",
+        #   "precision": 9
+        # His daughter born 5th century, precision 7, time="+0500-01-01..."
+        # So century precision still has millennium zero padding.
+
+        # Precision less than millennium
+        if prec_id < 6:
+            return LangText(None, original=raw_time) 
+        #  before 1900
+        if time < "1900":
             # Hacky, but set all old dates to the minimum date so persons
             # with historical birth dates are filtered out.
             return LangText(MIN_DATE, original=raw_time)
