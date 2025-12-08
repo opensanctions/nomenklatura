@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
 from rigour.ids.wikidata import is_qid
 from rigour.text.cleaning import remove_emoji, remove_bracketed_text
 from rigour.names import is_name
+
 # from rigour.text.distance import is_levenshtein_plausible
 
 from nomenklatura.wikidata.lang import LangText
@@ -14,10 +15,14 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 MIN_DATE = "1001"
+
+WD_PRECISION_DAY = 11
+WD_PRECISION_MONTH = 10
+WD_PRECISION_YEAR = 9
 PRECISION = {
-    11: Precision.DAY,
-    10: Precision.MONTH,
-    9: Precision.YEAR,
+    WD_PRECISION_DAY: Precision.DAY,
+    WD_PRECISION_MONTH: Precision.MONTH,
+    WD_PRECISION_YEAR: Precision.YEAR,
 }
 
 
@@ -30,15 +35,30 @@ def snak_value_to_string(
         raw_time = cast(Optional[str], value.get("time"))
         if raw_time is None:
             return LangText(None)
-        time = raw_time.strip("+")
-        prec_id = cast(int, value.get("precision"))
+
+        # > Wikidata years are always signed and padded to have between 4 and 16 digits.
         # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
-        if prec_id >= 9:
-            if time < "1900":
-                # Hacky, but set all old dates to the minimum date so persons
-                # with historical birth dates are filtered out.
+        sign = raw_time[0]
+        time = raw_time.strip("+-")
+        prec_id = cast(int, value.get("precision"))
+
+        # Hacky, but set all old imprecise dates to the minimum date so persons
+        # with historical birth dates are filtered out.
+
+        if sign == "-":
+            # Really old: Pharaoh Nebtawyre ruled around 1995 BC.
+            # Comparisons without sign in return value would be broken, so use MIN_DATE sentinel.
+            return LangText(MIN_DATE, original=raw_time)
+        if time > "1900":
+            if prec_id < WD_PRECISION_YEAR:
+                # Current but too imprecise
+                return LangText(None, original=raw_time)
+        else:
+            if prec_id < WD_PRECISION_YEAR:
+                # Old and imprecise
                 return LangText(MIN_DATE, original=raw_time)
-            return LangText(None, original=raw_time)
+        # We're left with a date with enough precision for upstream logic to make good decisions.
+
         prec = PRECISION.get(prec_id, Precision.DAY)
         time = time[: prec.value]
 

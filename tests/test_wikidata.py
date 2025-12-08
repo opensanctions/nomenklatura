@@ -109,3 +109,6 @@ def test_model(test_cache: Cache):
         assert item.label is not None
         assert item.label.text == "Vladimir Putin"
         assert "Q5" in item.types
+        birth_dates = [c for c in item.claims if c.property == "P569"]
+        assert len(birth_dates) == 1
+        assert birth_dates[0].text.text == "1952-10-07"
