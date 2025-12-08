@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
 from rigour.ids.wikidata import is_qid
 from rigour.text.cleaning import remove_emoji, remove_bracketed_text
 from rigour.names import is_name
+
 # from rigour.text.distance import is_levenshtein_plausible
 
 from nomenklatura.wikidata.lang import LangText
@@ -14,10 +15,17 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 MIN_DATE = "1001"
+
+# cf. https://www.wikidata.org/wiki/Help:Dates#Precision
+WD_PRECISION_DAY = 11
+WD_PRECISION_MONTH = 10
+WD_PRECISION_YEAR = 9
+WD_PRECISION_DECADE = 8
+WD_PRECISION_CENTURY = 7
 PRECISION = {
-    11: Precision.DAY,
-    10: Precision.MONTH,
-    9: Precision.YEAR,
+    WD_PRECISION_DAY: Precision.DAY,
+    WD_PRECISION_MONTH: Precision.MONTH,
+    WD_PRECISION_YEAR: Precision.YEAR,
 }
 
 
@@ -30,23 +38,18 @@ def snak_value_to_string(
         raw_time = cast(Optional[str], value.get("time"))
         if raw_time is None:
             return LangText(None)
-        if raw_time.startswith("-"):
-            return LangText(None, original=raw_time)  # No BC dates
-        time = raw_time.strip("+")
+        sign = raw_time[0]
+        time = raw_time.strip("+-")
         prec_id = cast(int, value.get("precision"))
 
-        # cf. https://www.wikidata.org/wiki/Help:Dates#Precision
-        # precision=6 1st millennium and precision=7 5th centrury both have 4 digit years
-        # https://www.wikidata.org/wiki/Special:EntityData/Q15967019.json
-        # https://www.wikidata.org/wiki/Special:EntityData/Q449672.json
-
-        # Precision less than millennium
-        if prec_id < 6:
+        if prec_id < WD_PRECISION_CENTURY:
             return LangText(None, original=raw_time)
-        if time < "1900":
-            # Hacky, but set all old dates to the minimum date so persons
-            # with historical birth dates are filtered out.
+        # Hacky, but set all old imprecise dates to the minimum date so persons
+        # with historical birth dates are filtered out.
+        # Wikidata years are always signed and padded to have between 4 and 16 digits.
+        if (prec_id < WD_PRECISION_YEAR and time < "1900") or sign == "-":
             return LangText(MIN_DATE, original=raw_time)
+
         prec = PRECISION.get(prec_id, Precision.DAY)
         time = time[: prec.value]
 
