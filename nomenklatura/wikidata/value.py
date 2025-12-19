@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Set, cast, Any, Dict, Optional
 from rigour.ids.wikidata import is_qid
 from rigour.text.cleaning import remove_emoji, remove_bracketed_text
 from rigour.names import is_name
-
-# from rigour.text.distance import is_levenshtein_plausible
+from followthemoney.types import registry
 
 from nomenklatura.wikidata.lang import LangText
 
@@ -14,7 +13,6 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-MIN_DATE = "1001"
 
 WD_PRECISION_DAY = 11
 WD_PRECISION_MONTH = 10
@@ -48,15 +46,15 @@ def snak_value_to_string(
         if sign == "-":
             # Really old: Pharaoh Nebtawyre ruled around 1995 BC.
             # Comparisons without sign in return value would be broken, so use MIN_DATE sentinel.
-            return LangText(MIN_DATE, original=raw_time)
-        if time > "1900":
+            return LangText(registry.date.HISTORIC, original=raw_time)
+        if time > registry.date.RELEVANCE_MIN:
             if prec_id < WD_PRECISION_YEAR:
                 # Current but too imprecise
                 return LangText(None, original=raw_time)
         else:
             if prec_id < WD_PRECISION_YEAR:
                 # Old and imprecise
-                return LangText(MIN_DATE, original=raw_time)
+                return LangText(registry.date.HISTORIC, original=raw_time)
         # We're left with a date with enough precision for upstream logic to make good decisions.
 
         prec = PRECISION.get(prec_id, Precision.DAY)
@@ -68,7 +66,7 @@ def snak_value_to_string(
             time = time[:4]
 
         # Date limit in FtM. These will be removed by the death filter:
-        time = max(MIN_DATE, time)
+        time = max(registry.date.HISTORIC, time)
         return LangText(time, original=raw_time)
     elif value_type == "wikibase-entityid":
         qid = value.get("id")
