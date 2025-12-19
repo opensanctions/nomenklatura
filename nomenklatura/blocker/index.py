@@ -28,13 +28,14 @@
 # When the process is killed due to the operating system running out of memory,
 # making memory_limit smaller might help fit what the buffer manager manages,
 # plus all the additional DuckDB and non-DuckDB memory usage.
+import csv
 import duckdb
-import orjson
 import logging
 from pathlib import Path
+from itertools import batched
+from rigour.reset import reset_caches
 from collections import defaultdict
 from typing import Any, Dict, Generator, Iterable, List, Tuple
-from rigour.reset import reset_caches
 
 from followthemoney import DS, SE, StatementEntity, model, registry
 from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
@@ -103,45 +104,41 @@ class Index(object):
         # self.max_stopwords: int = int(options.get("max_stopwords", 100_000))
         self.match_batch: int = int(options.get("match_batch", 1_000))
         self.data_dir = data_dir.resolve()
-        # if self.data_dir.exists():
-        #     rmtree(self.data_dir)
-        tmp_dir = self.data_dir / "tmp"
-        tmp_dir.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         self.duckdb_config: DuckDBConfig = {
             "preserve_insertion_order": False,
-            "temp_directory": tmp_dir.as_posix(),
+            "python_enable_replacements": False,
         }
-        if DUCKDB_THREADS is not None:
-            # > If you have a limited amount of memory, try to limit the number of threads
-            # "threads": int(settings.XREF_THREADS),
-            self.duckdb_config["threads"] = int(DUCKDB_THREADS)
-        self.memory_budget = options.get("memory", DUCKDB_MEMORY)
-        """Memory budget in megabytes"""
+
         # https://duckdb.org/docs/guides/performance/environment
         # > For ideal performance,
         # > aggregation-heavy workloads require approx. 5 GB memory per thread and
         # > join-heavy workloads require approximately 10 GB memory per thread.
         # > Aim for 5-10 GB memory per thread.
-        if self.memory_budget is not None:
-            self.duckdb_config["memory_limit"] = f"{self.memory_budget}MB"
-        log.info("DuckDB index configured: %r", self.duckdb_config)
-        self.duckdb_path = (self.data_dir / "index.duckdb").as_posix()
-        self._init_db()
+        memory_budget = options.get("memory", DUCKDB_MEMORY)
+        """Memory budget in megabytes"""
+        if memory_budget is not None:
+            self.duckdb_config["memory_limit"] = f"{memory_budget}MB"
 
-    def _init_db(self) -> None:
+        if DUCKDB_THREADS is not None:
+            # > If you have a limited amount of memory, try to limit the number of threads
+            self.duckdb_config["threads"] = int(DUCKDB_THREADS)
+
+        log.info("DuckDB index configured: %r", self.duckdb_config)
+        self.duckdb_path = self.data_dir / "index.duckdb"
         self.con = duckdb.connect(self.duckdb_path, config=self.duckdb_config)
 
-    def _clear(self) -> None:
-        self.con.execute("CHECKPOINT")
-        self.con.close()
-        reset_caches()
-        self._init_db()
-
     def load_entities(self, table: str, entities: Iterable[StatementEntity]) -> None:
-        path = self.data_dir / f"{table}.ndjson"
-        log.info("Dumping tokenized entities to NDJSON: %r", table)
-        with open(path, "wb") as fh:
+        path = self.data_dir / f"{table}.csv"
+        self.con.execute(f"""
+        CREATE OR REPLACE TABLE {table}
+            (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+        """)
+        self.con.execute(f"DELETE FROM {table}")
+
+        def generate() -> Generator[Tuple[str, str, str, str, int], None, None]:
             idx = 0
+            tokens = 0
             for entity in entities:
                 if not entity.schema.matchable or entity.id is None:
                     continue
@@ -151,26 +148,34 @@ class Index(object):
                     counts[(field, token)] += 1
 
                 for (field, token), count in counts.items():
-                    data = {
-                        "schema": entity.schema.name,
-                        "id": entity.id,
-                        "field": field,
-                        "token": token,
-                        "count": count,
-                    }
-                    fh.write(orjson.dumps(data, option=orjson.OPT_APPEND_NEWLINE))
+                    yield (entity.schema.name, entity.id, field, token, count)
+                    tokens += 1
 
                 idx += 1
                 if idx % 50000 == 0:
-                    log.info("Dumped %s entities", idx)
-        self.con.execute(f"""
-        CREATE OR REPLACE TABLE {table}
-            (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
-        """)
+                    log.info("Loaded %d entities (%d tokens)", idx, tokens)
+
         log.info("Loading data to table %r...", table)
-        self.con.execute(f"COPY {table} FROM '{path}'")
-        # path.unlink(missing_ok=True)
-        self._clear()
+        for batch in batched(generate(), 500_000):
+            with open(path, "w", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                for row in batch:
+                    writer.writerow(row)
+            self.con.execute(f"""
+                INSERT INTO {table} SELECT * FROM
+                    read_csv('{path.as_posix()}',
+                        HEADER=FALSE,
+                        QUOTE='\"',
+                        DELIM=',',
+                        ENCODING='utf-8',
+                        COMPRESSION='none',
+                        SAMPLE_SIZE=5
+                    )
+            """)
+
+        path.unlink(missing_ok=True)
+        reset_caches()
+        self.con.execute("CHECKPOINT")
 
     def entity_count(self, table: str) -> int:
         # check the table exists:
@@ -292,7 +297,6 @@ class Index(object):
             LEFT OUTER JOIN boosts boo ON f.field = boo.field
         """
         self.con.execute(term_frequencies_query)
-        self._clear()
 
     def pairs(
         self, max_pairs: int = 10_000
@@ -331,7 +335,6 @@ class Index(object):
         None,
         None,
     ]:
-        self._clear()
         q = "SELECT COUNT(DISTINCT id) FROM matching_filtered"
         res = self.con.execute(q).fetchone()
         num_matching = res[0] if res is not None else 0
@@ -343,7 +346,6 @@ class Index(object):
             SELECT id, ntile(?) OVER (ORDER BY id) as chunk FROM ids
         """
         self.con.execute(chunk_table_query, [chunks])
-        self._clear()
 
         log.info("Matching %d entities in %d chunks...", num_matching, chunks)
         for chunk in range(1, chunks + 1):
@@ -379,7 +381,6 @@ class Index(object):
             if matches and previous_id is not None:
                 yield Identifier.get(previous_id), matches[: self.max_candidates]
                 # yield Identifier.get(previous_id), matches
-            self._clear()
 
     def close(self) -> None:
         self.con.close()
