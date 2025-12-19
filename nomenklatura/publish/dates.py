@@ -29,6 +29,8 @@ def simplify_dates(entity: SE) -> SE:
             elif prop.name in PROV_MIN_DATES:
                 values = (min(values),)
 
+            # If the sentinel HISTORIC is present, remove it during entity
+            # consolidation.
             if registry.date.HISTORIC in values:
                 values = tuple(v for v in values if v != registry.date.HISTORIC)
 
