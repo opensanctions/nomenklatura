@@ -29,6 +29,9 @@ def simplify_dates(entity: SE) -> SE:
             elif prop.name in PROV_MIN_DATES:
                 values = (min(values),)
 
+            if registry.date.HISTORIC in values:
+                values = tuple(v for v in values if v != registry.date.HISTORIC)
+
             for stmt in list(stmts):
                 if stmt.value not in values:
                     entity._statements[prop.name].remove(stmt)
