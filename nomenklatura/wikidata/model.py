@@ -63,6 +63,7 @@ class Claim(Snak):
 
         self.references = [Reference(client, r) for r in data.pop("references", [])]
         self.property = self.property or prop
+        self.deprecated = bool(self.rank == "deprecated")
 
     def get_qualifier(self, prop: str) -> List[Snak]:
         return self.qualifiers.get(prop, [])

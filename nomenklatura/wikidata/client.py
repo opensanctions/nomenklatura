@@ -108,8 +108,8 @@ class WikidataClient(object):
         types: List[str] = []
         for claim in item.claims:
             # historical countries are always historical:
-            ended = claim.qualifiers.get("P582") is not None and claim.qid != "Q3024240"
-            if ended or claim.qid is None:
+            ended = claim.is_ended and claim.qid != "Q3024240"
+            if ended or claim.qid is None or claim.deprecated:
                 continue
             if claim.property in ("P31", "P279"):
                 types.append(claim.qid)

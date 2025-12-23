@@ -31,6 +31,8 @@ def post_summary(
 def qualify_value(value: LangText, claim: Claim) -> LangText:
     if value.text is None:
         return value
+    if claim.deprecated:
+        return value
     starts: Set[str] = set()
     for qual in claim.get_qualifier("P580"):
         if qual.text.text is not None:
