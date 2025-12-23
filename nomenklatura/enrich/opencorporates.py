@@ -60,7 +60,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
             self.api_token = None
         if self.api_token is None:
             log.warning("OpenCorporates has no API token (%s)" % token_var)
-        self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
+        # self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
 
     def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
         url = build_url(url, params=params)
@@ -70,12 +70,16 @@ class OpenCorporatesEnricher(Enricher[DS]):
                 return None
             hidden_url = build_url(url, params={"api_token": self.api_token})
             try:
+                log.info("OpenCorporates fetch: %s", url)
                 resp = self.session.get(hidden_url)
                 resp.raise_for_status()
             except RequestException as rex:
                 if rex.response is not None:
                     if rex.response.status_code in (403, 429):
-                        log.info("OpenCorporates quota exceeded; using only cache now.")
+                        log.warning(
+                            "OpenCorporates quota exceeded (%s); using only cache now.",
+                            rex.response.status_code,
+                        )
                         self.quota_exceeded = True
                         return None
                     elif rex.response.status_code == 401:

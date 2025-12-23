@@ -84,6 +84,7 @@ class BrightQueryEnricher(Enricher[DS]):
         # return JSON when there are no results.
         resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
         if not resp_data:
+            log.info("BrightQuery search: %r", payload)
             response = self.session.post(self.BASE_URL, json=payload, timeout=15)
             # When no results are found, the API helpfully doesn't return JSON
             # but just a 204 with an empty response body.

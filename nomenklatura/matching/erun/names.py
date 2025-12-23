@@ -36,18 +36,15 @@ def name_levenshtein(left: E, right: E) -> float:
     similar names linked to both entities."""
     if not has_schema(left, right, "LegalEntity"):
         return 0.0
+    left_name_objs = {n for n in _entity_names(left)}
+    right_name_objs = {n for n in _entity_names(right)}
+    left_names = {n.comparable for n in left_name_objs}
+    right_names = {n.comparable for n in right_name_objs}
     if has_schema(left, right, "Person"):
-        left_names: Set[str] = set()
-        for name in _entity_names(left):
+        for name in left_name_objs:
             left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-            left_names.add(name.comparable)
-        right_names: Set[str] = set()
-        for name in _entity_names(right):
+        for name in right_name_objs:
             right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-            right_names.add(name.comparable)
-    else:
-        left_names = {n.comparable for n in _entity_names(left)}
-        right_names = {n.comparable for n in _entity_names(right)}
     return max_in_sets(left_names, right_names, compare_levenshtein)
 
 
