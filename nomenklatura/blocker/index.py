@@ -35,7 +35,7 @@ from pathlib import Path
 from itertools import islice
 from rigour.reset import reset_caches
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Tuple, TypeVar
 
 from followthemoney import DS, SE, StatementEntity, model, registry
 from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
@@ -51,6 +51,7 @@ from nomenklatura.blocker.tokenizer import (
 
 DuckDBConfig = Dict[str, str | bool | int | float | list[str]]
 BlockingMatches = List[Tuple[Identifier, float]]
+R = TypeVar("R")
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ DEFAULT_FIELD_STOPWORDS_PCT = {
 }
 
 
-def batched(iterable, n):
+def batched(iterable: Iterable[R], n: int) -> Generator[Tuple[R, ...], None, None]:
     iterator = iter(iterable)
     while batch := tuple(islice(iterator, n)):
         yield batch
