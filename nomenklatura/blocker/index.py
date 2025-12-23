@@ -32,7 +32,7 @@ import csv
 import duckdb
 import logging
 from pathlib import Path
-from itertools import batched
+from itertools import islice
 from rigour.reset import reset_caches
 from collections import defaultdict
 from typing import Any, Dict, Generator, Iterable, List, Tuple
@@ -69,6 +69,12 @@ DEFAULT_FIELD_STOPWORDS_PCT = {
     NAME_PART_FIELD: 2.0,
     SYMBOL_FIELD: 10.0,
 }
+
+
+def batched(iterable, n):
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
 
 
 class Index(object):
