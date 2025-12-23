@@ -78,3 +78,4 @@ branch = true
 [tool.pytest.ini_options]
 # Log a stack trace when a test takes longer than 300 seconds
 faulthandler_timeout = 300
+asyncio_default_fixture_loop_scope = "function"
