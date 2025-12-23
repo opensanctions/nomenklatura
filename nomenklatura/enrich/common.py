@@ -10,9 +10,9 @@ from requests.exceptions import RequestException, ChunkedEncodingError
 from followthemoney import DS, registry
 from followthemoney import StatementEntity, SE
 from followthemoney.types.topic import TopicType
+from followthemoney.settings import USER_AGENT
 from rigour.urls import build_url, ParamsType
 
-from nomenklatura import __version__
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
 
@@ -83,7 +83,7 @@ class Enricher(BaseEnricher[DS], ABC):
     def session(self) -> Session:
         if self._session is None:
             self._session = Session()
-            self._session.headers["User-Agent"] = f"nomenklatura/{__version__}"
+            self._session.headers["User-Agent"] = USER_AGENT
         return self._session
 
     def http_get_cached(

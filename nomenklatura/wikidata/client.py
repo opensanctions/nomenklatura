@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Dict
 from requests import Session
 from normality import squash_spaces
 from rigour.urls import build_url
+from followthemoney.settings import USER_AGENT
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
@@ -18,6 +19,7 @@ class WikidataClient(object):
     QUERY_API = "https://query.wikidata.org/sparql"
     QUERY_HEADERS = {
         "Accept": "application/sparql-results+json",
+        "User-Agent": USER_AGENT,
     }
     CACHE_SHORT = 1
     CACHE_MEDIUM = CACHE_SHORT * 7

@@ -60,6 +60,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
             self.api_token = None
         if self.api_token is None:
             log.warning("OpenCorporates has no API token (%s)" % token_var)
+        self.headers = {"X-API-TOKEN": self.api_token}
         # self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
 
     def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
@@ -68,10 +69,9 @@ class OpenCorporatesEnricher(Enricher[DS]):
         if response is None:
             if self.quota_exceeded:
                 return None
-            hidden_url = build_url(url, params={"api_token": self.api_token})
             try:
                 log.info("OpenCorporates fetch: %s", url)
-                resp = self.session.get(hidden_url)
+                resp = self.session.get(url, headers=self.headers)
                 resp.raise_for_status()
             except RequestException as rex:
                 if rex.response is not None:
