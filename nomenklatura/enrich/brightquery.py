@@ -3,7 +3,7 @@ import logging
 from banal import hash_data
 from typing import Generator, Optional, Dict, Any
 from followthemoney.util import make_entity_id
-from followthemoney import DS, SE
+from followthemoney import DS, SE, registry
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -34,6 +34,10 @@ class BrightQueryEnricher(Enricher[DS]):
             )
 
         self.session.auth = (self._user, self._password)
+
+        self.skip_jurisdictions = set(self.get_config_list("skip_jurisdictions"))
+        """Set of jurisdiction codes to skip during enrichment because they're not covered by
+        BrightQuery/opendata.org."""
 
     def create_proxy(
         self, entity: SE, child: Dict[str, Any]
@@ -101,6 +105,13 @@ class BrightQueryEnricher(Enricher[DS]):
         yield from children
 
     def match(self, entity: SE) -> Generator[SE, None, None]:
+        if not entity.schema.is_a("Organization"):
+            return
+
+        countries = entity.get_type_values(registry.country, matchable=True)
+        if len(countries) > 0 and all(c in self.skip_jurisdictions for c in countries):
+            return
+
         # Get the name and address to search
         names = entity.get("name")
         addresses = entity.get("address")

@@ -3,7 +3,8 @@ import json
 import logging
 import traceback
 from banal import as_bool
-from typing import Union, Any, Dict, Optional, Generator, Generic
+from normality import stringify
+from typing import List, Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException, ChunkedEncodingError
@@ -50,6 +51,18 @@ class BaseEnricher(Generic[DS]):
 
     def get_config_bool(self, name: str, default: Union[bool, str] = False) -> int:
         return as_bool(self.config.get(name, default))
+
+    def get_config_list(
+        self, name: str, default: Optional[List[str]] = None
+    ) -> List[str]:
+        """Get a config option that is a list of strings."""
+        value = self.config.get(name, default)
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise ValueError(f"Expected list for config option {name}")
+        strings = [stringify(v) for v in value]
+        return [s for s in strings if s is not None]
 
     def _filter_entity(self, entity: StatementEntity) -> bool:
         """Check if the given entity should be filtered out. Filters
