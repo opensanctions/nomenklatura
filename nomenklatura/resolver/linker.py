@@ -84,8 +84,7 @@ class Linker(Generic[SE]):
                 if canon_value != stmt.value:
                     if stmt.original_value is None:
                         stmt.original_value = stmt.value
-                    # NOTE: this means the key is out of whack here now
-                    stmt.value = canon_value
+                    stmt = stmt.clone(value=canon_value)
         return proxy
 
     def apply_statement(self, stmt: Statement) -> Statement:
@@ -96,8 +95,7 @@ class Linker(Generic[SE]):
             if canon_value != stmt.value:
                 if stmt.original_value is None:
                     stmt.original_value = stmt.value
-                # NOTE: this means the key is out of whack here now
-                stmt.value = canon_value
+                stmt = stmt.clone(value=canon_value)
         return stmt
 
     def __repr__(self) -> str:

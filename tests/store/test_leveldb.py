@@ -89,10 +89,9 @@ def test_leveldb_graph_query(
     assert model.get("Company") not in schemata, set(schemata)
 
     # External
-    ext_entity = StatementEntity.from_data(test_dataset, PERSON)
+    ext_entity = StatementEntity.from_data(test_dataset, PERSON, external=True)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
-            stmt.external = True
             writer.add_statement(stmt)
 
     view = store.view(test_dataset, external=False)

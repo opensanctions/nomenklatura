@@ -604,8 +604,7 @@ class Resolver(Linker[SE]):
             if canon_value != stmt.value:
                 if stmt.original_value is None:
                     stmt.original_value = stmt.value
-                # NOTE: this means the key is out of whack here now
-                stmt.value = canon_value
+                stmt = stmt.clone(value=canon_value)
         return stmt
 
     def dump(self, path: PathLike) -> None:
