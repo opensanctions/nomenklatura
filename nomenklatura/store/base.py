@@ -32,7 +32,11 @@ class Store(Generic[DS, SE]):
         canonicals: List[Statement] = []
         for stmt in statements:
             if get_prop_type(stmt.schema, stmt.prop) == registry.entity.name:
-                stmt = stmt.clone(value=self.linker.get_canonical(stmt._value))
+                ov = stmt._value if stmt.original_value is None else stmt.original_value
+                stmt = stmt.clone(
+                    value=self.linker.get_canonical(stmt._value),
+                    original_value=ov,
+                )
             canonicals.append(stmt)
         entity = self.entity_class.from_statements(self.dataset, canonicals)
         if entity.id is not None:
