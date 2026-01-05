@@ -27,24 +27,6 @@ class OpenCorporatesEnricher(Enricher[DS]):
     UI_PART = "://opencorporates.com/"
     API_PART = "://api.opencorporates.com/v0.4/"
 
-    IGNORE_COUNTRIES = {
-        "ru",
-        "cn",
-        "kp",
-        "sy",
-        "iq",
-        "ae",
-        "ve",
-        "cu",
-        "ps",
-        "af",
-        "uz",
-        "kz",
-        "xk",
-        "md-pmr",
-    }
-    """Hard-code a set of countries where OC has no data to avoid wasting API quota."""
-
     def __init__(
         self,
         dataset: DS,
@@ -62,6 +44,10 @@ class OpenCorporatesEnricher(Enricher[DS]):
             log.warning("OpenCorporates has no API token (%s)" % token_var)
         self.headers = {"X-API-TOKEN": self.api_token}
         # self.cache.preload(f"{self.COMPANY_SEARCH_API}%")
+
+        self.skip_jurisdictions = set(self.get_config_list("skip_jurisdictions"))
+        """Set of jurisdiction codes to skip during enrichment because they're not covered by
+        OpenCorporates."""
 
     def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
         url = build_url(url, params=params)
@@ -196,7 +182,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
 
     def search_companies(self, entity: SE) -> Generator[SE, None, None]:
         countries = entity.get_type_values(registry.country, matchable=True)
-        if len(countries) > 0 and all(c in self.IGNORE_COUNTRIES for c in countries):
+        if len(countries) > 0 and all(c in self.skip_jurisdictions for c in countries):
             return
 
         params = {"q": entity.caption, "sparse": True, "country_codes": countries}
