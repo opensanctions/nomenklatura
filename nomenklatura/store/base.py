@@ -29,10 +29,16 @@ class Store(Generic[DS, SE]):
     def assemble(self, statements: List[Statement]) -> Optional[SE]:
         if not len(statements):
             return None
+        canonicals: List[Statement] = []
         for stmt in statements:
             if get_prop_type(stmt.schema, stmt.prop) == registry.entity.name:
-                stmt.value = self.linker.get_canonical(stmt.value)
-        entity = self.entity_class.from_statements(self.dataset, statements)
+                ov = stmt._value if stmt.original_value is None else stmt.original_value
+                stmt = stmt.clone(
+                    value=self.linker.get_canonical(stmt._value),
+                    original_value=ov,
+                )
+            canonicals.append(stmt)
+        entity = self.entity_class.from_statements(self.dataset, canonicals)
         if entity.id is not None:
             entity.extra_referents.update(self.linker.get_referents(entity.id))
         return entity
@@ -118,7 +124,9 @@ class View(Generic[DS, SE]):
             for prop, adjacent in self.get_inverted(entity.id):
                 yield prop, adjacent
 
-    def entities(self, include_schemata: List[Schema] = []) -> Generator[SE, None, None]:
+    def entities(
+        self, include_schemata: List[Schema] = []
+    ) -> Generator[SE, None, None]:
         """Iterate over all entities in the view.
 
         If `include_schemata` is provided, only entities of the provided schemata will be returned.

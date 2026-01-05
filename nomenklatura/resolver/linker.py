@@ -80,24 +80,24 @@ class Linker(Generic[SE]):
             if proxy.id is not None:
                 stmt.canonical_id = proxy.id
             if stmt.prop_type == registry.entity.name:
-                canon_value = self.get_canonical(stmt.value)
+                canon_value = self.get_canonical(stmt._value)
                 if canon_value != stmt.value:
-                    if stmt.original_value is None:
-                        stmt.original_value = stmt.value
-                    # NOTE: this means the key is out of whack here now
-                    stmt.value = canon_value
+                    stmt = stmt.clone(
+                        value=canon_value,
+                        original_value=stmt.original_value or stmt._value,
+                    )
         return proxy
 
     def apply_statement(self, stmt: Statement) -> Statement:
         if stmt.entity_id is not None:
             stmt.canonical_id = self.get_canonical(stmt.entity_id)
         if stmt.prop_type == registry.entity.name:
-            canon_value = self.get_canonical(stmt.value)
-            if canon_value != stmt.value:
-                if stmt.original_value is None:
-                    stmt.original_value = stmt.value
-                # NOTE: this means the key is out of whack here now
-                stmt.value = canon_value
+            canon_value = self.get_canonical(stmt._value)
+            if canon_value != stmt._value:
+                stmt = stmt.clone(
+                    value=canon_value,
+                    original_value=stmt.original_value or stmt._value,
+                )
         return stmt
 
     def __repr__(self) -> str:

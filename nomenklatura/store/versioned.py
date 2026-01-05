@@ -291,7 +291,7 @@ class VersionedRedisView(View[DS, SE]):
             if not stmt.external or self.external:
                 stmt.canonical_id = self.store.linker.get_canonical(stmt.entity_id)
                 if stmt.prop_type == registry.entity.name:
-                    stmt.value = self.store.linker.get_canonical(stmt.value)
+                    stmt = stmt.clone(value=self.store.linker.get_canonical(stmt.value))
                 statements.append(stmt)
         return self.store.assemble(statements)
 
@@ -335,7 +335,9 @@ class VersionedRedisView(View[DS, SE]):
                         stmt = self.store.linker.apply_statement(stmt)
                     yield stmt
 
-    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
+    def entities(
+        self, include_schemata: Optional[List[Schema]] = None
+    ) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return
         if len(self.vers) == 1:
@@ -363,7 +365,10 @@ class VersionedRedisView(View[DS, SE]):
                     seen.add(canonical_id)
                 entity = self.get_entity(entity_id)
                 if entity is not None:
-                    if include_schemata is not None and entity.schema not in include_schemata:
+                    if (
+                        include_schemata is not None
+                        and entity.schema not in include_schemata
+                    ):
                         continue
                     yield entity
         finally:

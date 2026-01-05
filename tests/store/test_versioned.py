@@ -99,7 +99,7 @@ def test_graph_query(
     ext_entity = Entity.from_data(test_dataset, PERSON)
     with store.writer() as writer:
         for stmt in ext_entity.statements:
-            stmt.external = True
+            stmt = stmt.clone(external=True)
             writer.add_statement(stmt)
         writer.release()
 
