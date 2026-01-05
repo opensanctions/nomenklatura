@@ -199,7 +199,8 @@ class OpenCorporatesEnricher(Enricher[DS]):
         if len(countries) > 0 and all(c in self.IGNORE_COUNTRIES for c in countries):
             return
 
-        params = {"q": entity.caption, "sparse": True, "country_codes": countries}
+        country_codes = "|".join(countries) if countries else None
+        params = {"q": entity.caption, "sparse": True, "country_codes": country_codes}
         for page in range(1, 9):
             params["page"] = page
             results = self.oc_get_cached(self.COMPANY_SEARCH_API, params=params)
