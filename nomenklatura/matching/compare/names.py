@@ -146,8 +146,8 @@ def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # NOTE: This is unbalanced, i.e. it treats 'query' and 'result' differently.
     # cf. https://ofac.treasury.gov/faqs/topic/1646
     query_names = query.get_type_values(registry.name)
-    query_names.extend(query.get("weakAlias", quiet=True))
-    result_names = result.get("weakAlias", quiet=True)
+    result_names = set(result.get("weakAlias", quiet=True))
+    result_names.update(result.get("abbreviation", quiet=True))
     qnames = clean_map(query_names, clean_name_light)
     rnames = clean_map(result_names, clean_name_light)
     overlap = qnames.intersection(rnames)
