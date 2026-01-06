@@ -212,6 +212,8 @@ class OpenCorporatesEnricher(Enricher[DS]):
 
     def search_companies(self, entity: SE) -> Generator[SE, None, None]:
         query = self.clean_query(entity.caption)
+        # if query != entity.caption:
+        #     log.info("OC query cleaned: %r -> %r", entity.caption, query)
         if not len(query):
             return
         params = {"q": query, "sparse": True}
