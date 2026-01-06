@@ -110,6 +110,11 @@ class BrightQueryEnricher(Enricher[DS]):
 
         countries = entity.get_type_values(registry.country, matchable=True)
         if len(countries) > 0 and all(c in self.skip_jurisdictions for c in countries):
+            log.info(
+                "Skipping BrightQuery enrichment for %r: unsupported jurisdictions %r",
+                entity.id,
+                countries,
+            )
             return
 
         # Get the name and address to search
