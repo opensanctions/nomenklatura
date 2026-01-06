@@ -128,8 +128,6 @@ class OpenCorporatesEnricher(Enricher[DS]):
         """Filter a list of country codes to those known to followthemoney."""
         valid_countries = []
         for code in countries:
-            if code in self.skip_jurisdictions:
-                continue
             territory = get_territory(code)
             if territory is None:
                 continue
@@ -219,6 +217,10 @@ class OpenCorporatesEnricher(Enricher[DS]):
         params = {"q": query, "sparse": True}
         countries = entity.get_type_values(registry.country, matchable=True)
         countries = self.filter_ftm_countries(countries)
+
+        if len(countries) > 0 and all(c in self.skip_jurisdictions for c in countries):
+            return
+
         if len(countries) > 0:
             country_codes = "|".join(countries) if countries else None
             params["country_codes"] = country_codes
