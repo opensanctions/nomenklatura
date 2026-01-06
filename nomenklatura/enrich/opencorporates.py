@@ -1,6 +1,6 @@
 import json
 import logging
-from normality import slugify_text
+from normality import slugify_text, squash_spaces
 from typing import List, cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
@@ -27,6 +27,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
     OFFICER_SEARCH_API = "https://api.opencorporates.com/v0.4/officers/search"
     UI_PART = "://opencorporates.com/"
     API_PART = "://api.opencorporates.com/v0.4/"
+    QUERY_SKIP = "'\\\"|&()[]{}^~*?:;!+-/<>@#$%`"
 
     def __init__(
         self,
@@ -113,6 +114,15 @@ class OpenCorporatesEnricher(Enricher[DS]):
         path = slugify_text(parsed.path, sep="-")
         assert path is not None, "Invalid OpenCorporates URL: %s" % url
         return f"oc-{path}"
+
+    def clean_query(self, query: str) -> str:
+        """Clean a query string for OpenCorporates search."""
+        out: List[str] = []
+        for char in query:
+            if char in self.QUERY_SKIP:
+                char = " "
+            out.append(char)
+        return squash_spaces("".join(out))
 
     def filter_ftm_countries(self, countries: List[str]) -> List[str]:
         """Filter a list of country codes to those known to followthemoney."""
@@ -201,7 +211,10 @@ class OpenCorporatesEnricher(Enricher[DS]):
     #     return entity
 
     def search_companies(self, entity: SE) -> Generator[SE, None, None]:
-        params = {"q": entity.caption, "sparse": True}
+        query = self.clean_query(entity.caption)
+        if not len(query):
+            return
+        params = {"q": query, "sparse": True}
         countries = entity.get_type_values(registry.country, matchable=True)
         countries = self.filter_ftm_countries(countries)
         if len(countries) > 0:
