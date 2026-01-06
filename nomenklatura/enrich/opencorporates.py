@@ -201,11 +201,13 @@ class OpenCorporatesEnricher(Enricher[DS]):
     #     return entity
 
     def search_companies(self, entity: SE) -> Generator[SE, None, None]:
+        params = {"q": entity.caption, "sparse": True}
         countries = entity.get_type_values(registry.country, matchable=True)
         countries = self.filter_ftm_countries(countries)
-        country_codes = "|".join(countries) if countries else None
+        if len(countries) > 0:
+            country_codes = "|".join(countries) if countries else None
+            params["country_codes"] = country_codes
 
-        params = {"q": entity.caption, "sparse": True, "country_codes": country_codes}
         for page in range(1, 9):
             params["page"] = page
             results = self.oc_get_cached(self.COMPANY_SEARCH_API, params=params)
