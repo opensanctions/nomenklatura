@@ -1,13 +1,14 @@
 import json
 import logging
 from normality import slugify_text
-from typing import cast, Any, Dict, Generator, Optional
+from typing import List, cast, Any, Dict, Generator, Optional
 from urllib.parse import urlparse
 from banal import ensure_dict
 from followthemoney import registry, DS, SE
 from requests import Session
 from requests.exceptions import RequestException
 from rigour.urls import build_url, ParamsType
+from rigour.territories import get_territory
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -48,6 +49,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
         self.skip_jurisdictions = set(self.get_config_list("skip_jurisdictions"))
         """Set of jurisdiction codes to skip during enrichment because they're not covered by
         OpenCorporates."""
+        self.skip_jurisdictions.update(["xk", "su"])
 
     def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
         url = build_url(url, params=params)
@@ -61,7 +63,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
                 resp.raise_for_status()
             except RequestException as rex:
                 if rex.response is not None:
-                    if rex.response.status_code in (403, 429):
+                    if rex.response.status_code == 429:
                         log.warning(
                             "OpenCorporates quota exceeded (%s); using only cache now.",
                             rex.response.status_code,
@@ -111,6 +113,24 @@ class OpenCorporatesEnricher(Enricher[DS]):
         path = slugify_text(parsed.path, sep="-")
         assert path is not None, "Invalid OpenCorporates URL: %s" % url
         return f"oc-{path}"
+
+    def filter_ftm_countries(self, countries: List[str]) -> List[str]:
+        """Filter a list of country codes to those known to followthemoney."""
+        valid_countries = []
+        for code in countries:
+            if code in self.skip_jurisdictions:
+                continue
+            territory = get_territory(code)
+            if territory is None:
+                continue
+            if territory.parent is not None:
+                territory = territory.parent
+            if territory.is_historical:
+                continue
+            if not territory.is_country:
+                continue
+            valid_countries.append(territory.code)
+        return valid_countries
 
     def jurisdiction_to_country(self, juris: Optional[Any]) -> Optional[str]:
         if juris is None:
@@ -182,10 +202,9 @@ class OpenCorporatesEnricher(Enricher[DS]):
 
     def search_companies(self, entity: SE) -> Generator[SE, None, None]:
         countries = entity.get_type_values(registry.country, matchable=True)
-        if len(countries) > 0 and all(c in self.skip_jurisdictions for c in countries):
-            return
-
+        countries = self.filter_ftm_countries(countries)
         country_codes = "|".join(countries) if countries else None
+
         params = {"q": entity.caption, "sparse": True, "country_codes": country_codes}
         for page in range(1, 9):
             params["page"] = page
