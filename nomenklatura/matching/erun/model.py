@@ -13,9 +13,9 @@ from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
 from nomenklatura.matching.erun.misc import contact_match
 from nomenklatura.matching.erun.misc import security_isin_match
 from nomenklatura.matching.erun.countries import (
-    org_obj_country_match,
+    position_country_match,
+    org_country_match,
     per_country_mismatch,
-    pos_country_mismatch,
 )
 from nomenklatura.matching.erun.identifiers import strong_identifier_match
 from nomenklatura.matching.erun.identifiers import weak_identifier_match
@@ -52,8 +52,9 @@ class EntityResolveRegression(ScoringAlgorithm):
         birth_place,
         gender_mismatch,
         per_country_mismatch,
-        org_obj_country_match,
-        pos_country_mismatch,
+        # vessel_country_match,
+        position_country_match,
+        org_country_match,
         security_isin_match,
         obj_name_levenshtein,
         address_match,

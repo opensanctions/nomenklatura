@@ -23,7 +23,7 @@ def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
 def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
     weak_ids: Set[str] = set()
     for prop, value in entity.itervalues():
-        if not prop.matchable or not prop.type != registry.identifier:
+        if not prop.matchable or prop.type != registry.identifier:
             continue
         if prop.format in STRONG_FORMATS:
             continue
@@ -33,8 +33,6 @@ def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
 
 def strong_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
     """Check if two entities share any strong identifiers."""
-    # if has_schema(left, right, "Security"):
-    #     return 0.0
     left_strong = _get_strong_identifiers(left)
     right_strong = _get_strong_identifiers(right)
     if len(left_strong) == 0 or len(right_strong) == 0:
@@ -47,8 +45,8 @@ def strong_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
         return 0.7
     if right_nofmt.intersection(_get_weak_identifiers(left)):
         return 0.7
-    left_fmts = {f for _, f in left_strong}
-    right_fmts = {f for _, f in right_strong}
+    left_fmts = {f for f, _ in left_strong}
+    right_fmts = {f for f, _ in right_strong}
     common_fmts = left_fmts.intersection(right_fmts)
     return -0.2 * len(common_fmts)
 

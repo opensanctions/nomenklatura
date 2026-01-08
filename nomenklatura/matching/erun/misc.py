@@ -86,7 +86,7 @@ def contact_match(query: E, result: E) -> float:
 
 
 def security_isin_match(query: E, result: E) -> float:
-    """Both entities are linked to different ISIN codes."""
+    """Compare ISIN codes for Security entities."""
     if not has_schema(query, result, "Security"):
         return 0.0
     query_isins = set(query.get("isin", quiet=True))
@@ -94,5 +94,5 @@ def security_isin_match(query: E, result: E) -> float:
     if len(query_isins) == 0 or len(result_isins) == 0:
         return 0.0
     if query_isins.intersection(result_isins):
-        return 1.0
-    return -2.0
+        return 0.0
+    return -1.0
