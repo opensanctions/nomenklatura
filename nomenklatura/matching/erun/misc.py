@@ -74,18 +74,21 @@ def gender_mismatch(query: E, result: E) -> float:
 def contact_match(query: E, result: E) -> float:
     """Matching contact information between the two entities."""
     lv, rv = type_pair(query, result, registry.phone)
-    if set(lv).intersection(set(rv)):
-        return 1.0
+    phones = registry.phone.compare_sets(lv, rv)
+    if phones > 0:
+        return phones
     lv, rv = type_pair(query, result, registry.email)
-    if set(lv).intersection(set(rv)):
-        return 1.0
+    emails = registry.email.compare_sets(lv, rv)
+    if emails > 0:
+        return emails
     lv, rv = type_pair(query, result, registry.url)
-    if set(lv).intersection(set(rv)):
-        return 1.0
+    urls = registry.url.compare_sets(lv, rv)
+    if urls > 0:
+        return urls
     return 0.0
 
 
-def security_isin_match(query: E, result: E) -> float:
+def security_isin_mismatch(query: E, result: E) -> float:
     """Compare ISIN codes for Security entities."""
     if not has_schema(query, result, "Security"):
         return 0.0
@@ -95,4 +98,4 @@ def security_isin_match(query: E, result: E) -> float:
         return 0.0
     if query_isins.intersection(result_isins):
         return 0.0
-    return -1.0
+    return 1.0

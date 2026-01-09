@@ -18,7 +18,7 @@ from nomenklatura.matching.erun.dob import dob_match, dob_year_match
 from nomenklatura.matching.erun.misc import address_match, address_numbers
 from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
 from nomenklatura.matching.erun.misc import contact_match
-from nomenklatura.matching.erun.misc import security_isin_match
+from nomenklatura.matching.erun.misc import security_isin_mismatch
 from nomenklatura.matching.erun.countries import (
     position_country_match,
     org_country_mismatch,
@@ -61,7 +61,7 @@ class EntityResolveRegression(ScoringAlgorithm):
         # vessel_country_match,
         position_country_match,
         org_country_mismatch,
-        security_isin_match,
+        security_isin_mismatch,
         obj_name_levenshtein,
         address_match,
         address_numbers,

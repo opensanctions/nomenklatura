@@ -1,5 +1,6 @@
+from functools import lru_cache
 from typing import Set, Tuple
-from rigour.ids import get_strong_format_names
+from rigour.ids import StrictFormat, get_strong_format_names
 
 from followthemoney import EntityProxy, registry
 from nomenklatura.matching.util import has_schema
@@ -20,6 +21,7 @@ def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
     return strong_ids
 
 
+@lru_cache(maxsize=1024)
 def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
     weak_ids: Set[str] = set()
     for prop, value in entity.itervalues():
@@ -27,6 +29,7 @@ def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
             continue
         if prop.format in STRONG_FORMATS:
             continue
+        value = StrictFormat.normalize(value) or value
         weak_ids.add(value)
     return weak_ids
 

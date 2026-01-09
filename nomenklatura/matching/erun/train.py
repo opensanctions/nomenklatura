@@ -115,11 +115,17 @@ def build_dataset(
 def train_matcher(pairs_file: PathLike) -> None:
     X, y = build_dataset(pairs_file)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30)
-    # logreg = LogisticRegression(class_weight={0: 95, 1: 1})
-    # logreg = LogisticRegression(penalty="l1", solver="liblinear")
-    logreg = LogisticRegression(penalty="l2")
+    logreg = LogisticRegression(
+        penalty="elasticnet",
+        solver="saga",
+        l1_ratio=0.5,
+        C=1.2,
+        max_iter=2000,
+        random_state=42,
+        n_jobs=-1,  # Use all cores
+    )
     log.info("Training model...")
-    pipe = make_pipeline(StandardScaler(), logreg)
+    pipe = make_pipeline(StandardScaler(with_mean=False), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
     coefficients = {
