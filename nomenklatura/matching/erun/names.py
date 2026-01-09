@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import Set
-from followthemoney import EntityProxy, registry, E
+from followthemoney import EntityProxy, model, registry, E
 from followthemoney.names import schema_type_tag
 from rigour.text.distance import levenshtein_similarity
 from rigour.names import Name, NameTypeTag
@@ -31,20 +31,53 @@ def _entity_names(entity: EntityProxy) -> Set[Name]:
     return names
 
 
-def name_levenshtein(left: E, right: E) -> float:
+def person_name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
-    if not has_schema(left, right, "LegalEntity"):
+    if not has_schema(left, right, "Person"):
         return 0.0
-    left_name_objs = {n for n in _entity_names(left)}
-    right_name_objs = {n for n in _entity_names(right)}
+    left_name_objs = _entity_names(left)
+    right_name_objs = _entity_names(right)
     left_names = {n.comparable for n in left_name_objs}
     right_names = {n.comparable for n in right_name_objs}
-    if has_schema(left, right, "Person"):
-        for name in left_name_objs:
-            left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-        for name in right_name_objs:
-            right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    for name in left_name_objs:
+        left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    for name in right_name_objs:
+        right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    return max_in_sets(left_names, right_names, compare_levenshtein)
+
+
+def org_name_levenshtein(left: E, right: E) -> float:
+    """Consider the edit distance (as a fraction of name length) between the two most
+    similar names linked to both entities."""
+    if not has_schema(left, right, "Organization"):
+        return 0.0
+    left_name_objs = _entity_names(left)
+    right_name_objs = _entity_names(right)
+    left_names = {n.comparable for n in left_name_objs}
+    right_names = {n.comparable for n in right_name_objs}
+    # if has_schema(left, right, "Person"):
+    #     for name in left_name_objs:
+    #         left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    #     for name in right_name_objs:
+    #         right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    return max_in_sets(left_names, right_names, compare_levenshtein)
+
+
+def legal_name_levenshtein(left: E, right: E) -> float:
+    """Consider the edit distance (as a fraction of name length) between the two most
+    similar names linked to both entities."""
+    schema = model.common_schema(left.schema, right.schema)
+    if schema.name != "LegalEntity":
+        return 0.0
+    left_name_objs = _entity_names(left)
+    right_name_objs = _entity_names(right)
+    left_names = {n.comparable for n in left_name_objs}
+    right_names = {n.comparable for n in right_name_objs}
+    for name in left_name_objs:
+        left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
+    for name in right_name_objs:
+        right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
     return max_in_sets(left_names, right_names, compare_levenshtein)
 
 

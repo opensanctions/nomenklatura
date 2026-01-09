@@ -5,22 +5,27 @@ from functools import cache
 from sklearn.pipeline import Pipeline  # type: ignore
 from followthemoney import E
 
-from nomenklatura.matching.erun.names import name_levenshtein, family_name_match
-from nomenklatura.matching.erun.names import name_token_overlap, name_numbers
-from nomenklatura.matching.erun.names import obj_name_levenshtein
+from nomenklatura.matching.erun.names import (
+    family_name_match,
+    name_token_overlap,
+    name_numbers,
+    obj_name_levenshtein,
+    legal_name_levenshtein,
+    person_name_levenshtein,
+    org_name_levenshtein,
+)
+from nomenklatura.matching.erun.dob import dob_match, dob_year_match
 from nomenklatura.matching.erun.misc import address_match, address_numbers
 from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
 from nomenklatura.matching.erun.misc import contact_match
 from nomenklatura.matching.erun.misc import security_isin_match
 from nomenklatura.matching.erun.countries import (
     position_country_match,
-    org_country_match,
+    org_country_mismatch,
     per_country_mismatch,
 )
 from nomenklatura.matching.erun.identifiers import strong_identifier_match
 from nomenklatura.matching.erun.identifiers import weak_identifier_match
-from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
-from nomenklatura.matching.compare.dates import dob_year_disjoint
 from nomenklatura.matching.types import (
     FeatureDocs,
     FeatureDoc,
@@ -41,20 +46,21 @@ class EntityResolveRegression(ScoringAlgorithm):
     FEATURES: List[CompareFunction] = [
         name_token_overlap,
         name_numbers,
-        name_levenshtein,
+        legal_name_levenshtein,
+        person_name_levenshtein,
+        org_name_levenshtein,
         strong_identifier_match,
         weak_identifier_match,
-        dob_matches,
-        dob_year_matches,
+        dob_match,
+        dob_year_match,
         contact_match,
-        FtResult.unwrap(dob_year_disjoint),
         family_name_match,
         birth_place,
         gender_mismatch,
         per_country_mismatch,
         # vessel_country_match,
         position_country_match,
-        org_country_match,
+        org_country_mismatch,
         security_isin_match,
         obj_name_levenshtein,
         address_match,
