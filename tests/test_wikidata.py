@@ -5,7 +5,7 @@ from followthemoney import StatementEntity as Entity
 
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata import LangText, WikidataClient
-from nomenklatura.enrich.wikidata import clean_name
+from nomenklatura.enrich.wikidata import clean_wikidata_name
 
 from .conftest import wd_read_response
 
@@ -27,12 +27,12 @@ def test_model_apply():
     assert ent.get("name") == ["test"]
 
     only_dirty = LangText("(placeholder)", "en")
-    only_dirty.apply(ent, "alias", clean=clean_name)
+    only_dirty.apply(ent, "alias", clean=clean_wikidata_name)
     assert ent.get("alias") == ["(placeholder)"]
     ent.pop("alias")
 
     dirty = LangText("clean part (politician)", "en")
-    dirty.apply(ent, "alias", clean=clean_name)
+    dirty.apply(ent, "alias", clean=clean_wikidata_name)
     assert ent.get("alias") == ["clean part"]
     ent.pop("alias")
 
