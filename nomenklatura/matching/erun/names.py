@@ -82,6 +82,10 @@ def _name_tokens(entity: EntityProxy) -> Set[str]:
 
 def name_token_overlap(left: E, right: E) -> float:
     """Evaluate the proportion of identical words in each name."""
+    # This is pretty generic but we don't want to apply it to all schemas, like
+    # `Security`, `RealEstate` or `CryptoWallet` where names are meaningless.
+    if not has_schema(left, right, "LegalEntity", "Position", "Vehicle"):
+        return 0.0
     left_tokens = _name_tokens(left)
     right_tokens = _name_tokens(right)
     common = left_tokens.intersection(right_tokens)
