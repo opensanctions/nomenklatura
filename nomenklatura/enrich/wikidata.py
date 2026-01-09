@@ -19,7 +19,7 @@ from nomenklatura.wikidata.props import (
     PROPS_TOPICS,
 )
 from nomenklatura.wikidata.qualified import qualify_value
-from nomenklatura.wikidata.value import clean_name, is_alias_strong
+from nomenklatura.wikidata.value import clean_wikidata_name, is_alias_strong
 
 log = logging.getLogger(__name__)
 
@@ -214,7 +214,7 @@ class WikidataEnricher(Enricher[DS]):
             ltext = label.text.casefold()
             if ltext in names:
                 continue
-            label.apply(proxy, "name", clean=clean_name)
+            label.apply(proxy, "name", clean=clean_wikidata_name)
             names.add(ltext)
         if item.description is not None:
             item.description.apply(proxy, "notes")
@@ -225,10 +225,10 @@ class WikidataEnricher(Enricher[DS]):
             if ltext in names:
                 continue
             if is_alias_strong(alias.text, names):
-                alias.apply(proxy, "alias", clean=clean_name)
+                alias.apply(proxy, "alias", clean=clean_wikidata_name)
                 names.add(ltext)
             else:
-                alias.apply(proxy, "weakAlias", clean=clean_name)
+                alias.apply(proxy, "weakAlias", clean=clean_wikidata_name)
 
         if proxy.schema.is_a("Person") and not item.is_instance("Q5"):
             log.debug("Person is not a Q5 [%s]: %s", item.id, item.labels)

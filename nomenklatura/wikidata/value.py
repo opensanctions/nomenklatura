@@ -92,7 +92,7 @@ def snak_value_to_string(
     return LangText(None)
 
 
-def clean_name(name: str) -> Optional[str]:
+def clean_wikidata_name(name: str) -> Optional[str]:
     """Clean a name for storage, try to throw out dangerous user inputs."""
     if not is_name(name):
         return None
@@ -107,7 +107,8 @@ def is_alias_strong(alias: str, names: Set[str]) -> bool:
     similarity to the actual name."""
     if " " not in alias:
         return False
-    # for name in names:
-    #     if is_levenshtein_plausible(alias, name, max_edits=None, max_percent=0.7):
-    #         return True
+    if not is_name(alias):
+        return False
+    if len(alias) < 3:
+        return False
     return True
