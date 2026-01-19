@@ -140,7 +140,7 @@ class Resolver(Linker[SE]):
         # self.connected.cache_clear()
         self.get_canonical.cache_clear()
 
-    def begin(self) -> None:
+    def begin(self, load_edges: bool = True) -> None:
         """
         Start a new transaction in Begin Once style. Callers are responsible for
         committing or rolling back the transaction.
@@ -151,7 +151,8 @@ class Resolver(Linker[SE]):
             self._conn = self._engine.connect()
         if self._transaction is None:
             self._transaction = self._conn.begin()
-        self._update_from_db()
+        if load_edges:
+            self._update_from_db()
         self._invalidate()
 
     def commit(self) -> None:
