@@ -110,7 +110,12 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
             detail = " ".join(str(m) for m in matches)
-            retval = FtResult(score=score, detail=detail)
+            retval = FtResult(
+                score=score,
+                detail=detail,
+                query=query.original,
+                candidate=result.original,
+            )
     if retval.detail is None:
         retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
     return retval
@@ -143,7 +148,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
                 score = score * mismatch_penalty
                 detail = "Number mismatch"
             if score > best_result.score:
-                best_result = FtResult(score=score, detail=detail)
+                best_result = FtResult(score=score, detail=detail, query=query_name, candidate=result_name)
     return best_result
 
 
@@ -176,7 +181,7 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
             rps=result_comparable[longest].parts,
             score=1.0,
         )
-        return FtResult(score=match.score, detail=str(match))
+        return FtResult(score=match.score, detail=str(match), query=match.qstr, candidate=match.rstr)
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John

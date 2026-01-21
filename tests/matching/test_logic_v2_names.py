@@ -1,9 +1,12 @@
 from rigour.names import NameTypeTag, NamePartTag, Symbol
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
+from nomenklatura.matching.logic_v2.names.match import name_match
+from nomenklatura.matching import LogicV2
 
 from .util import e
 
+config = LogicV2.default_config()
 
 def test_entity_names_person():
     entity = e("Person", name="Smith, John", firstName="John", lastName="Smith")
@@ -51,6 +54,14 @@ def test_entity_names_company():
     other_name = entity_names(NameTypeTag.ORG, other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
+
+def test_name_match():
+    query = e("Person", name="John Smith")
+    result = e("Person", name="Smith, John")
+    res = name_match(query, result, config)
+    assert res.score == 1.0
+    assert res.query == "John Smith"
+    assert res.candidate == "Smith, John"
 
 
 # def test_specific():

@@ -12,7 +12,12 @@ config = ScoringConfig.defaults()
 def test_lei_match():
     query = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
     result = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
-    assert lei_code_match(query, result, config).score == 1.0
+    res = lei_code_match(query, result, config)
+    assert res.score == 1.0
+    # Assert once for this feature that query/candidate are set correctly
+    assert res.query == "1595VL9OPPQ5THEK2X30"
+    assert res.candidate == "1595VL9OPPQ5THEK2X30"
+
     result = e("Company", registrationNumber="1595VL9OPPQ5THEK2X30")
     assert lei_code_match(query, result, config).score == 1.0
 
@@ -25,7 +30,11 @@ def test_lei_match():
 
     query = e("Company", leiCode="1595VL9OPPQ5THEK2")
     result = e("Company", registrationNumber="1595VL9OPPQ5THEK2")
-    assert lei_code_match(query, result, config).score == 0.0
+    res = lei_code_match(query, result, config)
+    assert res.score == 0.0
+    # Assert once for this feature that query/candidate are set correctly
+    assert res.query is None
+    assert res.candidate is None
 
 
 def test_bic_match():
