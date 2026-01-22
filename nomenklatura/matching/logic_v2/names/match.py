@@ -169,14 +169,22 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_comparable = {name.comparable: name for name in query_names}
     result_comparable = {name.comparable: name for name in result_names}
     common = set(query_comparable).intersection(result_comparable)
-    if len(common) > 0:
-        longest = max(common, key=len)
-        match = Match(
-            qps=query_comparable[longest].parts,
-            rps=result_comparable[longest].parts,
-            score=1.0,
-        )
-        return FtResult(score=match.score, detail=str(match))
+    # We want to find the longest common name first, so we sort by length.
+    common = sorted(common, key=len, reverse=True)
+    for name in common:
+        query_name = query_comparable[name]
+        result_name = result_comparable[name]
+        # We don't call align_person_name_order here because we only want literal in-order matches,
+        # all the fancy magic is for match_name_symbolic.
+        # We call can_match here because we never want to match a given name with a family name
+        parts_can_match = [qpart.can_match(rpart) for qpart, rpart in zip(query_name.parts, result_name.parts)]
+        if all(parts_can_match):
+            match = Match(
+                qps=query_name.parts,
+                rps=result_name.parts,
+                score=1.0,
+            )
+            return FtResult(score=match.score, detail=str(match))
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John
