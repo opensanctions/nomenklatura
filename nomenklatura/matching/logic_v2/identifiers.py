@@ -33,17 +33,22 @@ def _identifier_format_match(
     common = query_format.intersection(result_format)
     if len(common) > 0:
         detail = f"Matched {format.TITLE}: {', '.join(common)}"
-        return FtResult(score=1.0, detail=detail)
+        first_common = next(iter(common))
+        return FtResult(score=1.0, detail=detail, query=first_common, candidate=first_common)
     if len(query_format) > 0:
         result_generic = [format.normalize(f) for f in format_values(result, None)]
-        if len(set(query_format).intersection(result_generic)) > 0:
+        common = set(query_format).intersection(result_generic)
+        if len(common) > 0:
             detail = f"Matched {format.TITLE}: {', '.join(common)}"
-            return FtResult(score=1.0, detail=detail)
+            first_common = next(iter(common))
+            return FtResult(score=1.0, detail=detail, query=first_common, candidate=first_common)
     if len(result_format) > 0:
         query_generic = [format.normalize(f) for f in format_values(query, None)]
-        if len(set(result_format).intersection(query_generic)) > 0:
+        common = set(result_format).intersection(query_generic)
+        if len(common) > 0:
             detail = f"Matched {format.TITLE}: {', '.join(common)}"
-            return FtResult(score=1.0, detail=detail)
+            first_common = next(iter(common))
+            return FtResult(score=1.0, detail=detail, query=first_common, candidate=first_common)
     return FtResult(score=FNUL, detail=f"No {format.TITLE} match")
 
 

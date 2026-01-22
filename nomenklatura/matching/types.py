@@ -56,6 +56,11 @@ class FtResult(BaseModel):
     detail: Optional[str]
     score: float
 
+    # Used e.g. for names and identifiers to explain which value from
+    # the query and result entities was actually used to make the match.
+    query: Optional[str] = None
+    candidate: Optional[str] = None
+
     def empty(self) -> bool:
         """Check if the result is empty."""
         return self.detail is None and self.score == FNUL
