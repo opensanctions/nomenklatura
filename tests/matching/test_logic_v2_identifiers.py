@@ -8,15 +8,47 @@ from .util import e
 
 config = ScoringConfig.defaults()
 
+def test_query_candidate_set():
+    """Test that the query and candidate values are set correctly on the result."""
+    # Internally, the logic is the same for all identifiers, but we try
+    # different identifier types across the test cases anyway.
+    
+    # Both query and candidate have the same identifier in correct format
+    query = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
+    result = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
+    res = lei_code_match(query, result, config)
+    assert res.query == "1595VL9OPPQ5THEK2X30"
+    assert res.candidate == "1595VL9OPPQ5THEK2X30"
+    
+    # Non-match: different identifier values
+    query = e("Company", swiftBic="GENODEM1")
+    result = e("Company", swiftBic="GENODEM2")
+    res = bic_code_match(query, result, config)
+    assert res.query is None
+    assert res.candidate is None
+    
+    # Out-of-format match: query has identifier in generic property, candidate has it in format-specific property
+    query = e("Security", registrationNumber="US4581401001")
+    result = e("Security", isin="US4581401001")
+    res = isin_security_match(query, result, config)
+    assert res.query == "US4581401001"
+    assert res.candidate == "US4581401001"
+    
+    # Out-of-format match: query has identifier in format-specific property, candidate has it in generic property
+    query = e("Vessel", imoNumber="IMO9929429")
+    result = e("Vessel", registrationNumber="IMO9929429")
+    res = vessel_imo_mmsi_match(query, result, config)
+    assert res.query == "IMO9929429"
+    assert res.candidate == "IMO9929429"
+
+
+
+
 
 def test_lei_match():
     query = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
     result = e("Company", leiCode="1595VL9OPPQ5THEK2X30")
-    res = lei_code_match(query, result, config)
-    assert res.score == 1.0
-    # Assert once for this feature that query/candidate are set correctly
-    assert res.query == "1595VL9OPPQ5THEK2X30"
-    assert res.candidate == "1595VL9OPPQ5THEK2X30"
+    assert lei_code_match(query, result, config).score == 1.0
 
     result = e("Company", registrationNumber="1595VL9OPPQ5THEK2X30")
     assert lei_code_match(query, result, config).score == 1.0
@@ -30,11 +62,7 @@ def test_lei_match():
 
     query = e("Company", leiCode="1595VL9OPPQ5THEK2")
     result = e("Company", registrationNumber="1595VL9OPPQ5THEK2")
-    res = lei_code_match(query, result, config)
-    assert res.score == 0.0
-    # Assert once for this feature that query/candidate are set correctly
-    assert res.query is None
-    assert res.candidate is None
+    assert lei_code_match(query, result, config).score == 0.0
 
 
 def test_bic_match():
