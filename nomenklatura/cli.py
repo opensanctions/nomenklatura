@@ -58,6 +58,8 @@ def cli() -> None:
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
+@click.option("-f", "--focus-dataset", type=str, help="Focus on a specific dataset")
+@click.option("-d", "--discount-internal", type=click.FLOAT, default=1.0)
 @click.option(
     "-c",
     "--clear",
@@ -72,6 +74,8 @@ def xref_file(
     limit: int = 5000,
     scored: bool = True,
     clear: bool = False,
+    focus_dataset: Optional[str] = None,
+    discount_internal: float = 1.0,
 ) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
@@ -94,6 +98,8 @@ def xref_file(
         algorithm=algorithm_type,
         scored=scored,
         limit=limit,
+        focus_dataset=focus_dataset,
+        discount_internal=discount_internal,
     )
     resolver.commit()
     log.info("Xref complete in: %r", resolver)
