@@ -89,10 +89,10 @@ def xref(
                     continue
 
             if scored:
-                result = algorithm.compare(left, right, config)
-                score = result.score
-                if len(left.datasets.intersection(right.datasets)) > 0:
-                    score = score * discount_internal
+                score = algorithm.compare(left, right, config).score
+
+            if len(left.datasets.intersection(right.datasets)) > 0:
+                score = score * discount_internal
 
             if heuristic is not None:
                 hscore = heuristic(resolver, left, right, score)
