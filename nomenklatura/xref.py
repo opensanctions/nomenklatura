@@ -119,3 +119,5 @@ def xref(
         resolver.commit()
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
+    finally:
+        index.close()
