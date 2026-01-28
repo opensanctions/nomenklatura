@@ -79,6 +79,10 @@ class BrightQueryEnricher(Enricher[DS]):
             )
             return
 
+        if not proxy.id.startswith("bq-") and not proxy.id.startswith("bqo-"):
+            log.error("BrightQuery ID without prefix: %s", proxy.id)
+            return
+
         # Legal name of the Legal Entity
         proxy.add("name", name)
         proxy.add("brightQueryOrgId", bq_org_id)
@@ -92,7 +96,7 @@ class BrightQueryEnricher(Enricher[DS]):
         # Date on which the Legal Entity was registered with the Secretary of State.
         founded = child.get("bq_legal_entity_date_founded")
         proxy.add("incorporationDate", founded)
-        log.info("Candidate [%s]: %s (%s)", entity.caption, proxy.id, name)
+        log.info("Candidate [%s]: %s", proxy.id, name)
         yield proxy
 
     def search(self, payload: dict[str, Any]) -> Generator[Dict[str, str], None, None]:
