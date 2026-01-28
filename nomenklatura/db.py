@@ -30,16 +30,29 @@ VALUE_LEN = 65535
 log = logging.getLogger(__name__)
 
 
-@cache
 def get_engine(url: Optional[str] = None) -> Engine:
     url = url or settings.DB_URL
+    return _make_engine(url)
+
+
+@cache
+def _make_engine(url: str) -> Engine:
     connect_args = {}
     if url.startswith("postgres"):
         connect_args["options"] = f"-c statement_timeout={settings.DB_STMT_TIMEOUT}"
 
     return create_engine(
-        url, pool_size=settings.DB_POOL_SIZE, connect_args=connect_args
+        url,
+        pool_size=settings.DB_POOL_SIZE,
+        connect_args=connect_args,
     )
+
+
+def close_db() -> None:
+    engine = get_engine()
+    engine.dispose()
+    get_metadata.cache_clear()
+    _make_engine.cache_clear()
 
 
 @cache

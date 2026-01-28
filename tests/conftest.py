@@ -14,7 +14,7 @@ from followthemoney import Dataset, StatementEntity as Entity
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
-from nomenklatura.db import get_engine, get_metadata
+from nomenklatura.db import close_db, get_engine, get_metadata
 from nomenklatura.resolver import Resolver
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
@@ -37,10 +37,8 @@ def wrap_test():
     engine = get_engine()
     meta = get_metadata()
     meta.drop_all(bind=engine)
-    engine.dispose()
-    get_engine.cache_clear()
+    close_db()
     get_redis.cache_clear()
-    get_metadata.cache_clear()
 
 
 @pytest.fixture(scope="module")
@@ -97,7 +95,7 @@ def test_dataset() -> Dataset:
     return Dataset.make({"name": "test_dataset", "title": "Test Dataset"})
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_cache(test_dataset: Dataset) -> Cache:
     engine = get_engine(settings.DB_URL)
     metadata = MetaData()
@@ -112,10 +110,11 @@ def index_path() -> Generator[Path, None, None]:
 
 
 @pytest.fixture(scope="function")
-def dindex(index_path: Path, dstore: SimpleMemoryStore) -> Index:
+def dindex(index_path: Path, dstore: SimpleMemoryStore) -> Generator[Index, None, None]:
     index = Index(dstore.default_view(), index_path)
     index.build()
-    return index
+    yield index
+    index.close()
 
 
 def wd_read_response(request, context):

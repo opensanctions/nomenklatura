@@ -1,4 +1,3 @@
-import os
 import shutil
 import yaml
 import click
@@ -47,6 +46,12 @@ def _get_linker() -> Linker[Entity]:
     return linker
 
 
+def _get_data_path(data_path: Optional[Path]) -> Path:
+    if data_path is None:
+        data_path = Path.cwd() / "nomenklatura.data"
+    return data_path
+
+
 @click.group(help="Nomenklatura data integration")
 def cli() -> None:
     logging.basicConfig(level=logging.INFO)
@@ -54,6 +59,7 @@ def cli() -> None:
 
 @cli.command("xref", help="Generate dedupe candidates")
 @click.argument("path", type=InPath)
+@click.option("-p", "--data-path", type=Path, default=None)
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
 @click.option("-l", "--limit", type=click.INT, default=5000)
 @click.option("--algorithm", default=DefaultAlgorithm.NAME)
@@ -69,6 +75,7 @@ def cli() -> None:
 )
 def xref_file(
     path: Path,
+    data_path: Optional[Path] = None,
     auto_threshold: Optional[float] = None,
     algorithm: str = DefaultAlgorithm.NAME,
     limit: int = 5000,
@@ -79,14 +86,14 @@ def xref_file(
 ) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
+    data_path = _get_data_path(data_path)
+
     store = load_entity_file_store(path, resolver=resolver)
     algorithm_type = get_algorithm(algorithm)
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
 
-    index_dir = Path(
-        os.environ.get("NOMENKLATURA_INDEX_PATH", path.parent / INDEX_SEGMENT)
-    )
+    index_dir = data_path / INDEX_SEGMENT
     if clear and index_dir.exists():
         log.info("Clearing index: %s", index_dir)
         shutil.rmtree(index_dir, ignore_errors=True)
@@ -116,20 +123,11 @@ def xref_prune() -> None:
 @cli.command("apply", help="Apply resolver to an entity stream")
 @click.argument("path", type=InPath)
 @click.option("-o", "--outpath", type=OutPath, default="-")
-@click.option(
-    "-d",
-    "--dataset",
-    type=str,
-    default=None,
-    help="Add a dataset to the entity metadata",
-)
-def apply(path: Path, outpath: Path, dataset: Optional[str] = None) -> None:
+def apply(path: Path, outpath: Path) -> None:
     linker = _get_linker()
     with path_writer(outpath) as outfh:
         for proxy in path_entities(path, ValueEntity):
             proxy = linker.apply_stream(proxy)
-            if dataset is not None:
-                proxy.datasets.add(dataset)
             write_entity(outfh, proxy)
 
 
@@ -152,12 +150,14 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @cli.command("dedupe", help="Interactively judge xref candidates")
 @click.argument("path", type=InPath)
 @click.option("-x", "--xref", is_flag=True, default=False)
-def dedupe(path: Path, xref: bool = False) -> None:
+@click.option("-p", "--data-path", type=Path, default=None)
+def dedupe(path: Path, xref: bool = False, data_path: Optional[Path] = None) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
+    data_path = _get_data_path(data_path)
     store = load_entity_file_store(path, resolver=resolver)
     if xref:
-        index_dir = path.parent / INDEX_SEGMENT
+        index_dir = data_path / INDEX_SEGMENT
         run_xref(resolver, store, index_dir)
     resolver.commit()
 

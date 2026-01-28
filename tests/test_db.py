@@ -27,5 +27,3 @@ def test_statement_db(test_dataset: Dataset, donations_json: List[Dict[str, Any]
         cursor = conn.execute(q)
         stmts = list(cursor.fetchall())
         assert len(stmts) > len(donations_json)
-
-    get_engine.cache_clear()
