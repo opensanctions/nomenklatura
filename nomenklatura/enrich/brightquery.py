@@ -1,8 +1,8 @@
+from normality import slugify
 import requests
 import logging
 from banal import hash_data
 from typing import Generator, Optional, Dict, Any
-from followthemoney.util import make_entity_id
 from followthemoney import DS, SE, registry
 
 from nomenklatura.cache import Cache
@@ -53,6 +53,7 @@ class BrightQueryEnricher(Enricher[DS]):
                 child.get("bq_legal_entity_id"),
             )
             return
+        proxy = self.make_entity(entity, "Company")
         # Unique ID of the Organization. An Organization is the concept of a company,
         # which is constructed as a collection of Legal Entities (child and parent entities)
         # and Locations (e.g., offices, stores).
@@ -61,8 +62,23 @@ class BrightQueryEnricher(Enricher[DS]):
         # registered with the Secretary of State of a jurisdiction.
         # LegalEntity is the primary object of interest for our processing.
         bq_entity_id = child.get("bq_legal_entity_id")
-        proxy = self.make_entity(entity, "Company")
-        proxy.id = f"brightquery-{make_entity_id(name, bq_entity_id)}"
+        if bq_entity_id is not None:
+            proxy.id = slugify(bq_entity_id, "-")
+        if proxy.id is None and bq_org_id is not None:
+            proxy.id = f"bqo-{slugify(bq_org_id, '-')}"
+
+        if proxy.id is None:
+            log.error("BrightQuery record without IDs: %s", name)
+            return
+
+        if len(proxy.id) > registry.entity.max_length:
+            log.error(
+                "BrightQuery generated ID too long (%d): %s",
+                len(proxy.id),
+                proxy.id,
+            )
+            return
+
         # Legal name of the Legal Entity
         proxy.add("name", name)
         proxy.add("brightQueryOrgId", bq_org_id)
@@ -74,10 +90,9 @@ class BrightQueryEnricher(Enricher[DS]):
         # typically with the Secretary of State.
         proxy.add("jurisdiction", child.get("bq_legal_entity_jurisdiction_code"))
         # Date on which the Legal Entity was registered with the Secretary of State.
-        proxy.add(
-            "incorporationDate",
-            child.get("bq_legal_entity_date_founded"),
-        )
+        founded = child.get("bq_legal_entity_date_founded")
+        proxy.add("incorporationDate", founded)
+        log.info("Candidate [%s]: %s (%s)", entity.caption, proxy.id, name)
         yield proxy
 
     def search(self, payload: dict[str, Any]) -> Generator[Dict[str, str], None, None]:
@@ -101,8 +116,8 @@ class BrightQueryEnricher(Enricher[DS]):
             resp_data = response.json()
             self.cache.set_json(cache_key, resp_data)
         # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
-        children = resp_data.get("root", {}).get("children", [])
-        yield from children
+        for child in resp_data.get("root", {}).get("children", []):
+            yield child
 
     def match(self, entity: SE) -> Generator[SE, None, None]:
         if not entity.schema.is_a("Organization"):
@@ -118,11 +133,9 @@ class BrightQueryEnricher(Enricher[DS]):
             return
 
         # Get the name and address to search
-        # names = entity.get("name")
-        names = [entity.caption]
         addresses = entity.get("address")
         address = max(addresses, key=len) if len(addresses) > 0 else None
-        for name in names:
+        for name in entity.get("name"):
             # If we have an address, we can search by both name and address
             payload = {"company_name": name}
             if address:
