@@ -10,7 +10,7 @@ from followthemoney.names import PROP_PART_TAGS
 
 # NOTE: This @lru_cache uses Entity.__hash__, which only compares IDs. So if the properties of
 # the underlying entity change, this cache will not be invalidated.
-@lru_cache(maxsize=50)
+@lru_cache(maxsize=200)
 def entity_names(
     type_tag: NameTypeTag,
     entity: EntityProxy,
