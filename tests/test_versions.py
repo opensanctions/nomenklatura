@@ -36,23 +36,32 @@ def test_version() -> None:
 def test_run_history():
     original = VersionHistory([])
     assert original.latest is None
-    assert original.to_json() == '{"items": []}'
+    assert original.to_json() == '{"items": [], "last_successful": null}'
 
     runid = Version.new()
     history = original.append(runid)
     assert len(history) == 1
     assert len(original) == 0
     assert history.latest == runid
-    assert history.to_json() == f'{{"items": ["{runid.id}"]}}'
+    assert history.last_successful is None
+    assert history.to_json() == f'{{"items": ["{runid.id}"], "last_successful": null}}'
+
+    history.last_successful = runid
+    assert history.to_json() == f'{{"items": ["{runid.id}"], "last_successful": "{runid.id}"}}'
+    assert history.last_successful == runid
 
     runid2 = Version.new()
     history = history.append(runid2)
     assert history.latest == runid2
-    assert history.to_json() == f'{{"items": ["{runid.id}", "{runid2.id}"]}}'
+    assert history.to_json() == f'{{"items": ["{runid.id}", "{runid2.id}"], "last_successful": "{runid.id}"}}'
     assert len(list(history)) == 2
+    # check that the last_successful is not updated automatically
+    assert history.last_successful == runid
 
+    # test that the load-store cycle works
     other = VersionHistory.from_json(history.to_json())
     assert other.latest == runid2
+    assert other.last_successful == runid
 
     for _ in range(10000):
         history = history.append(Version.new())
@@ -60,4 +69,4 @@ def test_run_history():
 
     history = VersionHistory([runid, runid2])
     assert history.latest == runid2
-    assert history.to_json() == f'{{"items": ["{runid.id}", "{runid2.id}"]}}'
+    assert history.to_json() == f'{{"items": ["{runid.id}", "{runid2.id}"], "last_successful": null}}'
