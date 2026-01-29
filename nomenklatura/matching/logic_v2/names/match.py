@@ -21,12 +21,32 @@ from nomenklatura.matching.types import FtResult, ScoringConfig
 # Step 3: Pick the best sequence
 
 
-def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
-    # Stage 1: We create a set of pairings between the symbols that have been annotated as spans
-    # on both names. This will try to determine the maximum, non-overlapping set of name
-    # parts that can be explained using pre-defined symbols.
+def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
+    """Generate all valid non-overlapping pairings of symbol spans between two names.
+
+    This function creates a set of pairings between the symbols that have been annotated
+    as spans on both names. It tries to determine the maximum, non-overlapping set of
+    name parts that can be explained using pre-defined symbols.
+
+    The algorithm works as follows:
+    1. Build a map of result spans indexed by symbol
+    2. For each query name part, find all query spans containing that part
+    3. For each compatible query-result span pair, create a new pairing
+    4. Use deduplication to avoid creating identical pairings
+    5. Iteratively build up pairings, ensuring no overlapping name parts
+
+    Args:
+        query: The query name with tagged spans
+        result: The result name with tagged spans
+
+    Returns:
+        A list of Pairing objects representing all valid non-overlapping symbol matches.
+        Returns a list with one empty pairing if no symbol matches are possible.
+    """
     query_symbols: Set[Symbol] = set(span.symbol for span in query.spans)
     pairings = [Pairing.empty()]
+
+    # Build a map of result spans indexed by symbol for fast lookup
     result_map: Dict[Symbol, List[Span]] = {}
     for span in result.spans:
         if span.symbol not in query_symbols:
@@ -34,27 +54,47 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         if span.symbol not in result_map:
             result_map[span.symbol] = []
         result_map[span.symbol].append(span)
+
+    # Track which span pair combinations we've already seen to avoid duplicates
     seen: Set[int] = set()
+
+    # Iterate through query parts to build up pairings incrementally
     for part in query.parts:
         next_pairings: List[Pairing] = []
         for qspan in query.spans:
-            if qspan.symbol not in result_map:
-                continue
+            # Skip spans that don't contain the current part
             if part not in qspan.parts:
                 continue
-            for rspan in result_map.get(qspan.symbol, []):
+            # Skip symbols not present in result
+            if qspan.symbol not in result_map:
+                continue
+
+            for rspan in result_map[qspan.symbol]:
+                # Create a unique key for this span pair to prevent duplicates
                 # This assumes that these are the only factors for weighting the
                 # resulting match:
                 key = hash((qspan.parts, rspan.parts, qspan.symbol.category))
                 if key in seen:
                     continue
+
+                # Try to add this span pair to each existing pairing
                 for pairing in pairings:
                     if pairing.can_pair(qspan, rspan):
                         seen.add(key)
                         next_pairing = pairing.add(qspan, rspan)
                         next_pairings.append(next_pairing)
+
+        # If we found any new pairings, replace the old list
+        # This ensures we always work with the most complete pairings
         if len(next_pairings):
             pairings = next_pairings
+
+    return pairings
+
+
+def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
+    # Stage 1: Generate all valid symbol-based pairings
+    pairings = generate_symbol_pairings(query, result)
 
     # Stage 2: We compute the score for each pairing, which is a combination of the
     # symbolic match (some types of symbols are considered less strong matches than others) and
