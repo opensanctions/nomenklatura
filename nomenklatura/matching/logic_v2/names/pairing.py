@@ -35,9 +35,9 @@ class Pairing:
 
     def can_pair(self, query_span: Span, result_span: Span) -> bool:
         """Check if two spans can be paired."""
-        if self.query_used.intersection(query_span.parts):
+        if not self.query_used.isdisjoint(query_span.parts):
             return False
-        if self.result_used.intersection(result_span.parts):
+        if not self.result_used.isdisjoint(result_span.parts):
             return False
 
         # If the text is actually identical, we do not need to establish
