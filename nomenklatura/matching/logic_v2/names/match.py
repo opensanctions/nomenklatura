@@ -28,13 +28,6 @@ def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
     as spans on both names. It tries to determine the maximum, non-overlapping set of
     name parts that can be explained using pre-defined symbols.
 
-    The algorithm works as follows:
-    1. Build a map of result spans indexed by symbol
-    2. For each query name part, find all query spans containing that part
-    3. For each compatible query-result span pair, create a new pairing
-    4. Use deduplication to avoid creating identical pairings
-    5. Iteratively build up pairings, ensuring no overlapping name parts
-
     Args:
         query: The query name with tagged spans
         result: The result name with tagged spans
@@ -55,20 +48,27 @@ def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
             result_map[span.symbol] = []
         result_map[span.symbol].append(span)
 
+    part_to_spans: Dict[NamePart, List[Span]] = {}
+    for span in query.spans:
+        # Only index spans that have matching symbols in result
+        if span.symbol not in result_map:
+            continue
+        # Map each part in the span to the span itself
+        for part in span.parts:
+            if part not in part_to_spans:
+                part_to_spans[part] = []
+            part_to_spans[part].append(span)
+
     # Track which span pair combinations we've already seen to avoid duplicates
     seen: Set[int] = set()
 
     # Iterate through query parts to build up pairings incrementally
     for part in query.parts:
-        next_pairings: List[Pairing] = []
-        for qspan in query.spans:
-            # Skip spans that don't contain the current part
-            if part not in qspan.parts:
-                continue
-            # Skip symbols not present in result
-            if qspan.symbol not in result_map:
-                continue
+        if part not in part_to_spans:
+            continue  # No spans contain this part
 
+        next_pairings: List[Pairing] = []
+        for qspan in part_to_spans[part]:  # Only relevant spans, not all spans
             for rspan in result_map[qspan.symbol]:
                 # Create a unique key for this span pair to prevent duplicates
                 # This assumes that these are the only factors for weighting the
@@ -188,7 +188,9 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
                 score = score * mismatch_penalty
                 detail = "Number mismatch"
             if score > best_result.score:
-                best_result = FtResult(score=score, detail=detail, query=query_name, candidate=result_name)
+                best_result = FtResult(
+                    score=score, detail=detail, query=query_name, candidate=result_name
+                )
     return best_result
 
 
@@ -221,7 +223,9 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
             rps=result_comparable[longest].parts,
             score=1.0,
         )
-        return FtResult(score=match.score, detail=str(match), query=match.qstr, candidate=match.rstr)
+        return FtResult(
+            score=match.score, detail=str(match), query=match.qstr, candidate=match.rstr
+        )
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John
