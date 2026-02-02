@@ -25,8 +25,10 @@ def props_pair(left: E, right: E, props: List[str]) -> Tuple[Set[str], Set[str]]
     left_values: Set[str] = set()
     right_values: Set[str] = set()
     for prop in props:
-        left_values.update(left.get(prop, quiet=True))
-        right_values.update(right.get(prop, quiet=True))
+        if prop in left.schema.properties:
+            left_values.update(left.get(prop, quiet=True))
+        if prop in right.schema.properties:
+            right_values.update(right.get(prop, quiet=True))
     return left_values, right_values
 
 

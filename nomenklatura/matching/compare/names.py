@@ -145,9 +145,11 @@ def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """The query name is exactly the same as a result's weak alias."""
     # NOTE: This is unbalanced, i.e. it treats 'query' and 'result' differently.
     # cf. https://ofac.treasury.gov/faqs/topic/1646
-    query_names = query.get_type_values(registry.name)
     result_names = set(result.get("weakAlias", quiet=True))
     result_names.update(result.get("abbreviation", quiet=True))
+    if len(result_names) == 0:
+        return FtResult(score=FNUL, detail=None)
+    query_names = query.get_type_values(registry.name)
     qnames = clean_map(query_names, clean_name_light)
     rnames = clean_map(result_names, clean_name_light)
     overlap = qnames.intersection(rnames)

@@ -7,9 +7,9 @@ from nomenklatura.matching.util import make_github_url, FNUL
 
 Encoded = List[float]
 CompareFunction = Callable[[EntityProxy, EntityProxy], float]
-FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], "FtResult"]
+FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], Optional["FtResult"]]
 FeatureCompareConfigured = Callable[
-    [EntityProxy, EntityProxy, "ScoringConfig"], "FtResult"
+    [EntityProxy, EntityProxy, "ScoringConfig"], Optional["FtResult"]
 ]
 
 
@@ -192,7 +192,7 @@ class Feature(BaseModel):
             url=make_github_url(self.func),
         )
 
-    def invoke(self, query: E, result: E, config: ScoringConfig) -> FtResult:
+    def invoke(self, query: E, result: E, config: ScoringConfig) -> Optional[FtResult]:
         """Invoke the feature function and return the result."""
         if self.func.__code__.co_argcount == 3:
             func = cast(FeatureCompareConfigured, self.func)
@@ -239,8 +239,10 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         for feature in cls.features:
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
-                explanations[feature.name] = feature.invoke(query, result, config)
-                scores[feature.name] = explanations[feature.name].score
+                res = feature.invoke(query, result, config)
+                if res is not None:
+                    explanations[feature.name] = res
+                    scores[feature.name] = res.score
         score = cls.compute_score(scores, weights)
         score = min(1.0, max(FNUL, score))
         return MatchingResult.make(score=score, explanations=explanations)
