@@ -7,9 +7,9 @@ from nomenklatura.matching.util import make_github_url, FNUL
 
 Encoded = List[float]
 CompareFunction = Callable[[EntityProxy, EntityProxy], float]
-FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], Optional["FtResult"]]
+FeatureCompareFunction = Callable[[EntityProxy, EntityProxy], "FtResult"]
 FeatureCompareConfigured = Callable[
-    [EntityProxy, EntityProxy, "ScoringConfig"], Optional["FtResult"]
+    [EntityProxy, EntityProxy, "ScoringConfig"], "FtResult"
 ]
 
 
@@ -192,7 +192,7 @@ class Feature(BaseModel):
             url=make_github_url(self.func),
         )
 
-    def invoke(self, query: E, result: E, config: ScoringConfig) -> Optional[FtResult]:
+    def invoke(self, query: E, result: E, config: ScoringConfig) -> FtResult:
         """Invoke the feature function and return the result."""
         if self.func.__code__.co_argcount == 3:
             func = cast(FeatureCompareConfigured, self.func)
