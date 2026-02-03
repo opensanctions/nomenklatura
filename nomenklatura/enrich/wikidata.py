@@ -83,6 +83,12 @@ class WikidataEnricher(Enricher[DS]):
         item = self.client.fetch_item(wikidata_id)
         if item is None:
             return
+        if item.id != wikidata_id:
+            log.warning(
+                "Redirected matched QID: %s -> %s",
+                wikidata_id,
+                item.id,
+            )
         proxy = self.item_proxy(match, item, schema=match.schema.name)
         if proxy is None or not self.keep_entity(proxy):
             return
