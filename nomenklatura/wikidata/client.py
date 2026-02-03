@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Dict
 from requests import Session
 from normality import squash_spaces
 from rigour.urls import build_url
+from rigour.util import MEMO_SMALL
 from followthemoney.settings import USER_AGENT
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
@@ -36,7 +37,7 @@ class WikidataClient(object):
         self.cache_days = cache_days
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
-    @lru_cache(maxsize=1000)
+    @lru_cache(maxsize=MEMO_SMALL)
     def fetch_item(self, qid: str) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
@@ -52,7 +53,11 @@ class WikidataClient(object):
         entity = data.get("entities", {}).get(qid)
         if entity is None:
             return None
-        return Item(self, entity)
+        item = Item(self, entity)
+        if item.id != qid:
+            # Redirected/merged item:
+            return self.fetch_item(item.id)
+        return item
 
     @lru_cache(maxsize=100000)
     def get_label(self, qid: str) -> LangText:

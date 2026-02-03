@@ -242,11 +242,11 @@ class WikidataEnricher(Enricher[DS]):
             if ftm_prop is None:
                 continue
             if ftm_prop not in proxy.schema.properties:
-                log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
+                log.info("Entity %s does not have property: %s", item.id, ftm_prop)
                 continue
             ftm_prop_ = proxy.schema.get(ftm_prop)
             if ftm_prop_ is None:
-                log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
+                log.info("Entity %s does not have property: %s", item.id, ftm_prop)
                 continue
             if ftm_prop_.type == registry.country:
                 territory = get_territory_by_qid(claim.qid)
