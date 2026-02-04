@@ -239,8 +239,10 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         for feature in cls.features:
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
-                explanations[feature.name] = feature.invoke(query, result, config)
-                scores[feature.name] = explanations[feature.name].score
+                res = feature.invoke(query, result, config)
+                if res is not None:
+                    explanations[feature.name] = res
+                    scores[feature.name] = res.score
         score = cls.compute_score(scores, weights)
         score = min(1.0, max(FNUL, score))
         return MatchingResult.make(score=score, explanations=explanations)

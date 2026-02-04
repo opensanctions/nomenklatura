@@ -18,7 +18,7 @@ def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
     entity = Entity(dataset, {"schema": schema, "id": id})
     for prop, value in props.items():
         entity.add(prop, value)
-    if not len(entity.names):
+    if not len(entity.names) and entity.schema.is_a("Person"):
         parts = [
             entity.first("firstName"),
             entity.first("secondName"),
@@ -54,7 +54,7 @@ def run_benchmark() -> None:
     config = LogicV2.default_config()
     func = LogicV2.compare
     print("Running benchmark for: %s" % (func.__name__))
-    for i in range(1000):
+    for i in range(2000):
         for check in checks:
             func(check.query, check.candidate, config)
 
