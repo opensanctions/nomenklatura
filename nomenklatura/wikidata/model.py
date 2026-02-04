@@ -102,6 +102,12 @@ class Item(object):
             for value in values:
                 self.claims.append(Claim(client, value, prop))
 
+        # Merged pages handling:
+        redirects = data.pop("redirects", {})
+        self.redirect_id = redirects.get("to", None)
+        if self.redirect_id is not None:
+            self.id = self.redirect_id
+
         # TODO: get back to this later:
         data.pop("sitelinks", None)
 

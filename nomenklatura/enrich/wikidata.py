@@ -83,6 +83,12 @@ class WikidataEnricher(Enricher[DS]):
         item = self.client.fetch_item(wikidata_id)
         if item is None:
             return
+        if item.id != wikidata_id:
+            log.warning(
+                "Redirected matched QID: %s -> %s",
+                wikidata_id,
+                item.id,
+            )
         proxy = self.item_proxy(match, item, schema=match.schema.name)
         if proxy is None or not self.keep_entity(proxy):
             return
@@ -242,11 +248,11 @@ class WikidataEnricher(Enricher[DS]):
             if ftm_prop is None:
                 continue
             if ftm_prop not in proxy.schema.properties:
-                log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
+                log.info("Entity %s does not have property: %s", item.id, ftm_prop)
                 continue
             ftm_prop_ = proxy.schema.get(ftm_prop)
             if ftm_prop_ is None:
-                log.info("Entity %s does not have property: %s", proxy.id, ftm_prop)
+                log.info("Entity %s does not have property: %s", item.id, ftm_prop)
                 continue
             if ftm_prop_.type == registry.country:
                 territory = get_territory_by_qid(claim.qid)
