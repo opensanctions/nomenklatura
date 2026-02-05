@@ -35,7 +35,7 @@ def xref(
     discount_internal: float = 0.7,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
-    min_threshold: Optional[float] = 0.01,
+    min_threshold: float = 0.01,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     heuristic: Optional[
