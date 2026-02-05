@@ -38,12 +38,13 @@ class WikidataClient(object):
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
     @lru_cache(maxsize=MEMO_SMALL)
-    def fetch_item(self, qid: str) -> Optional[Item]:
+    def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
         params = {"format": "json", "ids": qid, "action": "wbgetentities"}
         url = build_url(self.WD_API, params=params)
-        raw = self.cache.get(url, max_age=self.cache_days)
+        cache_days = cache_days or self.cache_days
+        raw = self.cache.get(url, max_age=cache_days)
         if raw is None:
             res = self.session.get(url)
             res.raise_for_status()
@@ -56,7 +57,7 @@ class WikidataClient(object):
         item = Item(self, entity)
         if item.id != qid:
             # Redirected/merged item:
-            return self.fetch_item(item.id)
+            return self.fetch_item(item.id, cache_days=cache_days)
         return item
 
     @lru_cache(maxsize=100000)

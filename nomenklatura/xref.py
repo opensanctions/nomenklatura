@@ -35,6 +35,7 @@ def xref(
     discount_internal: float = 0.7,
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
+    min_threshold: Optional[float] = 0.01,
     focus_dataset: Optional[str] = None,
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     heuristic: Optional[
@@ -59,6 +60,10 @@ def xref(
         for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
+
+                if idx > (limit * 10):
+                    log.info("Reached maximum number of pairs to process.")
+                    break
 
             if suggested % 10000 == 0 and suggested > 0:
                 resolver.commit()
@@ -101,6 +106,9 @@ def xref(
                 score = hscore
 
             scores.append(score)
+
+            if score < min_threshold:
+                continue
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
