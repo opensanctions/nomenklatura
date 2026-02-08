@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, Optional, Set, Tuple, cast
+from typing import Dict, Generic, Optional, Set, Tuple, cast
 
 from rich.console import RenderableType
 from rich.text import Text
@@ -20,7 +20,7 @@ from nomenklatura.tui.comparison import render_comparison
 HISTORY_LENGTH = 20
 
 
-class DedupeState(object):
+class DedupeState(Generic[DS, SE]):
     def __init__(
         self,
         resolver: Resolver[SE],
