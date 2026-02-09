@@ -4,8 +4,8 @@ from collections import defaultdict
 from itertools import zip_longest
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
-from rigour.names import NamePart, is_stopword
-from rigour.text.distance import levenshtein
+from rigour.names import NamePart
+from rigour.text import levenshtein, is_stopword
 
 from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.types import ScoringConfig

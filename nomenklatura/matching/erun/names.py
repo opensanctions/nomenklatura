@@ -4,10 +4,10 @@ from followthemoney import EntityProxy, model, registry, E
 from followthemoney.names import schema_type_tag
 from rigour.text.distance import levenshtein_similarity
 from rigour.names import Name, NameTypeTag
-from rigour.names import is_stopword
 from rigour.names import remove_org_prefixes, remove_obj_prefixes
 from rigour.names import remove_person_prefixes
 from rigour.names import replace_org_types_compare
+from rigour.text import is_stopword
 
 from nomenklatura.matching.erun.util import compare_levenshtein
 from nomenklatura.matching.util import max_in_sets, has_schema

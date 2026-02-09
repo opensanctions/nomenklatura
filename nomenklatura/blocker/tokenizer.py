@@ -3,9 +3,10 @@ from normality import WS
 from rigour.ids import StrictFormat
 from rigour.addresses import normalize_address
 from rigour.names import Name
-from rigour.names import tokenize_name, is_stopword, prenormalize_name
+from rigour.names import tokenize_name, prenormalize_name
 from rigour.names import remove_person_prefixes
 from rigour.names import tag_person_name, tag_org_name
+from rigour.text import is_stopword
 from typing import Generator, Set, Tuple
 from followthemoney import registry, Schema, StatementEntity
 

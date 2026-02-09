@@ -2,8 +2,7 @@ import orjson
 import fakeredis
 from pathlib import Path
 from followthemoney import model, Dataset, StatementEntity as Entity
-from datetime import datetime
-from rigour.time import datetime_iso
+from rigour.time import datetime_iso, utc_now
 
 from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
@@ -33,7 +32,7 @@ def test_store_basics(test_dataset: Dataset, resolver: Resolver[Entity]):
     entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
     assert len(list(store.view(test_dataset).entities())) == 0
     writer = store.writer()
-    ts = datetime_iso(datetime.now())
+    ts = datetime_iso(utc_now())
     for stmt in entity.statements:
         stmt.first_seen = ts
         stmt.last_seen = ts

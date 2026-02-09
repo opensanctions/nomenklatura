@@ -1,6 +1,6 @@
 from typing import List
-from rigour.names import is_stopword
 from rigour.names import Name, NamePart, Symbol
+from rigour.text import is_stopword
 
 
 # Used when a match is two-sided (e.g. international~intl), to modify the importance of the match
