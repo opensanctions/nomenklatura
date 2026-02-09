@@ -18,11 +18,11 @@ from followthemoney import model, DS, SE, Schema, registry, Property, Statement
 from followthemoney.exc import InvalidData
 from followthemoney.statement.util import get_prop_type
 
+from nomenklatura import settings
 from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)
-MAX_OPEN_FILES = 1000
 
 
 def unpack_statement(
@@ -61,22 +61,27 @@ class LevelDBStore(Store[DS, SE]):
     def __init__(self, dataset: DS, linker: Linker[SE], path: Path):
         super().__init__(dataset, linker)
         self.path = path
+        self.buffer_size = settings.LEVELDB_BUFFER * 1024 * 1024
         self.db = plyvel.DB(
             path.as_posix(),
             create_if_missing=True,
-            max_open_files=MAX_OPEN_FILES,
+            max_open_files=settings.LEVELDB_MAX_FILES,
+            write_buffer_size=self.buffer_size,
+            lru_cache_size=self.buffer_size,
         )
 
     def optimize(self) -> None:
         """Optimize the database by compacting it."""
         self.db.compact_range()
-        self.db.close()
+        # self.db.close()
         gc.collect()
-        self.db = plyvel.DB(
-            self.path.as_posix(),
-            create_if_missing=False,
-            max_open_files=MAX_OPEN_FILES,
-        )
+        # self.db = plyvel.DB(
+        #     self.path.as_posix(),
+        #     create_if_missing=False,
+        #     max_open_files=settings.LEVELDB_MAX_FILES,
+        #     write_buffer_size=self.buffer_size,
+        #     lru_cache_size=self.buffer_size,
+        # )
         log.info("Optimized LevelDB at %s", self.path)
 
     def writer(self) -> Writer[DS, SE]:
