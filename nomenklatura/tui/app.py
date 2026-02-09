@@ -9,7 +9,7 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
 
-from followthemoney import DS, SE
+from followthemoney import DS, SE, Dataset, StatementEntity
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -91,8 +91,8 @@ class DedupeState(Generic[DS, SE]):
 
 class DedupeAppWidget(Widget):
     @property
-    def dedupe(self) -> DedupeState:
-        return cast(DedupeApp, self.app).dedupe
+    def dedupe(self) -> DedupeState[Dataset, StatementEntity]:
+        return cast(DedupeApp[Dataset, StatementEntity], self.app).dedupe
 
 
 class HistoryItem(Static, DedupeAppWidget):
@@ -165,7 +165,7 @@ class HistoryListView(ListView):
         if selected is None:
             return
         edge = selected.query_one(HistoryItem).edge
-        await cast(DedupeApp, self.app).edit(edge, judgement)
+        await cast(DedupeApp[Dataset, StatementEntity], self.app).edit(edge, judgement)
 
 
 class HistoryWidget(DedupeAppWidget):
@@ -230,9 +230,9 @@ class DedupeWidget(Widget):
         yield HistoryWidget()
 
 
-class DedupeApp(App[int]):
+class DedupeApp(App[int], Generic[DS, SE]):
     CSS_PATH = "app.tcss"
-    dedupe: DedupeState
+    dedupe: DedupeState[DS, SE]
 
     BINDINGS = [
         ("x", "positive", "Match"),
