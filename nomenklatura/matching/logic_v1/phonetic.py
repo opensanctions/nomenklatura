@@ -25,7 +25,7 @@ class NameTokenPhonetic:
             phoneme = metaphone(self.ascii)
             if len(phoneme) >= 3:
                 return phoneme
-        return None
+        return self.token
 
     # def __repr__(self) -> str:
     #     return f"<NameTokenPhonetic {self.token!r}, {self.ascii!r}, {self.metaphone!r}>"
