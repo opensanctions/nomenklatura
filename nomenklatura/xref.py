@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
 
@@ -42,13 +42,14 @@ def xref(
         Callable[[Resolver[SE], SE, SE, float], Optional[float]]
     ] = None,
     config: Optional[ScoringConfig] = None,
+    blocker_options: Optional[Dict[str, Any]] = None,
     user: Optional[str] = None,
 ) -> None:
     log.info("Begin xref: %r, resolver: %s", store, resolver)
     if config is None:
         config = ScoringConfig.defaults()
     view = store.default_view(external=external)
-    index = Index(view, index_dir)
+    index = Index(view, index_dir, options=blocker_options or {})
     index.build()
 
     try:
@@ -113,7 +114,11 @@ def xref(
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
                 canonical_id = resolver.decide(
-                    left_id, right_id, Judgement.POSITIVE, user=user
+                    left_id,
+                    right_id,
+                    Judgement.POSITIVE,
+                    user=user,
+                    score=score,
                 )
                 store.update(canonical_id)
                 continue

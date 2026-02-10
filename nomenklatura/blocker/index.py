@@ -29,6 +29,7 @@
 # making memory_limit smaller might help fit what the buffer manager manages,
 # plus all the additional DuckDB and non-DuckDB memory usage.
 import csv
+from banal import as_bool
 import duckdb
 import logging
 from pathlib import Path
@@ -108,6 +109,7 @@ class Index(object):
         self.max_candidates = int(options.get("max_candidates", 75))
         self.stopwords_pct = DEFAULT_FIELD_STOPWORDS_PCT.copy()
         self.stopwords_pct.update(options.get("stopwords_pct", {}))
+        self.disable_stopwords = as_bool(options.get("disable_stopwords", False))
         # self.max_stopwords: int = int(options.get("max_stopwords", 100_000))
         self.match_batch: int = int(options.get("match_batch", 1_000))
         self.data_dir = data_dir.resolve()
@@ -228,6 +230,9 @@ class Index(object):
         self.con.execute(
             "CREATE OR REPLACE TABLE stopwords (field TEXT, token TEXT, freq INT)"
         )
+        if self.disable_stopwords:
+            log.info("Stopwords are disabled, skipping stopword generation.")
+            return
         field_counts = self.con.execute(
             "SELECT field, count(*) FROM tokens GROUP BY field"
         ).fetchall()
