@@ -42,8 +42,7 @@ def name_match(left: E, right: E) -> float:
     """Check for exact name matches between the two entities."""
     lv, rv = type_pair(left, right, registry.name)
     lvn, rvn = normalize_names(lv), normalize_names(rv)
-    common = lvn.intersection(rvn)
-    return 1.0 if len(common) > 0 else 0.0
+    return 0.0 if lvn.isdisjoint(rvn) else 1.0
 
 
 def name_token_overlap(left: E, right: E) -> float:
