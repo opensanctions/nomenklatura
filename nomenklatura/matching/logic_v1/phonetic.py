@@ -32,7 +32,7 @@ class NameTokenPhonetic:
 
     @classmethod
     def from_name(cls, name: str) -> List["NameTokenPhonetic"]:
-        tokens = tokenize_name(name.lower(), token_min_length=2)
+        tokens = tokenize_name(name.casefold(), token_min_length=2)
         return [cls(token) for token in tokens]
 
 
@@ -55,17 +55,13 @@ def soundex_token(token: str) -> str:
 
 
 def compare_parts_phonetic(left: NameTokenPhonetic, right: NameTokenPhonetic) -> bool:
-    if left.metaphone is None or right.metaphone is None:
-        return left.ascii == right.ascii
-    if (
-        left.metaphone == right.metaphone
-        and left.ascii is not None
-        and right.ascii is not None
-    ):
-        # Secondary check for Levenshtein distance:
-        if is_levenshtein_plausible(left.ascii, right.ascii):
-            return True
-    return False
+    if left.metaphone is not None and right.metaphone is not None:
+        if left.metaphone == right.metaphone:
+            # Secondary check for Levenshtein distance:
+            if left.ascii is not None and right.ascii is not None:
+                if is_levenshtein_plausible(left.ascii, right.ascii):
+                    return True
+    return left.token == right.token
 
 
 def _clean_phonetic_entity(original: str) -> Optional[str]:

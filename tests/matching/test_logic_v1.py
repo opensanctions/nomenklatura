@@ -236,6 +236,10 @@ def test_person_name_phonetic_match():
     assert person_name_phonetic_match(query, result) < 1.0
     assert person_name_phonetic_match(query, result) > 0.4
 
+    query = e("Person", name="باراك أوباما")
+    result = e("Person", name="محمد بن سلمان آل سعود")
+    assert person_name_phonetic_match(query, result) < 0.1
+
 
 def test_single_name():
     name = e("Person", name="Hannibal")
