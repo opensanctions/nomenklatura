@@ -58,7 +58,6 @@ class EntityResolveRegression(ScoringAlgorithm):
         birth_place,
         gender_mismatch,
         per_country_mismatch,
-        # vessel_country_match,
         position_country_match,
         org_country_mismatch,
         security_isin_mismatch,
