@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Callable, Union, cast
-from followthemoney.proxy import E, EntityProxy
+from followthemoney import E, EntityProxy
 
 from nomenklatura.matching.util import make_github_url, FNUL
 

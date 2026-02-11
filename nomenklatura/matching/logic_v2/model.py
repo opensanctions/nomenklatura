@@ -96,6 +96,8 @@ class LogicV2(HeuristicAlgorithm):
             weight = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
             mains.append(weight)
         score = max(mains)
+        if score == FNUL:
+            return score
         for feat in cls.features:
             if not feat.qualifier:
                 continue

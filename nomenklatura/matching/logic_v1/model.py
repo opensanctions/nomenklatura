@@ -28,7 +28,7 @@ class LogicV1(HeuristicAlgorithm):
     """A rule-based matching system that generates a set of basic scores via
     name and identifier-based matching, and then qualifies that score using
     supporting or contradicting features of the two entities.
-    
+
     This algorithm has been superseeded by logic-v2 and is no longer
     recommended for new integrations."""
 
@@ -71,6 +71,8 @@ class LogicV1(HeuristicAlgorithm):
             weight = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
             mains.append(weight)
         score = max(mains)
+        if score == FNUL:
+            return score
         for feat in cls.features:
             if not feat.qualifier:
                 continue

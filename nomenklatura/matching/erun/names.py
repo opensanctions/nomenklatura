@@ -2,14 +2,13 @@ from functools import lru_cache
 from typing import Set
 from followthemoney import EntityProxy, model, registry, E
 from followthemoney.names import schema_type_tag
-from rigour.text.distance import levenshtein_similarity
+from rigour.text.distance import levenshtein_similarity, levenshtein
 from rigour.names import Name, NameTypeTag
 from rigour.names import remove_org_prefixes, remove_obj_prefixes
 from rigour.names import remove_person_prefixes
 from rigour.names import replace_org_types_compare
 from rigour.text import is_stopword
 
-from nomenklatura.matching.erun.util import compare_levenshtein
 from nomenklatura.matching.util import max_in_sets, has_schema
 from nomenklatura.util import unroll
 
@@ -31,6 +30,13 @@ def _entity_names(entity: EntityProxy) -> Set[Name]:
     return names
 
 
+def _compare_levenshtein(left: str, right: str) -> float:
+    distance = levenshtein(left, right)
+    base = max((1, len(left), len(right)))
+    return 1.0 - (distance / float(base))
+    # return math.sqrt(distance)
+
+
 def person_name_levenshtein(left: E, right: E) -> float:
     """Consider the edit distance (as a fraction of name length) between the two most
     similar names linked to both entities."""
@@ -44,7 +50,7 @@ def person_name_levenshtein(left: E, right: E) -> float:
         left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
     for name in right_name_objs:
         right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-    return max_in_sets(left_names, right_names, compare_levenshtein)
+    return max_in_sets(left_names, right_names, _compare_levenshtein)
 
 
 def org_name_levenshtein(left: E, right: E) -> float:
@@ -61,7 +67,7 @@ def org_name_levenshtein(left: E, right: E) -> float:
     #         left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
     #     for name in right_name_objs:
     #         right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-    return max_in_sets(left_names, right_names, compare_levenshtein)
+    return max_in_sets(left_names, right_names, _compare_levenshtein)
 
 
 def legal_name_levenshtein(left: E, right: E) -> float:
@@ -78,7 +84,7 @@ def legal_name_levenshtein(left: E, right: E) -> float:
         left_names.add(" ".join(sorted(part.comparable for part in name.parts)))
     for name in right_name_objs:
         right_names.add(" ".join(sorted(part.comparable for part in name.parts)))
-    return max_in_sets(left_names, right_names, compare_levenshtein)
+    return max_in_sets(left_names, right_names, _compare_levenshtein)
 
 
 def _entity_lastnames(entity: EntityProxy) -> Set[str]:
