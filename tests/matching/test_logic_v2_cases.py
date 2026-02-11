@@ -114,6 +114,16 @@ CASES = [
         "schema": "Person",
         "matches": False,
         "query": {
+            "name": "باراك أوباما",
+        },
+        "result": {
+            "name": "محمد بن سلمان آل سعود",
+        },
+    },
+    {
+        "schema": "Person",
+        "matches": False,
+        "query": {
             "name": "Ted Doe",
             "firstName": "Doe",
             "lastName": "Ted",
