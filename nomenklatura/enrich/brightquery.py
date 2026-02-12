@@ -3,6 +3,8 @@ import requests
 import logging
 from banal import hash_data
 from typing import Generator, Optional, Dict, Any
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from followthemoney import DS, SE, registry
 
 from nomenklatura.cache import Cache
@@ -24,15 +26,22 @@ class BrightQueryEnricher(Enricher[DS]):
         session: Optional[requests.Session] = None,
     ):
         super().__init__(dataset, cache, config, session)
-        user_var = "${BRIGHTQUERY_USERNAME}"
-        pass_var = "${BRIGHTQUERY_PASSWORD}"
-        self._user = self.get_config_expand("username", user_var)
-        self._password = self.get_config_expand("password", pass_var)
+        self._user = self.get_config_expand("username", "${BRIGHTQUERY_USERNAME}")
+        self._password = self.get_config_expand("password", "${BRIGHTQUERY_PASSWORD}")
         if not self._user or not self._password:
             raise ValueError(
                 "Missing BrightQuery credentials: brightquery_user and/or brightquery_pass"
             )
 
+        # BrightQuery sometimes returns transient 401 responses; retry POST calls.
+        retries = Retry(
+            total=3,
+            backoff_factor=2,
+            status_forcelist=[401] + list(Retry.RETRY_AFTER_STATUS_CODES),
+            allowed_methods=frozenset(["POST"]),
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        self.session.mount("https://apigateway.brightquery.com", adapter)
         self.session.auth = (self._user, self._password)
 
         self.skip_jurisdictions = set(self.get_config_list("skip_jurisdictions"))
