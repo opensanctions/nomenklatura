@@ -39,7 +39,8 @@ class BrightQueryEnricher(Enricher[DS]):
             backoff_factor=2,
             status_forcelist=[
                 401, # 401 Unauthorized is sometimes returned even though we have valid credentials
-                504 # 504 Gateway Timeout
+                504, # 504 Gateway Timeout
+                502, # 502 Bad Gateway
                 ] + list(Retry.RETRY_AFTER_STATUS_CODES),
             allowed_methods=frozenset(["POST"]),
         )
