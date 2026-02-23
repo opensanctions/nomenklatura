@@ -35,8 +35,8 @@ class BrightQueryEnricher(Enricher[DS]):
 
         # BrightQuery sometimes returns transient 401 responses; retry POST calls.
         retries = Retry(
-            total=3,
-            backoff_factor=2,
+            total=5,
+            backoff_factor=3,
             status_forcelist=[
                 401, # 401 Unauthorized is sometimes returned even though we have valid credentials
                 504, # 504 Gateway Timeout
