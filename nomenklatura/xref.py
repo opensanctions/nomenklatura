@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Set, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
 
@@ -36,7 +36,7 @@ def xref(
     range: Optional[Schema] = None,
     auto_threshold: Optional[float] = None,
     min_threshold: float = 0.01,
-    focus_dataset: Optional[str] = None,
+    focus_datasets: Set[str] = set(),
     algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
     heuristic: Optional[
         Callable[[Resolver[SE], SE, SE, float], Optional[float]]
@@ -83,11 +83,10 @@ def xref(
             if not left.schema.can_match(right.schema):
                 continue
 
-            if focus_dataset is not None:
-                if (
-                    focus_dataset not in left.datasets
-                    and focus_dataset not in right.datasets
-                ):
+            if len(focus_datasets) > 0:
+                if left.datasets.isdisjoint(
+                    focus_datasets
+                ) and right.datasets.isdisjoint(focus_datasets):
                     continue
 
             if range is not None:
