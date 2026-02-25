@@ -32,8 +32,8 @@ def test_logic_overrides():
     config = ScoringConfig.defaults()
     result = LogicV1.compare(a, b, config)
     assert result.score == 1.0
-    assert name_literal_match.__name__ in result.features
-    assert name_metaphone_match.__name__ not in result.features
+    assert name_literal_match.__name__ in result.explanations
+    assert name_metaphone_match.__name__ not in result.explanations
     overrides = {
         name_literal_match.__name__: 0.0,
         name_metaphone_match.__name__: 0.96,
@@ -43,9 +43,9 @@ def test_logic_overrides():
     b = e("Company", name="CRYSTALORD LTD")
     result = LogicV1.compare(a, b, config)
     assert result.score < 1.0
-    assert name_literal_match.__name__ not in result.features
-    assert name_metaphone_match.__name__ in result.features
-    assert result.features[name_metaphone_match.__name__] == 1.0
+    assert name_literal_match.__name__ not in result.explanations
+    assert name_metaphone_match.__name__ in result.explanations
+    assert result.explanations[name_metaphone_match.__name__].score == 1.0
 
 
 def test_logic_qualified_country():
