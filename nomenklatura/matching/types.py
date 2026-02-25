@@ -97,15 +97,13 @@ class MatchingResult(BaseModel):
     """Score and feature comparison results for matching comparison."""
 
     score: float
-    features: Dict[str, float]
     explanations: Dict[str, FtResult]
 
     @classmethod
     def make(cls, score: float, explanations: Dict[str, FtResult]) -> "MatchingResult":
         """Create a new matching result."""
         explanations = {k: v for k, v in explanations.items() if not v.empty()}
-        features = {k: v.score for k, v in explanations.items() if v.score != FNUL}
-        return cls(score=score, features=features, explanations=explanations)
+        return cls(score=score, explanations=explanations)
 
     def __repr__(self) -> str:
         """Return a string representation of the matching result."""
