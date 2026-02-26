@@ -86,7 +86,7 @@ def test_store_sql(
     assert _run_store_test(store, test_dataset, donations_json)
 
 
-def test_sql_writer_sqlite_batch_size_cap(
+def test_sql_writer_sqlite_batch_limit_cap(
     tmp_path: Path,
     test_dataset: Dataset,
     resolver: Resolver[Entity],
@@ -98,15 +98,30 @@ def test_sql_writer_sqlite_batch_size_cap(
     monkeypatch.setattr(settings, "STATEMENT_BATCH", 10_000)
     writer = store.writer()
     assert isinstance(writer, SQLWriter)
-    assert writer.batch_size == SQLWriter.SQLITE_MAX_BATCH
+    assert writer.batch_limit == SQLWriter.SQLITE_MAX_BATCH
 
 
-def test_sql_writer_postgresql_no_batch_size_cap(monkeypatch: MonkeyPatch):
+def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+    monkeypatch: MonkeyPatch,
+):
+    resolver.begin()
+    uri = f"sqlite:///{tmp_path / 'test.db'}"
+    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
+    writer = store.writer()
+    assert isinstance(writer, SQLWriter)
+    assert writer.batch_limit == 500
+
+
+def test_sql_writer_postgresql_no_batch_limit_cap(monkeypatch: MonkeyPatch):
     mock_store = MagicMock()
     mock_store.engine = create_mock_engine("postgresql:///", lambda *a, **kw: None)
     monkeypatch.setattr(settings, "STATEMENT_BATCH", 10_000)
     writer = SQLWriter(mock_store)
-    assert writer.batch_size == 10_000
+    assert writer.batch_limit == 10_000
 
 
 def test_store_memory(

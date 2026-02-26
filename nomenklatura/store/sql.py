@@ -90,7 +90,7 @@ class SQLWriter(Writer[DS, SE]):
         batch_size = settings.STATEMENT_BATCH
         if store.engine.dialect.name == "sqlite":
             batch_size = min(batch_size, self.SQLITE_MAX_BATCH)
-        self.batch_size = batch_size
+        self.batch_limit = batch_size
 
     def _upsert_batch(self) -> None:
         if not len(self.batch):
@@ -144,7 +144,7 @@ class SQLWriter(Writer[DS, SE]):
         canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
         self.batch.add(stmt)
-        if len(self.batch) >= self.batch_size:
+        if len(self.batch) >= self.batch_limit:
             self._upsert_batch()
 
     def pop(self, entity_id: str) -> List[Statement]:
