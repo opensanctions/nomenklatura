@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 from sqlalchemy import create_mock_engine
 
 from nomenklatura import settings
-from nomenklatura.db import SQLITE_MAX_BATCH
+from nomenklatura.db import SQLITE_MAX_VARS
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
 from nomenklatura.store.level import LevelDBStore
@@ -99,7 +99,7 @@ def test_sql_writer_sqlite_batch_limit_cap(
     monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
     writer = store.writer()
     assert isinstance(writer, SQLWriter)
-    assert writer.batch_limit == SQLITE_MAX_BATCH
+    assert writer.batch_limit == SQLITE_MAX_VARS // len(store.table.columns)
 
 
 def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
