@@ -78,13 +78,19 @@ class SQLStore(Store[DS, SE]):
 
 
 class SQLWriter(Writer[DS, SE]):
-    BATCH_STATEMENTS = 10_000
+    # Max rows per INSERT for SQLite to stay under SQLITE_MAX_VARIABLE_NUMBER
+    # (32,766). With 14 columns per row: 2000 * 14 = 28,000 < 32,766.
+    SQLITE_MAX_BATCH = 2_000
 
     def __init__(self, store: SQLStore[DS, SE]):
         self.store: SQLStore[DS, SE] = store
         self.batch: Set[Statement] = set()
         self.conn = self.store.engine.connect()
         self.tx: Optional[Transaction] = None
+        batch_size = settings.STATEMENT_BATCH
+        if store.engine.dialect.name == "sqlite":
+            batch_size = min(batch_size, self.SQLITE_MAX_BATCH)
+        self.batch_size = batch_size
 
     def _upsert_batch(self) -> None:
         if not len(self.batch):
@@ -138,7 +144,7 @@ class SQLWriter(Writer[DS, SE]):
         canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
         self.batch.add(stmt)
-        if len(self.batch) >= self.BATCH_STATEMENTS:
+        if len(self.batch) >= self.batch_size:
             self._upsert_batch()
 
     def pop(self, entity_id: str) -> List[Statement]:
