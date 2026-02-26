@@ -27,3 +27,23 @@ def test_statement_db(test_dataset: Dataset, donations_json: List[Dict[str, Any]
         cursor = conn.execute(q)
         stmts = list(cursor.fetchall())
         assert len(stmts) > len(donations_json)
+
+
+def test_insert_statements_sqlite_large_batch(
+    test_dataset: Dataset, donations_json: List[Dict[str, Any]]
+):
+    """Verify insert_statements caps batch_size on SQLite to avoid exceeding
+    SQLITE_MAX_VARIABLE_NUMBER (32,766 host parameters)."""
+    engine = get_engine("sqlite:///:memory:")
+    metadata = MetaData()
+    table = make_statement_table(metadata)
+    metadata.create_all(bind=engine, tables=[table])
+    statements = _parse_statements(test_dataset, donations_json)
+    # Without the cap, 2857 rows × 14 cols = 39,998 params > 32,766 limit
+    insert_statements(engine, table, test_dataset.name, statements, batch_size=10000)
+
+    with engine.connect() as conn:
+        q = select(table)
+        cursor = conn.execute(q)
+        stmts = list(cursor.fetchall())
+        assert len(stmts) > len(donations_json)
