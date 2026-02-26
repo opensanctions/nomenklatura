@@ -26,9 +26,8 @@ Conn = Connection
 Connish = Optional[Connection]
 KEY_LEN = 255
 VALUE_LEN = 65535
-# Max rows per INSERT for SQLite to stay under SQLITE_MAX_VARIABLE_NUMBER
-# (32,766). With 14 columns per row: 2000 * 14 = 28,000 < 32,766.
-SQLITE_MAX_BATCH = 2000
+# Max rows per INSERT for SQLite to stay under SQLITE_MAX_VARIABLE_NUMBER (32,766).
+SQLITE_MAX_VARS = 32766
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +122,8 @@ def insert_statements(
     dataset_count: int = 0
     is_postgresql = "postgres" in engine.dialect.name
     if not is_postgresql:
-        batch_size = min(batch_size, SQLITE_MAX_BATCH)
+        sqlite_max_batch = SQLITE_MAX_VARS // len(table.columns)
+        batch_size = min(batch_size, sqlite_max_batch)
     with engine.begin() as conn:
         del_q = delete(table).where(table.c.dataset == dataset_name)
         conn.execute(del_q)

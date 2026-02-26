@@ -8,7 +8,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.db import get_metadata, make_statement_table, SQLITE_MAX_BATCH
+from nomenklatura.db import get_metadata, make_statement_table, SQLITE_MAX_VARS
 from nomenklatura.resolver import Linker, Identifier
 from nomenklatura.store import Store, View, Writer
 
@@ -84,7 +84,8 @@ class SQLWriter(Writer[DS, SE]):
         self.tx: Optional[Transaction] = None
         batch_limit = settings.STATEMENT_BATCH
         if store.engine.dialect.name == "sqlite":
-            batch_limit = min(batch_limit, SQLITE_MAX_BATCH)
+            sqlite_max_batch = SQLITE_MAX_VARS // len(self.store.table.columns)
+            batch_limit = min(batch_limit, sqlite_max_batch)
         self.batch_limit = batch_limit
 
     def _upsert_batch(self) -> None:
@@ -209,7 +210,9 @@ class SQLView(View[DS, SE]):
                         if value == id and prop.reverse is not None:
                             yield prop.reverse, entity
 
-    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
+    def entities(
+        self, include_schemata: Optional[List[Schema]] = None
+    ) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)
         q = q.where(table.c.dataset.in_(self.dataset_names))
