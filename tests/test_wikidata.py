@@ -108,6 +108,10 @@ def test_model(test_cache: Cache):
         assert item.id == "Q7747"
         assert item.label is not None
         assert item.label.text == "Vladimir Putin"
+        assert len(item.sitelinks) > 2
+        enwiki = [s for s in item.sitelinks if s.site == "enwiki"]
+        assert len(enwiki) == 1
+        assert enwiki[0].title == "Vladimir Putin"
         assert "Q5" in item.types
         birth_dates = [c for c in item.claims if c.property == "P569"]
         assert len(birth_dates) == 1

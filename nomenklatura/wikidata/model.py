@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
@@ -82,6 +83,25 @@ class Claim(Snak):
         return hash((self.qid, self.property, self.id))
 
 
+class SiteLink(object):
+    def __init__(self, qid: str, data: Dict[str, Any]) -> None:
+        self.qid = qid
+        self.site = data.pop("site")
+        self.is_wiki = self.site.endswith("wiki")
+        self.title = data.pop("title")
+        self.badges = data.pop("badges", [])
+
+    @property
+    def url(self) -> str:
+        # quoted = quote(self.title.replace(" ", "_"), safe="/:@!$&'()*+,;=-._~")
+        quoted = quote(self.title.replace(" ", "_"), safe="/_-")
+        return f"https://{self.site}.wikipedia.org/wiki/{quoted}"
+
+    @property
+    def linked_url(self) -> str:
+        return f"https://www.wikidata.org/wiki/Special:GoToLinkedPage/{self.site}/{self.qid}"
+
+
 class Item(object):
     """A wikidata item (or entity)."""
 
@@ -108,8 +128,9 @@ class Item(object):
         if self.redirect_id is not None:
             self.id = self.redirect_id
 
-        # TODO: get back to this later:
-        data.pop("sitelinks", None)
+        self.sitelinks: List[SiteLink] = []
+        for data in data.pop("sitelinks", {}).values():
+            self.sitelinks.append(SiteLink(self.id, data))
 
     @property
     def label(self) -> Optional[LangText]:
@@ -125,6 +146,10 @@ class Item(object):
     @property
     def sorted_aliases(self) -> List[LangText]:
         return LangText.sorted(self.aliases)
+
+    @property
+    def wikilinks(self) -> List[SiteLink]:
+        return [s for s in self.sitelinks if s.is_wiki]
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:

@@ -131,7 +131,9 @@ def wd_read_response(request, context):
             print("URL", request.url, "failed:", exc, exc.read())
             raise
         for _, value in data["entities"].items():
-            value.pop("sitelinks", None)
+            for k in list(value.get("sitelinks", {}).keys()):
+                if k not in ("enwiki", "ruwiki", "dewiki", "arwiki"):
+                    value["sitelinks"].pop(k, None)
             for sect in ["labels", "aliases", "descriptions"]:
                 # labels = value.get("labels", {})
                 for lang in list(value.get(sect, {}).keys()):
