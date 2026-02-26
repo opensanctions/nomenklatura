@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 from sqlalchemy import create_mock_engine
 
 from nomenklatura import settings
+from nomenklatura.db import SQLITE_MAX_BATCH
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
 from nomenklatura.store.level import LevelDBStore
@@ -95,10 +96,10 @@ def test_sql_writer_sqlite_batch_limit_cap(
     resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10_000)
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
     writer = store.writer()
     assert isinstance(writer, SQLWriter)
-    assert writer.batch_limit == SQLWriter.SQLITE_MAX_BATCH
+    assert writer.batch_limit == SQLITE_MAX_BATCH
 
 
 def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
@@ -119,9 +120,9 @@ def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
 def test_sql_writer_postgresql_no_batch_limit_cap(monkeypatch: MonkeyPatch):
     mock_store = MagicMock()
     mock_store.engine = create_mock_engine("postgresql:///", lambda *a, **kw: None)
-    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10_000)
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
     writer = SQLWriter(mock_store)
-    assert writer.batch_limit == 10_000
+    assert writer.batch_limit == 10000
 
 
 def test_store_memory(

@@ -8,9 +8,8 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.db import get_metadata
+from nomenklatura.db import get_metadata, make_statement_table, SQLITE_MAX_BATCH
 from nomenklatura.resolver import Linker, Identifier
-from nomenklatura.db import make_statement_table
 from nomenklatura.store import Store, View, Writer
 
 
@@ -78,19 +77,15 @@ class SQLStore(Store[DS, SE]):
 
 
 class SQLWriter(Writer[DS, SE]):
-    # Max rows per INSERT for SQLite to stay under SQLITE_MAX_VARIABLE_NUMBER
-    # (32,766). With 14 columns per row: 2000 * 14 = 28,000 < 32,766.
-    SQLITE_MAX_BATCH = 2_000
-
     def __init__(self, store: SQLStore[DS, SE]):
         self.store: SQLStore[DS, SE] = store
         self.batch: Set[Statement] = set()
         self.conn = self.store.engine.connect()
         self.tx: Optional[Transaction] = None
-        batch_size = settings.STATEMENT_BATCH
+        batch_limit = settings.STATEMENT_BATCH
         if store.engine.dialect.name == "sqlite":
-            batch_size = min(batch_size, self.SQLITE_MAX_BATCH)
-        self.batch_limit = batch_size
+            batch_limit = min(batch_limit, SQLITE_MAX_BATCH)
+        self.batch_limit = batch_limit
 
     def _upsert_batch(self) -> None:
         if not len(self.batch):
