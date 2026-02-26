@@ -8,9 +8,8 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.db import get_metadata
+from nomenklatura.db import get_metadata, make_statement_table, SQLITE_MAX_VARS
 from nomenklatura.resolver import Linker, Identifier
-from nomenklatura.db import make_statement_table
 from nomenklatura.store import Store, View, Writer
 
 
@@ -78,13 +77,16 @@ class SQLStore(Store[DS, SE]):
 
 
 class SQLWriter(Writer[DS, SE]):
-    BATCH_STATEMENTS = 10_000
-
     def __init__(self, store: SQLStore[DS, SE]):
         self.store: SQLStore[DS, SE] = store
         self.batch: Set[Statement] = set()
         self.conn = self.store.engine.connect()
         self.tx: Optional[Transaction] = None
+        batch_limit = settings.STATEMENT_BATCH
+        if store.engine.dialect.name == "sqlite":
+            sqlite_max_batch = SQLITE_MAX_VARS // len(self.store.table.columns)
+            batch_limit = min(batch_limit, sqlite_max_batch)
+        self.batch_limit = batch_limit
 
     def _upsert_batch(self) -> None:
         if not len(self.batch):
@@ -138,7 +140,7 @@ class SQLWriter(Writer[DS, SE]):
         canonical_id = self.store.linker.get_canonical(stmt.entity_id)
         stmt.canonical_id = canonical_id
         self.batch.add(stmt)
-        if len(self.batch) >= self.BATCH_STATEMENTS:
+        if len(self.batch) >= self.batch_limit:
             self._upsert_batch()
 
     def pop(self, entity_id: str) -> List[Statement]:
@@ -208,7 +210,9 @@ class SQLView(View[DS, SE]):
                         if value == id and prop.reverse is not None:
                             yield prop.reverse, entity
 
-    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
+    def entities(
+        self, include_schemata: Optional[List[Schema]] = None
+    ) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)
         q = q.where(table.c.dataset.in_(self.dataset_names))
