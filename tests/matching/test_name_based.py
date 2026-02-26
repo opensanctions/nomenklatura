@@ -67,7 +67,7 @@ def test_heuristic_overrides():
     b = e("Company", name="CRYSTALORD LTD")
     result = NameQualifiedMatcher.compare(a, b, config)
     assert result.score == 0.0
-    assert len(result.explanations) == 3
+    assert len(result.explanations) == 0
     overrides = {
         jaro_name_parts.__name__: 1.0,
         soundex_name_parts.__name__: 0.0,

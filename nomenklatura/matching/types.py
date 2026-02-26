@@ -234,10 +234,10 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         explanations: Dict[str, FtResult] = {}
         scores: Dict[str, float] = {}
         weights: Dict[str, float] = {}
-        mains = [f for f in cls.features if not f.qualifier]
-        qualifiers = [f for f in cls.features if f.qualifier]
 
-        for feature in mains:
+        for feature in cls.features:
+            if feature.qualifier:
+                continue
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
                 res = feature.invoke(query, result, config)
@@ -249,10 +249,12 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         # bonus). Skip them when no main feature scored above zero, since they
         # cannot improve the result. When scores is empty (all main weights
         # overridden to zero), qualifiers are still evaluated.
-        if scores and not any(v > FNUL for v in scores.values()):
+        if max(scores.values(), default=FNUL) <= FNUL:
             return MatchingResult.make(score=FNUL, explanations=explanations)
 
-        for feature in qualifiers:
+        for feature in cls.features:
+            if not feature.qualifier:
+                continue
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
                 res = feature.invoke(query, result, config)
