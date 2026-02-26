@@ -234,13 +234,32 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         explanations: Dict[str, FtResult] = {}
         scores: Dict[str, float] = {}
         weights: Dict[str, float] = {}
-        for feature in cls.features:
+        mains = [f for f in cls.features if not f.qualifier]
+        qualifiers = [f for f in cls.features if f.qualifier]
+
+        for feature in mains:
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
                 res = feature.invoke(query, result, config)
                 if res is not None:
                     explanations[feature.name] = res
                     scores[feature.name] = res.score
+
+        # Qualifier features have only negative weights (except a small address
+        # bonus). Skip them when no main feature scored above zero, since they
+        # cannot improve the result. When scores is empty (all main weights
+        # overridden to zero), qualifiers are still evaluated.
+        if scores and not any(v > FNUL for v in scores.values()):
+            return MatchingResult.make(score=FNUL, explanations=explanations)
+
+        for feature in qualifiers:
+            weights[feature.name] = config.weights.get(feature.name, feature.weight)
+            if weights[feature.name] != FNUL:
+                res = feature.invoke(query, result, config)
+                if res is not None:
+                    explanations[feature.name] = res
+                    scores[feature.name] = res.score
+
         score = cls.compute_score(scores, weights)
         score = min(1.0, max(FNUL, score))
         return MatchingResult.make(score=score, explanations=explanations)
