@@ -60,7 +60,7 @@ PROPS_QUALIFIED = (
 )
 
 PROPS_TOPICS = {
-    "Q82955": "role.pep",
+    # "Q82955": "role.pep",
     "Q193391": "role.diplo",
     # "Q392651": "role.spy",
     "Q14886050": "crime.terror",
