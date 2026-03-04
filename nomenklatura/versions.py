@@ -106,14 +106,8 @@ class VersionHistory(object):
     def to_json(self) -> str:
         """Return a JSON representation of the version history."""
         items = [str(run) for run in self.items[-self.LENGTH :]]
-        return json.dumps(
-            {
-                "items": items,
-                "last_successful": self.last_successful.id
-                if self.last_successful
-                else None,
-            }
-        )
+        last_successful = self.last_successful.id if self.last_successful else None
+        return json.dumps({"items": items, "last_successful": last_successful})
 
     @classmethod
     def from_json(cls, data: str) -> "VersionHistory":
