@@ -1,7 +1,8 @@
 import logging
 from typing import Generator, Optional, Set
+
+from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.helpers import check_person_cutoff
-from followthemoney import StatementEntity, registry, DS, SE
 from requests import Session
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
@@ -282,4 +283,16 @@ class WikidataEnricher(Enricher[DS]):
                     continue
                 value = LangText(topic, original=claim.qid)
             value.apply(proxy, ftm_prop)
+
+        # TEMP: Explore how many Wikidata items have wikilinks in more than 2 languages of which
+        # none is English. We want to start setting them as `wikipediaUrl` and this will validate
+        # our heuristics for doing so.
+        # See https://github.com/opensanctions/opensanctions/issues/3651
+        has_english = len([i for i in item.wikilinks if i.site == "enwiki"]) > 0
+        num_wikilinks = len(item.wikilinks)
+        if not has_english and num_wikilinks > 2:
+            log.warning(
+                "I got %d wikilinks, but English ain't one: %s", num_wikilinks, item.id
+            )
+
         return proxy
