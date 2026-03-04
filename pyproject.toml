@@ -62,6 +62,7 @@ dev = [
     "redis > 5.0.0, < 8.0.0",
     "psycopg2-binary",
     "bump2version",
+    "prek",
 ]
 leveldb = ["plyvel < 2.0.0"]
 redis = ["redis > 5.0.0, < 8.0.0"]
