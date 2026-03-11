@@ -289,6 +289,10 @@ class WikidataEnricher(Enricher[DS]):
             if wikilink.site == "enwiki":
                 proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
                 break
+        if not proxy.has("wikipediaUrl") and len(item.wikilinks) < 3:
+            for wikilink in item.wikilinks:
+                proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
+                break
         # TODO: do we want to do more sophisticated handling of wikilinks? For
         # example, if there are no English links, but there are many in other
         # languages, then maybe we should still include the first one?
