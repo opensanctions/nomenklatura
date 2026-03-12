@@ -507,16 +507,24 @@ class Resolver(Linker[SE]):
         self._invalidate()
         return affected
 
-    def prune(self, cleanup_after: timedelta = timedelta(days=6 * 30)) -> None:
+    def prune(
+        self,
+        cleanup_after: timedelta = timedelta(days=6 * 30),
+        user: Optional[str] = None,
+    ) -> None:
         """Remove suggested (i.e. NO_JUDGEMENT) edges."""
         # database
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        if user is not None:
+            stmt = stmt.where(self._table.c.user == user)
         self._get_connection().execute(stmt)
 
         # local state
         now = timestamp()
         for edge in list(self.edges.values()):
+            if user is not None and edge.user != user:
+                continue
             if edge.judgement == Judgement.NO_JUDGEMENT:
                 edge.deleted_at = now
                 self._update_edge(edge)
