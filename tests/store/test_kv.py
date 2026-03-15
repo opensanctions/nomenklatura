@@ -131,6 +131,47 @@ def test_external_statements(test_dataset: Dataset, resolver: Resolver[Entity]):
     assert len(list(ext_view.entities())) == 1
 
 
+def test_has_entity_mixed_external(test_dataset: Dataset, resolver: Resolver[Entity]):
+    """has_entity with mixed external/internal statements returns correctly
+    depending on the view's external flag."""
+    store = _make_store(test_dataset, resolver)
+
+    version = Version.new().id
+    with store.writer(version=version) as writer:
+        # Write some internal statements
+        entity = Entity.from_data(test_dataset, PERSON)
+        for stmt in entity.statements:
+            writer.add_statement(stmt)
+        # Write some external statements for the same entity
+        for stmt in entity.statements:
+            stmt = stmt.clone(external=True)
+            writer.add_statement(stmt)
+    store.release_version(test_dataset.name, version)
+
+    # Non-external view: should find the entity (has internal statements)
+    view = store.view(test_dataset, external=False)
+    assert view.has_entity("john-doe")
+
+    # External view: should also find it
+    ext_view = store.view(test_dataset, external=True)
+    assert ext_view.has_entity("john-doe")
+
+    # Now an entity with ONLY external statements
+    version_b = Version.new().id
+    with store.writer(version=version_b) as writer:
+        ext_only = Entity.from_data(test_dataset, PERSON_EXT)
+        for stmt in ext_only.statements:
+            stmt = stmt.clone(external=True)
+            writer.add_statement(stmt)
+    store.release_version(test_dataset.name, version_b)
+
+    view_b = store.view(test_dataset, external=False)
+    assert not view_b.has_entity("john-doe-2")
+
+    ext_view_b = store.view(test_dataset, external=True)
+    assert ext_view_b.has_entity("john-doe-2")
+
+
 def test_graph_query(
     donations_path: Path, test_dataset: Dataset, resolver: Resolver[Entity]
 ):
