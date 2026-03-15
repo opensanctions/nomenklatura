@@ -1,12 +1,14 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from followthemoney import Statement
+from typing import Dict, Tuple
+from followthemoney import Statement, StatementEntity
 
 from nomenklatura import settings
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.resolver import Resolver
+from nomenklatura.resolver.linker import Linker
 
 
 def test_identifier():
@@ -28,7 +30,7 @@ def test_qid_identifier():
     assert max(nk, regular) == nk
 
 
-def test_resolver(resolver):
+def test_resolver(resolver: Resolver[StatementEntity]):
     resolver.begin()
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
@@ -84,10 +86,10 @@ def test_resolver(resolver):
     assert c1c2.key not in resolver.edges, resolver.edges
     assert len(resolver.edges) == edge_count + 1
 
-    assert "a1" in resolver.get_referents(a_canon)
-    assert "a1" in resolver.get_referents(a_canon, canonicals=False)
+    assert "a1" in resolver.get_referents(a_canon.id)
+    assert "a1" in resolver.get_referents(a_canon.id, canonicals=False)
     # assert a_canon.id in resolver.get_referents(a_canon)
-    assert a_canon.id not in resolver.get_referents(a_canon, canonicals=False)
+    assert a_canon.id not in resolver.get_referents(a_canon.id, canonicals=False)
     if settings.DB_URL.startswith("sqlite"):
         assert "sqlite:///:memory:" in repr(resolver)
     elif settings.DB_URL.startswith("postgres"):
@@ -104,7 +106,7 @@ def test_resolver(resolver):
     resolver.commit()
 
 
-def test_cluster_to_cluster(resolver):
+def test_cluster_to_cluster(resolver: Resolver[StatementEntity]):
     resolver.begin()
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
@@ -154,7 +156,7 @@ def test_cluster_to_cluster(resolver):
     resolver.commit()
 
 
-def test_linker(resolver):
+def test_linker(resolver: Resolver[StatementEntity]):
     resolver.begin()
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
     canon_a = resolver.decide(canon_a, "a3", Judgement.POSITIVE)
@@ -178,7 +180,7 @@ def test_linker(resolver):
     assert canon_a.id in linker.get_referents("Q123")
     assert "Q123" not in linker.get_referents("Q123")
     assert linker.get_canonical("a1") == "Q123"
-    assert linker.get_canonical("b1") == canon_b
+    assert linker.get_canonical("b1") == canon_b.id
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
     assert linker.get_canonical("a3") == "a3"
@@ -193,8 +195,8 @@ def test_linker(resolver):
     assert linker.get_referents("unknown") == set()
 
     # get_canonical accepts Identifier objects
-    assert linker.get_canonical(Identifier.get("a1")) == "Q123"
-    assert linker.get_canonical(Identifier.get("x1")) == "x1"
+    assert linker.get_canonical(Identifier.get("a1").id) == "Q123"
+    assert linker.get_canonical(Identifier.get("x1").id) == "x1"
 
     # All nodes in a cluster share the same tuple object
     assert linker._mapping["a1"] is linker._mapping["a2"]
@@ -212,11 +214,10 @@ def test_linker(resolver):
 def test_linker_non_canonical_cluster():
     """A cluster with only source IDs (no NK-, no QID) picks the
     lexicographic max as canonical — a faulty but acceptable result."""
-    from nomenklatura.resolver.linker import Linker
 
     cluster = ("src-zzz", "src-aaa")
-    mapping = {"src-aaa": cluster, "src-zzz": cluster}
-    linker: Linker[Entity] = Linker(mapping)
+    mapping: Dict[str, Tuple[str, ...]] = {"src-aaa": cluster, "src-zzz": cluster}
+    linker: Linker = Linker(mapping)
 
     assert linker.get_canonical("src-aaa") == "src-zzz"
     assert linker.get_canonical("src-zzz") == "src-zzz"
@@ -226,7 +227,7 @@ def test_linker_non_canonical_cluster():
     assert "src-zzz" not in canonical_ids
 
 
-def test_update_from_db(resolver):
+def test_update_from_db():
     """
     This tests that one resolver instance can load updates from the db made by
     another instance.
@@ -283,7 +284,9 @@ def test_update_from_db(resolver):
         r1._table.drop(r1._engine)
 
 
-def test_resolver_store_load(resolver, other_table_resolver):
+def test_resolver_store_load(
+    resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
+):
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
         resolver.begin()
@@ -310,7 +313,7 @@ def test_resolver_store_load(resolver, other_table_resolver):
         assert edge is None, edge
 
 
-def test_resolver_candidates(resolver):
+def test_resolver_candidates(resolver: Resolver[StatementEntity]):
     resolver.begin()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
@@ -331,7 +334,7 @@ def test_resolver_candidates(resolver):
     resolver.commit()
 
 
-def test_get_judgements(resolver):
+def test_get_judgements(resolver: Resolver[StatementEntity]):
     resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide(canon, "a3", Judgement.POSITIVE)
@@ -351,7 +354,9 @@ def test_get_judgements(resolver):
     ]
 
 
-def test_resolver_statements(resolver, other_table_resolver):
+def test_resolver_statements(
+    resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
+):
     resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
@@ -370,7 +375,9 @@ def test_resolver_statements(resolver, other_table_resolver):
     assert stmt.value == "b2"
 
 
-def test_table_name(resolver, other_table_resolver):
+def test_table_name(
+    resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
+):
     """Make fairly sure that we're hitting the correct table"""
     resolver.begin()
     resolver.decide("b1", "b2", Judgement.POSITIVE)  # No a1

@@ -43,7 +43,7 @@ class Store(Generic[DS, SE]):
             entity.extra_referents.update(self.linker.get_referents(entity.id))
         return entity
 
-    def update(self, id: StrIdent) -> None:
+    def update(self, id: str) -> None:
         canonical_id = self.linker.get_canonical(id)
         with self.writer() as writer:
             for referent in self.linker.get_referents(canonical_id):

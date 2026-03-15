@@ -72,19 +72,19 @@ class DedupeState(Generic[DS, SE]):
                 # hold on to pre-merge entities to show in history.
                 self.recents[self.left.id] = self.left
                 self.recents[self.right.id] = self.right
-                canonical_id = self.resolver.decide(
+                canonical = self.resolver.decide(
                     self.left.id,
                     self.right.id,
                     judgement=judgement,
                 )
-                self.store.update(canonical_id)
+                self.store.update(canonical.id)
         self.resolver.commit()
         self.load()
 
     def edit(self, edge: Edge, judgement: Judgement) -> None:
         self.resolver.decide(edge.source, edge.target, judgement)
-        self.store.update(edge.source)
-        self.store.update(edge.target)
+        self.store.update(edge.source.id)
+        self.store.update(edge.target.id)
         self.resolver.commit()
         self.load()
 

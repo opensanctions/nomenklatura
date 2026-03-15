@@ -247,7 +247,7 @@ class Resolver(Linker[SE]):
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
-    def get_canonical(self, entity_id: StrIdent) -> str:
+    def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)
         max_ = max(self.connected(node))
@@ -260,13 +260,11 @@ class Resolver(Linker[SE]):
         for node in self.nodes.keys():
             if not node.canonical:
                 continue
-            canonical = self.get_canonical(node)
+            canonical = self.get_canonical(node.id)
             if canonical == node.id:
                 yield node
 
-    def get_referents(
-        self, canonical_id: StrIdent, canonicals: bool = True
-    ) -> Set[str]:
+    def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
@@ -537,7 +535,7 @@ class Resolver(Linker[SE]):
 
             # Cleanup job 1: Positive merges where the target is not canonical.
             if edge.judgement == Judgement.POSITIVE and not edge.target.canonical:
-                nu_target = Identifier.get(self.get_canonical(edge.target))
+                nu_target = Identifier.get(self.get_canonical(edge.target.id))
                 if not nu_target.canonical:
                     log.warning("Invalid target: %s -> %s" % (edge.source, edge.target))
                     continue
@@ -565,7 +563,7 @@ class Resolver(Linker[SE]):
                 and edge.created_at is not None
                 and edge.created_at < cutoff_ts
             ):
-                canonical = Identifier.get(self.get_canonical(edge.source))
+                canonical = Identifier.get(self.get_canonical(edge.source.id))
                 log.info(
                     "Removing intermediate merge: %s -> %s (%s)"
                     % (edge.source, edge.target, canonical)

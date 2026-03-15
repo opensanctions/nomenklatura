@@ -1,7 +1,7 @@
-from typing import Dict, Generator, Generic, Optional, Set, Tuple
+from typing import Dict, Generator, Generic, Set, Tuple
 from followthemoney import registry, ValueEntity, Statement, SE
 
-from nomenklatura.resolver.identifier import Identifier, StrIdent
+from nomenklatura.resolver.identifier import Identifier
 
 
 class Linker(Generic[SE]):
@@ -13,8 +13,8 @@ class Linker(Generic[SE]):
     tuple with the canonical ID at index 0 and referents following. Every node in
     a cluster maps to the same shared tuple object."""
 
-    def __init__(self, mapping: Optional[Dict[str, Tuple[str, ...]]] = None) -> None:
-        self._mapping: Dict[str, Tuple[str, ...]] = mapping or {}
+    def __init__(self, mapping: Dict[str, Tuple[str, ...]]) -> None:
+        self._mapping: Dict[str, Tuple[str, ...]] = mapping
 
     def connected(self, node: Identifier) -> Set[Identifier]:
         """Return all entities connected to the given node. Constructs Identifier
@@ -24,7 +24,7 @@ class Linker(Generic[SE]):
             return {node}
         return {Identifier.get(n) for n in cluster}
 
-    def get_canonical(self, entity_id: StrIdent) -> str:
+    def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
         if isinstance(entity_id, Identifier):
             entity_id = entity_id.id
@@ -44,9 +44,7 @@ class Linker(Generic[SE]):
                     seen.add(canonical)
                     yield ident
 
-    def get_referents(
-        self, canonical_id: StrIdent, canonicals: bool = True
-    ) -> Set[str]:
+    def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         if isinstance(canonical_id, Identifier):
