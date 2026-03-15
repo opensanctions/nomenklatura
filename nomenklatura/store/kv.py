@@ -97,8 +97,8 @@ class KVStore(Store[DS, SE]):
         return
 
     def get_latest(self, dataset: str) -> Optional[str]:
-        val = self.db.get(f"meta:latest:{dataset}".encode(E))
-        return val.decode(E) if val is not None else None
+        history = self.get_history(dataset)
+        return history[0] if history else None
 
     def get_history(self, dataset: str) -> List[str]:
         prefix = f"meta:versions:{dataset}:".encode(E)
@@ -120,7 +120,6 @@ class KVStore(Store[DS, SE]):
             f"meta:versions:{dataset}:{version}".encode(E),
             str(time.time()).encode(E),
         )
-        self.db.set(f"meta:latest:{dataset}".encode(E), version.encode(E))
         log.info("Released store version: %s (%s)", dataset, version)
 
     def drop_version(self, dataset: str, version: str) -> None:
@@ -138,14 +137,6 @@ class KVStore(Store[DS, SE]):
             pipeline.execute()
 
         self.db.delete(f"meta:versions:{dataset}:{version}".encode(E))
-
-        latest = self.get_latest(dataset)
-        if latest == version:
-            history = self.get_history(dataset)
-            if history:
-                self.db.set(f"meta:latest:{dataset}".encode(E), history[0].encode(E))
-            else:
-                self.db.delete(f"meta:latest:{dataset}".encode(E))
         log.info("Dropped store version: %s (%s)", dataset, version)
 
     def close(self) -> None:
