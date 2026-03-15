@@ -4,7 +4,7 @@ from followthemoney import Schema, registry, Property, DS, Statement
 from followthemoney import StatementEntity, SE
 from followthemoney.statement.util import get_prop_type
 
-from nomenklatura.resolver import Linker, StrIdent
+from nomenklatura.resolver import Linker
 
 
 class Store(Generic[DS, SE]):
