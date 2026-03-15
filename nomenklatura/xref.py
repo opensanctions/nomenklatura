@@ -70,8 +70,8 @@ def xref(
                 resolver.commit()
                 resolver.begin()
 
-            left_id = resolver.get_canonical(left_id_)
-            right_id = resolver.get_canonical(right_id_)
+            left_id = resolver.get_canonical(left_id_.id)
+            right_id = resolver.get_canonical(right_id_.id)
             if not resolver.check_candidate(left_id, right_id):
                 continue
 
@@ -112,14 +112,14 @@ def xref(
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
-                canonical_id = resolver.decide(
+                canonical = resolver.decide(
                     left_id,
                     right_id,
                     Judgement.POSITIVE,
                     user=user,
                     score=score,
                 )
-                store.update(canonical_id)
+                store.update(canonical.id)
                 continue
 
             resolver.suggest(left.id, right.id, score, user=user)
