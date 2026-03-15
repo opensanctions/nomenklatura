@@ -5,7 +5,6 @@ from datetime import timedelta
 import getpass
 import logging
 from collections import defaultdict
-from functools import lru_cache
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
@@ -137,8 +136,7 @@ class Resolver(Linker[SE]):
         return cls(engine, meta, create=True)
 
     def _invalidate(self) -> None:
-        # self.connected.cache_clear()
-        self.get_canonical.cache_clear()
+        pass
 
     def begin(self, load_edges: bool = True) -> None:
         """
@@ -204,7 +202,7 @@ class Resolver(Linker[SE]):
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
         """
-        entities: Dict[Identifier, Set[Identifier]] = {}
+        mapping: Dict[str, Tuple[str, ...]] = {}
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
@@ -213,18 +211,20 @@ class Resolver(Linker[SE]):
             cursor = conn.execute(stmt)
             while batch := cursor.fetchmany(20000):
                 for row in batch:
-                    edge = Edge.from_dict(row._mapping)
-                    cluster = entities.get(edge.source)
-                    if cluster is None:
-                        cluster = set([edge.source])
-                    other = entities.get(edge.target)
-                    if other is None:
-                        other = set([edge.target])
-                    cluster.update(other)
+                    source_id: str = row.source
+                    target_id: str = row.target
+                    idents = set([Identifier.get(source_id), Identifier.get(target_id)])
+                    sources = mapping.get(source_id)
+                    if sources is not None:
+                        idents.update(Identifier.get(n) for n in sources)
+                    targets = mapping.get(target_id)
+                    if targets is not None:
+                        idents.update(Identifier.get(n) for n in targets)
+                    cluster = tuple(i.id for i in sorted(idents, reverse=True))
                     for node in cluster:
-                        entities[node] = cluster
+                        mapping[node] = cluster
             cursor.close()
-        return Linker(entities)
+        return Linker(mapping)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
         key = Identifier.pair(left_id, right_id)
@@ -247,7 +247,6 @@ class Resolver(Linker[SE]):
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
-    @lru_cache(maxsize=200000)
     def get_canonical(self, entity_id: StrIdent) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)

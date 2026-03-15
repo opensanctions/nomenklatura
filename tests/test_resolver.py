@@ -20,8 +20,12 @@ def test_identifier():
 def test_qid_identifier():
     ident_low = Identifier("Q3481")
     ident_hi = Identifier("Q63481")
-    assert ident_low.id == "Q3481"
-    assert ident_hi.id == "Q63481"
+    assert max(ident_low, ident_hi) == ident_hi
+    # QID beats NK- beats regular
+    nk = Identifier.make()
+    regular = Identifier("src-123")
+    assert max(ident_low, ident_hi, nk, regular) == ident_hi
+    assert max(nk, regular) == nk
 
 
 def test_resolver(resolver):
@@ -168,7 +172,7 @@ def test_linker(resolver):
     #   Q123 canon_a a1 a2 # removed a3
     #   canon_b b1 b2
     #   c2
-    assert len(linker._entities) == 7, linker._entities
+    assert len(linker._mapping) == 7, linker._mapping
     assert "a1" in linker.get_referents("Q123")
     assert "a2" in linker.get_referents("Q123")
     assert canon_a.id in linker.get_referents("Q123")
@@ -178,6 +182,48 @@ def test_linker(resolver):
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
     assert linker.get_canonical("a3") == "a3"
+
+    # get_referents with canonicals=False excludes NK- and QID entries
+    refs_no_canon = linker.get_referents("Q123", canonicals=False)
+    assert "a1" in refs_no_canon
+    assert "a2" in refs_no_canon
+    assert canon_a.id not in refs_no_canon  # NK- prefix, filtered out
+
+    # get_referents on unknown ID returns empty set
+    assert linker.get_referents("unknown") == set()
+
+    # get_canonical accepts Identifier objects
+    assert linker.get_canonical(Identifier.get("a1")) == "Q123"
+    assert linker.get_canonical(Identifier.get("x1")) == "x1"
+
+    # All nodes in a cluster share the same tuple object
+    assert linker._mapping["a1"] is linker._mapping["a2"]
+    assert linker._mapping["a1"] is linker._mapping["Q123"]
+    assert linker._mapping["b1"] is linker._mapping["b2"]
+
+    # canonicals() does not yield non-canonical heads
+    canonical_ids = {c.id for c in linker.canonicals()}
+    assert "Q123" in canonical_ids
+    assert canon_b.id in canonical_ids
+    assert "c2" not in canonical_ids  # not in any cluster
+    assert "a1" not in canonical_ids  # not canonical
+
+
+def test_linker_non_canonical_cluster():
+    """A cluster with only source IDs (no NK-, no QID) picks the
+    lexicographic max as canonical — a faulty but acceptable result."""
+    from nomenklatura.resolver.linker import Linker
+
+    cluster = ("src-zzz", "src-aaa")
+    mapping = {"src-aaa": cluster, "src-zzz": cluster}
+    linker: Linker[Entity] = Linker(mapping)
+
+    assert linker.get_canonical("src-aaa") == "src-zzz"
+    assert linker.get_canonical("src-zzz") == "src-zzz"
+
+    # Not yielded by canonicals() since neither ID is canonical
+    canonical_ids = {c.id for c in linker.canonicals()}
+    assert "src-zzz" not in canonical_ids
 
 
 def test_update_from_db(resolver):
