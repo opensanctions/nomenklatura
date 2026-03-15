@@ -211,6 +211,45 @@ def test_linker(resolver: Resolver[StatementEntity]):
     assert "a1" not in canonical_ids  # not canonical
 
 
+def test_connected_plain(resolver: Resolver[StatementEntity]):
+    """connected_plain returns a tuple of plain strings instead of Identifier objects."""
+    resolver.begin()
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide("b1", "b2", Judgement.POSITIVE)
+
+    # Resolver.connected_plain
+    cluster_a = resolver.connected_plain("a1")
+    assert isinstance(cluster_a, tuple)
+    assert "a1" in cluster_a
+    assert "a2" in cluster_a
+    assert canon_a.id in cluster_a
+
+    # Unknown node returns singleton tuple
+    cluster_x = resolver.connected_plain("unknown")
+    assert cluster_x == ("unknown",)
+
+    # Cross-cluster isolation
+    assert "b1" not in cluster_a
+    resolver.commit()
+
+    # Linker.connected_plain
+    linker = resolver.get_linker()
+    lcluster_a = linker.connected_plain("a1")
+    assert isinstance(lcluster_a, tuple)
+    assert "a1" in lcluster_a
+    assert "a2" in lcluster_a
+    assert canon_a.id in lcluster_a
+    assert "b1" not in lcluster_a
+
+    # Unknown node in linker
+    assert linker.connected_plain("unknown") == ("unknown",)
+
+    # Singleton in linker (b1 is in a cluster, so check all members)
+    lcluster_b = linker.connected_plain("b1")
+    assert "b1" in lcluster_b
+    assert "b2" in lcluster_b
+
+
 def test_linker_non_canonical_cluster():
     """A cluster with only source IDs (no NK-, no QID) picks the
     lexicographic max as canonical — a faulty but acceptable result."""
