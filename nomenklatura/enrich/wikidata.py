@@ -284,15 +284,23 @@ class WikidataEnricher(Enricher[DS]):
                 value = LangText(topic, original=claim.qid)
             value.apply(proxy, ftm_prop)
 
-        # TEMP: Explore how many Wikidata items have wikilinks in more than 2 languages of which
-        # none is English. We want to start setting them as `wikipediaUrl` and this will validate
-        # our heuristics for doing so.
         # See https://github.com/opensanctions/opensanctions/issues/3651
-        has_english = len([i for i in item.wikilinks if i.site == "enwiki"]) > 0
-        num_wikilinks = len(item.wikilinks)
-        if not has_english and num_wikilinks > 2:
-            log.warning(
-                "I got %d wikilinks, but English ain't one: %s", num_wikilinks, item.id
-            )
+        for wikilink in item.wikilinks:
+            if wikilink.site == "enwiki":
+                proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
+                break
+        if not proxy.has("wikipediaUrl") and len(item.wikilinks) < 3:
+            for wikilink in item.wikilinks:
+                proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
+                break
+        # TODO: do we want to do more sophisticated handling of wikilinks? For
+        # example, if there are no English links, but there are many in other
+        # languages, then maybe we should still include the first one?
 
+        # has_english = len([i for i in item.wikilinks if i.site == "enwiki"]) > 0
+        # num_wikilinks = len(item.wikilinks)
+        # if not has_english and num_wikilinks > 2:
+        #     log.warning(
+        #         "I got %d wikilinks, but English ain't one: %s", num_wikilinks, item.id
+        #     )
         return proxy
