@@ -1,12 +1,15 @@
 #
-# KV-based store using bahamut's composite key patterns over Redis/KVRocks.
+# KV-based store using Redis Hashes over Redis/KVRocks.
 #
 # Key design:
-#   d:{dataset}:{version}:s:{entity_id}:{ext}:{stmt_id}:{schema}:{property} → packed value
-#   d:{dataset}:{version}:i:{target_entity_id}:{source_entity_id}            → b""
-#   d:{dataset}:{version}:e:{entity_id}                                      → schema name
-#   meta:versions:{dataset}:{version}                                        → release timestamp
-#   meta:latest:{dataset}                                                    → version string
+#   d:{dataset}:{version}:s:{entity_id}  → Hash { "{ext}:{stmt_id}:{schema}:{prop}" → packed value }
+#   d:{dataset}:{version}:i:{target_entity_id}:{source_entity_id} → b""
+#   d:{dataset}:{version}:e:{entity_id}  → schema name
+#   meta:versions:{dataset}:{version}    → release timestamp
+#
+# Each entity's statements are stored as fields in a single Redis Hash keyed by
+# entity_id. This allows HGETALL to retrieve all statements for an entity in one
+# round-trip, and pipelined HGETALL to batch entity fetches.
 #
 # Statements are stored under raw source entity IDs (not canonical). The linker
 # resolves canonical IDs at read time (late-binding canonicalization).
@@ -20,7 +23,7 @@ import logging
 from typing import Dict, Generator, List, Optional, Set, Tuple
 from rigour.env import ENCODING as E
 
-from redis.client import Redis
+from redis.client import Redis, Pipeline
 from followthemoney import DS, SE, Schema, registry, Property, Statement
 from followthemoney.statement.util import get_prop_type
 
@@ -30,20 +33,23 @@ from nomenklatura.resolver import Linker, StrIdent
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)
-MGET_BATCH = 500
+HGETALL_BATCH = 200
+MARKER_BATCH = 500
 
 
-def _unpack_statement(
-    parts: List[str],
+def _unpack_hash_statement(
+    dataset: str,
+    entity_id: str,
+    field: bytes,
     data: bytes,
     canonical_id: str,
 ) -> Statement:
-    # parts: d, dataset, version, s, entity_id, ext, stmt_id, schema, property
-    entity_id = parts[4]
-    ext = parts[5]
-    stmt_id = parts[6]
-    schema = parts[7]
-    prop = parts[8]
+    # field: {ext}:{stmt_id}:{schema}:{prop}
+    parts = field.decode(E).split(":")
+    ext = parts[0]
+    stmt_id = parts[1]
+    schema = parts[2]
+    prop = parts[3]
     value, lang, original_value, origin, first_seen, last_seen = orjson.loads(data)
     return Statement(
         id=stmt_id,
@@ -52,7 +58,7 @@ def _unpack_statement(
         schema=schema,
         value=value,
         lang=None if lang == 0 else lang,
-        dataset=parts[1],
+        dataset=dataset,
         original_value=None if original_value == 0 else original_value,
         origin=None if origin == 0 else origin,
         first_seen=first_seen,
@@ -109,7 +115,6 @@ class KVStore(Store[DS, SE]):
         return sorted(versions, reverse=True)
 
     def has_version(self, dataset: str, version: str) -> bool:
-        # Check if any data keys exist for this dataset+version
         prefix = f"d:{dataset}:{version}:e:".encode(E)
         for _ in self.db.scan_iter(match=prefix + b"*", count=1):
             return True
@@ -156,7 +161,7 @@ class KVWriter(Writer[DS, SE]):
         self.dataset = dataset
         self.version = version
         self.ds_ver = f"{dataset.name}:{version}"
-        self._pipeline = self.store.db.pipeline()
+        self._pipeline: Pipeline = self.store.db.pipeline()
         self._batch_size = 0
 
     def flush(self) -> None:
@@ -173,9 +178,10 @@ class KVWriter(Writer[DS, SE]):
 
         entity_id = stmt.entity_id
         ext = "x" if stmt.external else ""
-        key = f"d:{self.ds_ver}:s:{entity_id}:{ext}:{stmt.id}:{stmt.schema}:{stmt.prop}".encode(
-            E
-        )
+
+        # Statement as hash field
+        hash_key = f"d:{self.ds_ver}:s:{entity_id}".encode(E)
+        field = f"{ext}:{stmt.id}:{stmt.schema}:{stmt.prop}".encode(E)
         value = orjson.dumps(
             (
                 stmt.value,
@@ -186,9 +192,9 @@ class KVWriter(Writer[DS, SE]):
                 stmt.last_seen,
             )
         )
-        self._pipeline.set(key, value)
+        self._pipeline.hset(hash_key, field, value)
 
-        # Entity marker
+        # Entity marker (for schema pre-filtering and discovery)
         self._pipeline.set(
             f"d:{self.ds_ver}:e:{entity_id}".encode(E),
             stmt.schema.encode(E),
@@ -229,47 +235,59 @@ class KVView(View[DS, SE]):
             if version is not None:
                 self.vers.append((ds, version))
 
-    def _prefix_scan(self, prefix: bytes) -> Generator[Tuple[bytes, bytes], None, None]:
-        # Batch keys and use MGET to avoid N individual GET round-trips.
-        batch: List[bytes] = []
-        for key in self.store.db.scan_iter(match=prefix + b"*"):
-            batch.append(key)
-            if len(batch) >= MGET_BATCH:
-                values = self.store.db.mget(batch)
-                for k, v in zip(batch, values):
-                    if v is not None:
-                        yield k, v
-                batch = []
-        if batch:
-            values = self.store.db.mget(batch)
-            for k, v in zip(batch, values):
-                if v is not None:
-                    yield k, v
+    def _hgetall_entity(
+        self,
+        source_ids: List[str],
+        canonical_id: str,
+    ) -> List[Statement]:
+        """Fetch all statements for a set of source IDs using pipelined HGETALL."""
+        pipe = self.store.db.pipeline()
+        lookups: List[Tuple[str, str]] = []  # (dataset, entity_id)
+        for sid in source_ids:
+            for ds, ver in self.vers:
+                pipe.hgetall(f"d:{ds}:{ver}:s:{sid}".encode(E))
+                lookups.append((ds, sid))
+        results = pipe.execute()
+        statements: List[Statement] = []
+        for (ds, sid), fields in zip(lookups, results):
+            if not fields:
+                continue
+            for field, data in fields.items():
+                ext = field[0:1]  # b"x" or b""[0:1]
+                if ext == b"x" and not self.external:
+                    continue
+                statements.append(
+                    _unpack_hash_statement(ds, sid, field, data, canonical_id)
+                )
+        return statements
 
     def has_entity(self, id: str) -> bool:
+        if self.external:
+            # Any statement counts — just check hash existence.
+            pipe = self.store.db.pipeline()
+            count = 0
+            for sid in self.store.linker.connected_plain(id):
+                for ds, ver in self.vers:
+                    pipe.exists(f"d:{ds}:{ver}:s:{sid}".encode(E))
+                    count += 1
+            if count == 0:
+                return False
+            results = pipe.execute()
+            return any(r > 0 for r in results)
+
+        # Non-external view: must check that at least one internal field exists.
         for sid in self.store.linker.connected_plain(id):
             for ds, ver in self.vers:
-                prefix = f"d:{ds}:{ver}:s:{sid}:".encode(E)
-                for key in self.store.db.scan_iter(match=prefix + b"*", count=1):
-                    if not self.external:
-                        parts = key.decode(E).split(":")
-                        if parts[5] == "x":
-                            continue
-                    return True
+                fields = self.store.db.hgetall(f"d:{ds}:{ver}:s:{sid}".encode(E))
+                for field in fields:
+                    if field[0:1] != b"x":
+                        return True
         return False
 
     def get_entity(self, id: str) -> Optional[SE]:
-        statements: List[Statement] = []
         canonical_id = self.store.linker.get_canonical(id)
-        for sid in self.store.linker.connected_plain(id):
-            for ds, ver in self.vers:
-                prefix = f"d:{ds}:{ver}:s:{sid}:".encode(E)
-                for key, value in self._prefix_scan(prefix):
-                    parts = key.decode(E).split(":")
-                    ext = parts[5]
-                    if ext == "x" and not self.external:
-                        continue
-                    statements.append(_unpack_statement(parts, value, canonical_id))
+        source_ids = list(self.store.linker.connected_plain(id))
+        statements = self._hgetall_entity(source_ids, canonical_id)
         return self.store.assemble(statements)
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
@@ -297,12 +315,19 @@ class KVView(View[DS, SE]):
         source entity ID from the statement being written.
         """
         timestamps: Dict[str, str] = {}
+        pipe = self.store.db.pipeline()
+        ds_list: List[str] = []
         for ds, ver in self.vers:
-            prefix = f"d:{ds}:{ver}:s:{entity_id}:".encode(E)
-            for key, value in self._prefix_scan(prefix):
-                parts = key.decode(E).split(":")
-                stmt_id = parts[6]
-                vals = orjson.loads(value)
+            pipe.hgetall(f"d:{ds}:{ver}:s:{entity_id}".encode(E))
+            ds_list.append(ds)
+        results = pipe.execute()
+        for ds, fields in zip(ds_list, results):
+            if not fields:
+                continue
+            for field, data in fields.items():
+                parts = field.decode(E).split(":")
+                stmt_id = parts[1]
+                vals = orjson.loads(data)
                 first_seen = vals[4]
                 if first_seen:
                     timestamps[stmt_id] = first_seen
@@ -311,31 +336,83 @@ class KVView(View[DS, SE]):
     def entities(
         self, include_schemata: Optional[List[Schema]] = None
     ) -> Generator[SE, None, None]:
-        seen: Set[str] = set()
         schema_names: Optional[Set[bytes]] = None
         if include_schemata is not None:
             schema_names = {s.name.encode(E) for s in include_schemata if s is not None}
 
+        # Step 1: Discover all entities via markers and group by canonical ID.
+        # canonical_id → list of (dataset, source_entity_id) tuples
+        canonical_sources: Dict[str, List[Tuple[str, str]]] = {}
+        canonical_order: List[str] = []
+
         for ds, ver in self.vers:
             marker_prefix = f"d:{ds}:{ver}:e:".encode(E)
-            for key, schema_bytes in self._prefix_scan(marker_prefix):
-                entity_id = key.decode(E).split(":")[4]
-
-                # Schema pre-filter before hitting statements
-                if schema_names is not None:
-                    if schema_bytes not in schema_names:
+            batch: List[bytes] = []
+            for key in self.store.db.scan_iter(match=marker_prefix + b"*"):
+                batch.append(key)
+                if len(batch) >= MARKER_BATCH:
+                    values = self.store.db.mget(batch)
+                    for k, v in zip(batch, values):
+                        if v is None:
+                            continue
+                        if schema_names is not None and v not in schema_names:
+                            continue
+                        entity_id = k.decode(E).split(":")[4]
+                        canonical_id = self.store.linker.get_canonical(entity_id)
+                        if canonical_id not in canonical_sources:
+                            canonical_sources[canonical_id] = []
+                            canonical_order.append(canonical_id)
+                        canonical_sources[canonical_id].append((ds, entity_id))
+                    batch = []
+            if batch:
+                values = self.store.db.mget(batch)
+                for k, v in zip(batch, values):
+                    if v is None:
                         continue
+                    if schema_names is not None and v not in schema_names:
+                        continue
+                    entity_id = k.decode(E).split(":")[4]
+                    canonical_id = self.store.linker.get_canonical(entity_id)
+                    if canonical_id not in canonical_sources:
+                        canonical_sources[canonical_id] = []
+                        canonical_order.append(canonical_id)
+                    canonical_sources[canonical_id].append((ds, entity_id))
 
-                # Canonicalize
-                canonical_id = self.store.linker.get_canonical(entity_id)
+        # Step 2: Batch HGETALL in pipeline chunks, assemble and yield entities.
+        for batch_start in range(0, len(canonical_order), HGETALL_BATCH):
+            batch_ids = canonical_order[batch_start : batch_start + HGETALL_BATCH]
+            pipe = self.store.db.pipeline()
+            # (canonical_id, dataset, source_entity_id) per pipeline command
+            lookups: List[Tuple[str, str, str]] = []
+            for cid in batch_ids:
+                for ds, sid in canonical_sources[cid]:
+                    for d, ver in self.vers:
+                        if d == ds:
+                            pipe.hgetall(f"d:{ds}:{ver}:s:{sid}".encode(E))
+                            lookups.append((cid, ds, sid))
+                            break
 
-                # Dedup merged entities
-                if canonical_id in seen:
+            results = pipe.execute()
+
+            # Group statements by canonical
+            by_canonical: Dict[str, List[Statement]] = {}
+            for (cid, ds, sid), fields in zip(lookups, results):
+                if not fields:
                     continue
-                if canonical_id != entity_id:
-                    seen.add(canonical_id)
+                for field, data in fields.items():
+                    ext = field[0:1]
+                    if ext == b"x" and not self.external:
+                        continue
+                    stmt = _unpack_hash_statement(ds, sid, field, data, cid)
+                    if cid not in by_canonical:
+                        by_canonical[cid] = []
+                    by_canonical[cid].append(stmt)
 
-                entity = self.get_entity(canonical_id)
+            for cid in batch_ids:
+                stmts = by_canonical.get(cid)
+                if stmts is None:
+                    continue
+                entity = self.store.assemble(stmts)
                 if entity is not None:
                     if schema_names is not None:
                         if entity.schema.name.encode(E) not in schema_names:
