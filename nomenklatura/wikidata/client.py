@@ -57,6 +57,7 @@ class WikidataClient(object):
         # FIXME: remove this once the cache has run out, this is just to migrate old
         # cache keys to new ones. Estimated: mid-April 2026.
         if raw is None:
+            self.cache.delete(old_url)  # Make sure we don't use the old value again
             raw = self.cache.get(url, max_age=cache_days)
         if raw is None:
             res = self.session.get(url)
