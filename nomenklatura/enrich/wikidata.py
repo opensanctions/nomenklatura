@@ -285,14 +285,25 @@ class WikidataEnricher(Enricher[DS]):
             value.apply(proxy, ftm_prop)
 
         # See https://github.com/opensanctions/opensanctions/issues/3651
+        # First preference is enwiki
         for wikilink in item.wikilinks:
             if wikilink.site == "enwiki":
                 proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
                 break
-        if not proxy.has("wikipediaUrl") and len(item.wikilinks) < 3:
+        # Second preference is commonswiki
+        if not proxy.has("wikipediaUrl"):
             for wikilink in item.wikilinks:
-                proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
-                break
+                if wikilink.site == "commonswiki":
+                    proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
+                    break
+        # Final preference is any other wiki.
+        # We only use this if there are very few, since what we pick is then potentially significant for them.
+        if not proxy.has("wikipediaUrl"):
+            if len(item.wikilinks) < 3:
+                # Sort to be sure we pick the same link consistently
+                for wikilink in sorted(item.wikilinks, key=lambda s: s.site):
+                    proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
+                    break
         # TODO: do we want to do more sophisticated handling of wikilinks? For
         # example, if there are no English links, but there are many in other
         # languages, then maybe we should still include the first one?
