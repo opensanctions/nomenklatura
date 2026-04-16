@@ -79,7 +79,7 @@ class AlephEnricher(Enricher[DS]):
         for _, values in properties.items():
             for value in ensure_list(values):
                 if is_mapping(value):
-                    proxy = self.load_aleph_entity(entity, value)
+                    proxy = self.load_aleph_entity(entity, dict(value))
                     if proxy is not None:
                         yield proxy
 

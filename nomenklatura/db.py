@@ -9,14 +9,13 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Dialect,
     MetaData,
     Table,
     Unicode,
     create_engine,
     delete,
 )
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import Connection, Dialect, Engine
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
