@@ -166,7 +166,8 @@ class Item(object):
 
     @property
     def wikilinks(self) -> List[SiteLink]:
-        return [s for s in self.sitelinks if s.is_wiki]
+        # Skip commonswiki since it doesn't offer much more than wikidata as a wiki website.
+        return [s for s in self.sitelinks if s.is_wiki and s.site != "commonswiki"]
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:

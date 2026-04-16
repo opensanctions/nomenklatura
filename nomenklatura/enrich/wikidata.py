@@ -285,18 +285,10 @@ class WikidataEnricher(Enricher[DS]):
             value.apply(proxy, ftm_prop)
 
         # See https://github.com/opensanctions/opensanctions/issues/3651
-        # First preference is enwiki
         for wikilink in item.wikilinks:
             if wikilink.site == "enwiki":
                 proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
                 break
-        # Second preference is commonswiki
-        if not proxy.has("wikipediaUrl"):
-            for wikilink in item.wikilinks:
-                if wikilink.site == "commonswiki":
-                    proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
-                    break
-        # Final preference is any other wiki.
         # We only use this if there are very few, since what we pick is then potentially significant for them.
         if not proxy.has("wikipediaUrl"):
             if len(item.wikilinks) < 3:
