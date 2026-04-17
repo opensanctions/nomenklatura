@@ -1,5 +1,4 @@
 import logging
-import sys
 from typing import Any, Callable, Dict, List, Optional, Set, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
@@ -31,7 +30,7 @@ def xref(
     index_dir: Path,
     limit: int = 5000,
     limit_factor: int = 10,
-    patience: int = sys.maxsize,
+    patience: int = 500000,
     scored: bool = True,
     external: bool = True,
     discount_internal: float = 0.7,
