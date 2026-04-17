@@ -41,24 +41,16 @@ class WikidataClient(object):
     def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
-        cache_days = cache_days or self.cache_days
-        old_params = {"format": "json", "ids": qid, "action": "wbgetentities"}
-        old_url = build_url(self.WD_API, params=old_params)
-        raw = self.cache.get(old_url, max_age=cache_days)
-        # Ask for sitelink URLs:
         params = {
             "format": "json",
             "ids": qid,
             "action": "wbgetentities",
+            # Ask for sitelink URLs for proper wikipedia links:
             "props": "info|sitelinks/urls|aliases|labels|descriptions|claims|datatype",
         }
         url = build_url(self.WD_API, params=params)
-
-        # FIXME: remove this once the cache has run out, this is just to migrate old
-        # cache keys to new ones. Estimated: mid-April 2026.
-        if raw is None:
-            self.cache.delete(old_url)  # Make sure we don't use the old value again
-            raw = self.cache.get(url, max_age=cache_days)
+        cache_days = cache_days or self.cache_days
+        raw = self.cache.get(url, max_age=cache_days)
         if raw is None:
             res = self.session.get(url)
             res.raise_for_status()

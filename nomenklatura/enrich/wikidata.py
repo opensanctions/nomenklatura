@@ -289,8 +289,10 @@ class WikidataEnricher(Enricher[DS]):
             if wikilink.site == "enwiki":
                 proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
                 break
+        # We only use this if there are very few, since what we pick is then potentially significant for them.
         if not proxy.has("wikipediaUrl") and len(item.wikilinks) < 3:
-            for wikilink in item.wikilinks:
+            # Sort to be sure we pick the same link consistently
+            for wikilink in sorted(item.wikilinks, key=lambda s: s.site):
                 proxy.add("wikipediaUrl", wikilink.url, origin=wikilink.title)
                 break
         # TODO: do we want to do more sophisticated handling of wikilinks? For

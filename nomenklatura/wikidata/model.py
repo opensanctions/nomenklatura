@@ -1,4 +1,3 @@
-from urllib.parse import quote
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from rigour.langs import iso_639_alpha3
@@ -92,21 +91,7 @@ class SiteLink(object):
         self.wiki_site = self.site[:-4] if self.is_wiki else None
         self.title = data.pop("title")
         self.badges = data.pop("badges", [])
-        self._url = str(data.pop("url")) if "url" in data else None
-
-    # TODO: remove this entirely once the cache has run out, make `_url` the prop.
-    @property
-    def url(self) -> Optional[str]:
-        if self._url is not None:
-            return str(self._url)
-        # FIXME: this is broken because it does not convert site key to domain:
-        # enwiki -> en.wikipedia.org. We should remove this and make sure the API
-        # returns the URL.
-        if self.is_wiki is False:
-            return None
-        domain = f"{self.site}.wikipedia.org"
-        quoted = quote(self.title.replace(" ", "_"), safe="/_-")
-        return f"https://{domain}/wiki/{quoted}"
+        self.url = str(data.pop("url")) if "url" in data else None
 
     @property
     def lang(self) -> Optional[str]:
@@ -166,7 +151,9 @@ class Item(object):
 
     @property
     def wikilinks(self) -> List[SiteLink]:
-        return [s for s in self.sitelinks if s.is_wiki]
+        wikilinks = [s for s in self.sitelinks if s.is_wiki]
+        # Skip commonswiki since it doesn't offer much more than wikidata as a wiki website.
+        return [s for s in wikilinks if s.site != "commonswiki"]
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:
