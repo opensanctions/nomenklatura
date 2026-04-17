@@ -127,6 +127,9 @@ def xref(
             if score < min_threshold:
                 continue
 
+            # Record this as a successful candidate:
+            last_suggested_idx = idx
+
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
                 canonical_id = resolver.decide(
@@ -140,7 +143,6 @@ def xref(
                 continue
 
             resolver.suggest(left.id, right.id, score, user=user)
-            last_suggested_idx = idx
 
             if suggested >= limit:
                 break
