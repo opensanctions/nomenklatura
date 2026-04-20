@@ -1,6 +1,6 @@
-from urllib.parse import quote
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from rigour.langs import iso_639_alpha3
 
 from nomenklatura.wikidata.value import snak_value_to_string
 from nomenklatura.wikidata.lang import LangText
@@ -88,14 +88,16 @@ class SiteLink(object):
         self.qid = qid
         self.site = data.pop("site")
         self.is_wiki = self.site.endswith("wiki")
+        self.wiki_site = self.site[:-4] if self.is_wiki else None
         self.title = data.pop("title")
         self.badges = data.pop("badges", [])
+        self.url = str(data.pop("url")) if "url" in data else None
 
     @property
-    def url(self) -> str:
-        # quoted = quote(self.title.replace(" ", "_"), safe="/:@!$&'()*+,;=-._~")
-        quoted = quote(self.title.replace(" ", "_"), safe="/_-")
-        return f"https://{self.site}.wikipedia.org/wiki/{quoted}"
+    def lang(self) -> Optional[str]:
+        if self.wiki_site is not None:
+            return iso_639_alpha3(self.wiki_site)
+        return None
 
     @property
     def linked_url(self) -> str:
@@ -149,7 +151,9 @@ class Item(object):
 
     @property
     def wikilinks(self) -> List[SiteLink]:
-        return [s for s in self.sitelinks if s.is_wiki]
+        wikilinks = [s for s in self.sitelinks if s.is_wiki]
+        # Skip commonswiki since it doesn't offer much more than wikidata as a wiki website.
+        return [s for s in wikilinks if s.site != "commonswiki"]
 
     def is_instance(self, qid: str) -> bool:
         for claim in self.claims:

@@ -30,6 +30,7 @@ def xref(
     index_dir: Path,
     limit: int = 5000,
     limit_factor: int = 10,
+    patience: int = 500000,
     scored: bool = True,
     external: bool = True,
     discount_internal: float = 0.7,
@@ -45,19 +46,27 @@ def xref(
     blocker_options: Optional[Dict[str, Any]] = None,
     user: Optional[str] = None,
 ) -> None:
-    log.info("Begin xref: %r, resolver: %s", store, resolver)
+    log.info(
+        "Begin xref: %r, resolver: %s, limit: %d, patience: %d",
+        store,
+        resolver,
+        limit,
+        patience,
+    )
     if config is None:
         config = ScoringConfig.defaults()
     view = store.default_view(external=external)
     index = Index(view, index_dir, options=blocker_options or {})
     index.build()
+    max_pairs = limit * limit_factor
+    last_suggested_idx = 0
 
     try:
         scores: List[float] = []
         suggested = 0
         idx = 0
         resolver.begin()
-        pairs = index.pairs(max_pairs=limit * limit_factor)
+        pairs = index.pairs(max_pairs=max_pairs)
         for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
@@ -65,6 +74,14 @@ def xref(
                 if idx > (limit * 10):
                     log.info("Reached maximum number of pairs to process.")
                     break
+
+            if idx > max_pairs:
+                log.info("Reached maximum number of pairs to consider.")
+                break
+
+            if (idx - last_suggested_idx) > patience:
+                log.info("No suggestions since pair %d, stopping.", last_suggested_idx)
+                break
 
             if suggested % 10000 == 0 and suggested > 0:
                 resolver.commit()
@@ -109,6 +126,9 @@ def xref(
 
             if score < min_threshold:
                 continue
+
+            # Record this as a successful candidate:
+            last_suggested_idx = idx
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)

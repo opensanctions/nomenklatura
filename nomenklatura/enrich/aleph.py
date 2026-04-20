@@ -1,7 +1,7 @@
 import os
 import uuid
 import logging
-from banal import is_mapping, ensure_list, hash_data
+from banal import ensure_list, hash_data
 from typing import Any, Dict, cast, Generator, Optional
 from urllib.parse import urljoin
 from functools import cached_property
@@ -78,7 +78,7 @@ class AlephEnricher(Enricher[DS]):
         properties = data.get("properties", {})
         for _, values in properties.items():
             for value in ensure_list(values):
-                if is_mapping(value):
+                if isinstance(value, dict) and "id" in value:
                     proxy = self.load_aleph_entity(entity, value)
                     if proxy is not None:
                         yield proxy

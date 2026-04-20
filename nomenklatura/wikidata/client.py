@@ -41,7 +41,13 @@ class WikidataClient(object):
     def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
-        params = {"format": "json", "ids": qid, "action": "wbgetentities"}
+        params = {
+            "format": "json",
+            "ids": qid,
+            "action": "wbgetentities",
+            # Ask for sitelink URLs for proper wikipedia links:
+            "props": "info|sitelinks/urls|aliases|labels|descriptions|claims|datatype",
+        }
         url = build_url(self.WD_API, params=params)
         cache_days = cache_days or self.cache_days
         raw = self.cache.get(url, max_age=cache_days)
