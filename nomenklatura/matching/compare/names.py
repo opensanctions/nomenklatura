@@ -132,7 +132,7 @@ def name_literal_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     return FtResult(score=1.0, detail=detail)
 
 
-def last_name_mismatch(query: E, result: E) -> float:
+def last_name_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
     """The two persons have different last names."""
     qv, rv = props_pair(query, result, ["lastName"])
     qvt = names_word_list(qv, min_length=2)
@@ -140,7 +140,8 @@ def last_name_mismatch(query: E, result: E) -> float:
     # TODO: levenshtein
     # for (qn, rn) in product(qvt, rvt):
     #     similarity = levenshtein_similarity(qn, rn)
-    return 1.0 if is_disjoint(qvt, rvt) else FNUL
+    score = 1.0 if is_disjoint(qvt, rvt) else FNUL
+    return FtResult(score=score, detail=None)
 
 
 def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:

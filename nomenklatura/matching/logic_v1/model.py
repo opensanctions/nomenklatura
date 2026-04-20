@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
@@ -52,7 +52,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=last_name_mismatch, weight=-0.2, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
         Feature(func=dob_day_disjoint, weight=-0.2, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
