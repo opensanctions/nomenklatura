@@ -105,6 +105,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     extra_result_weight = config.get_float("nm_extra_result_name")
     family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
+    retmatches: List[Match] = []
     for pairing in pairings:
         matches: List[Match] = pairing.matches
 
@@ -137,7 +138,9 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
 
             # We have types of symbol matches and where we never score 1.0, but for
             # literal matches, we always want to score 1.0
-            if match.score < 1.0 and match.qstr == match.rstr:
+            if match.score < 1.0 and all(
+                (q.comparable == r.comparable for q, r in zip(match.qps, match.rps))
+            ):
                 match.score = 1.0
             # We treat family names matches as more important (but configurable) because
             # they're just globally less murky and changeable than given names.
@@ -150,15 +153,17 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = " ".join(str(m) for m in matches)
+            retmatches = list(matches)
             retval = FtResult(
                 score=score,
-                detail=detail,
                 query=query.original,
                 candidate=result.original,
             )
     if retval.detail is None:
-        retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
+        if len(retmatches) > 0:
+            retval.detail = " ".join(str(m) for m in retmatches)
+        else:
+            retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
     return retval
 
 
@@ -203,7 +208,6 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     if type_tag == NameTypeTag.UNK:
         # Name matching is not supported for entities that are not listed
         # as a person, organization, or a thing.
-        best.detail = "Unsuited for name matching: %s" % schema.name
         return best
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
@@ -225,7 +229,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
             score=1.0,
         )
         return FtResult(
-            score=match.score, detail=str(match), query=match.qstr, candidate=match.rstr
+            score=match.score,
+            detail=str(match),
+            query=query_comparable[longest].original,
+            candidate=result_comparable[longest].original,
         )
 
     # Remove short names that are contained in longer names.
