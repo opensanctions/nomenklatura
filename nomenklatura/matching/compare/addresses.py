@@ -7,7 +7,7 @@ from rigour.text import levenshtein_similarity
 from rigour.addresses import normalize_address, remove_address_keywords
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import has_schema
+from nomenklatura.matching.util import FNUL, has_schema
 
 
 @lru_cache(maxsize=128)
@@ -25,8 +25,8 @@ def _normalize_address(addr: str) -> Set[str]:
 def _address_match(query_addrs: List[str], result_addrs: List[str]) -> FtResult:
     """Text similarity between addresses."""
     if len(query_addrs) == 0 or len(result_addrs) == 0:
-        return FtResult(score=0.0, detail="No addresses provided")
-    max_result = FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail="No addresses provided")
+    max_result = FtResult(score=FNUL, detail=None)
     query_norms = [_normalize_address(addr) for addr in query_addrs]
     result_norms = [_normalize_address(addr) for addr in result_addrs]
     for query_tokens, result_tokens in product(query_norms, result_norms):
@@ -58,14 +58,14 @@ def _address_match(query_addrs: List[str], result_addrs: List[str]) -> FtResult:
 def address_entity_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two address entities relate to similar addresses."""
     if not has_schema(query, result, "Address"):
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     return _address_match(query.get("full"), result.get("full"))
 
 
 def address_prop_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities have similar stated addresses."""
     if has_schema(query, result, "Address"):
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     query_addrs = query.get_type_values(registry.address, matchable=True)
     result_addrs = result.get_type_values(registry.address, matchable=True)
     return _address_match(query_addrs, result_addrs)

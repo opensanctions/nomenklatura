@@ -5,7 +5,7 @@ from rigour.text.distance import jaro_winkler
 from rigour.text.phonetics import soundex
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import type_pair
+from nomenklatura.matching.util import FNUL, type_pair
 from nomenklatura.matching.compat import names_word_list
 
 
@@ -25,7 +25,7 @@ def soundex_name_parts(query: E, result: E, config: ScoringConfig) -> FtResult:
     result_soundex = set([_soundex_token(p) for p in names_word_list(result_names_)])
     overlap = query_soundex.intersection(result_soundex)
     if len(overlap) == 0:
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     min_len = min(len(query_soundex), len(result_soundex))
     score = len(overlap) / float(max(1.0, min_len))
     detail = f"Matched {len(overlap)} tokens: {', '.join(overlap)}"
@@ -53,7 +53,7 @@ def jaro_name_parts(query: E, result: E, config: ScoringConfig) -> FtResult:
         if best_token is not None:
             tokens.append((part, best_token))
     if len(similiarities) == 0:
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     score = sum(similiarities) / float(max(1.0, len(similiarities)))
     mapping = ", ".join(f"{a} -> {b}" for a, b in tokens)
     return FtResult(score=score, detail=f"Matched {len(tokens)} tokens: {mapping}")

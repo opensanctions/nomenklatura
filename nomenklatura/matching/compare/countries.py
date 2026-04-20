@@ -3,7 +3,7 @@ from followthemoney.proxy import E
 from followthemoney.types import registry
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import type_pair
+from nomenklatura.matching.util import FNUL, type_pair
 
 
 def country_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -14,4 +14,4 @@ def country_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
         if len(common) == 0:
             detail = f"Different countries: {qv} / {rv}"
             return FtResult(score=1.0, detail=detail)
-    return FtResult(score=0.0, detail=None)
+    return FtResult(score=FNUL, detail=None)

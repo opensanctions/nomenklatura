@@ -14,6 +14,7 @@ from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similari
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import Match, numbers_mismatch
 from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import FNUL
 
 
 # Step 1: Generate all Matches based on symbols
@@ -103,7 +104,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     extra_query_weight = config.get_float("nm_extra_query_name")
     extra_result_weight = config.get_float("nm_extra_result_name")
     family_name_weight = config.get_float("nm_family_name_weight")
-    retval = FtResult(score=0.0, detail=None)
+    retval = FtResult(score=FNUL, detail=None)
     for pairing in pairings:
         matches: List[Match] = pairing.matches
 
@@ -174,7 +175,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match the names of two objects, such as vessels or assets."""
     result_names = _get_object_names(result)
     mismatch_penalty = 1 - config.get_float("nm_number_mismatch")
-    best_result = FtResult(score=0.0, detail=None)
+    best_result = FtResult(score=FNUL, detail=None)
     for query_name in _get_object_names(query):
         query_name = remove_obj_prefixes(query_name)
         for result_name in result_names:
@@ -198,7 +199,7 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match two entities by analyzing and comparing their names."""
     schema = model.common_schema(query.schema, result.schema)
     type_tag = schema_type_tag(schema)
-    best = FtResult(score=0.0, detail=None)
+    best = FtResult(score=FNUL, detail=None)
     if type_tag == NameTypeTag.UNK:
         # Name matching is not supported for entities that are not listed
         # as a person, organization, or a thing.
