@@ -138,8 +138,14 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
 
             # We have types of symbol matches and where we never score 1.0, but for
             # literal matches, we always want to score 1.0
-            if match.score < 1.0 and all(
-                (q.comparable == r.comparable for q, r in zip(match.qps, match.rps))
+            if (
+                match.score < 1.0
+                and len(match.qps) == len(match.rps)
+                and match.qps
+                and all(
+                    q.comparable == r.comparable
+                    for q, r in zip(match.qps, match.rps)
+                )
             ):
                 match.score = 1.0
             # We treat family names matches as more important (but configurable) because
