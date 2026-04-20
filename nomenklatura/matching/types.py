@@ -53,7 +53,7 @@ class AlgorithmDocs(BaseModel):
 class FtResult(object):
     """Match feature result type."""
 
-    __slots__ = ["score", "detail", "query", "candidate", "empty"]
+    __slots__ = ["score", "detail", "query", "candidate"]
 
     def __init__(
         self,
@@ -64,7 +64,6 @@ class FtResult(object):
     ) -> None:
         self.score = score
         self.detail = detail
-        self.empty = detail is None and score == FNUL
 
         # Used e.g. for names and identifiers to explain which value from
         # the query and result entities was actually used to make the match.
@@ -132,7 +131,7 @@ class MatchingResult(object):
         """Return the explanations for the feature results as pydantic models."""
         _explanations: Dict[str, FeatureResult] = {}
         for name, res in self._explanations.items():
-            if not res.empty:
+            if res.detail is not None or res.score > FNUL:
                 _explanations[name] = FeatureResult(
                     score=res.score,
                     detail=res.detail,

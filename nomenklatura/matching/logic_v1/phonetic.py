@@ -10,6 +10,7 @@ from rigour.text.phonetics import metaphone, soundex
 from rigour.names import tokenize_name
 from rigour.util import list_intersection
 
+from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import type_pair, has_schema
 from nomenklatura.matching.compat import fingerprint_name, name_words
 
@@ -83,10 +84,10 @@ def _token_names_compare(
     return score
 
 
-def person_name_phonetic_match(query: E, result: E) -> float:
+def person_name_phonetic_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two persons have similar names, using a phonetic algorithm."""
     if not has_schema(query, result, "Person"):
-        return 0.0
+        return FtResult(score=0.0, detail=None)
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_parts = [NameTokenPhonetic.from_name(n) for n in query_names_]
     result_parts = [NameTokenPhonetic.from_name(n) for n in result_names_]
@@ -103,7 +104,7 @@ def person_name_phonetic_match(query: E, result: E) -> float:
                     matched += 1
                     break
         score = max(score, matched / float(len(q)))
-    return score
+    return FtResult(score=score, detail=None)
 
 
 def _metaphone_tokens(token: str) -> List[str]:
@@ -113,13 +114,13 @@ def _metaphone_tokens(token: str) -> List[str]:
     return words
 
 
-def name_metaphone_match(query: E, result: E) -> float:
+def name_metaphone_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities (person and non-person) have similar names, using the metaphone
     algorithm."""
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_metaphone_tokens(n) for n in query_names_]
     result_names = [_metaphone_tokens(n) for n in result_names_]
-    return _token_names_compare(query_names, result_names)
+    return FtResult(score=_token_names_compare(query_names, result_names), detail=None)
 
 
 def _soundex_tokens(token: str) -> List[str]:
@@ -129,10 +130,10 @@ def _soundex_tokens(token: str) -> List[str]:
     return words
 
 
-def name_soundex_match(query: E, result: E) -> float:
+def name_soundex_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities (person and non-person) have similar names, using the soundex
     algorithm."""
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_soundex_tokens(n) for n in query_names_]
     result_names = [_soundex_tokens(n) for n in result_names_]
-    return _token_names_compare(query_names, result_names)
+    return FtResult(score=_token_names_compare(query_names, result_names), detail=None)

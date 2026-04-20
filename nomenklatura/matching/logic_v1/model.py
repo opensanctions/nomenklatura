@@ -35,12 +35,12 @@ class LogicV1(HeuristicAlgorithm):
     NAME = "logic-v1"
     features = [
         Feature(func=name_literal_match, weight=1.0),
-        Feature(func=FtResult.wrap(person_name_jaro_winkler), weight=0.8),
-        Feature(func=FtResult.wrap(person_name_phonetic_match), weight=0.9),
-        Feature(func=FtResult.wrap(name_fingerprint_levenshtein), weight=0.9),
+        Feature(func=person_name_jaro_winkler, weight=0.8),
+        Feature(func=person_name_phonetic_match, weight=0.9),
+        Feature(func=name_fingerprint_levenshtein, weight=0.9),
         # These are there so they can be enabled using custom weights:
-        Feature(func=FtResult.wrap(name_metaphone_match), weight=FNUL),
-        Feature(func=FtResult.wrap(name_soundex_match), weight=FNUL),
+        Feature(func=name_metaphone_match, weight=FNUL),
+        Feature(func=name_soundex_match, weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
         Feature(func=isin_security_match, weight=0.98),

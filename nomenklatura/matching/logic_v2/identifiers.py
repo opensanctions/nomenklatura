@@ -57,7 +57,7 @@ def _identifier_format_match(
     query_format = format_values(query, format_name)
     result_format = format_values(result, format_name)
     if len(query_format) == 0 and len(result_format) == 0:
-        return FtResult(score=FNUL, detail="No identifer match")
+        return FtResult(score=FNUL, detail="No identifier match")
     common = query_format.intersection(result_format)
     if len(common) > 0:
         detail = f"Matched {format.TITLE}: {', '.join(common)}"
