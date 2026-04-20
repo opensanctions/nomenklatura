@@ -1,4 +1,5 @@
 from typing import Dict, Generator, Generic, Set, Tuple
+import warnings
 from followthemoney import registry, ValueEntity, Statement, SE
 
 from nomenklatura.resolver.identifier import Identifier
@@ -27,6 +28,11 @@ class Linker(Generic[SE]):
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
         if isinstance(entity_id, Identifier):
+            warnings.warn(
+                "Passing Identifier objects to get_canonical is deprecated",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             entity_id = entity_id.id
         cluster = self._mapping.get(entity_id)
         if cluster is not None:
@@ -48,6 +54,11 @@ class Linker(Generic[SE]):
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         if isinstance(canonical_id, Identifier):
+            warnings.warn(
+                "Passing Identifier objects to get_referents is deprecated",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             canonical_id = canonical_id.id
         cluster = self._mapping.get(canonical_id)
         if cluster is None:

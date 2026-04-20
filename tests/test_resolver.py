@@ -195,8 +195,8 @@ def test_linker(resolver: Resolver[StatementEntity]):
     assert linker.get_referents("unknown") == set()
 
     # get_canonical accepts Identifier objects
-    assert linker.get_canonical(Identifier.get("a1").id) == "Q123"
-    assert linker.get_canonical(Identifier.get("x1").id) == "x1"
+    assert linker.get_canonical("a1") == "Q123"
+    assert linker.get_canonical("x1") == "x1"
 
     # All nodes in a cluster share the same tuple object
     assert linker._mapping["a1"] is linker._mapping["a2"]
