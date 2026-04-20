@@ -97,7 +97,7 @@ class RegressionV1(ScoringAlgorithm):
         encoded = cls.encode_pair(query, result)
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
-        score = cast(float, pred[0][1])
+        score = float(pred[0][1])
         explanations: Dict[str, FtResult] = {}
         for feature, coeff in zip(cls.FEATURES, encoded):
             name = feature.__name__
