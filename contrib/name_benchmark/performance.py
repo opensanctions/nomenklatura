@@ -1,6 +1,6 @@
 import yaml
 from typing import Dict, List
-from followthemoney import Dataset, StatementEntity as Entity
+from followthemoney import ValueEntity as Entity, model
 from nomenklatura.matching.logic_v2.model import LogicV2
 
 
@@ -14,8 +14,9 @@ class Check:
 
 def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
-    dataset = Dataset.make({"name": id, "title": id})
-    entity = Entity(dataset, {"schema": schema, "id": id})
+    schema_obj = model.get(schema)
+    assert schema_obj is not None, f"Schema not found: {schema}"
+    entity = Entity(schema_obj, {"id": id})
     for prop, value in props.items():
         entity.add(prop, value)
     if not len(entity.names) and entity.schema.is_a("Person"):
