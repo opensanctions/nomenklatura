@@ -25,7 +25,7 @@ def _normalize_address(addr: str) -> Set[str]:
 def _address_match(query_addrs: List[str], result_addrs: List[str]) -> FtResult:
     """Text similarity between addresses."""
     if len(query_addrs) == 0 or len(result_addrs) == 0:
-        return FtResult(score=FNUL, detail="No addresses provided")
+        return FtResult(score=FNUL, detail=None)
     max_result = FtResult(score=FNUL, detail=None)
     query_norms = [_normalize_address(addr) for addr in query_addrs]
     result_norms = [_normalize_address(addr) for addr in result_addrs]

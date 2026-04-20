@@ -50,14 +50,14 @@ def _identifier_format_match(
 ) -> FtResult:
     """Check if the identifier format is the same for two entities."""
     if not has_schema_formats(query.schema, result.schema, format_name):
-        return FtResult(score=FNUL, detail="Does not apply to schema")
+        return FtResult(score=FNUL, detail=None)
     format = get_identifier_format(format_name)
     if format is None:
         raise RuntimeError(f"Unknown identifier format: {format_name}")
     query_format = format_values(query, format_name)
     result_format = format_values(result, format_name)
     if len(query_format) == 0 and len(result_format) == 0:
-        return FtResult(score=FNUL, detail=f"No {format.TITLE} match")
+        return FtResult(score=FNUL, detail="No identifer match")
     common = query_format.intersection(result_format)
     if len(common) > 0:
         detail = f"Matched {format.TITLE}: {', '.join(common)}"
@@ -92,7 +92,7 @@ def _identifier_format_match(
                 query=first_common,
                 candidate=first_common,
             )
-    return FtResult(score=FNUL, detail=f"No {format.TITLE} match")
+    return FtResult(score=FNUL, detail="No identifier match")
 
 
 def lei_code_match(

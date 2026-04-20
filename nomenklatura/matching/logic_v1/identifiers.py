@@ -39,7 +39,7 @@ def _bidi_id_prop_match(
         return FtResult(score=1.0, detail="Property match: %r" % prop_name)
     if _id_prop_match(result, query, prop_name, clean=clean):
         return FtResult(score=1.0, detail="Property match: %r" % prop_name)
-    return FtResult(score=FNUL, detail="No match: %r" % prop_name)
+    return FtResult(score=FNUL, detail="No match on identifiers.")
 
 
 def lei_code_match(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -65,7 +65,7 @@ def inn_code_match(query: E, result: E, config: ScoringConfig) -> FtResult:
 def isin_security_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two securities have the same ISIN."""
     if not has_schema(query, result, "Security"):
-        return FtResult(score=FNUL, detail="None of the entities is a security")
+        return FtResult(score=FNUL, detail=None)
     return _bidi_id_prop_match(query, result, "isin", ISIN.normalize)
 
 

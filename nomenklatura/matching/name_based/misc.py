@@ -36,7 +36,7 @@ def dob_day_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
         return FtResult(score=FNUL, detail="Birth days don't include day precision")
     overlap = query_days.intersection(result_days)
     if len(overlap) > 0:
-        return FtResult(score=FNUL, detail=f"Birth day match: {', '.join(overlap)}")
+        return FtResult(score=FNUL, detail="Birth day match.")
     query_flipped = set([_flip_day_month(d) for d in query_days])
     overlap = query_flipped.intersection(result_days)
     if len(overlap) > 0:
@@ -71,7 +71,8 @@ def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
         return FtResult(score=FNUL, detail="Neither entity has identifiers")
     common = query_ids.intersection(result_ids)
     if len(common) > 0:
-        return FtResult(score=FNUL, detail="Common identifiers: %s" % ", ".join(common))
+        detail = f"Common identifiers found: {', '.join(common)}"
+        return FtResult(score=FNUL, detail=detail)
     max_ratio = 0.0
     for query_id, result_id in product(query_ids, result_ids):
         distance = levenshtein(query_id, result_id)
@@ -79,8 +80,4 @@ def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
         ratio = 1.0 - (distance / float(max_len))
         if ratio > 0.7:
             max_ratio = max(max_ratio, ratio)
-    detail = "Mismatched identifiers: %s vs %s" % (
-        ", ".join(query_ids),
-        ", ".join(result_ids),
-    )
-    return FtResult(score=1 - max_ratio, detail=detail)
+    return FtResult(score=1 - max_ratio, detail="Mismatched identifiers.")
