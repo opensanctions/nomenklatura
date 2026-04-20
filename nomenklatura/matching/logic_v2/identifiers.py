@@ -1,24 +1,29 @@
 from functools import cache, lru_cache
 from typing import Optional, Set
 
-from followthemoney import Schema
+from followthemoney import registry, EntityProxy, Property, Schema
 from rigour.ids import get_identifier_format
 from rigour.util import MEMO_TINY
-from followthemoney.types import registry
-from followthemoney.proxy import EntityProxy
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, has_schema
 
 
+@cache
+def format_props(schema: Schema, format: Optional[str]) -> Set[Property]:
+    """This is cached because it is called repeatedly."""
+    format_props: Set[Property] = set()
+    for prop in schema.properties.values():
+        if prop.type == registry.identifier and prop.matchable:
+            if prop.format == format:
+                format_props.add(prop)
+    return format_props
+
+
 def format_values(entity: EntityProxy, format_name: Optional[str]) -> Set[str]:
     """Get all identifier values of a given format from an entity."""
     values: Set[str] = set()
-    for prop in entity.iterprops():
-        if prop.type is not registry.identifier or not prop.matchable:
-            continue
-        if prop.format != format_name:
-            continue
+    for prop in format_props(entity.schema, format_name):
         values.update(entity.get_prop(prop))
     return values
 
