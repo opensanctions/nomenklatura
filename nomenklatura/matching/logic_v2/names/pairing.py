@@ -56,7 +56,7 @@ class Pairing:
             # This may not be correct for many tokens since it's expected that the bulk
             # of filtered items will be single-part span.
             for qp, rp in zip(query_span.parts, result_span.parts):
-                if not qp.can_match(rp):
+                if not qp.tag.can_match(rp.tag):
                     return False
 
         return True

@@ -1,4 +1,4 @@
-from rigour.names import NameTypeTag, NamePartTag, Symbol
+from rigour.names import NamePartTag, Symbol
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
 from nomenklatura.matching.logic_v2.names.match import name_match
@@ -8,9 +8,10 @@ from .util import e
 
 config = LogicV2.default_config()
 
+
 def test_entity_names_person():
     entity = e("Person", name="Smith, John", firstName="John", lastName="Smith")
-    names = entity_names(NameTypeTag.PER, entity)
+    names = entity_names(entity)
     assert len(names) == 1
     name = names.pop()
     assert name.form == "smith, john"
@@ -23,13 +24,13 @@ def test_entity_names_person():
             assert span.symbol.id == "j"
 
     names = {sym.id for sym in name.symbols if sym.category == Symbol.Category.NAME}
-    assert 1158446 in names
+    assert "Q1158446" in names
     # assert False, names
 
 
 def test_entity_names_company():
     entity = e("Company", name="Westminster Holdings, Ltd.")
-    names = entity_names(NameTypeTag.ORG, entity)
+    names = entity_names(entity)
     assert len(names) == 1
     name = names.pop()
     assert name.form == "westminster holdings, ltd"
@@ -43,7 +44,7 @@ def test_entity_names_company():
             assert span.symbol.id == "HOLDING"
 
     entity = e("Company", name="ABC Gesellschaft mit beschränkter Haftung")
-    names = entity_names(NameTypeTag.ORG, entity)
+    names = entity_names(entity)
     assert len(names) == 1
     name = names.pop()
     for span in name.spans:
@@ -51,9 +52,10 @@ def test_entity_names_company():
             assert span.symbol.id == "LLC"
             assert len(span.parts) == 1
     other = e("Company", name="ABC Ltd.")
-    other_name = entity_names(NameTypeTag.ORG, other).pop()
+    other_name = entity_names(other).pop()
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
+
 
 def test_name_match():
     query = e("Person", name="John Smith")

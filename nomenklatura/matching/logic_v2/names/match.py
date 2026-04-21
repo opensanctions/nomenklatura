@@ -216,8 +216,8 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
     name_prop = config.get_optional_string("nm_name_property")
-    query_names = entity_names(type_tag, query, prop=name_prop, is_query=True)
-    result_names = entity_names(type_tag, result, prop=name_prop)
+    query_names = entity_names(query, prop=name_prop, is_query=True)
+    result_names = entity_names(result, prop=name_prop)
 
     # For literal matches, return early instead of performing all the magic. This addresses
     # a user surprise where literal matches can score below 1.0 after name de-duplication has

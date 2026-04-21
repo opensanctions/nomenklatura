@@ -3,9 +3,10 @@ from normality import WS
 from rigour.ids import StrictFormat
 from rigour.addresses import normalize_address
 from rigour.names import Name
-from rigour.names import tokenize_name, prenormalize_name
+from rigour.names import tokenize_name
 from rigour.names import remove_person_prefixes
 from rigour.names import tag_person_name, tag_org_name
+from rigour.text.normalize import Normalize
 from rigour.text import is_stopword
 from typing import Generator, Set, Tuple
 from followthemoney import registry, Schema, StatementEntity
@@ -68,9 +69,9 @@ def tokenize_name_(schema: Schema, name: str) -> Generator[Tuple[str, str], None
     #     name = remove_org_types(name, normalizer=normalize_name)
     nameobj = Name(name)
     if schema.is_a("Person"):
-        nameobj = tag_person_name(nameobj, prenormalize_name)
+        nameobj = tag_person_name(nameobj, Normalize.CASEFOLD)
     elif schema.is_a("LegalEntity"):
-        nameobj = tag_org_name(nameobj, prenormalize_name)
+        nameobj = tag_org_name(nameobj, Normalize.CASEFOLD)
 
     # symbolic_parts: Set[NamePart] = set()
     for span in nameobj.spans:
