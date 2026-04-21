@@ -291,6 +291,7 @@ class WikidataEnricher(Enricher[DS]):
                     "wikipediaUrl",
                     wikilink.url,
                     original_value=wikilink.title,
+                    origin=wikilink.site,
                     lang=wikilink.lang,
                 )
                 break
@@ -302,6 +303,7 @@ class WikidataEnricher(Enricher[DS]):
                     "wikipediaUrl",
                     wikilink.url,
                     original_value=wikilink.title,
+                    origin=wikilink.site,
                     lang=wikilink.lang,
                 )
                 break
