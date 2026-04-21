@@ -5,7 +5,7 @@ from rigour.text.distance import levenshtein
 from followthemoney import E, registry
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import has_schema, type_pair
+from nomenklatura.matching.util import FNUL, has_schema, type_pair
 from nomenklatura.matching.compare.util import clean_map, CleanFunc
 
 
@@ -39,7 +39,7 @@ def _bidi_id_prop_match(
         return FtResult(score=1.0, detail="Property match: %r" % prop_name)
     if _id_prop_match(result, query, prop_name, clean=clean):
         return FtResult(score=1.0, detail="Property match: %r" % prop_name)
-    return FtResult(score=0.0, detail="No match: %r" % prop_name)
+    return FtResult(score=FNUL, detail="No match on identifiers.")
 
 
 def lei_code_match(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -65,7 +65,7 @@ def inn_code_match(query: E, result: E, config: ScoringConfig) -> FtResult:
 def isin_security_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two securities have the same ISIN."""
     if not has_schema(query, result, "Security"):
-        return FtResult(score=0.0, detail="None of the entities is a security")
+        return FtResult(score=FNUL, detail=None)
     return _bidi_id_prop_match(query, result, "isin", ISIN.normalize)
 
 
@@ -81,15 +81,15 @@ def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two companies or organizations have different tax identifiers or registration
     numbers."""
     if not has_schema(query, result, "Organization"):
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
     query_ids = clean_map(query_ids_, StrictFormat.normalize)
     result_ids = clean_map(result_ids_, StrictFormat.normalize)
     if not len(query_ids) or not len(result_ids):
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     common = query_ids.intersection(result_ids)
     if len(common) > 0:
-        return FtResult(score=0.0, detail=None)
+        return FtResult(score=FNUL, detail=None)
     max_ratio = 0.0
     for query_id, result_id in product(query_ids, result_ids):
         distance = levenshtein(query_id, result_id)

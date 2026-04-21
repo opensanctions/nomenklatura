@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm, FtResult
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
@@ -35,12 +35,12 @@ class LogicV1(HeuristicAlgorithm):
     NAME = "logic-v1"
     features = [
         Feature(func=name_literal_match, weight=1.0),
-        Feature(func=FtResult.wrap(person_name_jaro_winkler), weight=0.8),
-        Feature(func=FtResult.wrap(person_name_phonetic_match), weight=0.9),
-        Feature(func=FtResult.wrap(name_fingerprint_levenshtein), weight=0.9),
+        Feature(func=person_name_jaro_winkler, weight=0.8),
+        Feature(func=person_name_phonetic_match, weight=0.9),
+        Feature(func=name_fingerprint_levenshtein, weight=0.9),
         # These are there so they can be enabled using custom weights:
-        Feature(func=FtResult.wrap(name_metaphone_match), weight=FNUL),
-        Feature(func=FtResult.wrap(name_soundex_match), weight=FNUL),
+        Feature(func=name_metaphone_match, weight=FNUL),
+        Feature(func=name_soundex_match, weight=FNUL),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
         Feature(func=isin_security_match, weight=0.98),
@@ -52,7 +52,7 @@ class LogicV1(HeuristicAlgorithm):
         Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
-        Feature(func=FtResult.wrap(last_name_mismatch), weight=-0.2, qualifier=True),
+        Feature(func=last_name_mismatch, weight=-0.2, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
         Feature(func=dob_day_disjoint, weight=-0.2, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),

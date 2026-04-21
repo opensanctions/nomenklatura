@@ -50,20 +50,25 @@ class AlgorithmDocs(BaseModel):
     features: FeatureDocs
 
 
-class FtResult(BaseModel):
-    """A explained score for a particular feature result."""
+class FtResult(object):
+    """Match feature result type."""
 
-    detail: Optional[str]
-    score: float
+    __slots__ = ["score", "detail", "query", "candidate"]
 
-    # Used e.g. for names and identifiers to explain which value from
-    # the query and result entities was actually used to make the match.
-    query: Optional[str] = None
-    candidate: Optional[str] = None
+    def __init__(
+        self,
+        score: float,
+        detail: Optional[str] = None,
+        query: Optional[str] = None,
+        candidate: Optional[str] = None,
+    ) -> None:
+        self.score = score
+        self.detail = detail
 
-    def empty(self) -> bool:
-        """Check if the result is empty."""
-        return self.detail is None and self.score == FNUL
+        # Used e.g. for names and identifiers to explain which value from
+        # the query and result entities was actually used to make the match.
+        self.query = query
+        self.candidate = candidate
 
     @classmethod
     def wrap(cls, func: CompareFunction) -> FeatureCompareFunction:
@@ -93,21 +98,51 @@ class FtResult(BaseModel):
         return f"<FtR({self.score}, {self.detail!r})>"
 
 
-class MatchingResult(BaseModel):
-    """Score and feature comparison results for matching comparison."""
+class FeatureResult(BaseModel):
+    """A explained score for a particular feature result."""
 
+    # This is the API version of the explanation. it's a pydantic model that can
+    # be easily serialized to JSON and returned in the API response. The FtResult
+    # is the internal version that is quicker to generate in the millions during
+    # matching operations.
+
+    detail: Optional[str]
     score: float
-    explanations: Dict[str, FtResult]
 
-    @classmethod
-    def make(cls, score: float, explanations: Dict[str, FtResult]) -> "MatchingResult":
-        """Create a new matching result."""
-        explanations = {k: v for k, v in explanations.items() if not v.empty()}
-        return cls(score=score, explanations=explanations)
+    # Used e.g. for names and identifiers to explain which value from
+    # the query and result entities was actually used to make the match.
+    query: Optional[str] = None
+    candidate: Optional[str] = None
+
+
+class MatchingResult(object):
+    """Score and feature comparison results for matching comparison. This is instantiated
+    for each candidate returned by the search, and the score is used to rank the results.
+    Explanations are lazy-generated for performance."""
+
+    __slots__ = ["score", "_explanations"]
+
+    def __init__(self, score: float, explanations: Dict[str, FtResult]) -> None:
+        self.score = score
+        self._explanations = explanations
+
+    @property
+    def explanations(self) -> Dict[str, FeatureResult]:
+        """Return the explanations for the feature results as pydantic models."""
+        _explanations: Dict[str, FeatureResult] = {}
+        for name, res in self._explanations.items():
+            if res.detail is not None or res.score > FNUL:
+                _explanations[name] = FeatureResult(
+                    score=res.score,
+                    detail=res.detail,
+                    query=res.query,
+                    candidate=res.candidate,
+                )
+        return _explanations
 
     def __repr__(self) -> str:
         """Return a string representation of the matching result."""
-        return f"<MR({self.score}, expl={self.explanations})>"
+        return f"<MR({self.score}, expl={self._explanations})>"
 
 
 class ScoringConfig(BaseModel):
@@ -119,7 +154,7 @@ class ScoringConfig(BaseModel):
     @classmethod
     def defaults(cls) -> "ScoringConfig":
         """Return the default configuration."""
-        return cls(weights={}, config={})
+        return cls.model_construct(weights={}, config={})
 
     def get_float(self, key: str) -> float:
         """Get a float value from the configuration."""
@@ -171,17 +206,21 @@ class ScoringAlgorithm(object):
         return ScoringConfig.defaults()
 
 
-class Feature(BaseModel):
-    func: Union[FeatureCompareFunction, FeatureCompareConfigured]
-    weight: float
-    qualifier: bool = False
+class Feature(object):
+    __slots__ = ["func", "name", "weight", "qualifier"]
 
-    @property
-    def name(self) -> str:
-        return self.func.__name__
+    def __init__(
+        self,
+        func: Union[FeatureCompareFunction, FeatureCompareConfigured],
+        weight: float,
+        qualifier: bool = False,
+    ) -> None:
+        self.func = func
+        self.name = func.__name__
+        self.weight = weight
+        self.qualifier = qualifier
 
-    @property
-    def doc(self) -> FeatureDoc:
+    def get_doc(self) -> FeatureDoc:
         description = self.func.__doc__
         assert description is not None, self.func.__name__
         return FeatureDoc(
@@ -211,7 +250,7 @@ class HeuristicAlgorithm(ScoringAlgorithm):
 
     @classmethod
     def get_feature_docs(cls) -> FeatureDocs:
-        return {f.name: f.doc for f in cls.features}
+        return {f.name: f.get_doc() for f in cls.features}
 
     @classmethod
     def default_config(cls) -> ScoringConfig:
@@ -225,7 +264,7 @@ class HeuristicAlgorithm(ScoringAlgorithm):
     def compare(cls, query: E, result: E, config: ScoringConfig) -> MatchingResult:
         if not query.schema.can_match(result.schema):
             if not query.schema.name == result.schema.name:
-                return MatchingResult.make(FNUL, {})
+                return MatchingResult(FNUL, {})
 
         for name, var in cls.CONFIG.items():
             if config.config.get(name) is None:
@@ -240,7 +279,8 @@ class HeuristicAlgorithm(ScoringAlgorithm):
                 continue
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
-                res = feature.invoke(query, result, config)
+                func = cast(FeatureCompareConfigured, feature.func)
+                res = func(query, result, config)
                 if res is not None:
                     explanations[feature.name] = res
                     scores[feature.name] = res.score
@@ -250,18 +290,19 @@ class HeuristicAlgorithm(ScoringAlgorithm):
         # cannot improve the result. When scores is empty (all main weights
         # overridden to zero), qualifiers are still evaluated.
         if max(scores.values(), default=FNUL) <= FNUL:
-            return MatchingResult.make(score=FNUL, explanations=explanations)
+            return MatchingResult(score=FNUL, explanations=explanations)
 
         for feature in cls.features:
             if not feature.qualifier:
                 continue
             weights[feature.name] = config.weights.get(feature.name, feature.weight)
             if weights[feature.name] != FNUL:
-                res = feature.invoke(query, result, config)
+                func = cast(FeatureCompareConfigured, feature.func)
+                res = func(query, result, config)
                 if res is not None:
                     explanations[feature.name] = res
                     scores[feature.name] = res.score
 
         score = cls.compute_score(scores, weights)
         score = min(1.0, max(FNUL, score))
-        return MatchingResult.make(score=score, explanations=explanations)
+        return MatchingResult(score=score, explanations=explanations)

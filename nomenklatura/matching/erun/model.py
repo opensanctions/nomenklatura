@@ -113,7 +113,7 @@ class EntityResolveRegression(ScoringAlgorithm):
         for feature, coeff in zip(cls.FEATURES, encoded):
             name = feature.__name__
             explanations[name] = FtResult(score=float(coeff), detail=None)
-        return MatchingResult.make(score=score, explanations=explanations)
+        return MatchingResult(score=score, explanations=explanations)
 
     @classmethod
     def encode_pair(cls, left: E, right: E) -> Encoded:

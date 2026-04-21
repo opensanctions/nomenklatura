@@ -4,8 +4,7 @@ from rich.text import Text
 from rich.table import Table
 import yaml
 
-from followthemoney import StatementEntity as Entity
-from followthemoney import Dataset
+from followthemoney import ValueEntity as Entity, model
 from nomenklatura.matching.types import FtResult
 
 
@@ -31,8 +30,9 @@ class Result:
 
 def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
-    dataset = Dataset.make({"name": id, "title": id})
-    entity = Entity(dataset, {"schema": schema, "id": id})
+    schema_obj = model.get(schema)
+    assert schema_obj is not None, f"Schema not found: {schema}"
+    entity = Entity(schema_obj, {"id": id})
     for prop, value in props.items():
         entity.add(prop, value)
     if not len(entity.names):

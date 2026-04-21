@@ -8,7 +8,7 @@ from rigour.ids import StrictFormat
 
 from nomenklatura.matching.compare.util import clean_map
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import has_schema, props_pair, type_pair
+from nomenklatura.matching.util import FNUL, has_schema, props_pair, type_pair
 
 
 def _dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
@@ -29,14 +29,14 @@ def dob_day_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     """The birth date of the two entities is not the same."""
     query_dates, result_dates = props_pair(query, result, ["birthDate"])
     if len(query_dates) == 0 or len(result_dates) == 0:
-        return FtResult(score=0.0, detail="No birth dates provided")
+        return FtResult(score=FNUL, detail="No birth dates provided")
     result_days = _dates_precision(result_dates, Precision.DAY)
     query_days = _dates_precision(query_dates, Precision.DAY)
     if len(result_days) == 0 or len(query_days) == 0:
-        return FtResult(score=0.0, detail="Birth days don't include day precision")
+        return FtResult(score=FNUL, detail="Birth days don't include day precision")
     overlap = query_days.intersection(result_days)
     if len(overlap) > 0:
-        return FtResult(score=0.0, detail=f"Birth day match: {', '.join(overlap)}")
+        return FtResult(score=FNUL, detail="Birth day match.")
     query_flipped = set([_flip_day_month(d) for d in query_days])
     overlap = query_flipped.intersection(result_days)
     if len(overlap) > 0:
@@ -51,11 +51,11 @@ def dob_year_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_years = _dates_precision(query_dates, Precision.YEAR)
     result_years = _dates_precision(result_dates, Precision.YEAR)
     if len(query_years) == 0 or len(result_years) == 0:
-        return FtResult(score=0.0, detail="No birth years provided")
+        return FtResult(score=FNUL, detail="No birth years provided")
     overlap = query_years.intersection(result_years)
     if len(overlap) > 0:
         detail = f"Birth year match: {', '.join(overlap)}"
-        return FtResult(score=0.0, detail=detail)
+        return FtResult(score=FNUL, detail=detail)
     return FtResult(score=1.0, detail="Birth year mis-match")
 
 
@@ -63,15 +63,16 @@ def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two companies or organizations have different tax identifiers or registration
     numbers."""
     if not has_schema(query, result, "Organization"):
-        return FtResult(score=0.0, detail="Neither entity is an organization")
+        return FtResult(score=FNUL, detail="Neither entity is an organization")
     query_ids_, result_ids_ = type_pair(query, result, registry.identifier)
     query_ids = clean_map(query_ids_, StrictFormat.normalize)
     result_ids = clean_map(result_ids_, StrictFormat.normalize)
     if not len(query_ids) or not len(result_ids):
-        return FtResult(score=0.0, detail="Neither entity has identifiers")
+        return FtResult(score=FNUL, detail="Neither entity has identifiers")
     common = query_ids.intersection(result_ids)
     if len(common) > 0:
-        return FtResult(score=0.0, detail="Common identifiers: %s" % ", ".join(common))
+        detail = f"Common identifiers found: {', '.join(common)}"
+        return FtResult(score=FNUL, detail=detail)
     max_ratio = 0.0
     for query_id, result_id in product(query_ids, result_ids):
         distance = levenshtein(query_id, result_id)
@@ -79,8 +80,4 @@ def orgid_disjoint(query: E, result: E, config: ScoringConfig) -> FtResult:
         ratio = 1.0 - (distance / float(max_len))
         if ratio > 0.7:
             max_ratio = max(max_ratio, ratio)
-    detail = "Mismatched identifiers: %s vs %s" % (
-        ", ".join(query_ids),
-        ", ".join(result_ids),
-    )
-    return FtResult(score=1 - max_ratio, detail=detail)
+    return FtResult(score=1 - max_ratio, detail="Mismatched identifiers.")

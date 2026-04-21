@@ -1,4 +1,4 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 from rigour.names import NameTypeTag, Name, NamePart, Span, Symbol
 from rigour.names import align_person_name_order, normalize_name
 from rigour.names import remove_obj_prefixes
@@ -14,6 +14,7 @@ from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similari
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import Match, numbers_mismatch
 from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import FNUL
 
 
 # Step 1: Generate all Matches based on symbols
@@ -92,7 +93,9 @@ def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
     return pairings
 
 
-def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
+def match_name_symbolic(
+    query: Name, result: Name, config: ScoringConfig
+) -> Tuple[FtResult, List[Match]]:
     # Stage 1: Generate all valid symbol-based pairings
     pairings = generate_symbol_pairings(query, result)
 
@@ -103,7 +106,8 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
     extra_query_weight = config.get_float("nm_extra_query_name")
     extra_result_weight = config.get_float("nm_extra_result_name")
     family_name_weight = config.get_float("nm_family_name_weight")
-    retval = FtResult(score=0.0, detail=None)
+    retval = FtResult(score=FNUL, detail=None)
+    retmatches: List[Match] = []
     for pairing in pairings:
         matches: List[Match] = pairing.matches
 
@@ -136,7 +140,14 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
 
             # We have types of symbol matches and where we never score 1.0, but for
             # literal matches, we always want to score 1.0
-            if match.score < 1.0 and match.qstr == match.rstr:
+            if (
+                match.score < 1.0
+                and len(match.qps) == len(match.rps)
+                and match.qps
+                and all(
+                    q.comparable == r.comparable for q, r in zip(match.qps, match.rps)
+                )
+            ):
                 match.score = 1.0
             # We treat family names matches as more important (but configurable) because
             # they're just globally less murky and changeable than given names.
@@ -149,16 +160,16 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
-            detail = " ".join(str(m) for m in matches)
+            # We are not turning the matches into a detail string here because this is the hot
+            # path and the string generation takes a non-trivial amount of time. We defer it
+            # until the end when we know which matches we will return.
+            retmatches = list(matches)
             retval = FtResult(
                 score=score,
-                detail=detail,
                 query=query.original,
                 candidate=result.original,
             )
-    if retval.detail is None:
-        retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
-    return retval
+    return retval, retmatches
 
 
 def _get_object_names(entity: EntityProxy) -> Set[str]:
@@ -174,7 +185,7 @@ def match_object_names(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match the names of two objects, such as vessels or assets."""
     result_names = _get_object_names(result)
     mismatch_penalty = 1 - config.get_float("nm_number_mismatch")
-    best_result = FtResult(score=0.0, detail=None)
+    best_result = FtResult(score=FNUL, detail=None)
     for query_name in _get_object_names(query):
         query_name = remove_obj_prefixes(query_name)
         for result_name in result_names:
@@ -198,12 +209,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match two entities by analyzing and comparing their names."""
     schema = model.common_schema(query.schema, result.schema)
     type_tag = schema_type_tag(schema)
-    best = FtResult(score=0.0, detail=None)
     if type_tag == NameTypeTag.UNK:
         # Name matching is not supported for entities that are not listed
         # as a person, organization, or a thing.
-        best.detail = "Unsuited for name matching: %s" % schema.name
-        return best
+        return FtResult(score=FNUL, detail=None)
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
     name_prop = config.get_optional_string("nm_name_property")
@@ -224,7 +233,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
             score=1.0,
         )
         return FtResult(
-            score=match.score, detail=str(match), query=match.qstr, candidate=match.rstr
+            score=match.score,
+            detail=str(match),
+            query=query_comparable[longest].original,
+            candidate=result_comparable[longest].original,
         )
 
     # Remove short names that are contained in longer names.
@@ -234,11 +246,16 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = Name.consolidate_names(query_names)
     result_names = Name.consolidate_names(result_names)
 
+    best = FtResult(score=FNUL, detail=None)
+    best_matches: List[Match] = []
     for query_name in query_names:
         for result_name in result_names:
-            ftres = match_name_symbolic(query_name, result_name, config)
+            ftres, ftmatches = match_name_symbolic(query_name, result_name, config)
             if ftres.score >= best.score:
                 best = ftres
+                best_matches = ftmatches
+    if len(best_matches) > 0 and best.detail is None:
+        best.detail = " ".join(str(m) for m in best_matches)
     if best.detail is None:
-        best.detail = "No names available for matching"
+        best.detail = "No name match found."
     return best

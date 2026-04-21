@@ -52,10 +52,10 @@ def _align_name_parts(query: List[str], result: List[str]) -> float:
     # return jaro_winkler(query_aligned, result_aligned)
 
 
-def person_name_jaro_winkler(query: E, result: E) -> float:
+def person_name_jaro_winkler(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Compare two persons' names using the Jaro-Winkler string similarity algorithm."""
     if not has_schema(query, result, "Person"):
-        return FNUL
+        return FtResult(score=FNUL, detail=None)
     query_names_, result_names_ = type_pair(query, result, registry.name)
     query_names = [_name_parts(n) for n in query_names_]
     result_names = [_name_parts(n) for n in result_names_]
@@ -66,15 +66,17 @@ def person_name_jaro_winkler(query: E, result: E) -> float:
         if is_levenshtein_plausible(qns, rns):
             score = max(score, jaro_winkler(qns, rns) ** len(qns))
         score = max(score, _align_name_parts(list(qn), list(rn)))
-    return score
+    return FtResult(score=score, detail=None)
 
 
-def name_fingerprint_levenshtein(query: E, result: E) -> float:
+def name_fingerprint_levenshtein(
+    query: E, result: E, config: ScoringConfig
+) -> FtResult:
     """Two non-person entities have similar fingerprinted names. This includes
     simplifying entity type names (e.g. "Limited" -> "Ltd") and uses the
     Damerau-Levensthein string distance algorithm."""
     if has_schema(query, result, "Person"):
-        return FNUL
+        return FtResult(score=FNUL, detail=None)
     query_names, result_names = type_pair(query, result, registry.name)
     max_score = FNUL
     for qn, rn in product(query_names, result_names):
@@ -115,7 +117,7 @@ def name_fingerprint_levenshtein(query: E, result: E) -> float:
         raligned = "".join(p[1] for p in aligned)
         score = levenshtein_similarity(qaligned, raligned)
         max_score = max(max_score, score)
-    return max_score
+    return FtResult(score=max_score, detail=None)
 
 
 def name_literal_match(query: E, result: E, config: ScoringConfig) -> FtResult:
@@ -130,7 +132,7 @@ def name_literal_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     return FtResult(score=1.0, detail=detail)
 
 
-def last_name_mismatch(query: E, result: E) -> float:
+def last_name_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:
     """The two persons have different last names."""
     qv, rv = props_pair(query, result, ["lastName"])
     qvt = names_word_list(qv, min_length=2)
@@ -138,7 +140,8 @@ def last_name_mismatch(query: E, result: E) -> float:
     # TODO: levenshtein
     # for (qn, rn) in product(qvt, rvt):
     #     similarity = levenshtein_similarity(qn, rn)
-    return 1.0 if is_disjoint(qvt, rvt) else FNUL
+    score = 1.0 if is_disjoint(qvt, rvt) else FNUL
+    return FtResult(score=score, detail=None)
 
 
 def weak_alias_match(query: E, result: E, config: ScoringConfig) -> FtResult:
