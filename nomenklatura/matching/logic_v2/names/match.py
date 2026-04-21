@@ -1,4 +1,4 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 from rigour.names import NameTypeTag, Name, NamePart, Span, Symbol
 from rigour.names import align_person_name_order, normalize_name
 from rigour.names import remove_obj_prefixes
@@ -93,7 +93,9 @@ def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
     return pairings
 
 
-def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtResult:
+def match_name_symbolic(
+    query: Name, result: Name, config: ScoringConfig
+) -> Tuple[FtResult, List[Match]]:
     # Stage 1: Generate all valid symbol-based pairings
     pairings = generate_symbol_pairings(query, result)
 
@@ -143,8 +145,7 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
                 and len(match.qps) == len(match.rps)
                 and match.qps
                 and all(
-                    q.comparable == r.comparable
-                    for q, r in zip(match.qps, match.rps)
+                    q.comparable == r.comparable for q, r in zip(match.qps, match.rps)
                 )
             ):
                 match.score = 1.0
@@ -159,18 +160,16 @@ def match_name_symbolic(query: Name, result: Name, config: ScoringConfig) -> FtR
         total_score = sum(match.weighted_score for match in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
+            # We are not turning the matches into a detail string here because this is the hot
+            # path and the string generation takes a non-trivial amount of time. We defer it
+            # until the end when we know which matches we will return.
             retmatches = list(matches)
             retval = FtResult(
                 score=score,
                 query=query.original,
                 candidate=result.original,
             )
-    if retval.detail is None:
-        if len(retmatches) > 0:
-            retval.detail = " ".join(str(m) for m in retmatches)
-        else:
-            retval.detail = f"{query.comparable!r}≉{result.comparable!r}"
-    return retval
+    return retval, retmatches
 
 
 def _get_object_names(entity: EntityProxy) -> Set[str]:
@@ -210,11 +209,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Match two entities by analyzing and comparing their names."""
     schema = model.common_schema(query.schema, result.schema)
     type_tag = schema_type_tag(schema)
-    best = FtResult(score=FNUL, detail=None)
     if type_tag == NameTypeTag.UNK:
         # Name matching is not supported for entities that are not listed
         # as a person, organization, or a thing.
-        return best
+        return FtResult(score=FNUL, detail=None)
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
     name_prop = config.get_optional_string("nm_name_property")
@@ -248,11 +246,16 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = Name.consolidate_names(query_names)
     result_names = Name.consolidate_names(result_names)
 
+    best = FtResult(score=FNUL, detail=None)
+    best_matches: List[Match] = []
     for query_name in query_names:
         for result_name in result_names:
-            ftres = match_name_symbolic(query_name, result_name, config)
+            ftres, ftmatches = match_name_symbolic(query_name, result_name, config)
             if ftres.score >= best.score:
                 best = ftres
+                best_matches = ftmatches
+    if len(best_matches) > 0 and best.detail is None:
+        best.detail = " ".join(str(m) for m in best_matches)
     if best.detail is None:
-        best.detail = "No names available for matching"
+        best.detail = "No name match found."
     return best
