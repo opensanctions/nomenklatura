@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class BrightQueryEnricher(Enricher[DS]):
     """Enricher for the BrightQuery Business Identity API."""
 
-    BASE_URL = "https://apigateway.brightquery.com/auth/business-identity-api/org"
+    BASE_URL = "https://apigw.brightquery.com/search/identity/org"
 
     def __init__(
         self,
@@ -26,27 +26,23 @@ class BrightQueryEnricher(Enricher[DS]):
         session: Optional[requests.Session] = None,
     ):
         super().__init__(dataset, cache, config, session)
-        self._user = self.get_config_expand("username", "${BRIGHTQUERY_USERNAME}")
-        self._password = self.get_config_expand("password", "${BRIGHTQUERY_PASSWORD}")
-        if not self._user or not self._password:
-            raise ValueError(
-                "Missing BrightQuery credentials: brightquery_user and/or brightquery_pass"
-            )
+        self._api_key = self.get_config_expand("api_key", "${BRIGHTQUERY_API_KEY}")
+        if not self._api_key:
+            raise ValueError("Missing BrightQuery API key.")
 
-        # BrightQuery sometimes returns transient 401 responses; retry POST calls.
         retries = Retry(
             total=5,
             backoff_factor=3,
             status_forcelist=[
-                401, # 401 Unauthorized is sometimes returned even though we have valid credentials
-                504, # 504 Gateway Timeout
-                502, # 502 Bad Gateway
-                ] + list(Retry.RETRY_AFTER_STATUS_CODES),
+                504,  # 504 Gateway Timeout
+                502,  # 502 Bad Gateway
+            ]
+            + list(Retry.RETRY_AFTER_STATUS_CODES),
             allowed_methods=frozenset(["POST"]),
         )
         adapter = HTTPAdapter(max_retries=retries)
-        self.session.mount("https://apigateway.brightquery.com", adapter)
-        self.session.auth = (self._user, self._password)
+        self.session.mount("https://apigw.brightquery.com", adapter)
+        self.session.headers.update({"x-api-key": self._api_key})
 
         self.skip_jurisdictions = set(self.get_config_list("skip_jurisdictions"))
         """Set of jurisdiction codes to skip during enrichment because they're not covered by
