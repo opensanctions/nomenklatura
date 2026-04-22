@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import yaml
 from typing import Dict, List
 from followthemoney import ValueEntity as Entity, model
@@ -12,11 +14,12 @@ class Check:
         self.candidate = candidate
 
 
-def make_entity(id: str, schema: str, props: Dict[str, str]) -> Entity:
+def make_entity(schema: str, props: Dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
     schema_obj = model.get(schema)
     assert schema_obj is not None, f"Schema not found: {schema}"
-    entity = Entity(schema_obj, {"id": id})
+    entity_id = uuid4().hex
+    entity = Entity(schema_obj, {"id": entity_id})
     for prop, value in props.items():
         entity.add(prop, value)
     if not len(entity.names) and entity.schema.is_a("Person"):
@@ -42,9 +45,9 @@ def load_checks() -> List[Check]:
         schema = check.get("schema")
         is_match = check.get("match")
         query_ = check.get("query", {})
-        query = make_entity("query", schema, query_)
+        query = make_entity(schema, query_)
         candidate_ = check.get("candidate", {})
-        candidate = make_entity("candidate", schema, candidate_)
+        candidate = make_entity(schema, candidate_)
         objects.append(Check(schema, is_match, query, candidate))
     return objects
 
