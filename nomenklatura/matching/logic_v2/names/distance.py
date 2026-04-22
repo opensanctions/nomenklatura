@@ -112,6 +112,8 @@ def weighted_edit_similarity(
     costs: Dict[NamePart, List[float]] = defaultdict(list)
 
     if len(qry_parts) and len(res_parts):
+        qry_idx = 0
+        res_idx = 0
         qry_cur = qry_parts[0]
         res_cur = res_parts[0]
         for op in _opcodes(qry_text, res_text):
@@ -126,15 +128,15 @@ def weighted_edit_similarity(
                 if qc is not None:
                     costs[qry_cur].append(cost)
                     if qc == SEP:
-                        next_idx = qry_parts.index(qry_cur) + 1
-                        if len(qry_parts) >= next_idx:
-                            qry_cur = qry_parts[next_idx]
+                        qry_idx += 1
+                        if qry_idx < len(qry_parts):
+                            qry_cur = qry_parts[qry_idx]
                 if rc is not None:
                     costs[res_cur].append(cost)
                     if rc == SEP:
-                        next_idx = res_parts.index(res_cur) + 1
-                        if len(res_parts) >= next_idx:
-                            res_cur = res_parts[next_idx]
+                        res_idx += 1
+                        if res_idx < len(res_parts):
+                            res_cur = res_parts[res_idx]
 
     # Use the overlaps to create matches between query and result parts.
     part_matches: Dict[NamePart, Match] = {}
