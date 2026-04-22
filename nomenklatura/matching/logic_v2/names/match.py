@@ -1,5 +1,5 @@
-from typing import Dict, List, Set, Tuple
-from rigour.names import NameTypeTag, Name, NamePart, Span, Symbol
+from typing import List, Set, Tuple
+from rigour.names import NameTypeTag, Name, NamePart
 from rigour.names import align_person_name_order, normalize_name
 from rigour.names import remove_obj_prefixes
 from rigour.names.symbol import pair_symbols
@@ -14,88 +14,11 @@ from nomenklatura.matching.logic_v2.names.magic import (
     SYM_WEIGHTS,
     weight_extra_match,
 )
-from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import Match, numbers_mismatch
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL
-
-
-# Step 1: Generate all Matches based on symbols
-# Step 2: Generate the most highly-scored sequences of matches
-# Step 3: Pick the best sequence
-
-
-def generate_symbol_pairings(query: Name, result: Name) -> List[Pairing]:
-    """Generate all valid non-overlapping pairings of symbol spans between two names.
-
-    This function creates a set of pairings between the symbols that have been annotated
-    as spans on both names. It tries to determine the maximum, non-overlapping set of
-    name parts that can be explained using pre-defined symbols.
-
-    Args:
-        query: The query name with tagged spans
-        result: The result name with tagged spans
-
-    Returns:
-        A list of Pairing objects representing all valid non-overlapping symbol matches.
-        Returns a list with one empty pairing if no symbol matches are possible.
-    """
-    query_symbols: Set[Symbol] = set(span.symbol for span in query.spans)
-    pairings = [Pairing.empty()]
-
-    # Build a map of result spans indexed by symbol for fast lookup
-    result_map: Dict[Symbol, List[Span]] = {}
-    for span in result.spans:
-        if span.symbol not in query_symbols:
-            continue
-        if span.symbol not in result_map:
-            result_map[span.symbol] = []
-        result_map[span.symbol].append(span)
-
-    part_to_spans: Dict[NamePart, List[Span]] = {}
-    for span in query.spans:
-        # Only index spans that have matching symbols in result
-        if span.symbol not in result_map:
-            continue
-        # Map each part in the span to the span itself
-        for part in span.parts:
-            if part not in part_to_spans:
-                part_to_spans[part] = []
-            part_to_spans[part].append(span)
-
-    # Track which span pair combinations we've already seen to avoid duplicates
-    seen: Set[int] = set()
-
-    # Iterate through query parts to build up pairings incrementally
-    for part in query.parts:
-        if part not in part_to_spans:
-            continue  # No spans contain this part
-
-        next_pairings: List[Pairing] = []
-        for qspan in part_to_spans[part]:  # Only relevant spans, not all spans
-            for rspan in result_map[qspan.symbol]:
-                # Create a unique key for this span pair to prevent duplicates
-                # This assumes that these are the only factors for weighting the
-                # resulting match:
-                key = hash((qspan.parts, rspan.parts, qspan.symbol.category))
-                if key in seen:
-                    continue
-
-                # Try to add this span pair to each existing pairing
-                for pairing in pairings:
-                    if pairing.can_pair(qspan, rspan):
-                        seen.add(key)
-                        next_pairing = pairing.add(qspan, rspan)
-                        next_pairings.append(next_pairing)
-
-        # If we found any new pairings, replace the old list
-        # This ensures we always work with the most complete pairings
-        if len(next_pairings):
-            pairings = next_pairings
-
-    return pairings
 
 
 def match_name_symbolic(
