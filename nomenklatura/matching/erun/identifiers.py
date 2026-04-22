@@ -3,7 +3,7 @@ from typing import Set, Tuple
 from rigour.ids import StrictFormat, get_strong_format_names
 
 from followthemoney import EntityProxy, registry
-from nomenklatura.matching.util import has_schema
+from nomenklatura.matching.util import MEMO_BATCH, has_schema
 
 # HONORARY_STRONG = {registry.phone, registry.email, registry.checksum}
 STRONG_FORMATS = get_strong_format_names()
@@ -21,7 +21,7 @@ def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
     return strong_ids
 
 
-@lru_cache(maxsize=1024)
+@lru_cache(maxsize=MEMO_BATCH)
 def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
     weak_ids: Set[str] = set()
     for prop, value in entity.itervalues():

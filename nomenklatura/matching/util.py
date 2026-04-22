@@ -12,6 +12,10 @@ BASE_URL = "https://github.com/opensanctions/nomenklatura/blob/%s/nomenklatura/%
 CODE_PATH = DATA_PATH.joinpath("..").resolve()
 FNUL = 0.0
 
+# Cache enough to cover the number of comparisons in a batch where "query" is compared
+# to many "results".
+MEMO_BATCH = 1000
+
 
 def has_schema(left: E, right: E, *schemata: str) -> bool:
     """Check if one of the entities has the required schema."""

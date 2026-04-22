@@ -9,6 +9,7 @@ from rigour.text import levenshtein, is_stopword
 
 from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.types import ScoringConfig
+from nomenklatura.matching.util import MEMO_BATCH
 from nomenklatura.util import unroll
 
 SEP = " "
@@ -30,7 +31,7 @@ SIMILAR_PAIRS = [
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=MEMO_BATCH)
 def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     """Calculate the string distance between two strings."""
     if left == right:
@@ -83,7 +84,7 @@ def _costs_similarity(costs: List[float], max_cost_bias: float = 1.0) -> float:
     return 1 - (total_cost / len(costs))
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=MEMO_BATCH)
 def _opcodes(qry_text: str, res_text: str) -> Opcodes:
     """Get the opcodes for the Levenshtein distance between two strings."""
     return Levenshtein.opcodes(qry_text, res_text)

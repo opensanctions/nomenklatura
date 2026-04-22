@@ -7,10 +7,10 @@ from rigour.text import levenshtein_similarity
 from rigour.addresses import normalize_address, remove_address_keywords
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import FNUL, has_schema
+from nomenklatura.matching.util import FNUL, MEMO_BATCH, has_schema
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=MEMO_BATCH)
 def _normalize_address(addr: str) -> Set[str]:
     """Normalize an address string into tokens."""
     norm = normalize_address(addr, latinize=True)
