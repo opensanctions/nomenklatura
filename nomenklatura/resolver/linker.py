@@ -25,6 +25,15 @@ class Linker(Generic[SE]):
             return {node}
         return {Identifier.get(n) for n in cluster}
 
+    def connected_plain(self, node_id: str) -> Tuple[str, ...]:
+        """Return all entity IDs connected to the given node ID. This is a more
+        efficient version of `connected` which avoids constructing Identifier
+        objects."""
+        cluster = self._mapping.get(node_id)
+        if cluster is None:
+            return (node_id,)
+        return cluster
+
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
         if isinstance(entity_id, Identifier):

@@ -247,6 +247,10 @@ class Resolver(Linker[SE]):
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._traverse(node, set())
 
+    def connected_plain(self, node_id: str) -> Tuple[str, ...]:
+        node = Identifier.get(node_id)
+        return tuple(n.id for n in self._traverse(node, set()))
+
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
         node = Identifier.get(entity_id)
