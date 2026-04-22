@@ -2,13 +2,18 @@ from typing import Dict, List, Set, Tuple
 from rigour.names import NameTypeTag, Name, NamePart, Span, Symbol
 from rigour.names import align_person_name_order, normalize_name
 from rigour.names import remove_obj_prefixes
+from rigour.names.symbol import pair_symbols
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
 from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.magic import weight_extra_match
+from nomenklatura.matching.logic_v2.names.magic import (
+    SYM_SCORES,
+    SYM_WEIGHTS,
+    weight_extra_match,
+)
 from nomenklatura.matching.logic_v2.names.pairing import Pairing
 from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
@@ -97,7 +102,7 @@ def match_name_symbolic(
     query: Name, result: Name, config: ScoringConfig
 ) -> Tuple[FtResult, List[Match]]:
     # Stage 1: Generate all valid symbol-based pairings
-    pairings = generate_symbol_pairings(query, result)
+    # pairings = generate_symbol_pairings(query, result)
 
     # Stage 2: We compute the score for each pairing, which is a combination of the
     # symbolic match (some types of symbols are considered less strong matches than others) and
@@ -108,12 +113,23 @@ def match_name_symbolic(
     family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
     retmatches: List[Match] = []
-    for pairing in pairings:
-        matches: List[Match] = pairing.matches
+    for edges in pair_symbols(query, result):
+        matches: List[Match] = []
+        for edge in edges:
+            match = Match(
+                symbol=edge.symbol,
+                qps=list(edge.query_parts),
+                rps=list(edge.result_parts),
+                score=SYM_SCORES.get(edge.symbol.category, 1.0),
+                weight=SYM_WEIGHTS.get(edge.symbol.category, 1.0),
+            )
+            matches.append(match)
 
-        # Name parts that have not been tagged with a symbol:
-        query_rem = [part for part in query.parts if part not in pairing.query_used]
-        result_rem = [part for part in result.parts if part not in pairing.result_used]
+        # Remainders — parts not covered by any edge in this pairing
+        query_used = {p for edge in edges for p in edge.query_parts}
+        result_used = {p for edge in edges for p in edge.result_parts}
+        query_rem = [p for p in query.parts if p not in query_used]
+        result_rem = [p for p in result.parts if p not in result_used]
 
         if len(query_rem) > 0 or len(result_rem) > 0:
             if query.tag == NameTypeTag.PER:
