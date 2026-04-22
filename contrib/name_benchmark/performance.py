@@ -1,6 +1,6 @@
-from uuid import uuid4
-
+import time
 import yaml
+from uuid import uuid4
 from typing import Dict, List
 from followthemoney import ValueEntity as Entity, model
 from nomenklatura.matching.logic_v2.model import LogicV2
@@ -52,15 +52,20 @@ def load_checks() -> List[Check]:
     return objects
 
 
-def run_benchmark() -> None:
+def run_benchmark(runs: int = 2000) -> None:
     """Wrap the matcher function to match the expected signature."""
     checks = load_checks()
     config = LogicV2.default_config()
     func = LogicV2.compare
     print("Running benchmark for: %s" % (func.__name__))
-    for i in range(2000):
+    start = time.perf_counter_ns()
+    for i in range(runs):
         for check in checks:
             func(check.query, check.candidate, config)
+    end = time.perf_counter_ns()
+    comparisons = len(checks) * runs
+    print("Benchmark completed in %d ns" % (end - start))
+    print("Average time per check: %d ns" % ((end - start) / comparisons))
 
 
 if __name__ == "__main__":
