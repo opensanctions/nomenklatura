@@ -2,14 +2,12 @@ import re
 from normality import WS
 from rigour.ids import StrictFormat
 from rigour.addresses import normalize_address
-from rigour.names import Name
+from rigour.names import Symbol, NamePartTag
 from rigour.names import tokenize_name
-from rigour.names import remove_person_prefixes
-from rigour.names import tag_person_name, tag_org_name
-from rigour.text.normalize import Normalize
 from rigour.text import is_stopword
 from typing import Generator, Set, Tuple
-from followthemoney import registry, Schema, StatementEntity
+from followthemoney import registry, StatementEntity
+from followthemoney.names import entity_names
 
 NON_LETTER = re.compile(r"[^a-z0-9]+")
 WORD_FIELD = "wd"
@@ -17,6 +15,8 @@ NAME_PART_FIELD = "np"
 PHONETIC_FIELD = "ph"
 SYMBOL_FIELD = "sy"
 SKIP = (
+    # done via entity_names:
+    registry.name,
     # registry.country,
     registry.url,
     registry.topic,
@@ -60,52 +60,38 @@ TEXT_TYPES = (
 )
 
 
-def tokenize_name_(schema: Schema, name: str) -> Generator[Tuple[str, str], None, None]:
-    name = name.casefold()
-    if schema.is_a("Person"):
-        name = remove_person_prefixes(name)
-    # Disabled because this has an outsized cost in terms of performance:
-    # if schema.is_a("Organization"):
-    #     name = remove_org_types(name, normalizer=normalize_name)
-    nameobj = Name(name)
-    if schema.is_a("Person"):
-        nameobj = tag_person_name(nameobj, Normalize.CASEFOLD)
-    elif schema.is_a("LegalEntity"):
-        nameobj = tag_org_name(nameobj, Normalize.CASEFOLD)
-
-    # symbolic_parts: Set[NamePart] = set()
-    for span in nameobj.spans:
-        val = f"{SYMBOL_FIELD}:{span.symbol.category.value}:{span.symbol.id}"
-        yield (SYMBOL_FIELD, val)
-
-        # if len(span.parts) == 1 and span.symbol.category in (
-        #     Symbol.Category.NAME,
-        #     Symbol.Category.SYMBOL,
-        # ):
-        #     symbolic_parts.update(span.parts)
-
-    name_tokens: Set[str] = set()
-    for part in nameobj.parts:
-        name_tokens.add(part.comparable)
-        if len(part.form) < 3 or len(part.form) > 30 or is_stopword(part.form):
-            continue
-
-        # if part in symbolic_parts:
-        #     continue
-
-        yield NAME_PART_FIELD, f"{NAME_PART_FIELD}:{part.comparable}"
-        phoneme = part.metaphone
-        if phoneme is not None and len(phoneme) > 3:
-            yield PHONETIC_FIELD, f"{PHONETIC_FIELD}:{phoneme}"
-
-    name_fp = "".join(sorted(name_tokens))
-    if len(name_fp) > 3 and len(name_fp) < 200:
-        prefix = PREFIXES.get(registry.name, "n")
-        yield (registry.name.name, f"{prefix}:{name_fp}")
-
-
 def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None, None]:
     unique: Set[Tuple[str, str]] = set()
+
+    # Parsed name parts
+    for name in entity_names(
+        entity,
+        phonetics=False,
+        numerics=False,
+        consolidate=False,
+    ):
+        for span in name.spans:
+            if span.symbol.category in (
+                Symbol.Category.INITIAL,
+                Symbol.Category.SYMBOL,
+            ):
+                continue
+            val = f"{SYMBOL_FIELD}:{span.symbol.category.value}:{span.symbol.id}"
+            unique.add((SYMBOL_FIELD, val))
+
+        for part in name.parts:
+            if part.tag in (NamePartTag.STOP, NamePartTag.LEGAL):
+                continue
+            if len(part.form) < 3 or len(part.form) > 30:
+                continue
+            unique.add((NAME_PART_FIELD, f"{NAME_PART_FIELD}:{part.comparable}"))
+
+        if name.comparable:
+            name_fp = "".join(sorted({part.comparable for part in name.parts}))
+            if len(name_fp) > 3 and len(name_fp) < 200:
+                prefix = PREFIXES.get(registry.name, "n")
+                unique.add((registry.name.name, f"{prefix}:{name_fp}"))
+
     for prop, value in entity.itervalues():
         type = prop.type
         if not prop.matchable or type in SKIP or prop.name in SKIP_PROPERTIES:
@@ -128,7 +114,6 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
             unique.add((type.name, f"{prefix}:{value[:10]}"))
             continue
         if type == registry.name:
-            unique.update(tokenize_name_(entity.schema, value))
             continue
         if type == registry.identifier:
             clean_id = StrictFormat.normalize(value)
