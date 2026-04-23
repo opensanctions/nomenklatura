@@ -457,14 +457,14 @@ checks:
       name: Jean-Claude Juncker
   - match: true
     label: Abbreviation
-    schema: Person
+    schema: Organization
     query:
       name: PLA
     candidate:
       name: People’s Liberation Army
   - match: true
     label: Abbreviation
-    schema: Person
+    schema: Organization
     query:
       name: PLA China
     candidate:
@@ -1207,9 +1207,11 @@ checks:
   - match: false
     schema: Company
     query:
-      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР СОЦИАЛЬНОЙ АДАПТАЦИИ "АЛЬЯНС"
+      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР СОЦИАЛЬНОЙ
+        АДАПТАЦИИ "АЛЬЯНС"
     candidate:
-      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР ИССЛЕДОВАНИЯ БОЕВЫХ ИСКУССТВ "УРАЛЬСКИЙ БУДОКАН"
+      name: СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ "ЦЕНТР ИССЛЕДОВАНИЯ БОЕВЫХ
+        ИСКУССТВ "УРАЛЬСКИЙ БУДОКАН"
   - match: true
     schema: LegalEntity
     query:
@@ -1413,7 +1415,8 @@ checks:
     query:
       name: Academy of Military Medical Sciences, Insitute of Medical Equipment
     candidate:
-      name: Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology
+      name: Academy of Military Medical Sciences, Institute of Micobiology and
+        Epidemiology
   - match: false
     schema: Company
     query:
