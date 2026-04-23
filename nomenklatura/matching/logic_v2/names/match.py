@@ -108,6 +108,8 @@ def match_name_symbolic(
                 query=query.original,
                 candidate=result.original,
             )
+            if score == 1.0:
+                break
     return retval, retmatches
 
 
@@ -187,12 +189,19 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
 
     best = FtResult(score=FNUL, detail=None)
     best_matches: List[Match] = []
+
+    # This combinatorial explosion is the single biggest determinant of the name
+    # matching speed: 1 x 1 is very fast, 2 x 5 still good, but 3 x 200 gets out
+    # of hand. We need to consider more ways to prune pairs before we do a full
+    # symbolic + fuzzy match on them.
     for query_name in query_names:
         for result_name in result_names:
             ftres, ftmatches = match_name_symbolic(query_name, result_name, config)
             if ftres.score >= best.score:
                 best = ftres
                 best_matches = ftmatches
+                if best.score == 1.0:
+                    break
     if len(best_matches) > 0 and best.detail is None:
         best.detail = " ".join(str(m) for m in best_matches)
     if best.detail is None:
