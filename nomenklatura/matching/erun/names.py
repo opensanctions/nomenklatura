@@ -1,33 +1,18 @@
 from functools import lru_cache
 from typing import Set
-from followthemoney import EntityProxy, model, registry, E
-from followthemoney.names import schema_type_tag
+from followthemoney import EntityProxy, model, E
+from followthemoney.names import entity_names
 from rigour.text.distance import levenshtein_similarity, levenshtein
 from rigour.names import Name, NameTypeTag
-from rigour.names import remove_org_prefixes, remove_obj_prefixes
-from rigour.names import remove_person_prefixes
-from rigour.names import replace_org_types_compare
 from rigour.text import is_stopword
 
-from nomenklatura.matching.util import max_in_sets, has_schema
+from nomenklatura.matching.util import MEMO_BATCH, max_in_sets, has_schema
 from nomenklatura.util import unroll
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=MEMO_BATCH)
 def _entity_names(entity: EntityProxy) -> Set[Name]:
-    names: Set[Name] = set()
-    tag = schema_type_tag(entity.schema)
-    for string in entity.get_type_values(registry.name, matchable=True):
-        if tag in (NameTypeTag.ORG, NameTypeTag.ENT):
-            string = replace_org_types_compare(string)
-            string = remove_org_prefixes(string)
-        elif tag == NameTypeTag.PER:
-            string = remove_person_prefixes(string)
-        else:
-            string = remove_obj_prefixes(string)
-        n = Name(string, tag=tag)
-        names.add(n)
-    return names
+    return entity_names(entity, phonetics=False, symbols=False, consolidate=False)
 
 
 def _compare_levenshtein(left: str, right: str) -> float:

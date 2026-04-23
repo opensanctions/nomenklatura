@@ -44,7 +44,6 @@ from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
-    PHONETIC_FIELD,
     SYMBOL_FIELD,
     WORD_FIELD,
     tokenize_entity,
@@ -66,7 +65,6 @@ DEFAULT_FIELD_STOPWORDS_PCT = {
     registry.country.name: 90.0,
     registry.address.name: 10.0,
     registry.date.name: 30.0,
-    PHONETIC_FIELD: 30.0,
     WORD_FIELD: 5.0,
     NAME_PART_FIELD: 2.0,
     SYMBOL_FIELD: 10.0,
@@ -91,7 +89,6 @@ class Index(object):
     BOOSTS = {
         NAME_PART_FIELD: 5.0,
         WORD_FIELD: 0.5,
-        PHONETIC_FIELD: 2.0,
         registry.name.name: 15.0,
         registry.phone.name: 10.0,
         registry.email.name: 10.0,

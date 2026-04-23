@@ -11,6 +11,8 @@ from rigour.names import remove_person_prefixes
 from fingerprints.cleanup import clean_name_ascii, clean_name_light
 from fingerprints.types import replace_types
 
+from nomenklatura.matching.util import MEMO_BATCH
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -22,7 +24,7 @@ __all__ = [
 ]
 
 
-@lru_cache(maxsize=1024)
+@lru_cache(maxsize=MEMO_BATCH)
 def fingerprint_name(original: str) -> Optional[str]:
     """Fingerprint a legal entity name."""
     # this needs to happen before the replacements

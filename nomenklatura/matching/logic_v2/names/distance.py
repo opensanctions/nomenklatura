@@ -9,6 +9,7 @@ from rigour.text import levenshtein, is_stopword
 
 from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.types import ScoringConfig
+from nomenklatura.matching.util import MEMO_BATCH
 from nomenklatura.util import unroll
 
 SEP = " "
@@ -30,7 +31,7 @@ SIMILAR_PAIRS = [
 SIMILAR_PAIRS = SIMILAR_PAIRS + [(b, a) for a, b in SIMILAR_PAIRS]
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=MEMO_BATCH)
 def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     """Calculate the string distance between two strings."""
     if left == right:
@@ -83,7 +84,7 @@ def _costs_similarity(costs: List[float], max_cost_bias: float = 1.0) -> float:
     return 1 - (total_cost / len(costs))
 
 
-@lru_cache(maxsize=512)
+@lru_cache(maxsize=MEMO_BATCH)
 def _opcodes(qry_text: str, res_text: str) -> Opcodes:
     """Get the opcodes for the Levenshtein distance between two strings."""
     return Levenshtein.opcodes(qry_text, res_text)
@@ -112,6 +113,8 @@ def weighted_edit_similarity(
     costs: Dict[NamePart, List[float]] = defaultdict(list)
 
     if len(qry_parts) and len(res_parts):
+        qry_idx = 0
+        res_idx = 0
         qry_cur = qry_parts[0]
         res_cur = res_parts[0]
         for op in _opcodes(qry_text, res_text):
@@ -126,15 +129,15 @@ def weighted_edit_similarity(
                 if qc is not None:
                     costs[qry_cur].append(cost)
                     if qc == SEP:
-                        next_idx = qry_parts.index(qry_cur) + 1
-                        if len(qry_parts) >= next_idx:
-                            qry_cur = qry_parts[next_idx]
+                        qry_idx += 1
+                        if qry_idx < len(qry_parts):
+                            qry_cur = qry_parts[qry_idx]
                 if rc is not None:
                     costs[res_cur].append(cost)
                     if rc == SEP:
-                        next_idx = res_parts.index(res_cur) + 1
-                        if len(res_parts) >= next_idx:
-                            res_cur = res_parts[next_idx]
+                        res_idx += 1
+                        if res_idx < len(res_parts):
+                            res_cur = res_parts[res_idx]
 
     # Use the overlaps to create matches between query and result parts.
     part_matches: Dict[NamePart, Match] = {}
