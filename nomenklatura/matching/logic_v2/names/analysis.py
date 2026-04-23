@@ -37,18 +37,21 @@ def names_product(
 ) -> Iterator[Tuple[Name, Name]]:
     """Enumerate (query, result) name pairs worth feeding into the scoring core.
 
-    Prunes the cross product of two Name sets with two rules:
+    Prunes the cross product of two Name sets with three rules:
 
     - **Script-sharing pairs pass unconditionally.** If the two names share
       any real Unicode script (per `rigour.text.scripts.common_scripts` on
       the `comparable` forms), the pair is kept.
-    - **Symbol-overlap rescue with per-query dominance.** For pairs that do
-      not share any real script, keep only those with a non-empty symbol
-      overlap; and within each query, drop pairs whose symbol overlap is a
-      strict subset of another kept pair's overlap. Weaker symbolic
-      evidence is subsumed by stronger evidence for the same query — the
-      scoring core would score the dominator at least as highly as the
-      dominated, so running both is wasted work.
+    - **Same-script dominance over cross-script.** For pairs that do not
+      share any real script, drop those whose symbol overlap is a subset
+      (or equal) of any same-script pair's overlap for the same query.
+      The same-script pair is the better witness for that evidence —
+      a cross-script candidate earns a slot only by bringing symbolic
+      evidence no same-script pair already carries.
+    - **Symbol-overlap rescue with per-query strict-subset dominance.**
+      For the remaining cross-script pairs, keep only those with a
+      non-empty symbol overlap; and within each query, drop pairs whose
+      overlap is a strict subset of another kept pair's overlap.
 
     Empty-script inputs (numeric-only, punctuation-only) naturally fall
     through to the symbol-overlap rescue — they never match the script
@@ -72,27 +75,32 @@ def names_product(
 
     # First pass: script-sharing pairs always keep; no-script-overlap
     # pairs with symbol overlap are bucketed per query for the dominance
-    # check in the second pass.
-    script_ok: List[Tuple[Name, Name]] = []
+    # checks in the second pass.
+    shared_script_pairs: List[Tuple[Name, Name]] = []
+    shared_script_overlaps: Dict[Name, List[FrozenSet[Symbol]]] = {}
     per_query_symbol: Dict[Name, List[Tuple[Name, FrozenSet[Symbol]]]] = {}
     for q, qs in q_syms:
         for r, rs in r_syms:
             if common_scripts(q.comparable, r.comparable):
-                script_ok.append((q, r))
+                shared_script_pairs.append((q, r))
+                shared_script_overlaps.setdefault(q, []).append(qs & rs)
                 continue
             overlap = qs & rs
             if overlap:
                 per_query_symbol.setdefault(q, []).append((r, overlap))
 
-    # Script-ok pairs survive unconditionally.
-    yield from script_ok
+    # Shared-script pairs survive unconditionally.
+    yield from shared_script_pairs
 
-    # Symbol-only pairs: drop those whose overlap is a strict subset of
-    # another pair's overlap for the same query. Equal overlaps all
-    # survive (no strict-subset relationship).
+    # Cross-script pairs: drop those whose overlap is already covered by
+    # a same-script pair (subset-or-equal), then drop those strictly
+    # dominated by another cross-script pair for the same query.
     for q, cands in per_query_symbol.items():
+        covered = shared_script_overlaps.get(q, [])
         overlaps = [o for _, o in cands]
         for r, overlap in cands:
+            if any(overlap <= s for s in covered):
+                continue  # same-script pair already witnesses this evidence
             if any(overlap < other for other in overlaps):
-                continue  # strictly dominated — skip
+                continue  # strictly dominated within cross-script bucket
             yield (q, r)

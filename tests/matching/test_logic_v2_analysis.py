@@ -165,6 +165,87 @@ def test_names_product_partial_alias_rescues_via_symbol_overlap():
         assert set(q.symbols) & set(r.symbols)
 
 
+def test_names_product_same_script_dominates_cross_script():
+    # When a same-script candidate's symbol overlap already covers a
+    # cross-script candidate's overlap, the cross-script pair is pruned.
+    # Motivating case (issue #248): a Latin query against an entity
+    # carrying both a Latin and an Arabic rendering of the same surname.
+    # With equal symbolic evidence on both sides, the Latin pair is the
+    # better witness and the Arabic pair is dropped before scoring.
+    queries = set(
+        analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False)
+    )
+    results = set(
+        analyze_names(
+            NameTypeTag.PER,
+            [
+                "Fernando Perez Royo",
+                "فرناندو بيريز",
+                # Padding to clear the 6-pair small-product shortcut.
+                "Alice Johnson",
+                "Bob Smith",
+                "Carol Davis",
+                "Dave Wilson",
+                "Eve Brown",
+            ],
+            consolidate=False,
+        )
+    )
+    assert len(queries) * len(results) > 6
+    (query,) = queries
+    latin = next(r for r in results if r.comparable == "fernando perez royo")
+    arabic = next(r for r in results if r.comparable == "فرناندو بيريز")
+    # Sanity: latin shares script, arabic doesn't, and their overlaps
+    # with the query are equal — the exact precondition the rule targets.
+    assert common_scripts(query.comparable, latin.comparable)
+    assert not common_scripts(query.comparable, arabic.comparable)
+    assert (set(query.symbols) & set(latin.symbols)) == (
+        set(query.symbols) & set(arabic.symbols)
+    )
+    pairs = list(names_product(queries, results))
+    kept = {r for _, r in pairs}
+    assert latin in kept
+    assert arabic not in kept
+
+
+def test_names_product_cross_script_adds_new_evidence_survives():
+    # The same-script dominance rule only prunes when the cross-script
+    # pair adds nothing new. A cross-script candidate carrying a symbol
+    # the same-script pair doesn't should still survive.
+    queries = set(
+        analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False)
+    )
+    # "Fernando" in Cyrillic has Latin-transliterated comparable, so it
+    # still lands in the shared-script bucket; pair it with a richer
+    # Arabic name that carries an extra symbol.
+    results = set(
+        analyze_names(
+            NameTypeTag.PER,
+            [
+                "Fernando",
+                "فرناندو بيريز",
+                "Alice Johnson",
+                "Bob Smith",
+                "Carol Davis",
+                "Dave Wilson",
+                "Eve Brown",
+            ],
+            consolidate=False,
+        )
+    )
+    assert len(queries) * len(results) > 6
+    (query,) = queries
+    latin = next(r for r in results if r.comparable == "fernando")
+    arabic = next(r for r in results if r.comparable == "فرناندو بيريز")
+    latin_overlap = set(query.symbols) & set(latin.symbols)
+    arabic_overlap = set(query.symbols) & set(arabic.symbols)
+    assert latin_overlap < arabic_overlap  # arabic adds new evidence
+    pairs = list(names_product(queries, results))
+    kept = {r for _, r in pairs}
+    assert latin in kept
+    assert arabic in kept  # survives because it carries new symbolic evidence
+
+
 def test_names_product_symbol_dominance_drops_strict_subsets():
     # Force a no-script-overlap setup so the dominance rule kicks in:
     # a Cyrillic query against two Arabic candidates where one candidate
