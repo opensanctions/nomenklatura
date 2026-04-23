@@ -42,12 +42,12 @@ def names_product(
     - **Script-sharing pairs pass unconditionally.** If the two names share
       any real Unicode script (per `rigour.text.scripts.common_scripts` on
       the `comparable` forms), the pair is kept.
-    - **Same-script dominance over cross-script.** For pairs that do not
-      share any real script, drop those whose symbol overlap is a subset
-      (or equal) of any same-script pair's overlap for the same query.
-      The same-script pair is the better witness for that evidence —
-      a cross-script candidate earns a slot only by bringing symbolic
-      evidence no same-script pair already carries.
+    - **Skip cross-script pairs already covered by same-script ones.**
+      For pairs that do not share any real script, drop those whose
+      symbol overlap is a subset (or equal) of any same-script pair's
+      overlap for the same query. The same-script pair is the better
+      witness — a cross-script candidate earns a slot only by bringing
+      symbolic evidence no same-script pair already carries.
     - **Symbol-overlap rescue with per-query strict-subset dominance.**
       For the remaining cross-script pairs, keep only those with a
       non-empty symbol overlap; and within each query, drop pairs whose
