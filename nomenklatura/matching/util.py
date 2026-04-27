@@ -1,6 +1,8 @@
 from pathlib import Path
 from itertools import product
 from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
+from followthemoney import model
+from followthemoney.exc import InvalidData
 from followthemoney.proxy import E
 from followthemoney.types.common import PropertyType
 
@@ -18,11 +20,15 @@ MEMO_BATCH = 1000
 
 
 def has_schema(left: E, right: E, *schemata: str) -> bool:
-    """Check if one of the entities has the required schema."""
-    for schema in schemata:
-        if left.schema.is_a(schema) or right.schema.is_a(schema):
-            return True
-    return False
+    """Check if the composite schema of two entities matches any of the required schemata."""
+    try:
+        common = model.common_schema(left.schema, right.schema)
+        for schema in schemata:
+            if common.is_a(schema):
+                return True
+        return False
+    except InvalidData:
+        return False
 
 
 def props_pair(left: E, right: E, props: List[str]) -> Tuple[Set[str], Set[str]]:

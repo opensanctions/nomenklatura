@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Set
+from typing import Set
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from itertools import product
@@ -22,8 +22,10 @@ def _normalize_address(addr: str) -> Set[str]:
     return set([n for n in norm.split() if len(n) > 0])
 
 
-def _address_match(query_addrs: List[str], result_addrs: List[str]) -> FtResult:
+def _address_match(query: E, result: E) -> FtResult:
     """Text similarity between addresses."""
+    query_addrs = query.get_type_values(registry.address, matchable=True)
+    result_addrs = result.get_type_values(registry.address, matchable=True)
     if len(query_addrs) == 0 or len(result_addrs) == 0:
         return FtResult(score=FNUL, detail=None)
     max_result = FtResult(score=FNUL, detail=None)
@@ -59,13 +61,11 @@ def address_entity_match(query: E, result: E, config: ScoringConfig) -> FtResult
     """Two address entities relate to similar addresses."""
     if not has_schema(query, result, "Address"):
         return FtResult(score=FNUL, detail=None)
-    return _address_match(query.get("full"), result.get("full"))
+    return _address_match(query, result)
 
 
 def address_prop_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Two entities have similar stated addresses."""
     if has_schema(query, result, "Address"):
         return FtResult(score=FNUL, detail=None)
-    query_addrs = query.get_type_values(registry.address, matchable=True)
-    result_addrs = result.get_type_values(registry.address, matchable=True)
-    return _address_match(query_addrs, result_addrs)
+    return _address_match(query, result)
