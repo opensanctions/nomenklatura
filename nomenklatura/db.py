@@ -31,12 +31,18 @@ SQLITE_MAX_VARS = 32766
 log = logging.getLogger(__name__)
 
 
+_ENGINE_CACHE: Dict[str, Engine] = {}
+
+
 def get_engine(url: Optional[str] = None) -> Engine:
     url = url or settings.DB_URL
-    return _make_engine(url)
+    engine = _ENGINE_CACHE.get(url)
+    if engine is None:
+        engine = _make_engine(url)
+        _ENGINE_CACHE[url] = engine
+    return engine
 
 
-@cache
 def _make_engine(url: str) -> Engine:
     connect_args = {}
     if url.startswith("postgres"):
@@ -49,11 +55,16 @@ def _make_engine(url: str) -> Engine:
     )
 
 
-def close_db() -> None:
-    engine = get_engine()
-    engine.dispose()
-    get_metadata.cache_clear()
-    _make_engine.cache_clear()
+def close_db(url: Optional[str] = None) -> None:
+    if url is None:
+        for engine in _ENGINE_CACHE.values():
+            engine.dispose()
+        _ENGINE_CACHE.clear()
+        get_metadata.cache_clear()
+    else:
+        engine = _ENGINE_CACHE.pop(url, None)
+        if engine is not None:
+            engine.dispose()
 
 
 @cache

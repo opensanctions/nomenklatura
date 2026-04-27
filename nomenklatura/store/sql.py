@@ -1,14 +1,21 @@
-from typing import Any, Generator, List, Optional, Set, Tuple
+from types import TracebackType
+from typing import Any, Generator, List, Optional, Set, Tuple, Type
 
 from followthemoney import DS, SE, Property, Schema, Statement
 from sqlalchemy import Table, delete, func, select
-from sqlalchemy.engine import Engine, Transaction, create_engine
+from sqlalchemy.engine import Engine, Transaction
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.db import get_metadata, make_statement_table, SQLITE_MAX_VARS
+from nomenklatura.db import (
+    SQLITE_MAX_VARS,
+    close_db,
+    get_engine,
+    get_metadata,
+    make_statement_table,
+)
 from nomenklatura.resolver import Linker, Identifier
 from nomenklatura.store import Store, View, Writer
 
@@ -19,20 +26,19 @@ class SQLStore(Store[DS, SE]):
         dataset: DS,
         linker: Linker[SE],
         uri: str = settings.DB_URL,
-        **engine_kwargs: Any,
     ):
         super().__init__(dataset, linker)
-        if "pool_size" not in engine_kwargs:
-            engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
-        # if uri.lower().startswith("sqlite"):
-        #     engine_kwargs.pop("pool_size", None)
+        self._uri = uri
         metadata = get_metadata()
-        self.engine: Engine = create_engine(uri, **engine_kwargs)
+        self.engine: Engine = get_engine(uri)
         self.table = make_statement_table(metadata)
         metadata.create_all(self.engine, tables=[self.table], checkfirst=True)
 
     def writer(self) -> Writer[DS, SE]:
         return SQLWriter(self)
+
+    def close(self) -> None:
+        close_db(self._uri)
 
     def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return SQLView(self, scope, external=external)
@@ -87,6 +93,21 @@ class SQLWriter(Writer[DS, SE]):
             sqlite_max_batch = SQLITE_MAX_VARS // len(self.store.table.columns)
             batch_limit = min(batch_limit, sqlite_max_batch)
         self.batch_limit = batch_limit
+
+    def close(self) -> None:
+        if self.tx is not None:
+            self.tx.rollback()
+            self.tx = None
+        self.conn.close()
+
+    def __exit__(
+        self,
+        type: Optional[Type[BaseException]],
+        value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        self.flush()
+        self.close()
 
     def _upsert_batch(self) -> None:
         if not len(self.batch):

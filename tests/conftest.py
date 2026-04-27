@@ -70,7 +70,7 @@ def donations_json(donations_path: Path) -> List[Dict[str, Any]]:
 def resolver() -> Generator[Resolver[Entity], None, None]:
     resolver = Resolver[Entity].make_default()
     yield resolver
-    resolver.rollback()
+    resolver.close()
     resolver._table.drop(resolver._engine, checkfirst=True)
 
 
@@ -96,10 +96,12 @@ def test_dataset() -> Dataset:
 
 
 @pytest.fixture(scope="function")
-def test_cache(test_dataset: Dataset) -> Cache:
+def test_cache(test_dataset: Dataset) -> Generator[Cache, None, None]:
     engine = get_engine(settings.DB_URL)
-    metadata = MetaData()
-    return Cache(engine, metadata, test_dataset, create=True)
+    metadata = get_metadata()
+    cache = Cache(engine, metadata, test_dataset, create=True)
+    yield cache
+    cache.close()
 
 
 @pytest.fixture(scope="function")

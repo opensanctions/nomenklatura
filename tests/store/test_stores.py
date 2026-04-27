@@ -54,9 +54,8 @@ def _run_store_test(
     adjacent = list(view.get_adjacent(entity))
     assert len(adjacent) == 2
 
-    writer = store.writer()
-    stmts = writer.pop(entity.id)
-    writer.flush()
+    with store.writer() as writer:
+        stmts = writer.pop(entity.id)
     assert len(stmts) == len(list(entity.statements))
     assert view.get_entity(entity.id) is None
 
@@ -83,8 +82,11 @@ def test_store_sql(
     resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    assert str(store.engine.url) == uri
-    assert _run_store_test(store, test_dataset, donations_json)
+    try:
+        assert str(store.engine.url) == uri
+        assert _run_store_test(store, test_dataset, donations_json)
+    finally:
+        store.close()
 
 
 def test_sql_writer_sqlite_batch_limit_cap(
@@ -96,10 +98,13 @@ def test_sql_writer_sqlite_batch_limit_cap(
     resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
-    writer = store.writer()
-    assert isinstance(writer, SQLWriter)
-    assert writer.batch_limit == SQLITE_MAX_VARS // len(store.table.columns)
+    try:
+        monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
+        with store.writer() as writer:
+            assert isinstance(writer, SQLWriter)
+            assert writer.batch_limit == SQLITE_MAX_VARS // len(store.table.columns)
+    finally:
+        store.close()
 
 
 def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
@@ -111,10 +116,13 @@ def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
     resolver.begin()
     uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
-    writer = store.writer()
-    assert isinstance(writer, SQLWriter)
-    assert writer.batch_limit == 500
+    try:
+        monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
+        with store.writer() as writer:
+            assert isinstance(writer, SQLWriter)
+            assert writer.batch_limit == 500
+    finally:
+        store.close()
 
 
 def test_sql_writer_postgresql_no_batch_limit_cap(monkeypatch: MonkeyPatch):
