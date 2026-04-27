@@ -79,7 +79,7 @@ def xref(
                 log.info("Reached maximum number of pairs to consider.")
                 break
 
-            if (idx - last_suggested_idx) > patience:
+            if idx > limit and (idx - last_suggested_idx) > patience:
                 log.info("No suggestions since pair %d, stopping.", last_suggested_idx)
                 break
 
