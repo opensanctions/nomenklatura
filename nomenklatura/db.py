@@ -62,9 +62,9 @@ def close_db(url: Optional[str] = None) -> None:
         _ENGINE_CACHE.clear()
         get_metadata.cache_clear()
     else:
-        engine = _ENGINE_CACHE.pop(url, None)
-        if engine is not None:
-            engine.dispose()
+        engine_ = _ENGINE_CACHE.pop(url, None)
+        if engine_ is not None:
+            engine_.dispose()
 
 
 @cache
