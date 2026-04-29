@@ -356,6 +356,12 @@ checks:
     candidate:
       name: Vladimir Putin
   - match: true
+    schema: Person
+    query:
+      name: VladimirPutin
+    candidate:
+      name: Vladimir Putin
+  - match: true
     label: Character Reversal
     schema: Person
     query:
@@ -395,6 +401,13 @@ checks:
     schema: Person
     query:
       name: Basharr al-Assad
+    candidate:
+      name: Bashar al-Assad
+  - match: true
+    label: Fat Finger Typo
+    schema: Person
+    query:
+      name: Bashar Xal-Assad
     candidate:
       name: Bashar al-Assad
   - match: true
