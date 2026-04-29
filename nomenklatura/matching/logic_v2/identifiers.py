@@ -34,6 +34,18 @@ def unformatted_values(entity: EntityProxy) -> Set[str]:
     return format_values(entity, None)
 
 
+@lru_cache(maxsize=MEMO_TINY)
+def has_identifiers(entity: EntityProxy) -> bool:
+    """Check if an entity has any identifiers. This exists purely for performance: there are
+    various _identifier_format_match functions that are called repeatedly, and most of our
+    queries don't have identifiers - so this skips the more expensive checks in those cases."""
+    for prop in entity.schema.properties.values():
+        if prop.type == registry.identifier and prop.matchable:
+            for _ in entity.get_prop(prop):
+                return True
+    return False
+
+
 @cache
 def has_schema_formats(query: Schema, result: Schema, format_name: str) -> bool:
     """Check if one of the entities has identifiers of the given format."""
@@ -49,6 +61,8 @@ def _identifier_format_match(
     format_name: str, query: EntityProxy, result: EntityProxy
 ) -> FtResult:
     """Check if the identifier format is the same for two entities."""
+    if not has_identifiers(query) or not has_identifiers(result):
+        return FtResult(score=FNUL, detail=None)
     if not has_schema_formats(query.schema, result.schema, format_name):
         return FtResult(score=FNUL, detail=None)
     format = get_identifier_format(format_name)
