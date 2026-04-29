@@ -5,6 +5,12 @@ from followthemoney import registry, StatementEntity
 from normality.cleaning import remove_unsafe_chars
 
 log = logging.getLogger(__name__)
+# This is a special language code used to indicate that a value is multilingual
+# (more specifically: not language-dependent, which is always a lie).
+MULTI_LANG = "mul"
+PREFERRED_WD_LANGS = list(PREFERRED_LANGS)
+# After English, before all the others:
+PREFERRED_WD_LANGS.insert(1, MULTI_LANG)
 
 
 class LangText(object):
@@ -23,7 +29,10 @@ class LangText(object):
         self.text = text
         self.lang: Optional[str] = None
         if lang is not None:
-            self.lang = registry.language.clean_text(lang)
+            if lang == MULTI_LANG:
+                self.lang = MULTI_LANG
+            else:
+                self.lang = registry.language.clean_text(lang)
         if lang is not None and self.lang is None:
             # Language is given, but it is not one supported by the FtM ecosystem:
             self.text = None
@@ -40,7 +49,8 @@ class LangText(object):
         clean_text = self.text if clean is None else clean(self.text)
         if clean_text is None or clean_text.strip() == "":
             return
-        entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
+        lang = None if self.lang == MULTI_LANG else self.lang
+        entity.add(prop, clean_text, lang=lang, original_value=self.original)
 
     def pack(self) -> Dict[str, Optional[str]]:
         data = {"t": self.text, "l": self.lang}
@@ -54,7 +64,7 @@ class LangText(object):
 
     @classmethod
     def pick(cls, texts: Iterable["LangText"]) -> Optional["LangText"]:
-        for lang in PREFERRED_LANGS:
+        for lang in PREFERRED_WD_LANGS:
             for lt in texts:
                 if lt.lang == lang:
                     return lt
@@ -65,10 +75,10 @@ class LangText(object):
     @classmethod
     def sorted(cls, texts: Iterable["LangText"]) -> List["LangText"]:
         def sort_key(lt: LangText) -> Any:
-            if lt.lang is None or lt.lang not in PREFERRED_LANGS:
-                index = len(PREFERRED_LANGS)
+            if lt.lang is None or lt.lang not in PREFERRED_WD_LANGS:
+                index = len(PREFERRED_WD_LANGS)
             else:
-                index = PREFERRED_LANGS.index(lt.lang) + 1
+                index = PREFERRED_WD_LANGS.index(lt.lang) + 1
             return (index, lt.text or "")
 
         return sorted(texts, key=sort_key)
