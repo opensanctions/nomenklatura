@@ -156,11 +156,6 @@ def weighted_edit_similarity(
     bias = config.get_float("nm_fuzzy_cutoff_factor")
     matches = set(part_matches.values())
     for match in matches:
-        # Score down stopwords:
-        if len(match.qps) == 1 and len(match.rps) == 1:
-            if is_stopword(match.qps[0].form):
-                match.weight = 0.7
-
         qcosts = unroll(costs.get(p, [1.0]) for p in match.qps)
         rcosts = unroll(costs.get(p, [1.0]) for p in match.rps)
         match.score = _costs_similarity(qcosts, max_cost_bias=bias) * _costs_similarity(
@@ -180,5 +175,12 @@ def weighted_edit_similarity(
         if rp not in part_matches:
             match = Match(rps=[rp])
             matches.add(match)
+
+    for match in matches:
+        # Score down stopwords:
+        if (len(match.qps) == 1 and is_stopword(match.qps[0].form)) or (
+            len(match.rps) == 1 and is_stopword(match.rps[0].form)
+        ):
+            match.weight = 0.7
 
     return list(matches)
