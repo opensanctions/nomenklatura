@@ -1,4 +1,4 @@
-from typing import List
+from typing import Sequence
 from rigour.names import Name, NamePart, Symbol
 from rigour.text import is_stopword
 
@@ -44,7 +44,7 @@ SYM_SCORES = {
 }
 
 
-def weight_extra_match(parts: List[NamePart], name: Name) -> float:
+def weight_extra_match(parts: Sequence[NamePart], name: Name) -> float:
     """Apply a weight to a name part which remained unmatched in the system, as a function
     of a user-supplied penalty, symbol weights, and some overrides."""
     if len(parts) == 1 and is_stopword(parts[0].form):

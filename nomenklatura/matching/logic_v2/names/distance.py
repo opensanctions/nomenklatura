@@ -4,13 +4,26 @@ from collections import defaultdict
 from itertools import zip_longest
 from typing import Dict, List, Optional, Tuple
 from rapidfuzz.distance import Levenshtein, Opcodes
-from rigour.names import NamePart
-from rigour.text import levenshtein, is_stopword
+from rigour.names import Alignment, NamePart
+from rigour.text import levenshtein
 
-from nomenklatura.matching.logic_v2.names.util import Match
 from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.matching.util import MEMO_BATCH
 from nomenklatura.util import unroll
+
+
+class _PartCluster:
+    """Internal mutable scaffold used during 0.51-overlap cluster
+    assembly. Converted to a frozen `Alignment` at function exit.
+    Object identity is the dedup key (set-via-id) — clusters are
+    distinct holders, not values."""
+
+    __slots__ = ("qps", "rps", "score")
+
+    def __init__(self) -> None:
+        self.qps: List[NamePart] = []
+        self.rps: List[NamePart] = []
+        self.score: float = 0.0
 
 SEP = " "
 SIMILAR_PAIRS = [
@@ -84,7 +97,7 @@ def _costs_similarity(costs: List[float], max_cost_bias: float = 1.0) -> float:
     return 1 - (total_cost / len(costs))
 
 
-@lru_cache(maxsize=MEMO_BATCH)
+# @lru_cache(maxsize=MEMO_BATCH)
 def _opcodes(qry_text: str, res_text: str) -> Opcodes:
     """Get the opcodes for the Levenshtein distance between two strings."""
     return Levenshtein.opcodes(qry_text, res_text)
@@ -92,13 +105,20 @@ def _opcodes(qry_text: str, res_text: str) -> Opcodes:
 
 def weighted_edit_similarity(
     qry_parts: List[NamePart], res_parts: List[NamePart], config: ScoringConfig
-) -> List[Match]:
-    """Calculate a weighted similarity score between two sets of name parts. This function implements custom
-    frills within the context of a simple Levenshtein distance calculation. For example:
+) -> List[Alignment]:
+    """Score the residue alignment of two name-part lists.
 
-    * The result is returned as a list of Match objects, which contain a score, but also a weight.
-    * Removals of full tokens are penalized more lightly than intra-token edits.
-    * Some edits inside of words are considered more similar than others, e.g. "o" and "0".
+    Returns one [Alignment][rigour.names.Alignment] per cluster
+    (paired or solo). Every input part appears in exactly one
+    cluster's `qps` / `rps`. Returned alignments carry
+    `symbol = None` and a per-cluster fuzzy-distance score; the
+    matcher applies weight policy (extras, stopword, family-name)
+    on top.
+
+    * Removals of full tokens are penalised more lightly than
+      intra-token edits.
+    * Some edits inside of words are considered more similar than
+      others, e.g. "o" and "0".
     """
     if len(qry_parts) == 0 and len(res_parts) == 0:
         return []
@@ -139,48 +159,50 @@ def weighted_edit_similarity(
                         if res_idx < len(res_parts):
                             res_cur = res_parts[res_idx]
 
-    # Use the overlaps to create matches between query and result parts.
-    part_matches: Dict[NamePart, Match] = {}
+    # Use the overlaps to create clusters between query and result parts.
+    part_clusters: Dict[NamePart, _PartCluster] = {}
     for (qp, rp), overlap in overlaps.items():
         min_len = min(len(qp.comparable), len(rp.comparable))
         if overlap / min_len > 0.51:
-            match = part_matches.get(qp, part_matches.get(rp, Match()))
-            if qp not in match.qps:
-                match.qps.append(qp)
-            if rp not in match.rps:
-                match.rps.append(rp)
-            part_matches[rp] = match
-            part_matches[qp] = match
+            cluster = part_clusters.get(qp, part_clusters.get(rp, _PartCluster()))
+            if qp not in cluster.qps:
+                cluster.qps.append(qp)
+            if rp not in cluster.rps:
+                cluster.rps.append(rp)
+            part_clusters[rp] = cluster
+            part_clusters[qp] = cluster
+
+    # Dedupe by object identity — distinct cluster instances are distinct outputs even if
+    # their part lists later collide; same instance shared across multiple key entries
+    # collapses to one. set() works: _PartCluster has no __eq__/__hash__ overrides so it
+    # uses default id-based identity.
+    clusters: List[_PartCluster] = list(set(part_clusters.values()))
 
     # Compute the scores where an overlap was applied
     bias = config.get_float("nm_fuzzy_cutoff_factor")
-    matches = set(part_matches.values())
-    for match in matches:
-        qcosts = unroll(costs.get(p, [1.0]) for p in match.qps)
-        rcosts = unroll(costs.get(p, [1.0]) for p in match.rps)
-        match.score = _costs_similarity(qcosts, max_cost_bias=bias) * _costs_similarity(
-            rcosts, max_cost_bias=bias
-        )
+    for cluster in clusters:
+        qcosts = unroll(costs.get(p, [1.0]) for p in cluster.qps)
+        rcosts = unroll(costs.get(p, [1.0]) for p in cluster.rps)
+        cluster.score = _costs_similarity(
+            qcosts, max_cost_bias=bias
+        ) * _costs_similarity(rcosts, max_cost_bias=bias)
 
     # Non-matched query parts: this penalizes scenarios where name parts in the query are
     # not matched to any name part in the result. Increasing this penalty will require queries
     # to always be matched in full.
     for qp in qry_parts:
-        if qp not in part_matches:
-            match = Match(qps=[qp])
-            matches.add(match)
+        if qp not in part_clusters:
+            solo = _PartCluster()
+            solo.qps = [qp]
+            clusters.append(solo)
 
     # Non-matched result parts
     for rp in res_parts:
-        if rp not in part_matches:
-            match = Match(rps=[rp])
-            matches.add(match)
+        if rp not in part_clusters:
+            solo = _PartCluster()
+            solo.rps = [rp]
+            clusters.append(solo)
 
-    for match in matches:
-        # Score down stopwords:
-        if (len(match.qps) == 1 and is_stopword(match.qps[0].form)) or (
-            len(match.rps) == 1 and is_stopword(match.rps[0].form)
-        ):
-            match.weight = 0.7
-
-    return list(matches)
+    return [
+        Alignment(qps=c.qps, rps=c.rps, symbol=None, score=c.score) for c in clusters
+    ]

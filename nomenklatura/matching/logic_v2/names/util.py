@@ -1,72 +1,42 @@
 import re
 
-from typing import Optional, Any, Sequence
-from rigour.names import NamePart, Symbol, NamePartTag
+from rigour.names import Alignment, NamePartTag
 
 
-class Match:
-    """A Match combines query and result name parts, along with a score and weight. It is one
-    part of the matching result, which is eventually aggregated into a final score."""
+def is_family_name(alignment: Alignment) -> bool:
+    """True if any covered part on either side carries a FAMILY
+    tag — used to apply the family-name weight boost."""
+    for np in alignment.qps:
+        if np.tag == NamePartTag.FAMILY:
+            return True
+    for np in alignment.rps:
+        if np.tag == NamePartTag.FAMILY:
+            return True
+    return False
 
-    __slots__ = ["qps", "rps", "symbol", "score", "weight"]
 
-    def __init__(
-        self,
-        qps: Sequence[NamePart] = [],
-        rps: Sequence[NamePart] = [],
-        symbol: Optional[Symbol] = None,
-        score: float = 0.0,
-        weight: float = 1.0,
-    ) -> None:
-        """Initialize the Match object with query and result parts."""
-        self.qps = list(qps)
-        self.rps = list(rps)
-        self.symbol: Optional[Symbol] = symbol
-        self.score = score
-        self.weight = weight
+def explain_alignment(alignment: Alignment) -> str:
+    """Format an alignment for the API explanation string.
 
-    @property
-    def weighted_score(self) -> float:
-        """Calculate the weighted score."""
-        return self.score * self.weight
-
-    def is_family_name(self) -> bool:
-        """Check if the match represents a family name."""
-        for np in self.qps:
-            if np.tag == NamePartTag.FAMILY:
-                return True
-        for np in self.rps:
-            if np.tag == NamePartTag.FAMILY:
-                return True
-        return False
-
-    def __hash__(self) -> int:
-        """Hash the Match object based on query and result parts."""
-        return hash((self.symbol, tuple(self.qps), tuple(self.rps)))
-
-    def __eq__(self, other: Any) -> bool:
-        """Check equality of two Match objects based on query and result parts."""
-        return hash(self) == hash(other)
-
-    def __repr__(self) -> str:
-        """String representation of the Match object."""
-        return f"<Match({str(self)})>"
-
-    def __str__(self) -> str:
-        """String representation of the Match object for debugging."""
-        qps_str = " ".join([part.comparable for part in self.qps])
-        rps_str = " ".join([part.comparable for part in self.rps])
-        if self.symbol is not None:
-            explanation = f"{qps_str!r}≈{rps_str!r} symbolMatch {self.symbol}"
-        elif not len(qps_str):
-            explanation = f"{rps_str!r} extraResultPart"
-        elif not len(rps_str):
-            explanation = f"{qps_str!r} extraQueryPart"
-        elif qps_str == rps_str:
-            explanation = f"{rps_str!r} literalMatch"
-        else:
-            explanation = f"{qps_str!r}≈{rps_str!r} fuzzyMatch"
-        return f"[{explanation}: {self.score:.2f}, weight {self.weight:.2f}]"
+    Surfaces in `MatchingResult.explanations[name_match].detail`,
+    one bracketed entry per piece of evidence — symbolic edge,
+    fuzzy cluster, or unmatched extra. The leading label
+    (`symbolMatch` / `literalMatch` / `fuzzyMatch` /
+    `extraQueryPart` / `extraResultPart`) is what makes per-pair
+    triage in support tickets possible."""
+    qstr = alignment.qstr
+    rstr = alignment.rstr
+    if alignment.symbol is not None:
+        explanation = f"{qstr!r}≈{rstr!r} symbolMatch {alignment.symbol}"
+    elif not qstr:
+        explanation = f"{rstr!r} extraResultPart"
+    elif not rstr:
+        explanation = f"{qstr!r} extraQueryPart"
+    elif qstr == rstr:
+        explanation = f"{rstr!r} literalMatch"
+    else:
+        explanation = f"{qstr!r}≈{rstr!r} fuzzyMatch"
+    return f"[{explanation}: {alignment.score:.2f}, weight {alignment.weight:.2f}]"
 
 
 NUMERIC = re.compile(r"\d{1,}")
