@@ -3,46 +3,44 @@ from typing import Optional, Set
 
 from followthemoney import registry, EntityProxy, Property, Schema
 from rigour.ids import get_identifier_format
-from rigour.util import MEMO_TINY
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import FNUL, has_schema
+from nomenklatura.matching.util import FNUL, MEMO_BATCH, has_schema
 
 
 @cache
-def format_props(schema: Schema, format: Optional[str]) -> Set[Property]:
-    """This is cached because it is called repeatedly."""
-    format_props: Set[Property] = set()
+def schema_identifier_props(schema: Schema) -> Set[Property]:
+    """Get the set of identifier properties for a given schema."""
+    props: Set[Property] = set()
     for prop in schema.properties.values():
         if prop.type == registry.identifier and prop.matchable:
-            if prop.format == format:
-                format_props.add(prop)
-    return format_props
+            props.add(prop)
+    return props
 
 
 def format_values(entity: EntityProxy, format_name: Optional[str]) -> Set[str]:
     """Get all identifier values of a given format from an entity."""
     values: Set[str] = set()
-    for prop in format_props(entity.schema, format_name):
-        values.update(entity.get_prop(prop))
+    for prop in schema_identifier_props(entity.schema):
+        if prop.format == format_name:
+            values.update(entity.get_prop(prop))
     return values
 
 
-@lru_cache(maxsize=MEMO_TINY)
+@lru_cache(maxsize=MEMO_BATCH)
 def unformatted_values(entity: EntityProxy) -> Set[str]:
     """Get all identifier values without a specific format from an entity."""
     return format_values(entity, None)
 
 
-@lru_cache(maxsize=MEMO_TINY)
+@lru_cache(maxsize=MEMO_BATCH)
 def has_identifiers(entity: EntityProxy) -> bool:
     """Check if an entity has any identifiers. This exists purely for performance: there are
     various _identifier_format_match functions that are called repeatedly, and most of our
     queries don't have identifiers - so this skips the more expensive checks in those cases."""
-    for prop in entity.schema.properties.values():
-        if prop.type == registry.identifier and prop.matchable:
-            for _ in entity.get_prop(prop):
-                return True
+    for prop in schema_identifier_props(entity.schema):
+        for _ in entity.get_prop(prop):
+            return True
     return False
 
 
@@ -50,10 +48,9 @@ def has_identifiers(entity: EntityProxy) -> bool:
 def has_schema_formats(query: Schema, result: Schema, format_name: str) -> bool:
     """Check if one of the entities has identifiers of the given format."""
     for schema in (query, result):
-        for prop in schema.properties.values():
-            if prop.type == registry.identifier and prop.matchable:
-                if prop.format == format_name:
-                    return True
+        for prop in schema_identifier_props(schema):
+            if prop.format == format_name:
+                return True
     return False
 
 
