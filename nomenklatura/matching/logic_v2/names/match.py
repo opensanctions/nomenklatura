@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from rigour.names import Alignment, NameTypeTag, Name, NamePart
+from rigour.names import Alignment, CompareConfig, NameTypeTag, Name, NamePart
 from rigour.names import align_person_name_order, normalize_name
 from rigour.names import remove_obj_prefixes
 from rigour.names.symbol import pair_symbols
@@ -27,7 +27,10 @@ from nomenklatura.matching.util import FNUL
 
 
 def match_name_symbolic(
-    query: Name, result: Name, config: ScoringConfig
+    query: Name,
+    result: Name,
+    config: ScoringConfig,
+    compare_config: CompareConfig,
 ) -> Tuple[FtResult, List[Alignment]]:
     # Stage 1: Generate all valid symbol-based pairings
     # pairings = generate_symbol_pairings(query, result)
@@ -64,7 +67,9 @@ def match_name_symbolic(
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            matches.extend(weighted_edit_similarity(query_rem, result_rem, config))
+            matches.extend(
+                weighted_edit_similarity(query_rem, result_rem, compare_config)
+            )
 
         # Apply additional weight and score normalisation to the generated matches based
         # on contextual clues.
@@ -196,6 +201,14 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = Name.consolidate_names(query_names)
     result_names = Name.consolidate_names(result_names)
 
+    # Build the residue-distance config once per name_match. ScoringConfig
+    # is invariant for the lifetime of a matcher run, so the inner symbolic
+    # / pair loop reuses one CompareConfig instance across every
+    # compare_parts call instead of rebuilding from a get_float() per pair.
+    compare_config = CompareConfig(
+        budget_tolerance=config.get_float("nm_fuzzy_cutoff_factor"),
+    )
+
     best = FtResult(score=FNUL, detail=None)
     best_matches: List[Alignment] = []
 
@@ -204,7 +217,9 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # of hand. We need to consider more ways to prune pairs before we do a full
     # symbolic + fuzzy match on them.
     for query_name, result_name in names_product(query_names, result_names):
-        ftres, ftmatches = match_name_symbolic(query_name, result_name, config)
+        ftres, ftmatches = match_name_symbolic(
+            query_name, result_name, config, compare_config
+        )
         if ftres.score >= best.score:
             best = ftres
             best_matches = ftmatches
