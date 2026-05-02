@@ -1,7 +1,5 @@
 from functools import lru_cache
-from typing import List
 
-from rigour.names import Alignment, CompareConfig, NamePart, compare_parts
 from rigour.text import levenshtein
 
 from nomenklatura.matching.util import MEMO_BATCH
@@ -20,25 +18,3 @@ def strict_levenshtein(left: str, right: str, max_rate: int = 4) -> float:
     if distance > max_edits:
         return 0.0
     return (1 - (distance / max_len)) ** max_edits
-
-
-def weighted_edit_similarity(
-    qry_parts: List[NamePart],
-    res_parts: List[NamePart],
-    compare_config: CompareConfig,
-) -> List[Alignment]:
-    """Score the residue alignment of two name-part lists.
-
-    Thin wrapper over `rigour.names.compare_parts`, which is the
-    Rust-backed cost-folded Wagner-Fischer + 0.51-overlap clustering
-    + product-of-side-similarities scoring. Returns one
-    `Alignment` per cluster (paired or solo). Every input part
-    appears in exactly one cluster's `qps` / `rps`. Returned
-    alignments carry `symbol = None` and a per-cluster
-    fuzzy-distance score; the matcher applies weight policy
-    (extras, stopword, family-name) on top.
-
-    `compare_config` is built once per `name_match` call from the
-    invariant `ScoringConfig` and threaded down — see `match.py`.
-    """
-    return compare_parts(qry_parts, res_parts, config=compare_config)

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from rigour.names import Alignment, CompareConfig, NameTypeTag, Name, NamePart
-from rigour.names import align_person_name_order, normalize_name
+from rigour.names import align_person_name_order, compare_parts, normalize_name
 from rigour.names import remove_obj_prefixes
 from rigour.names.symbol import pair_symbols
 from rigour.text import is_stopword
@@ -15,7 +15,6 @@ from nomenklatura.matching.logic_v2.names.magic import (
     SYM_WEIGHTS,
     weight_extra_match,
 )
-from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import (
     explain_alignment,
@@ -67,9 +66,14 @@ def match_name_symbolic(
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            matches.extend(
-                weighted_edit_similarity(query_rem, result_rem, compare_config)
-            )
+            # Residue-distance handoff: rigour's compare_parts owns the
+            # cost-folded DP, clustering, and per-side scoring; the
+            # Alignments it returns carry symbol=None and a per-cluster
+            # fuzzy score with weight=1.0. Matcher policy (extras
+            # penalty, stopword multiplier, family-name boost) is
+            # applied below — this is the only line in the function
+            # that crosses into the rigour primitive.
+            matches.extend(compare_parts(query_rem, result_rem, config=compare_config))
 
         # Apply additional weight and score normalisation to the generated matches based
         # on contextual clues.
