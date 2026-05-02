@@ -76,14 +76,16 @@ def match_name_symbolic(
             elif len(match.rps) == 0:
                 bias = weight_extra_match(match.qps, query)
                 match.weight = extra_query_weight * bias
-            elif match.symbol is None and (
-                (len(match.qps) == 1 and is_stopword(match.qps[0].form))
-                or (len(match.rps) == 1 and is_stopword(match.rps[0].form))
+
+            if (len(match.qps) == 1 and is_stopword(match.qps[0].form)) or (
+                len(match.rps) == 1 and is_stopword(match.rps[0].form)
             ):
-                # Stopword down-weight: applies only to residue-distance
-                # matches (no symbol). Symbol-paired stopword matches
-                # carry their category's SYM_WEIGHTS as before.
-                match.weight = 0.7
+                # Stopword multiplier: composes with whatever weight
+                # the prior branch contributed (extras override,
+                # SYM_WEIGHTS, residue default). Symmetric with the
+                # family-name boost below.
+                match.weight *= 0.7
+
             # We fall through here to apply the family-name boost to unmatched parts too.
 
             # Symbol-paired edges default to a category score (e.g. NAME → 0.9), but if
@@ -96,10 +98,11 @@ def match_name_symbolic(
                 and match.qstr == match.rstr
             ):
                 match.score = 1.0
+
             # We treat family names matches as more important (but configurable) because
             # they're just globally less murky and changeable than given names.
             if is_family_name(match):
-                match.weight = match.weight * family_name_weight
+                match.weight *= family_name_weight
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
