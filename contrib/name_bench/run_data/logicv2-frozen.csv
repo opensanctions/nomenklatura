@@ -1,0 +1,813 @@
+case_group,case_id,schema,name1,name2,is_match,quality,category,notes,score,predicted_match,outcome
+nk_checks,648f7137,Person,Olaf Scholze,Olaf Scholz,true,STRONG,,,0.9286,true,TP
+nk_checks,3e74a18c,Person,Olaf Schulze,Olaf Scholz,true,MEDIUM,,,0.8344,true,TP
+nk_checks,b652a1f2,Person,Octavian Scholz,Olaf Scholz,false,MEDIUM,,,0.5000,false,TN
+nk_checks,02eec3f2,Person,Angelo Cruz,Angela Merkel,false,MEDIUM,,,0.3673,false,TN
+nk_checks,088717cf,Person,Angelo Mercaz,Angela Merkel,false,MEDIUM,,,0.3673,false,TN
+nk_checks,3cc55a11,Person,Angela Merkur,Angela Merkel,true,MEDIUM,,,0.5000,false,FN
+nk_checks,fa5fc942,Company,Siemens Aktiengesellschaft,Siemens AG,true,STRONG,,,1.0000,true,TP
+nk_checks,8ad8a306,Company,SiemensAG,Siemens AG,true,MEDIUM,,,0.9800,true,TP
+nk_checks,cd40611d,Company,Siemens Aktiengeselschaft,Siemens AG,true,MEDIUM,,,1.0000,true,TP
+nk_checks,ea8bf6f0,Company,Volkswagen Aktiengesellschaft,Siemens Aktiengesellschaft,false,MEDIUM,,,0.4118,false,TN
+nk_checks,57f6b397,Person,Shaikh Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,1.0000,true,TP
+nk_checks,97b4ed6e,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9772,true,TP
+nk_checks,4796f2a8,Person,"AL BEN ALI, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9578,true,TP
+nk_checks,ecda9a1b,Person,Usama bin Laden,Shaikh Isa Bin Tarif Al Bin Ali,false,STRONG,,,0.2793,false,TN
+nk_checks,5292ed89,Person,"AL BEN MAHMOUD, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,false,MEDIUM,,,0.7468,true,FP
+nk_checks,88aa5c0c,Person,MOHAMMADHASNI HAJI SSAD KHAN ZARKARI,HAJI ASAD KHAN ZARKARI MOHAMMADHASNI,true,MEDIUM,,,0.8000,true,TP
+nk_checks,3b99af10,Person,MOHAMMAD HASNI HAJI SSAD KHAN ZARKARI,HAJI ASAD KHAN ZARKARI MOHAMMADHASNI,true,MEDIUM,,,0.7973,true,TP
+nk_checks,b3420203,Person,Hans Friedrich,Hans Friedrich,true,MEDIUM,,,1.0000,true,TP
+nk_checks,2581ab19,Person,Friedrich Hans,Hans Friedrich,false,MEDIUM,,,1.0000,true,FP
+nk_checks,37b435ab,Person,Hans O Friedrich,Hans Joachim Friedrich,false,MEDIUM,,,0.6667,false,TN
+nk_checks,2315b667,Person,Hans J Friedrich,Hans Joachim Friedrich,true,MEDIUM,,,0.6667,false,FN
+nk_checks,0ee6fd81,Person,REINALDO GREGORIO LENIN CERNA JUARE,Reinaldo Lenin Gregorio Cerna Juarez,true,MEDIUM,,,0.9667,true,TP
+nk_checks,3c89b399,Person,Vita Klave,Фуад Гулієв,false,MEDIUM,,,0.0000,false,TN
+nk_checks,e96c69ca,Person,Olga Barynova,Oleg BARANOV,false,MEDIUM,,,0.3403,false,TN
+nk_checks,9dd007bf,Person,Ginta Boreza,Janett Borez,false,MEDIUM,,,0.4286,false,TN
+nk_checks,f64ef7d2,Company,Deutsche Bank AG,Deutsche Bank,true,MEDIUM,,,0.7522,true,TP
+nk_checks,9f80f859,Company,Deutsche Bank's AG,Deutsche Bank AG,true,MEDIUM,,,0.9259,true,TP
+nk_checks,9c948b41,Company,Deutsche Bank AG,Deutsche Bank Aktiengesellschaft,true,STRONG,,,1.0000,true,TP
+nk_checks,380313eb,Company,Deutsche Bank (Schweiz) AG,Deutsche Bank AG,true,WEAK,,,0.7895,true,TP
+nk_checks,f84ca4ef,Company,Deutsche Bank AG,Deutsche Bank (Schweiz) AG,true,WEAK,,,0.9375,true,TP
+nk_checks,2e1ed587,Company,Deutsche Bank AG,Deutsche Bank GmbH,false,WEAK,,,0.7083,true,FP
+nk_checks,9c19e2b3,Company,Deutsche Bank Trust Company,Deutsche Bank,false,WEAK,,,0.6028,false,TN
+nk_checks,8505a508,Company,OAO Gazprom,Open Joint Stock Company Gazprom,true,MEDIUM,,,0.9176,true,TP
+nk_checks,1801829b,Company,HOMS REFINERY CORPORATION,The Homs Refinery Company,true,MEDIUM,,,0.9870,true,TP
+nk_checks,696fd577,Person,Friedrych Buchenberg,Friedrich Buchenberg,true,MEDIUM,,,0.9252,true,TP
+nk_checks,64ab04f9,Person,Fridrich Buchenberg,Friedrich Buchenberg,true,MEDIUM,,,0.9444,true,TP
+nk_checks,bcf9926b,Person,FridrichBuchenberg,Friedrich Buchenberg,true,MEDIUM,,,0.9400,true,TP
+nk_checks,aaf49f7a,Person,Friedrich Buchenbergo,Friedrich Buchenberg,true,MEDIUM,,,0.9545,true,TP
+nk_checks,dde86bdd,Person,Frederick Buchenberg,Friedrich Buchenberg,false,WEAK,,,0.8025,true,FP
+nk_checks,8db0860a,Person,Lars Friedrich Lindemann,Friedrich Buchenberg,false,MEDIUM,,,0.3571,false,TN
+nk_checks,f78f990e,Person,Wolfgang Friedrich Ischinger,Friedrich Buchenberg,false,MEDIUM,,,0.3571,false,TN
+nk_checks,92c9a52d,Person,Gerhard Friedrich Karl Westdickenberg,Friedrich Buchenberg,false,MEDIUM,,,0.2778,false,TN
+nk_checks,ebb282f6,Person,Klaus-Peter Friedrich Walter Schulze,Friedrich Buchenberg,false,MEDIUM,,,0.2273,false,TN
+nk_checks,bc8c4485,Person,Frank Richter,Frederik Richter,false,MEDIUM,,,0.5000,false,TN
+nk_checks,c7235023,Person,Фрэнк Рихтер,Frederik Richter,false,MEDIUM,,,0.4500,false,TN
+nk_checks,16e5538d,Person,Ig0r Sech1n,Igor Sechin,true,MEDIUM,Alphanumeric Swap,,0.8401,true,TP
+nk_checks,00b855b2,Person,I9or Sech1n,Igor Sechin,true,MEDIUM,Alphanumeric Swap,,0.7453,true,TP
+nk_checks,0681aedb,Person,Sergi Lavrov,Sergei Lavrov,true,STRONG,Character Deletion,,0.9167,true,TP
+nk_checks,0731bce8,Person,SergeiLavrov,Sergei Lavrov,true,STRONG,,,0.9846,true,TP
+nk_checks,16f24eb2,Person,Serei Lavrov,Sergei Lavrov,true,MEDIUM,Character Deletion,,0.9167,true,TP
+nk_checks,2aade929,Person,Alexandr Lukashnko,Alexander Lukashenko,true,MEDIUM,Character Addition/Deletion,,0.9000,true,TP
+nk_checks,113bf091,Person,Alexander Luakshenko,Alexander Lukashenko,true,MEDIUM,Character Addition/Deletion,,0.9050,true,TP
+nk_checks,2c23e05a,Person,Kim Jong-uun,Kim Jong-un,true,MEDIUM,Character Repetition,,0.6667,false,FN
+nk_checks,f7e7c301,Person,Kim Joonng-un,Kim Jong-un,true,MEDIUM,Character Repetition,,0.6667,false,FN
+nk_checks,b4b09197,Person,rimaldiV nituP,Vladimir Putin,true,WEAK,Character Reversal,,0.0000,false,FN
+nk_checks,a57107d5,Person,Vladimir nitPu,Vladimir Putin,true,WEAK,Character Reversal,,0.5000,false,FN
+nk_checks,fb7343cd,Person,Nicolás Maduro SA,Nicolás Maduro,true,MEDIUM,Contextual Ending,,0.7143,true,TP
+nk_checks,68ac99f9,Person,Nicolás Maduro LLC,Nicolás Maduro,true,MEDIUM,Contextual Ending,,0.7143,true,TP
+nk_checks,9da3f8e6,Person,Mr. Recep Tayyip Erdoğan,Recep Tayyip Erdoğan,true,STRONG,Contextual Beginning,,1.0000,true,TP
+nk_checks,68f66b8b,Person,President Erdoğan,Recep Tayyip Erdoğan,true,MEDIUM,Contextual Beginning,,0.7143,true,TP
+nk_checks,86370207,Person,Basharr al-Assad,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.9524,true,TP
+nk_checks,72c45f00,Person,Bashar al-Asasd,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.8800,true,TP
+nk_checks,cf960508,Person,Shi Jinping,Xi Jinping,true,MEDIUM,Phonetic Replacement,,0.9500,true,TP
+nk_checks,928eb9e4,Person,Si Jinpin,Xi Jinping,true,MEDIUM,Phonetic Replacement,,0.8786,true,TP
+nk_checks,ef75463e,Person,Margarita-Simonyan,Margarita Simonyan,true,MEDIUM,Special Characters Addition,,1.0000,true,TP
+nk_checks,10f1a279,Person,Margarita Simonyán,Margarita Simonyan,true,MEDIUM,Special Characters Addition,,1.0000,true,TP
+nk_checks,568f972d,Person,A. Khamenei,Ali Khamenei,true,WEAK,Initials Usage,,0.5882,false,FN
+nk_checks,e3a8b81f,Person,J.-C. Juncker,Jean-Claude Juncker,true,WEAK,Initials Usage,,0.9500,true,TP
+nk_checks,c22a1079,Person,JC Juncker,Jean-Claude Juncker,true,WEAK,Initials Usage,,0.9500,true,TP
+nk_checks,afb7912c,Organization,PLA,People’s Liberation Army,true,MEDIUM,Abbreviation,,0.9000,true,TP
+nk_checks,64f611b0,Organization,PLA China,People’s Liberation Army,true,MEDIUM,Abbreviation,,0.9000,true,TP
+nk_checks,3510efaf,Person,AlisherUsmanov,Alisher Usmanov,true,MEDIUM,Word Joining,,0.9867,true,TP
+nk_checks,21312e24,Person,Alisher-Usmanov,Alisher Usmanov,true,MEDIUM,Word Joining,,1.0000,true,TP
+nk_checks,e22b9d7e,Person,Nikolai Patr ushev,Nikolai Platonovich Patrushev,true,MEDIUM,Word Splitting,,0.8911,true,TP
+nk_checks,a88239d5,Person,Nikolai Plat Ono Vich Patrushev,Nikolai Platonovich Patrushev,true,MEDIUM,Word Splitting,,0.9897,true,TP
+nk_checks,d0436f53,Person,bin Salman Mohammed,Mohammed bin Salman,true,MEDIUM,Word Reordering,,1.0000,true,TP
+nk_checks,a4ff9a57,Person,Salman Mohammed bin,Mohammed bin Salman,true,MEDIUM,Word Reordering,,1.0000,true,TP
+nk_checks,6bbea6ea,Company,1st International Bank,First International Bank,true,MEDIUM,Ordinal Number Variation,,0.9435,true,TP
+nk_checks,bc6ccb9a,Company,First Bank Int’l,First International Bank,true,MEDIUM,Ordinal Number Variation,,0.9870,true,TP
+nk_checks,08558993,Organization,Brigade Forty-Four,Brigade 44,true,MEDIUM,Digit to Text Conversion,,0.9350,true,TP
+nk_checks,87a6de34,Organization,Brigade Forty 4,Brigade 44,true,WEAK,Digit to Text Conversion,,0.2555,false,FN
+nk_checks,4a4b65af,Organization,3 Percenters,Three Percenters,true,MEDIUM,Text to Digit Conversion,,0.9435,true,TP
+nk_checks,b64a0f9a,Organization,3%ers,Three Percenters,true,WEAK,Text to Digit Conversion,,0.5087,false,FN
+nk_checks,364a234b,Person,Sergey Sergey Shoigu,Sergey Shoigu,true,MEDIUM,Name Duplication Removal,,0.7143,true,TP
+nk_checks,2802571b,Person,Shoigu Shoigu Sergey,Sergey Shoigu,true,MEDIUM,Name Duplication Removal,,0.7143,true,TP
+nk_checks,b4409354,Person,N. Nazarbayev,Nursultan Nazarbayev,true,WEAK,Initials Addition,,0.5000,false,FN
+nk_checks,4e50656e,Person,A. Nazarbayev,Nursultan Nazarbayev,false,WEAK,,,0.5882,false,TN
+nk_checks,a8c5f5d3,Person,Nar Nazarbayev,Nursultan Nazarbayev,false,MEDIUM,,,0.5000,false,TN
+nk_checks,0e0c831d,Person,N.N.,Nursultan Nazarbayev,false,WEAK,Initials Addition,,0.0000,false,TN
+nk_checks,4f7a1618,Person,Dr. Rami Makhlouf,Rami Makhlouf,true,MEDIUM,Title Addition,,1.0000,true,TP
+nk_checks,bd12a48c,Person,Mr. Rami Makhlouf,Rami Makhlouf,true,MEDIUM,Title Addition,,1.0000,true,TP
+nk_checks,cc12d760,Person,RamiMakhlouf,Rami Makhlouf,true,MEDIUM,,,0.9846,true,TP
+nk_checks,8069c1c3,Person,Ihab Makhlouf,Rami Makhlouf,false,MEDIUM,,,0.5000,false,TN
+nk_checks,c1a1edbf,Person,Hafez Makhlouf,Rami Makhlouf,false,MEDIUM,,,0.5000,false,TN
+nk_checks,fd580ad8,Person,Bibi Netanyahu,Benjamin Netanyahu,true,WEAK,Nickname Usage,,0.5000,false,FN
+nk_checks,f8fc314f,Person,Ben Netanyahu,Benjamin Netanyahu,true,WEAK,Nickname Usage,,0.8222,true,TP
+nk_checks,f023048c,Person,Boris Netanyahu,Benjamin Netanyahu,false,MEDIUM,,,0.5000,false,TN
+nk_checks,bcb43666,Person,Emanuel Macron,Emmanuel Macron,true,MEDIUM,Common Misspelling,,0.9500,true,TP
+nk_checks,f94ee9ed,Person,Emmanuel Macrone,Emmanuel Macron,true,MEDIUM,Common Misspelling,,0.9286,true,TP
+nk_checks,e63fb282,Person,Pot Pouv,Pol Pot,false,MEDIUM,,,0.5000,false,TN
+nk_checks,884163e1,Person,PolPot,Pol Pot,true,MEDIUM,,,0.9714,true,TP
+nk_checks,dd748c80,Person,ប៉ុល ពត,Pol Pot,true,MEDIUM,,,0.9000,true,TP
+nk_checks,7c84e1ff,Person,Paul Murphy,Pol Pot,false,MEDIUM,,,0.4500,false,TN
+nk_checks,209d8b9d,Person,Pol Pot,Paul Murphy,false,STRONG,,,0.4500,false,TN
+nk_checks,9f62ec7e,Person,ماري تيريز أدينا أوندوا,Marie-Therese Abena Ondoa,true,MEDIUM,,,0.4500,false,FN
+nk_checks,0c3159f3,Person,Barack Obama,George Hussein Onyango Obama,false,MEDIUM,,,0.4167,false,TN
+nk_checks,6d12065e,Person,Barack Obama,Բարակ Օբամա,true,MEDIUM,,,0.9167,true,TP
+nk_checks,b4fd57c7,Person,Barack Obama,バラク・オバマ,true,MEDIUM,,,0.9000,true,TP
+nk_checks,0762bbea,Person,Barak Obama,Barack Obama,true,MEDIUM,,,0.9167,true,TP
+nk_checks,0e0ce99d,Person,Barry Obama,Barack Obama,true,WEAK,,,0.5000,false,FN
+nk_checks,cc8a721f,Person,贝拉克·奥巴马,Barack Obama,true,MEDIUM,,,0.9000,true,TP
+nk_checks,3a472518,Person,Präsident Barack Obama,Barack Obama,true,MEDIUM,,,1.0000,true,TP
+nk_checks,9330d6f1,Person,Barack Obama,Барак Хусеин Обама,true,MEDIUM,,,0.8636,true,TP
+nk_checks,c493a181,Person,ბარაკ ობამა,Barack Obama,true,MEDIUM,,,0.9167,true,TP
+nk_checks,5cb57149,Person,Michel Obama,Michelle Obama,true,WEAK,,,0.8750,true,TP
+nk_checks,6bd075cb,Person,Marie-Thérèse Obama,Michelle Obama,false,MEDIUM,,,0.3571,false,TN
+nk_checks,105666c4,Person,Hannibal,Hannibal,true,MEDIUM,,,1.0000,true,TP
+nk_checks,14d9f5c0,Person,Hanniball,Hannibal,true,MEDIUM,,,0.8889,true,TP
+nk_checks,4b4b7f86,Person,Sergejs Lavrovs,Sergey Viktorovich LAVROV,true,MEDIUM,,,0.7876,true,TP
+nk_checks,7fd87d08,Person,Sergey Ivanov,Sergey Viktorovich LAVROV,false,MEDIUM,,,0.4545,false,TN
+nk_checks,1f89dcc7,Person,Sergey Ivanevich Lavrov,Sergey Viktorovich LAVROV,false,MEDIUM,,,0.6667,false,TN
+nk_checks,d9bd137e,Person,Sergey Viktorovich Lavrov,Sergey Viktorovich LAVROV,true,MEDIUM,,,1.0000,true,TP
+nk_checks,d496e7c3,Person,Sergey Viktorovich Lavrov,Sergey Ivanevich LAVROV,false,MEDIUM,,,0.6667,false,TN
+nk_checks,15ed6201,Person,Sergej Viktorovich Navros,Sergey Viktorovich LAVROV,false,MEDIUM,,,0.6333,false,TN
+nk_checks,e9d1c1cc,Person,Jeremy Thomas England,Thomas Lindemann,false,MEDIUM,,,0.3571,false,TN
+nk_checks,588971d9,Person,Niranjan Thomas Alva,Thomas Lindemann,false,MEDIUM,,,0.3571,false,TN
+nk_checks,55e29636,Person,Thomas A. Lind,Thomas Lindemann,false,MEDIUM,,,0.5000,false,TN
+nk_checks,9e17e0a0,Person,Thomas A. Lindeman,Thomas Lindemann,true,MEDIUM,,,0.7917,true,TP
+nk_checks,7501a126,Person,Ротенберг Аркадий,Arkadii Romanovich Rotenberg,true,MEDIUM,,,0.8636,true,TP
+nk_checks,aab171a4,Person,Osama bin Laden,Usāma bin Muhammad ibn Awad ibn Lādin,true,MEDIUM,,,0.5163,false,FN
+nk_checks,7839701e,Person,Muhammad bin Salman,Usāma bin Muhammad ibn Awad ibn Lādin,false,MEDIUM,,,0.5435,false,TN
+nk_checks,2c108e72,Company,Goodwill Company,Good Will Company,true,MEDIUM,,,0.9829,true,TP
+nk_checks,e89e0d84,Organization,Government of Estonia,Government of Ethiopia,false,MEDIUM,,,0.2308,false,TN
+nk_checks,3d3369f1,Company,CRYSTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,,,1.0000,true,TP
+nk_checks,aa536cea,Company,CRISTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,,,0.9205,true,TP
+nk_checks,b50ebbe3,Company,CRYSTALORD SYSTEMS LIMITED,CRYSTALORD LTD,false,WEAK,,,0.7522,true,FP
+nk_checks,f36c459f,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,1.0000,true,TP
+nk_checks,ded3b89b,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPAN,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,1.0000,true,TP
+nk_checks,90ac62c2,Company,JSC TACTICAL MISSILES CORPORATION,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,1.0000,true,TP
+nk_checks,34864cf5,Company,OJSC TACTICAL MISSILES CORPORATION,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,0.9533,true,TP
+nk_checks,7e1dc456,Company,JSC TACTICAL MISSILES CORP.,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,0.9889,true,TP
+nk_checks,c1e5fa1f,Company,OJSC TACTICAL KITTENS CORPORATION,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,false,MEDIUM,,,0.5778,false,TN
+nk_checks,6c6fd9f2,Company,OJSC TACTICAL MISSIVES CORPORATION,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,WEAK,,,0.8613,true,TP
+nk_checks,f4045d5e,Company,Oboronnye Initsiativy OOO,OOO Oboronnye Initsiativy,true,MEDIUM,,,1.0000,true,TP
+nk_checks,819ed21a,Company,Oboronnye Initsiativy o.O.O.,OOO Oboronnye Initsiativy,true,MEDIUM,,,1.0000,true,TP
+nk_checks,5d62297c,Company,Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,true,MEDIUM,,,0.9346,true,TP
+nk_checks,5a28795c,Company,ANO Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,false,MEDIUM,,,0.6803,false,TN
+nk_checks,5f2b41d2,Company,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,,,0.7463,true,TP
+nk_checks,66674791,LegalEntity,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,,,0.7463,true,TP
+nk_checks,4cba6088,Person,Boris Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.8000,true,TP
+nk_checks,774c8d2d,Person,Geoffrey Boris Johnson,Alexandre Boris de Pfeffel Johnson,false,STRONG,,,0.6061,false,TN
+nk_checks,99818732,Person,Boris de Pfeffel Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9524,true,TP
+nk_checks,b8f02373,Person,Boris Johnson de Pfeffel,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9524,true,TP
+nk_checks,e1cf3f2c,Company,A.B.C. Company,A.B.C. Company,true,STRONG,,,1.0000,true,TP
+nk_checks,a133649c,Company,ABC Company,A.B.C. Company,true,STRONG,,,1.0000,true,TP
+nk_checks,cd91961d,Company,ABC Co.,A.B.C. Company,true,MEDIUM,,,0.9769,true,TP
+nk_checks,18371449,Company,CDE Company,A.B.C. Company,false,MEDIUM,,,0.2308,false,TN
+nk_checks,1e1de812,Company,C.B.A. Company,A.B.C. Company,false,STRONG,,,0.2308,false,TN
+nk_checks,7cd9604e,Company,N.A.B.C. Company,A.B.C. Company,false,MEDIUM,,,0.2308,false,TN
+nk_checks,8198f145,Company,ABC International,A.B.C. Company,false,MEDIUM,,,0.5882,false,TN
+nk_checks,b03d4f3e,Organization,Yamahdi (UK) Limited,YA MAHDI INDUSTRIES GROUP,false,STRONG,,,0.3943,false,TN
+nk_checks,d4122590,Organization,MAHDI & YASMIN LTD,YA MAHDI INDUSTRIES GROUP,false,MEDIUM,,,0.3521,false,TN
+nk_checks,bb34ccd4,Person,Niels Oscar Rost,Niels Oscar TROOST,true,MEDIUM,,,0.6667,false,FN
+nk_checks,1bed6465,Person,Nils Trosterich,Niels Oscar TROOST,false,MEDIUM,,,0.3788,false,TN
+nk_checks,b7d9579f,LegalEntity,Nils Trosterich,Niels Oscar TROOST,false,MEDIUM,,,0.3788,false,TN
+nk_checks,9ba41b3a,Person,Ali A. Velayati,Ali Akbar Velayati,true,MEDIUM,,,0.7407,true,TP
+nk_checks,54bd3e2a,Person,Ali Vellabati,Ali Akbar Velayati,false,MEDIUM,,,0.7609,true,FP
+nk_checks,9a3bce65,Person,Kim Myong-sik,Kim Myong-guk,true,MEDIUM,,,0.6667,false,FN
+nk_checks,5a7877bc,Person,Kim Pong-ryul,Kim Pyong-ryul,true,MEDIUM,,,0.9333,true,TP
+nk_checks,6841855e,Person,Choe Ryong-hae,Choe Kyong-song,false,MEDIUM,,,0.5648,false,TN
+nk_checks,31f526c5,Person,Kim Yong-chol,Kim Yong-chun,true,MEDIUM,,,0.6667,false,FN
+nk_checks,bac94633,LegalEntity,Kim Yong-chol,Kim Yong-chun,true,MEDIUM,,,0.6667,false,FN
+nk_checks,5653d9dc,LegalEntity,Volodymyr Groysman,Volodymyr Oleksandrovych Zelenskyy,false,MEDIUM,,,0.4545,false,TN
+nk_checks,12f3fa5b,Person,Володимир Зеленський,Volodymyr Oleksandrovych Zelenskyy,true,MEDIUM,,,0.8182,true,TP
+nk_checks,73bd5cc8,Person,Oleksandr Zelenskyy,Volodymyr Oleksandrovych Zelenskyy,false,MEDIUM,,,0.4545,false,TN
+nk_checks,25f302fb,LegalEntity,"Nantahala Capital Offshore Fund, Ltd.","Nantahala Capital Offshore Fund I, Ltd.",true,MEDIUM,,,0.9375,true,TP
+nk_checks,b6bb78d2,LegalEntity,C G Clow Will Trust,CG City Funding Limited,false,MEDIUM,,,0.2610,false,TN
+nk_checks,d474ca53,LegalEntity,The Pudney Trust,The Puccini Trust,false,MEDIUM,,,0.2308,false,TN
+nk_checks,3e8c9577,LegalEntity,The Puffin Trust,The Puccini Trust,false,MEDIUM,,,0.2308,false,TN
+nk_checks,f54ad1f2,LegalEntity,LVMH Aviation,"THEIA AVIATION, LLC",false,MEDIUM,,,0.3804,false,TN
+nk_checks,4d686dd9,Company,СБ Дако ООО,СБ Банк (ООО),false,MEDIUM,,,0.6296,false,TN
+nk_checks,7a143415,Company,"ООО ""БАЙ""","ООО""БАЗО""",false,MEDIUM,,,0.4118,false,TN
+nk_checks,88ff2011,Company,"ООО ""БАЙ""","ООО ""БАЙКАЛ""",false,MEDIUM,,,0.4118,false,TN
+nk_checks,48185c30,Company,ООО АЯС 2000,"ООО ""АЯС 2000""",true,MEDIUM,,,1.0000,true,TP
+nk_checks,95e09e00,Company,"ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ ""БАЙ""","ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ ""БАЙКАЛ""",false,MEDIUM,,,0.4118,false,TN
+nk_checks,fc59418c,Company,"СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ ""ЦЕНТР СОЦИАЛЬНОЙ АДАПТАЦИИ ""АЛЬЯНС""","СВЕРДЛОВСКАЯ ОБЛАСТНАЯ ОБЩЕСТВЕННАЯ ОРГАНИЗАЦИЯ ""ЦЕНТР ИССЛЕДОВАНИЯ БОЕВЫХ ИСКУССТВ ""УРАЛЬСКИЙ БУДОКАН""",false,MEDIUM,,,0.3876,false,TN
+nk_checks,8681ad4d,LegalEntity,Nanshan Group,Nanshan Group Co Ltd,true,MEDIUM,,,0.9028,true,TP
+nk_checks,30b92402,Company,Societatea cu Răspundere Limitată PRO TRAFFIC,SRL PRO TRAFFIC,true,MEDIUM,,,1.0000,true,TP
+nk_checks,590ce737,Company,Societatea cu Răspundere Limitată CON TRAFFIC,Societatea cu Răspundere Limitată PRO TRAFFIC,false,STRONG,,,0.6296,false,TN
+nk_checks,1cddd9f4,Company,S.R.L. CON TRAFFIC,Societatea cu Răspundere Limitată PRO TRAFFIC,false,MEDIUM,,,0.6296,false,TN
+nk_checks,edcc94a0,Company,JSC Murom Instrument-Making Plant,Акционерное общество “Муромский приборостроительный завод”,true,MEDIUM,,,0.5871,false,FN
+nk_checks,b8ad8c1e,Organization,ndrangheta,'Ndrangheta,true,MEDIUM,,,1.0000,true,TP
+nk_checks,8eda6e19,Organization,Andrang Heta,'Ndrangheta,true,MEDIUM,,,0.9000,true,TP
+nk_checks,ec402bc3,Organization,Al Qaeda,Al Qa'ida,true,STRONG,,,0.9000,true,TP
+nk_checks,5ddda764,Organization,Al Qaeda,Al-Qa'ida/Islamic Army,true,STRONG,,,0.9000,true,TP
+nk_checks,9bd251f2,Organization,Al-Qaida in Iraq,Al-Qaida in the Arabian Peninsula,false,MEDIUM,,,0.5512,false,TN
+nk_checks,2400d834,Person,'Abd al-Aziz al-Nuristani,Abdul Aziz Nooristani,true,MEDIUM,,,0.8037,true,TP
+nk_checks,48560f14,Person,"NURISTANI, Abdul Aziz",Abdul Aziz Nooristani,true,MEDIUM,,,0.9565,true,TP
+nk_checks,b6d9e4d5,Person,"NURISTANI, Abdul Aziz",ABDUL AZIZ Aziz Nooristani,true,MEDIUM,,,0.9565,true,TP
+nk_checks,8330d8cd,Vessel,Hellenic Spirit,MV Hellenic Spirit,true,MEDIUM,,,1.0000,true,TP
+nk_checks,72d78232,Vessel,Lady Leila,Lady Rania,false,MEDIUM,,,0.0000,false,TN
+nk_checks,38430e7c,Vessel,Zu Zag Bong 6,Zu Zag Bong 5,true,MEDIUM,,,0.5964,false,FN
+nk_checks,2e67ce37,Vessel,Yerotsakos,YEVGENY PRIMAKOV,false,MEDIUM,,,0.0000,false,TN
+nk_checks,e39e26ac,Vessel,Yard No. 9918779 Zvezda-Dsme,YARD NO. 455 IRAN MARINE,false,MEDIUM,,,0.0000,false,TN
+nk_checks,81a0cd54,Vessel,Victory,Victory 3,true,MEDIUM,,,0.0000,false,FN
+nk_checks,adec8f57,Vessel,Victory,VICTOR KONETSKY,false,MEDIUM,,,0.0000,false,TN
+nk_checks,d5c766ff,Vessel,VELIKIY NOVGOROD,Velikiy Novgorod,true,MEDIUM,,,1.0000,true,TP
+nk_checks,cb293136,Person,"Frost, William W.",William W Frost,true,MEDIUM,,,1.0000,true,TP
+nk_checks,bc5ad42c,Person,"Frost, William G.",William W Frost,false,MEDIUM,,,0.6667,false,TN
+nk_checks,d54ddd32,Person,GENA C RANDOLPH,"Randolph, Gena",true,MEDIUM,,,0.7143,true,TP
+nk_checks,a4cfc4c2,Person,GERD RANDOLPH,"Randolph, Gena",false,MEDIUM,,,0.5000,false,TN
+nk_checks,e0a7b412,Organization,The BSF Foundation,The BIRD Foundation,false,MEDIUM,,,0.2308,false,TN
+nk_checks,4df61699,Person,Eric A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6667,false,TN
+nk_checks,8082a5cc,Person,Aaron A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6667,false,TN
+nk_checks,95a2f48a,Company,"BWI Industries, Inc.","BAE Industries, Inc.",false,STRONG,,,0.5000,false,TN
+nk_checks,d27d29e3,LegalEntity,"BWI Industries, Inc.","BAE Industries, Inc.",true,MEDIUM,,,0.5000,false,FN
+nk_checks,acb967e1,Company,"BAE Systems, Inc.","BAE Industries, Inc.",false,MEDIUM,,,0.6296,false,TN
+nk_checks,0e94256b,Person,Allaidin Hussain ALWAN,Ahmad al-Hamidawi,false,MEDIUM,,,0.0000,false,TN
+nk_checks,1834d88e,Organization,"Academy of Military Medical Sciences, Insitute of Medical Equipment","Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology",false,MEDIUM,,,0.6773,false,TN
+nk_checks,1ce61548,Company,Management Company,Westminister Management Company,false,MEDIUM,,,0.7500,true,FP
+nk_checks,d6e1ce25,Company,Management Company 23,Management Company,false,MEDIUM,,,0.3659,false,TN
+nk_checks,09a9b423,LegalEntity,Elois,Alice Costandina Titus,false,MEDIUM,,,0.0000,false,TN
+nk_checks,1ea3db11,Person,Elois,Alice Costandina Titus,false,MEDIUM,,,0.0000,false,TN
+nk_checks,078cd3f6,Company,Blinq Holdings Pty Ltd,Bailey Holdings Pty Ltd,false,MEDIUM,,,0.5000,false,TN
+nk_checks,fc677510,Person,Ilie Bolojan,Monsieur Ilie-Gabril Bolojan,true,MEDIUM,,,0.9091,true,TP
+nk_unit_tests,83c5de91,Person,John Doe,John Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,1.0000,true,TP
+nk_unit_tests,3405b51f,Person,John Doe,Juan Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.5000,false,FN
+nk_unit_tests,692c3aee,Person,John Doeburg,John Dowburg,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8673,true,TP
+nk_unit_tests,3c6d442e,Person,John Doe,John Down,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.5000,false,FN
+nk_unit_tests,b429d61a,Person,Serei Lavrov,Sergei Lavrov,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9167,true,TP
+nk_unit_tests,ac07623a,Person,Serej Lavrov,Сергей Викторович Лавров,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8312,true,TP
+nk_unit_tests,fd71cebd,Person,Ramimakhlouf,Rami Makhlouf,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9846,true,TP
+nk_unit_tests,c70bd94f,Person,A Nazarbayev,Nursultan Naza,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.0000,false,TN
+nk_unit_tests,8e854163,Person,Ted Doe,Theodore Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8222,true,TP
+nk_unit_tests,d908245b,Person,باراك أوباما,محمد بن سلمان آل سعود,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.0000,false,TN
+nk_unit_tests,c2d5527f,Company,OAO Gazprom,Gazprom JSC,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9176,true,TP
+nk_unit_tests,5c075522,Company,OAO Gazprom,Gasprom JSC,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.7616,true,TP
+nk_unit_tests,50cd090c,Company,OAO Gazprom,Open Joint Stock Company Gasprom,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.7616,true,TP
+nk_unit_tests,3fa6978b,Company,Gazprom Neft JSC,Gazprom Neft OAO,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9417,true,TP
+nk_unit_tests,be58c9b8,Company,LXC Aviation,LAU Aviation,false,STRONG,logic_v2_cases,test_logic_v2_cases.py CASES,0.4118,false,TN
+nk_unit_tests,4e1d90db,Company,LXC Aviatio,LAU Aviation,false,STRONG,logic_v2_cases,test_logic_v2_cases.py CASES,0.4375,false,TN
+nk_unit_tests,8ca27e5a,Company,LXC Aviation,L.X.C Aviation,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,1.0000,true,TP
+nk_unit_tests,fe421cee,Company,L.X.C. Aviation,LAU Aviation,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.4118,false,TN
+nk_unit_tests,9a361885,Company,OJSC TACTICAL KITTENS CORPORATION,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.5778,false,TN
+nk_unit_tests,a78bc63e,Company,FABERLIC EUROPE,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9346,true,TP
+nk_unit_tests,5bb957d9,Organization,Brigade Fourty-four,Brigade 44,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9350,true,TP
+nk_unit_tests,1d3d0cf6,Vessel,Snow,SNOW,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,1.0000,true,TP
+nk_unit_tests,1883de34,Vessel,Snow,Snoe,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.0000,false,TN
+nk_unit_tests,35a337c4,Vessel,Snow Storm 1,Snow Stom 1,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8403,true,TP
+nk_unit_tests,dc0e2201,Vessel,Snow Storm 1,Snow Storm 2,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.5882,false,FN
+nk_unit_tests,c08b2802,Person,Friedrich Lindenberg,Lars Friedrich Lindemann,false,MEDIUM,friedrich_fps,test_jaro_friedrich,0.4545,false,TN
+nk_unit_tests,879eeb73,Person,Friedrich Lindenberg,Wolfgang Friedrich Ischinger,false,MEDIUM,friedrich_fps,test_jaro_friedrich,0.4545,false,TN
+nk_unit_tests,d23645a9,Person,Friedrich Lindenberg,Gerhard Friedrich Karl Westdickenberg,false,MEDIUM,friedrich_fps,test_jaro_friedrich,0.4167,false,TN
+nk_unit_tests,a301d633,Person,Friedrich Lindenberg,Klaus-Peter Friedrich Walter Schulze,false,MEDIUM,friedrich_fps,test_jaro_friedrich,0.3846,false,TN
+nk_unit_tests,a51f8668,Person,Friedrich Lindenberg,Fridrich Lindenberg,true,MEDIUM,friedrich_tps,test_jaro_friedrich,0.9444,true,TP
+nk_unit_tests,4fa9465b,Person,Friedrich Lindenberg,Fredrich Lindenberg,true,MEDIUM,friedrich_tps,test_jaro_friedrich,0.9444,true,TP
+nk_unit_tests,6bc57b11,Person,Friedrich Lindenberg,Friedrich Lindenburg,true,MEDIUM,friedrich_tps,test_jaro_friedrich,0.9050,true,TP
+nk_unit_tests,1507ccd3,Person,Friedrich Lindenberg,Friedrich Lyndenburg,true,MEDIUM,friedrich_tps,test_jaro_friedrich,0.8445,true,TP
+nk_unit_tests,fae2faf5,Person,Frederik Richter,Frederick Matthias Benjamin Bolte,false,MEDIUM,frederik_fps,test_jaro_frederik,0.3750,false,TN
+nk_unit_tests,8fa1debb,Person,Frederik Richter,Matthi Bolte-Richter,false,MEDIUM,frederik_fps,test_jaro_frederik,0.4545,false,TN
+nk_unit_tests,6c503372,Person,Frederik Richter,Frank Richter,false,MEDIUM,frederik_fps,test_jaro_frederik,0.5000,false,TN
+nk_unit_tests,a793823d,Person,Barack Obama,George Hussein Onyango Obama,false,MEDIUM,obama_fps,test_jaro_obamas,0.4167,false,TN
+nk_unit_tests,d6e0f1dd,Person,Barack Obama,Barak Obama,true,MEDIUM,obama_tps,test_jaro_obamas,0.9167,true,TP
+nk_unit_tests,13d05602,Person,Barack Obama,Barackk Obama,true,MEDIUM,obama_tps,test_jaro_obamas,0.9286,true,TP
+nk_unit_tests,32bcb692,Person,Barack Obama,Michelle Obama,false,MEDIUM,obama_fps,test_jaro_obamas,0.5000,false,TN
+nk_unit_tests,86fa9f6d,Person,Michelle Obama,Marie-Thérèse Obama,false,MEDIUM,obama_fps,test_jaro_obamas,0.4545,false,TN
+nk_unit_tests,e0a816f5,Person,Pol Pot,Paul Murphy,false,MEDIUM,pol_fps,test_jaro_pol,0.4500,false,TN
+nk_unit_tests,f9787ce2,Person,Pol Pot,Paul Mitchell,false,MEDIUM,pol_fps,test_jaro_pol,0.4500,false,TN
+nk_unit_tests,516df527,Person,Pol Pot,Pot Pouv,false,MEDIUM,pol_fps,test_jaro_pol,0.5000,false,TN
+nk_unit_tests,2af8869b,Person,Sergejs Lavrovs,Sergey Viktorovich LAVROV,true,MEDIUM,lavrov_tps,test_jaro_lavrov,0.7876,true,TP
+nk_unit_tests,57d1a4a5,Person,Thomas Lindemann,Jeremy Thomas England,false,MEDIUM,lindemann_fps,test_jaro_lindemann,0.4545,false,TN
+nk_unit_tests,3b0a9e47,Person,Thomas Lindemann,Niranjan Thomas Alva,false,MEDIUM,lindemann_fps,test_jaro_lindemann,0.4545,false,TN
+nk_unit_tests,fa660f4c,Person,Thomas Lindemann,Iain Thomas Rankin,false,MEDIUM,lindemann_fps,test_jaro_lindemann,0.4545,false,TN
+nk_unit_tests,d1cb9eb8,Person,Michelle Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.9091,true,TP
+nk_unit_tests,59d68634,Person,Michele Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.8485,true,TP
+nk_unit_tests,5f5b08f4,Person,Michele Nichaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.7531,true,TP
+nk_unit_tests,6f459879,Person,Michele Nychaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.6864,false,FN
+nk_unit_tests,09f42754,Person,Michele Mugaloo,Michaela Michelle Micheli,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity,0.4040,false,TN
+nk_unit_tests,5c441fb7,Person,Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.7143,true,TP
+nk_unit_tests,dc293452,Person,Michaela,Michelle Obama,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity,0.0000,false,TN
+nk_unit_tests,9b94d1e7,Person,Jan Daniel Bothma,RAZAFIMAHATRATRA Jean Daniel Christian,false,MEDIUM,jw_person_fps,test_person_name_jaro_winkler,0.5625,false,TN
+nk_unit_tests,1e8490b5,Person,Jan Daniel Bothma,JanDaniel Bothma,true,MEDIUM,jw_person_tps,test_person_name_jaro_winkler,0.9900,true,TP
+nk_unit_tests,3eb56801,Company,Siemens AG,Siemens Aktiengesellschaft,true,MEDIUM,fingerprint_tps,test_name_fingerprint_levenshtein,1.0000,true,TP
+nk_unit_tests,02081cb0,Company,Siemens AG,SiemensAG,true,MEDIUM,fingerprint_tps,test_name_fingerprint_levenshtein,0.9800,true,TP
+nk_unit_tests,fe0adf5c,Company,Siemens AG,Siemens AkG,true,MEDIUM,fingerprint_tps,test_name_fingerprint_levenshtein,0.5000,false,FN
+nk_unit_tests,5197fa72,Company,Good Will Company,Goodwill Company,true,MEDIUM,fingerprint_tps,test_name_fingerprint_levenshtein,0.9829,true,TP
+nk_unit_tests,0978bf12,Company,Government of Estonia,Government of Ethiopia,false,MEDIUM,fingerprint_fps,test_name_fingerprint_levenshtein,0.2308,false,TN
+nk_unit_tests,9c41f88b,Company,construction ltd,LLC CONSTRUCTION DREDGING COMPANY,false,MEDIUM,fingerprint_fps,test_name_fingerprint_levenshtein,0.7241,true,FP
+nk_unit_tests,91353c34,Company,CRYSTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,crystalord_tps,test_org_name_partial_match,1.0000,true,TP
+nk_unit_tests,fc10c585,Company,CRYSTALORD SYSTEMS LIMITED,CRYSTALORD LTD,false,MEDIUM,crystalord_fps,test_org_name_partial_match,0.7522,true,FP
+nk_unit_tests,b33eab5d,Company,CRYSTALORD,CRYSTALORD LTD,true,MEDIUM,crystalord_tps,test_org_name_partial_match,0.8772,true,TP
+nk_unit_tests,eef0f2b8,Company,CRISTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,crystalord_tps,test_org_name_partial_match,0.9205,true,TP
+nk_unit_tests,fcbd9cd1,Company,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,faberlic_tps,test_org_name_example_1,0.7463,true,TP
+nk_unit_tests,9db4fc2d,Company,faberlick,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,faberlic_tps,test_org_name_example_1,0.6486,false,FN
+nk_unit_tests,36cbd812,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JSC,true,MEDIUM,missiles_tps,test_org_name_example_2,1.0000,true,TP
+nk_unit_tests,826bb48e,Company,TACTICAL MISSILES CORPORATION OJSC,TACTICAL MISSILES CORPORATION JSC,true,MEDIUM,missiles_tps,test_org_name_example_2,0.9533,true,TP
+nk_unit_tests,80ab85f6,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JOYNT STOCK COMPANY,true,MEDIUM,missiles_tps,test_org_name_example_2,0.6319,false,FN
+nk_unit_tests,9e0014c3,Company,Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,true,MEDIUM,iskusstvo_tps,test_org_name_example_3,0.9346,true,TP
+nk_unit_tests,6370aa8b,Company,Iskustvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,true,MEDIUM,iskusstvo_tps,test_org_name_example_3,0.8879,true,TP
+nk_unit_tests,14d475ec,Person,Shaikh Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,arabic_tps,test_arabic_name_similarity,1.0000,true,TP
+nk_unit_tests,91212c94,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,arabic_tps,test_arabic_name_similarity,0.9772,true,TP
+nk_unit_tests,d3fe4aa9,Person,John Smith,"Smith, John",true,MEDIUM,reorder_tps,test_name_match,1.0000,true,TP
+nk_unit_tests,3b30cf44,Person,Vladimir Putin,Vladimir Pudin,true,MEDIUM,putin_tps,test_heuristic_scoring,0.8200,true,TP
+nk_unit_tests,ad79f3e8,Person,Hannibal,Hannibol,true,MEDIUM,single_tps,test_single_name,0.7656,true,TP
+nk_unit_tests,739854b9,Person,Hannibal,Hanniball,true,MEDIUM,single_tps,test_single_name,0.8889,true,TP
+nk_unit_tests,c7b7a46d,Person,Michelle Michaela,Michelle Michi,true,MEDIUM,soundex_tps,test_soundex_name_comparison,0.5000,false,FN
+nk_unit_tests,b0b3bb28,Person,Michelle Michaela,Donald Duck,false,MEDIUM,soundex_fps,test_soundex_name_comparison,0.0000,false,TN
+synth_companies,b173e865,Company,"Amazonis.com, Inc.","Amazon.com, Inc.",true,MEDIUM,LLM-proposed deviation,word substitution (real word collision),0.8930,true,TP
+synth_companies,17a6908c,Company,Wallmart Inc.,Walmart Inc.,true,MEDIUM,LLM-proposed deviation,doubled consonant,0.9265,true,TP
+synth_companies,9f07d381,Company,State Grid Corporation of Chile,State Grid Corporation of China,true,MEDIUM,LLM-proposed deviation,geographic swap,0.6970,false,FN
+synth_companies,80870c3e,Company,Saudi Arabian Gas Company,Saudi Arabian Oil Company,false,MEDIUM,LLM-proposed deviation,industry-word swap,0.6970,false,TN
+synth_companies,7a08ad43,Company,China National Pipeline Corporation,China National Petroleum Corporation,false,MEDIUM,LLM-proposed deviation,industry-word swap,0.5833,false,TN
+synth_companies,79457826,Company,China Petromechanical Corporation,China Petrochemical Corporation,false,MEDIUM,LLM-proposed deviation,coined compound substitution,0.5238,false,TN
+synth_companies,010cf7f1,Company,Appel Inc.,Apple Inc.,true,MEDIUM,LLM-proposed deviation,phonetic-near surname (Dutch/German real word),0.7882,true,TP
+synth_companies,a65e7f04,Company,Alphanet Inc.,Alphabet Inc.,true,MEDIUM,LLM-proposed deviation,word substitution,0.8621,true,TP
+synth_companies,efd5879c,Company,"UnitedWealth Group, Inc.","UnitedHealth Group, Inc.",true,MEDIUM,LLM-proposed deviation,single-char sub flips meaning,0.9201,true,TP
+synth_companies,0329852b,Company,Berkshire Halloway Inc.,Berkshire Hathaway Inc.,false,MEDIUM,LLM-proposed deviation,phonetic-near surname,0.6296,false,TN
+synth_companies,63c88fb2,Company,CVC Health Corporation,CVS Health Corporation,true,MEDIUM,LLM-proposed deviation,acronym single-char sub (CVC is a real PE firm),0.5000,false,FN
+synth_companies,fb197daf,Company,Volkswerk Aktiengesellschaft,Volkswagen Aktiengesellschaft,false,MEDIUM,LLM-proposed deviation,German compound second-element swap,0.4118,false,TN
+synth_companies,2e1a5888,Company,Exxor Mobil Corporation,Exxon Mobil Corporation,true,MEDIUM,LLM-proposed deviation,single-char sub,0.8671,true,TP
+synth_companies,0ef833d4,Company,Vital Holding S.A.,Vitol Holding S.A.,true,MEDIUM,LLM-proposed deviation,one-letter shift to real word,0.8200,true,TP
+synth_companies,301ed773,Company,Schell plc,Shell plc,true,MEDIUM,LLM-proposed deviation,added consonant (real surname),0.9020,true,TP
+synth_companies,03401615,Company,China State Construction Equipment Corporation,China State Construction Engineering Corporation,false,MEDIUM,LLM-proposed deviation,domain-word swap,0.6774,false,TN
+synth_companies,6fcdfd46,Company,Tayota Motor Corporation,Toyota Motor Corporation,true,MEDIUM,LLM-proposed deviation,vowel reorder,0.8846,true,TP
+synth_companies,5a8e551b,Company,McKenton Corporation,McKesson Corporation,true,MEDIUM,LLM-proposed deviation,plausible-alternate Scottish surname,0.6635,false,FN
+synth_companies,0f48b025,Company,Macrosoft Corporation,Microsoft Corporation,true,MEDIUM,LLM-proposed deviation,prefix antonym (micro/macro),0.8386,true,TP
+synth_companies,bfaca36d,Company,"Sencora, Inc.","Cencora, Inc.",true,MEDIUM,LLM-proposed deviation,initial-letter sub,0.8439,true,TP
+synth_companies,28254759,Company,Trafalgura Group Pte. Ltd.,Trafigura Group Pte. Ltd.,true,MEDIUM,LLM-proposed deviation,internal vowel sub,0.8556,true,TP
+synth_companies,2ae4f99c,Company,Cosco Wholesale Corporation,Costco Wholesale Corporation,true,MEDIUM,LLM-proposed deviation,dropped consonant (collides with real Cosco shipping),0.9379,true,TP
+synth_companies,d24457fd,Company,JPMorgon Chace & Co.,JPMorgan Chase & Co.,true,MEDIUM,LLM-proposed deviation,phonetic-near surname (Chace is a real surname),0.7522,true,TP
+synth_companies,5ff50bb6,Company,Industrial and Commercial Bank of Chad Limited,Industrial and Commercial Bank of China Limited,false,MEDIUM,LLM-proposed deviation,geographic swap,0.7872,true,FP
+synth_companies,43dd6128,Company,TotalEnergias SE,TotalEnergies SE,true,MEDIUM,LLM-proposed deviation,Spanish-form pluralisation,0.9130,true,TP
+synth_companies,b838460e,Company,Glenmore plc,Glencore plc,true,MEDIUM,LLM-proposed deviation,Scottish-place-name sub (Glenmore is a real distillery),0.8621,true,TP
+synth_companies,6de2e78a,Company,Invidia Corporation,NVIDIA Corporation,true,MEDIUM,LLM-proposed deviation,Latin word substitution,0.8901,true,TP
+synth_companies,32a0c054,Company,BD p.l.c.,BP p.l.c.,true,MEDIUM,LLM-proposed deviation,two-letter ticker collision (BD = Becton Dickinson),0.4118,false,FN
+synth_companies,f949679e,Company,"Cardinal Wealth, Inc.","Cardinal Health, Inc.",true,MEDIUM,LLM-proposed deviation,domain-word sub (Health/Wealth),0.8868,true,TP
+synth_companies,9dd03591,Company,Stellaris N.V.,Stellantis N.V.,true,MEDIUM,LLM-proposed deviation,truncated-and-substituted stem,0.8301,true,TP
+synth_companies,e38a1fb2,Company,Chevon Corporation,Chevron Corporation,true,MEDIUM,LLM-proposed deviation,dropped consonant (Chevon is a real meat brand),0.8901,true,TP
+synth_companies,1e09a6bb,Company,China Construction Trust Corporation,China Construction Bank Corporation,false,WEAK,LLM-proposed deviation,sector-word swap (Bank/Trust),0.7031,true,FP
+synth_companies,099c3673,Company,"Samsong Electronics Co., Ltd.","Samsung Electronics Co., Ltd.",true,MEDIUM,LLM-proposed deviation,Korean-Romanisation vowel sub,0.9208,true,TP
+synth_companies,9dc88ec2,Company,"Hon Wai Precision Industry Co., Ltd.","Hon Hai Precision Industry Co., Ltd.",true,MEDIUM,LLM-proposed deviation,plausible-alternate Cantonese name,0.7500,true,TP
+synth_companies,3b6710ee,Company,The Sigma Group,The Cigna Group,true,MEDIUM,LLM-proposed deviation,Greek-letter near-homophone,0.2308,false,FN
+synth_companies,f21e50b4,Company,Agriculture Bank of China Limited,Agricultural Bank of China Limited,true,MEDIUM,LLM-proposed deviation,morphological variant (noun/adjective),0.9806,true,TP
+synth_companies,96f4fd71,Company,Schwartz Gruppe,Schwarz Gruppe,true,MEDIUM,LLM-proposed deviation,Yiddish/German surname-spelling collision,0.9444,true,TP
+synth_companies,342028a3,Company,China Railroad Engineering Corporation,China Railway Engineering Corporation,false,MEDIUM,LLM-proposed deviation,US/UK English synonym (Railroad/Railway),0.6429,false,TN
+synth_companies,306b2215,Company,"Cargille, Incorporated","Cargill, Incorporated",true,MEDIUM,LLM-proposed deviation,French-orthography surname variant,0.9265,true,TP
+synth_companies,03fb72bd,Company,Fjord Motor Company,Ford Motor Company,true,MEDIUM,LLM-proposed deviation,Norse-word substitution (real word),0.9275,true,TP
+synth_companies,59cc256b,Company,Bank of Chima Limited,Bank of China Limited,true,MEDIUM,LLM-proposed deviation,one-letter geographic decoy,0.9014,true,TP
+synth_companies,e629519b,Company,Bank of Armenia Corporation,Bank of America Corporation,false,MEDIUM,LLM-proposed deviation,geographic swap (shared first phoneme),0.8380,true,FP
+synth_companies,c5b9dc8b,Company,General Mortars Company,General Motors Company,true,MEDIUM,LLM-proposed deviation,phonetic-near common-noun (Motors/Mortars),0.3750,false,FN
+synth_companies,7bc64a3c,Company,"Elegance Health, Inc.","Elevance Health, Inc.",true,MEDIUM,LLM-proposed deviation,brand-stem one-letter shift to real word,0.9023,true,TP
+synth_companies,5754bdd0,Company,Berliner Motoren Werke Aktiengesellschaft,Bayerische Motoren Werke Aktiengesellschaft,false,STRONG,LLM-proposed deviation,German-region word swap (BMW expansion),0.7297,true,FP
+synth_companies,61fed6df,Company,Mercedes-Benn Group AG,Mercedes-Benz Group AG,true,MEDIUM,LLM-proposed deviation,final-consonant doubling,0.6667,false,FN
+synth_companies,9351c8a1,Company,"Beta Platforms, Inc.","Meta Platforms, Inc.",true,MEDIUM,LLM-proposed deviation,Greek-letter sub,0.8667,true,TP
+synth_companies,f3d73f48,Company,China Railway Constructors Corporation,China Railway Construction Corporation,false,WEAK,LLM-proposed deviation,nominalisation variant,0.8909,true,FP
+synth_companies,4700e651,Company,China Baowei Steel Group Corporation Limited,China Baowu Steel Group Corporation Limited,true,MEDIUM,LLM-proposed deviation,Pinyin syllable swap,0.7368,true,TP
+synth_companies,0a55f724,Company,Citygroup Inc.,Citigroup Inc.,true,MEDIUM,LLM-proposed deviation,brand-stem English-spelling sub,0.9121,true,TP
+synth_people,d5c3cc6f,Person,Vladimir Pulin,Vladimir Putin,true,STRONG,LLM-proposed deviation,RU surname single-char sub (Latin),0.8200,true,TP
+synth_people,f9aa11e9,Person,VladimirPutin,Vladimir Putin,true,STRONG,Failed test,Missing space in name,0.9857,true,TP
+synth_people,bcded9dc,Person,Владимир Пулин,Владимир Путин,true,STRONG,LLM-proposed deviation,RU surname single-char sub (Cyrillic),0.8200,true,TP
+synth_people,bad9c0e0,Person,Xi Jinpeng,Xi Jinping,true,MEDIUM,LLM-proposed deviation,CN given-name vowel sub (Pinyin),0.9050,true,TP
+synth_people,188f01ce,Person,习近朋,习近平,false,MEDIUM,LLM-proposed deviation,CN given-name char sub (朋 péng vs 平 píng),0.0000,false,TN
+synth_people,655943e2,Person,Kim Jong On,Kim Jong Un,true,MEDIUM,LLM-proposed deviation,KP given-name vowel sub (Latin),0.9667,true,TP
+synth_people,cbce0094,Person,김종은,김정은,false,MEDIUM,LLM-proposed deviation,KP given-name syllable sub (Hangul),0.9091,true,FP
+synth_people,d8fc098d,Person,Lee Jae Hyung,Lee Jae Myung,true,MEDIUM,LLM-proposed deviation,KR given-name onset sub (Latin),0.8800,true,TP
+synth_people,378fea3f,Person,이재형,이재명,false,MEDIUM,LLM-proposed deviation,KR given-name syllable sub (Hangul),0.8100,true,FP
+synth_people,eb314e65,Person,Sanae Takaishi,Sanae Takaichi,true,MEDIUM,LLM-proposed deviation,JP surname plausible-alternate (Latin),0.8828,true,TP
+synth_people,f3310dea,Person,高石早苗,高市早苗,false,MEDIUM,LLM-proposed deviation,JP surname-character sub (Kanji 石 vs 市),0.0000,false,TN
+synth_people,55851428,Person,Benjamin Natanyahu,Benjamin Netanyahu,true,MEDIUM,LLM-proposed deviation,IL surname vowel sub (Latin),0.8951,true,TP
+synth_people,77d8e97d,Person,בנימין נתניחו,בנימין נתניהו,true,MEDIUM,LLM-proposed deviation,IL surname char sub ה→ח (Hebrew),0.8472,true,TP
+synth_people,06a82c3f,Person,Masoud Pezeshfar,Masoud Pezeshkian,false,MEDIUM,LLM-proposed deviation,IR surname-suffix swap (Latin),0.5000,false,TN
+synth_people,5f4b2750,Person,مسعود پزشک‌فر,مسعود پزشکیان,false,MEDIUM,LLM-proposed deviation,IR surname-suffix swap (Persian),0.5000,false,TN
+synth_people,2a3a3a11,Person,Mohammed bin Sultan,Mohammed bin Salman,true,MEDIUM,LLM-proposed deviation,SA patronymic swap (Latin),0.6667,false,FN
+synth_people,7b34166a,Person,محمد بن سلطان,محمد بن سلمان,true,MEDIUM,LLM-proposed deviation,SA patronymic swap (Arabic),0.8800,true,TP
+synth_people,77d11cf1,Person,Abdel Fattah el-Sirri,Abdel Fattah el-Sisi,true,MEDIUM,LLM-proposed deviation,EG surname consonant sub (Latin),0.6667,false,FN
+synth_people,50ae6266,Person,عبد الفتاح السري,عبد الفتاح السيسي,true,MEDIUM,LLM-proposed deviation,EG surname consonant sub (Arabic),0.5000,false,FN
+synth_people,b2d30b5e,Person,Kyriakos Mitsotakos,Kyriakos Mitsotakis,true,MEDIUM,LLM-proposed deviation,GR surname-ending -ος/-ης (Latin),0.9050,true,TP
+synth_people,bbaa30e8,Person,Κυριάκος Μητσοτάκος,Κυριάκος Μητσοτάκης,true,MEDIUM,LLM-proposed deviation,GR surname-ending -ος/-ης (Greek),0.9050,true,TP
+synth_people,c592cbcb,Person,Narender Modi,Narendra Modi,true,MEDIUM,LLM-proposed deviation,IN given-name plausible-alternate (Latin),0.7812,true,TP
+synth_people,fd43dd7d,Person,नरेन्द्र मोडी,नरेन्द्र मोदी,true,MEDIUM,LLM-proposed deviation,IN surname retroflex/dental swap ड/द (Devanagari),0.5000,false,FN
+synth_people,c3c86c7d,Person,Vajiralongkron,Vajiralongkorn,true,MEDIUM,LLM-proposed deviation,TH royal-name vowel reorder (Latin),0.8622,true,TP
+synth_people,fa4d833a,Person,วชิราลงกรน,วชิราลงกรณ,true,MEDIUM,LLM-proposed deviation,TH final-consonant sub น/ณ (Thai),0.7901,true,TP
+synth_people,a8e80649,Person,Aleksandar Vukić,Aleksandar Vučić,true,STRONG,LLM-proposed deviation,RS surname plausible-alternate Vukić (Latin),0.8698,true,TP
+synth_people,aa38bbd5,Person,Александар Вукић,Александар Вучић,true,MEDIUM,LLM-proposed deviation,RS surname plausible-alternate (Cyrillic),0.8698,true,TP
+synth_people,c7cd17c0,Person,Iliana Iordanova,Iliana Iotova,false,MEDIUM,LLM-proposed deviation,BG surname stem swap (Latin),0.5000,false,TN
+synth_people,ae6f7bfc,Person,Илиана Йорданова,Илиана Йотова,false,MEDIUM,LLM-proposed deviation,BG surname stem swap (Cyrillic),0.5000,false,TN
+synth_people,0044b23c,Person,Alexander Lukashevich,Alexander Lukashenko,false,MEDIUM,LLM-proposed deviation,BY surname-suffix swap -evich/-enko (Latin),0.5000,false,TN
+synth_people,ed425417,Person,Аляксандр Лукашэвіч,Аляксандр Лукашэнка,false,MEDIUM,LLM-proposed deviation,BY surname-suffix swap (Belarusian Cyrillic),0.5000,false,TN
+synth_people,178dda97,Person,Ukhnaagiin Khürelchükh,Ukhnaagiin Khürelsükh,true,MEDIUM,LLM-proposed deviation,MN surname consonant sub (Latin),0.8682,true,TP
+synth_people,1992db02,Person,Ухнаагийн Хүрэлчүх,Ухнаагийн Хүрэлсүх,true,MEDIUM,LLM-proposed deviation,MN surname consonant sub (Mongolian Cyrillic),0.8828,true,TP
+synth_people,d9de20e1,Person,Mohammed Shamsuddin,Mohammed Shahabuddin,false,MEDIUM,LLM-proposed deviation,BD given-name stem swap (Latin),0.5000,false,TN
+synth_people,c5d653fd,Person,মোহাম্মদ শামসুদ্দিন,মোহাম্মদ সাহাবুদ্দিন,false,MEDIUM,LLM-proposed deviation,BD given-name stem swap (Bengali),0.5000,false,TN
+synth_people,4b4bc6e4,Person,Arif Ali Zardari,Asif Ali Zardari,true,MEDIUM,LLM-proposed deviation,PK given-name onset sub (Latin),0.6667,false,FN
+synth_people,ae4f2e70,Person,عارف علی زرداری,آصف علی زرداری,false,MEDIUM,LLM-proposed deviation,PK given-name onset sub (Urdu),0.6667,false,TN
+synth_people,01871a1b,Person,Kassym-Jomart Tukayev,Kassym-Jomart Tokayev,true,MEDIUM,LLM-proposed deviation,KZ surname vowel sub (Latin),0.9367,true,TP
+synth_people,43ef6307,Person,Қасым-Жомарт Тұқаев,Қасым-Жомарт Тоқаев,true,MEDIUM,LLM-proposed deviation,KZ surname vowel sub ұ/о (Kazakh Cyrillic),0.9367,true,TP
+synth_people,31b02065,Person,Abiyot Ahmed,Abiy Ahmed,true,MEDIUM,LLM-proposed deviation,ET given-name plausible-alternate (Latin),0.5000,false,FN
+synth_people,efa34f41,Person,ዐቢዮት አሕመድ,ዐቢይ አሕመድ,true,MEDIUM,LLM-proposed deviation,ET given-name plausible-alternate (Amharic/Ge'ez),0.5000,false,FN
+synth_people,0c8af1e8,Person,Hun Manat,Hun Manet,true,MEDIUM,LLM-proposed deviation,KH given-name vowel sub (Latin),0.8200,true,TP
+synth_people,7e3b43b0,Person,ហ៊ុន ម៉ាណាត,ហ៊ុន ម៉ាណែត,true,MEDIUM,LLM-proposed deviation,KH given-name vowel sub (Khmer),0.8200,true,TP
+synth_people,e333625a,Person,Mohammed Sherif al-Sudani,Mohammed Shia' al-Sudani,false,MEDIUM,LLM-proposed deviation,IQ given-name stem swap (Latin),0.7500,true,FP
+synth_people,c9d0a3b5,Person,محمد شريف السوداني,محمد شياع السوداني,false,MEDIUM,LLM-proposed deviation,IQ given-name stem swap (Arabic),0.6667,false,TN
+synth_people,f4783954,Person,Friedrich Mertz,Friedrich Merz,true,MEDIUM,LLM-proposed deviation,DE surname doubled-consonant (Mertz is real surname),0.9000,true,TP
+synth_people,95eb8001,Person,Emmanuel Marcon,Emmanuel Macron,true,MEDIUM,LLM-proposed deviation,FR surname vowel reorder,0.8472,true,TP
+synth_people,3e6cbffc,Person,Giorgia Meleni,Giorgia Meloni,true,MEDIUM,LLM-proposed deviation,IT surname vowel sub,0.8472,true,TP
+synth_people,714273a2,Person,Pedro Sancho,Pedro Sánchez,false,MEDIUM,LLM-proposed deviation,ES surname truncation/sub (Sancho is real Spanish surname),0.5000,false,TN
+synth_people,f43efe7b,Person,Viktor Orbach,Viktor Orbán,false,MEDIUM,LLM-proposed deviation,HU surname-ending swap to Germanic,0.5000,false,TN
+synth_people,6c1ed17e,Person,Recep Tayyip Erdem,Recep Tayyip Erdoğan,false,MEDIUM,LLM-proposed deviation,TR surname truncation/sub (Erdem is real surname),0.6667,false,TN
+synth_people,acd17145,Person,Javier Mihel,Javier Milei,true,MEDIUM,LLM-proposed deviation,AR surname plausible-alternate,0.5000,false,FN
+synth_people,58476193,Person,Luiz Inácio Lula da Souza,Luiz Inácio Lula da Silva,false,MEDIUM,LLM-proposed deviation,BR surname swap to common Portuguese surname,0.8000,true,FP
+synth_people,92e2e1cf,Person,Claudia Steinbaum,Claudia Sheinbaum,true,MEDIUM,LLM-proposed deviation,MX surname Yiddish/German collision,0.8951,true,TP
+synth_people,e216248b,Person,Prabowo Subandrio,Prabowo Subianto,false,MEDIUM,LLM-proposed deviation,ID surname collision with historical PM Subandrio,0.5000,false,TN
+synth_people,6ea8c66f,Person,Keir Starkey,Keir Starmer,true,MEDIUM,LLM-proposed deviation,GB surname plausible-alternate (Starkey is real English surname),0.5000,false,FN
+synth_people,12930714,Person,Mark Cooney,Mark Carney,true,MEDIUM,LLM-proposed deviation,CA surname plausible-alternate (Cooney is real Irish-Canadian surname),0.5000,false,FN
+synth_people,16424716,Person,Anthony Albano,Anthony Albanese,false,MEDIUM,LLM-proposed deviation,AU surname truncation to real Italian surname Albano,0.5000,false,TN
+synth_people,a691b063,Person,Bart De Vries,Bart De Wever,false,MEDIUM,LLM-proposed deviation,BE surname swap to common Dutch surname,0.6667,false,TN
+synth_people,81982c5e,Person,Anders Kristersson,Ulf Kristersson,false,MEDIUM,LLM-proposed deviation,SE given-name sub (Anders is common Swedish),0.5000,false,TN
+synth_people,c06a2ff5,Person,Jonas Gahr Stoltenberg,Jonas Gahr Støre,false,MEDIUM,LLM-proposed deviation,NO surname collision with prior Norwegian PM Stoltenberg,0.6667,false,TN
+synth_people,c1b6d14c,Person,Pekka Orpo,Petteri Orpo,false,MEDIUM,LLM-proposed deviation,FI given-name sub (Pekka is common Finnish),0.5000,false,TN
+synth_people,72e7f0ac,Person,Mette Henriksen,Mette Frederiksen,false,MEDIUM,LLM-proposed deviation,DK surname swap to other Danish patronymic,0.5000,false,TN
+synth_people,1cb4ae90,Person,Micheál Mahon,Micheál Martin,false,MEDIUM,LLM-proposed deviation,IE surname swap to other Irish surname (Mahon),0.5000,false,TN
+synth_people,8736c92e,Person,Daniel Tusk,Donald Tusk,false,MEDIUM,LLM-proposed deviation,PL given-name sub,0.5000,false,TN
+synth_people,e0f01bdd,Person,Antonín Babiš,Andrej Babiš,false,MEDIUM,LLM-proposed deviation,CZ given-name sub (Antonín is common Czech),0.5000,false,TN
+synth_people,52396d23,Person,Roman Fico,Robert Fico,false,MEDIUM,LLM-proposed deviation,SK given-name sub,0.5000,false,TN
+synth_people,8c1c4a08,Person,Marcel Dan,Nicușor Dan,false,MEDIUM,LLM-proposed deviation,RO given-name sub (Marcel is real Romanian),0.5000,false,TN
+synth_people,eb10f7c0,Person,Ante Plenković,Andrej Plenković,false,MEDIUM,LLM-proposed deviation,HR given-name sub (Ante is common Croatian),0.5000,false,TN
+synth_people,b0870823,Person,Luís Monteiro,Luís Montenegro,false,MEDIUM,LLM-proposed deviation,PT surname swap to related Portuguese surname Monteiro,0.5000,false,TN
+synth_people,52101f64,Person,Halla Jónsdóttir,Halla Tómasdóttir,false,MEDIUM,LLM-proposed deviation,IS patronymic swap (different father),0.5000,false,TN
+synth_people,c897d62c,Person,Christopher Luxford,Christopher Luxon,false,MEDIUM,LLM-proposed deviation,NZ surname plausible-alternate,0.5000,false,TN
+synth_people,b00c7284,Person,Cyril Ramatlhodi,Cyril Ramaphosa,false,MEDIUM,LLM-proposed deviation,ZA surname collision with real SA politician (Ngoako Ramatlhodi),0.5000,false,TN
+synth_people,1ba82c03,Person,Tunde Tinubu,Bola Tinubu,false,MEDIUM,LLM-proposed deviation,NG given-name sub (Tunde is common Yoruba),0.5000,false,TN
+synth_people,0aa9f0eb,Person,William Mutua,William Ruto,false,MEDIUM,LLM-proposed deviation,KE surname swap to common Kenyan surname,0.5000,false,TN
+synth_people,7bda6039,Person,Bassirou Diomaye Sarr,Bassirou Diomaye Faye,false,MEDIUM,LLM-proposed deviation,SN surname swap to common Senegalese surname,0.6667,false,TN
+synth_people,c730115c,Person,Manuel Díaz-Canel,Miguel Díaz-Canel,true,MEDIUM,LLM-proposed deviation,CU given-name sub,0.6667,false,FN
+synth_people,9a00cc46,Person,Bongbong Aquino,Bongbong Marcos,false,MEDIUM,LLM-proposed deviation,PH surname swap to opposing political-dynasty surname Aquino,0.5000,false,TN
+synth_people,43a97b31,Person,Ahmad Ibrahim,Anwar Ibrahim,false,MEDIUM,LLM-proposed deviation,MY given-name sub (collides with historical SG politician Ahmad Ibrahim),0.5000,false,TN
+synth_people,4ad99132,Person,Wladimir Putin,Vladimir Putin,true,MEDIUM,LLM-proposed deviation,RU DE/PL transliteration of Cyrillic В (V/W),0.9500,true,TP
+synth_people,dfe75747,Person,Vladimir Vladimirovich Putin,Vladimir Putin,true,MEDIUM,LLM-proposed deviation,RU patronymic added,0.7143,true,TP
+synth_people,c23d06e9,Person,V. Putin,Vladimir Putin,true,MEDIUM,LLM-proposed deviation,RU given-name reduced to initial,0.5000,false,FN
+synth_people,b87ee473,Person,Vladmir Putin,Vladimir Putin,true,MEDIUM,LLM-proposed deviation,tiny defect (missing i in given name),0.9375,true,TP
+synth_people,1846ebe1,Person,Volodymyr Zelensky,Volodymyr Zelenskyy,true,MEDIUM,LLM-proposed deviation,UA single-y vs double-y romanisation,0.9500,true,TP
+synth_people,7b4442c9,Person,Wolodymyr Selenskyj,Volodymyr Zelenskyy,true,MEDIUM,LLM-proposed deviation,UA German transliteration (W-/S-/-yj),0.9000,true,TP
+synth_people,0ae7bd39,Person,Hsi Chin-ping,Xi Jinping,true,WEAK,LLM-proposed deviation,CN Wade-Giles vs Pinyin,0.6276,false,FN
+synth_people,927398b4,Person,Mao Tse-tung,Mao Zedong,true,MEDIUM,LLM-proposed deviation,CN Wade-Giles vs Pinyin (historical),0.9500,true,TP
+synth_people,8478d018,Person,Mohamed bin Salman,Mohammed bin Salman,true,MEDIUM,LLM-proposed deviation,SA single-m vs double-m transliteration,0.9667,true,TP
+synth_people,d5018376,Person,Muhammad bin Salman,Mohammed bin Salman,true,MEDIUM,LLM-proposed deviation,SA Mu/Mo transliteration variants,0.9667,true,TP
+synth_people,6982e07d,Person,Moammar Qaddafi,Muammar Gaddafi,true,MEDIUM,LLM-proposed deviation,LY competing Arabic transliterations,0.9000,true,TP
+synth_people,72427ba3,Person,Usama bin Ladin,Osama bin Laden,true,STRONG,LLM-proposed deviation,SA UN-style vs media-style transliteration,0.8799,true,TP
+synth_people,32798bc8,Person,Saddam Husayn,Saddam Hussein,true,MEDIUM,LLM-proposed deviation,IQ scholarly vs popular Arabic transliteration,0.9500,true,TP
+synth_people,ee6d0d6d,Person,Hasan Rohani,Hassan Rouhani,true,MEDIUM,LLM-proposed deviation,IR Persian transliteration variant,0.8786,true,TP
+synth_people,66c0befd,Person,Bachar el-Assad,Bashar al-Assad,true,MEDIUM,LLM-proposed deviation,SY French vs English transliteration,0.7600,true,TP
+synth_people,afe9031e,Person,Mahmood Ahmadinezhad,Mahmoud Ahmadinejad,true,MEDIUM,LLM-proposed deviation,IR Persian transliteration variant,0.8288,true,TP
+synth_people,3b323049,Person,Recep Tayyip Erdogan,Recep Tayyip Erdoğan,true,STRONG,LLM-proposed deviation,TR Turkish ğ stripped,1.0000,true,TP
+synth_people,6513c92b,Person,Aleksandar Vucic,Aleksandar Vučić,true,STRONG,LLM-proposed deviation,RS diacritics stripped,1.0000,true,TP
+synth_people,bae66c2f,Person,Andrej Plenkovic,Andrej Plenković,true,MEDIUM,LLM-proposed deviation,HR diacritic stripped,1.0000,true,TP
+synth_people,8092e54c,Person,Francois Hollande,François Hollande,true,MEDIUM,LLM-proposed deviation,FR cedilla stripped,1.0000,true,TP
+synth_people,d234e9e4,Person,Donlad Trump,Donald Trump,true,MEDIUM,LLM-proposed deviation,tiny defect (letter transposition al→la),0.8472,true,TP
+synth_people,72f2eb5c,Person,Olaf Schloz,Olaf Scholz,true,MEDIUM,LLM-proposed deviation,tiny defect (letter transposition ho→oh),0.8472,true,TP
+synth_people,1092dee2,Person,Anglea Merkel,Angela Merkel,true,MEDIUM,LLM-proposed deviation,tiny defect (letter transposition el→le),0.8472,true,TP
+synth_people,8e5475c8,Person,Boris Jonson,Boris Johnson,true,MEDIUM,LLM-proposed deviation,tiny defect (missing h in surname),0.9286,true,TP
+synth_people,79ff8add,Person,Justin Trudoau,Justin Trudeau,true,MEDIUM,LLM-proposed deviation,tiny defect (letter transposition ea→oa),0.8673,true,TP
+synth_people,3425e9d9,Person,"Putin, Vladimir",Vladimir Putin,true,STRONG,LLM-proposed deviation,RU last-first comma form,1.0000,true,TP
+synth_people,81e9e1e5,Person,Sergey Viktorovich Lavrov,Sergey Lavrov,true,MEDIUM,LLM-proposed deviation,RU patronymic added,0.7143,true,TP
+synth_people,95ae56de,Person,Sergey Viktorovich Lavrov,Sergey Borisovitch Lavrov,false,MEDIUM,Contradicting patronymics,,0.6667,false,TN
+synth_people,6b79d01d,Person,Kim Jong-un,Kim Jong Un,true,MEDIUM,LLM-proposed deviation,KP hyphenation + case in given name,1.0000,true,TP
+synth_people,257d3f13,Person,Jean Marie Le Pen,Jean-Marie Le Pen,true,MEDIUM,LLM-proposed deviation,FR hyphen vs space in given name,1.0000,true,TP
+synth_people,5e3ebf7e,Person,Bibi Netanyahu,Benjamin Netanyahu,true,WEAK,LLM-proposed deviation,IL diminutive nickname (Bibi),0.5000,false,FN
+synth_companies,afd05195,Company,"Bowne of Atlanta, Inc.","Bowne of Boston, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap,0.7059,true,FP
+synth_companies,c1ca076d,Company,"Bowne of Chicago, Inc.","Bowne of Cleveland, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap (shared C-),0.7059,true,FP
+synth_companies,a4d2f2b0,Company,"Bowne of Dallas, L.P.","Bowne of Phoenix, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier + entity-form swap,0.5000,false,TN
+synth_companies,e932d2a9,Company,"Bowne of New York City, L.L.C.","Bowne of Los Angeles, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap,0.3348,false,TN
+synth_companies,5f3240dd,Company,"Bowne of South Bend, Inc.","Bowne of Boston, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap (shared S-/B-),0.5714,false,TN
+synth_companies,25ea846b,Company,"Bowne Global Solutions (France), S.A.R.L.","Bowne Global Solutions (Germany), G.m.b.H.",false,MEDIUM,LLM-proposed deviation,country qualifier swap,0.7389,true,FP
+synth_companies,d26340ab,Company,"Bowne Global Solutions (Spain), S.L.","Bowne Global Solutions (Netherlands), B.V.",false,MEDIUM,LLM-proposed deviation,country qualifier swap,0.5469,false,TN
+synth_companies,36928d0e,Company,"Bowne Global Solutions (Ireland), Ltd.","Bowne Global Solutions Japan, Inc.",false,MEDIUM,LLM-proposed deviation,country qualifier swap (paren vs unparen form),0.7389,true,FP
+synth_companies,df7b1cce,Company,Bowne Global Solutions II (Sweden) AB,Bowne Global Solutions II (Finland) AB,false,MEDIUM,LLM-proposed deviation,country qualifier swap (with II marker shared),0.8462,true,FP
+synth_companies,a1ea92e8,Company,Bowne Global Solutions II (U.K.) Limited,"Bowne Global Solutions II Canada, Inc.",false,MEDIUM,LLM-proposed deviation,country qualifier swap on II series,0.8082,true,FP
+synth_companies,5263724f,Company,"Bowne Global Solutions, Inc.","Bowne Global Solutions II, Inc.",false,MEDIUM,LLM-proposed deviation,Roman-numeral series marker (original vs II),0.9390,true,FP
+synth_companies,479f4cc7,Company,"Bowne International, S.A.R.L.",Bowne International de Mexico S.A. de C.V.,false,MEDIUM,LLM-proposed deviation,country qualifier addition,0.5752,false,TN
+synth_companies,7f948022,Company,"Bowne Business Solutions, Inc.","Bowne Business Enterprises, L.P.",false,MEDIUM,LLM-proposed deviation,functional-token swap (Solutions/Enterprises),0.4815,false,TN
+synth_companies,b9c19ea9,Company,"Bowne Enterprise Solutions, L.L.C.","Bowne Technology Enterprise, L.L.C.",false,MEDIUM,LLM-proposed deviation,functional-token reorder + swap,0.7246,true,FP
+synth_companies,13ef7be3,Company,"Bowne Litigation Solutions, L.P.","Bowne Solutions, L.L.C.",false,MEDIUM,LLM-proposed deviation,prefix-token addition,0.4643,false,TN
+synth_companies,a617116b,Company,"Bowne Localization, Inc.","Bowne Global Solutions, Inc.",false,MEDIUM,LLM-proposed deviation,line-of-business token swap,0.5986,false,TN
+synth_companies,d2030860,Company,"Mendez, B.V.B.A","Mendez Nederland, B.V.",false,MEDIUM,LLM-proposed deviation,country-token addition,0.8211,true,FP
+synth_companies,71749cbf,Company,"Mendez, Denmark A/S",Mendez Norge A/S,false,MEDIUM,LLM-proposed deviation,country-token swap,0.6800,false,TN
+synth_companies,9e12c9c6,Company,"L & H Sweden, AB","L & H Mendez Sweden, AB",false,WEAK,LLM-proposed deviation,brand-token addition mid-name,0.9500,true,FP
+synth_companies,413d9140,Company,"L & H Editions, S.A.","L & H Linguex, S.A.",false,MEDIUM,LLM-proposed deviation,brand-token swap,0.7297,true,FP
+synth_companies,43dd1956,Company,"Bowne Global Solutions Denmark, A/S",Bowne Global Solutions II Denmark A/S,false,MEDIUM,LLM-proposed deviation,II series marker addition,0.9519,true,FP
+synth_companies,5128b9bb,Company,Bowne Global Solutions II France S.A.S.,"Bowne Global Solutions (France), S.A.R.L.",false,MEDIUM,LLM-proposed deviation,II marker + entity-form swap same country,0.7994,true,FP
+synth_companies,11b300c9,Company,Blackstone Real Estate Partners V L.P.,Blackstone Real Estate Partners VI L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap (PE fund series),0.7297,true,TP
+synth_companies,5ec026f5,Company,Blackstone Real Estate Partners IV L.P.,Blackstone Real Estate Partners V L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap,0.7297,true,TP
+synth_companies,f503c85e,Company,Blackstone Capital Partners VII L.P.,Blackstone Capital Partners VIII L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap,0.6970,false,FN
+synth_companies,28c6dea5,Company,KKR Asian Fund III L.P.,KKR Asian Fund IV L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap,0.6977,false,FN
+synth_companies,62a4a0d8,Company,KKR North America Fund XII L.P.,KKR North America Fund XIII L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap (XII/XIII),0.7917,true,TP
+synth_companies,70f04b81,Company,Apollo Investment Fund VIII L.P.,Apollo Investment Fund IX L.P.,false,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap (VIII/IX),0.6977,false,TN
+synth_companies,de0b40f2,Company,Carlyle Partners VII L.P.,Carlyle Partners VIII L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap,0.6667,false,FN
+synth_companies,b7fd03df,Company,Bain Capital Fund X L.P.,Bain Capital Fund XI L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap (X/XI),0.6970,false,FN
+synth_companies,39e3cbe2,Company,Goldman Sachs Capital Partners V L.P.,Goldman Sachs Capital Partners VI L.P.,true,MEDIUM,LLM-proposed deviation,Roman-numeral vintage swap,0.7674,true,TP
+synth_companies,567fcad0,Company,Goldman Sachs Mortgage Loan Trust 2004-1,Goldman Sachs Mortgage Loan Trust 2004-2,true,MEDIUM,LLM-proposed deviation,SPV trust series suffix swap (-1/-2),0.8116,true,TP
+synth_companies,b454f1ff,Company,Goldman Sachs Mortgage Loan Trust 2004-1,Goldman Sachs Mortgage Loan Trust 2005-1,true,MEDIUM,LLM-proposed deviation,SPV trust vintage-year swap,0.8485,true,TP
+synth_companies,8afd5088,Company,Citigroup Mortgage Loan Trust 2007-AHL1,Citigroup Mortgage Loan Trust 2007-AHL2,true,MEDIUM,LLM-proposed deviation,SPV trust tranche-marker swap,0.8214,true,TP
+synth_companies,c8c84ba4,Company,Bear Stearns Asset Backed Securities Trust 2006-2,Bear Stearns Asset Backed Securities Trust 2007-2,true,MEDIUM,LLM-proposed deviation,SPV trust vintage swap,0.8485,true,TP
+synth_companies,67138cd2,Company,Wells Fargo Mortgage Backed Securities Trust 2005-AR16,Wells Fargo Mortgage Backed Securities Trust 2006-AR16,true,MEDIUM,LLM-proposed deviation,SPV trust vintage swap,0.8571,true,TP
+synth_companies,40da487b,Company,JPMorgan Mortgage Trust Series 2007-1,JPMorgan Mortgage Trust Series 2007-2,true,MEDIUM,LLM-proposed deviation,SPV trust series-suffix swap,0.7797,true,TP
+synth_companies,a26880ba,Company,Citigroup Capital Trust I,Citigroup Capital Trust II,true,MEDIUM,LLM-proposed deviation,Roman-numeral series swap (capital-trust shelf),0.6154,false,FN
+synth_companies,0db8dbd7,Company,Citigroup Capital Trust XV,Citigroup Capital Trust XX,true,MEDIUM,LLM-proposed deviation,Roman-numeral series swap (XV/XX),0.6154,false,FN
+synth_companies,38e5718c,Company,ICBC (Asia) Limited,ICBC (London) plc,false,MEDIUM,LLM-proposed deviation,jurisdiction-paren swap + form change,0.3704,false,TN
+synth_companies,c65335aa,Company,Bank of China (Hong Kong) Limited,Bank of China (Singapore) Limited,false,MEDIUM,LLM-proposed deviation,jurisdiction-paren swap (HK/SG),0.6223,false,TN
+synth_companies,3191613c,Company,Bank of China (Hong Kong) Limited,Bank of China (Australia) Limited,false,MEDIUM,LLM-proposed deviation,jurisdiction-paren swap (HK/AU),0.6223,false,TN
+synth_companies,e9d82431,Company,CCB International Capital Corporation Limited,CCB International (Holdings) Limited,false,MEDIUM,LLM-proposed deviation,structural-token swap (Capital Corp / Holdings),0.6468,false,TN
+synth_companies,58b64cd1,Company,Mitsubishi UFJ Trust and Banking Corporation,Mitsubishi UFJ Lease and Finance Corporation,false,MEDIUM,LLM-proposed deviation,line-of-business mid-name swap (Trust/Lease),0.6303,false,TN
+synth_companies,eb3b1627,Company,Sumitomo Mitsui Trust Bank Limited,Sumitomo Mitsui Banking Corporation,false,MEDIUM,LLM-proposed deviation,structural-token swap (Trust Bank / Banking),0.6713,false,TN
+synth_companies,fcf648f5,Company,Mizuho Securities Co. Ltd.,Mizuho Trust & Banking Co. Ltd.,false,MEDIUM,LLM-proposed deviation,line-of-business mid-name swap (Securities/Trust & Banking),0.6686,false,TN
+synth_companies,f446d020,Company,Banco Santander S.A.,Banco Santander México S.A.,false,WEAK,LLM-proposed deviation,country-token addition mid-name,0.9231,true,FP
+synth_companies,367b873e,Company,Banco Santander S.A.,Banco Santander Chile S.A.,false,WEAK,LLM-proposed deviation,country-token addition mid-name,0.9375,true,FP
+synth_companies,6e8a92fd,Company,Banco Santander México S.A.,Banco Santander Chile S.A.,false,MEDIUM,LLM-proposed deviation,sister-country-sub swap,0.7143,true,FP
+synth_companies,64211bdb,Company,BNP Paribas Securities Services,BNP Paribas Personal Finance,false,MEDIUM,LLM-proposed deviation,line-of-business swap (Securities/Personal Finance),0.5319,false,TN
+synth_people,530ac335,Person,Elon Mosk,Elon Musk,true,MEDIUM,LLM-proposed deviation,surname single-char sub (vowel),0.8403,true,TP
+synth_people,4b08138a,Person,Mark Zuckermann,Mark Zuckerberg,false,STRONG,LLM-proposed deviation,surname swap to plausible-alt German-Jewish surname,0.5000,false,TN
+synth_people,7f648819,Person,Jeff Brezos,Jeff Bezos,true,MEDIUM,LLM-proposed deviation,surname single-char insertion,0.9167,true,TP
+synth_people,2d4b8fda,Person,Bill Cates,Bill Gates,true,MEDIUM,LLM-proposed deviation,surname swap (Cates is real English surname),0.8200,true,TP
+synth_people,4d98b1c6,Person,Larry Allison,Larry Ellison,true,MEDIUM,LLM-proposed deviation,surname swap (Allison is real surname),0.8673,true,TP
+synth_people,4a658dbf,Person,Tom Cook,Tim Cook,true,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,FN
+synth_people,94f7cabf,Person,Tim Cock,Tim Cook,true,MEDIUM,LLM-proposed deviation,last name swap,0.5000,false,FN
+synth_people,587d153e,Person,Sandeep Pichai,Sundar Pichai,false,MEDIUM,LLM-proposed deviation,given-name sub (Sandeep is common Indian),0.5000,false,TN
+synth_people,80770d04,Person,Satya Nandela,Satya Nadella,true,MEDIUM,LLM-proposed deviation,surname swap to plausible-alt Indian surname,0.8673,true,TP
+synth_people,ffe20e5b,Person,Harry Page,Larry Page,true,MEDIUM,LLM-proposed deviation,given-name sub,0.8200,true,TP
+synth_people,412eb144,Person,Jansen Huang,Jensen Huang,true,MEDIUM,LLM-proposed deviation,given-name sub (Jansen is Dutch),0.8472,true,TP
+synth_people,2109b850,Person,Lionel Bessi,Lionel Messi,true,MEDIUM,LLM-proposed deviation,surname swap (Bessi is real Italian surname),0.8200,true,TP
+synth_people,87a16b58,Person,Cristiano Ronaldinho,Cristiano Ronaldo,false,MEDIUM,LLM-proposed deviation,surname collision with real different Brazilian footballer,0.5000,false,TN
+synth_people,e01ffea2,Person,Kylian Mbembe,Kylian Mbappé,false,MEDIUM,LLM-proposed deviation,surname collision with real Cameroonian philosopher Achille Mbembe,0.5000,false,TN
+synth_people,b17422af,Person,Roger Federman,Roger Federer,false,MEDIUM,LLM-proposed deviation,surname swap to plausible-alt,0.5000,false,TN
+synth_people,6d5663b6,Person,Selena Williams,Serena Williams,true,MEDIUM,LLM-proposed deviation,given-name sub,0.8472,true,TP
+synth_people,712dd97d,Person,Tom Brody,Tom Brady,true,MEDIUM,LLM-proposed deviation,surname single-char sub (Brody is real surname),0.8200,true,TP
+synth_people,27d11a30,Person,LeBron Jones,LeBron James,true,MEDIUM,LLM-proposed deviation,surname swap (both common),0.5000,false,FN
+synth_people,4960f497,Person,Michael Jorgan,Michael Jordan,true,MEDIUM,LLM-proposed deviation,surname single-char sub,0.8472,true,TP
+synth_people,3e0903e9,Person,Tigran Woods,Tiger Woods,false,MEDIUM,LLM-proposed deviation,given-name swap (Tigran is Armenian),0.5000,false,TN
+synth_people,9c591c29,Person,Rafael Nadar,Rafael Nadal,true,MEDIUM,LLM-proposed deviation,surname swap (Nadar is real Tamil surname),0.8200,true,TP
+synth_people,b24879ab,Person,Boris Abramovich,Roman Abramovich,false,STRONG,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,ad25219e,Person,Mikhail Khordorovsky,Mikhail Khodorkovsky,true,MEDIUM,LLM-proposed deviation,surname syllable rearrangement,0.9201,true,TP
+synth_people,c9194a55,Person,Igor Sechev,Igor Sechin,true,MEDIUM,LLM-proposed deviation,surname-suffix swap -in/-ev,0.5000,false,FN
+synth_people,74fc3b76,Person,Alisher Asilov,Alisher Usmanov,false,MEDIUM,LLM-proposed deviation,surname swap to plausible-alt Uzbek,0.5000,false,TN
+synth_people,aee698c7,Person,Dmitry Mendeleev,Dmitry Medvedev,false,MEDIUM,LLM-proposed deviation,surname collision with real chemist Mendeleev,0.5000,false,TN
+synth_people,e9d12087,Person,Andrei Navalny,Alexei Navalny,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,e41b9580,Person,Sergey Prigozhin,Yevgeny Prigozhin,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,85a6f422,Person,Boris Vekselberg,Viktor Vekselberg,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,03aa3605,Person,Igor Deripaska,Oleg Deripaska,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,58f2faa9,Person,Viktor Yakunin,Vladimir Yakunin,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,66e206b0,Person,Hugo Chacón,Hugo Chávez,false,MEDIUM,LLM-proposed deviation,surname swap (Chacón is real Spanish surname),0.5000,false,TN
+synth_people,29942586,Person,Fernando Castro,Fidel Castro,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,fe1eb180,Person,Raúl Castillo,Raúl Castro,false,MEDIUM,LLM-proposed deviation,surname swap (Castillo is real Spanish),0.5000,false,TN
+synth_people,ad7707cb,Person,Daniel Ortiz,Daniel Ortega,false,MEDIUM,LLM-proposed deviation,surname swap (Ortiz is real Spanish),0.5000,false,TN
+synth_people,bdb55641,Person,Evo Morillo,Evo Morales,false,MEDIUM,LLM-proposed deviation,surname swap (Morillo is real Spanish),0.5000,false,TN
+synth_people,0b3b47a4,Person,Hugo Beltrán,Hugo Banzer,false,MEDIUM,LLM-proposed deviation,surname swap (Beltrán is real Spanish),0.5000,false,TN
+synth_people,9909bf8d,Person,Augusto Pinosa,Augusto Pinochet,false,MEDIUM,LLM-proposed deviation,surname truncation/sub,0.5000,false,TN
+synth_people,4c4fd347,Person,Carlos Saldívar,Carlos Salinas,false,MEDIUM,LLM-proposed deviation,surname swap (Saldívar is real Mexican),0.5000,false,TN
+synth_people,fd5310a2,Person,Luis Echegaray,Luis Echeverría,false,MEDIUM,LLM-proposed deviation,surname swap (Echegaray is real Spanish — Nobel laureate),0.5000,false,TN
+synth_people,e9177053,Person,Roberto Fox,Vicente Fox,false,MEDIUM,LLM-proposed deviation,given-name sub,0.5000,false,TN
+synth_people,3f1f7458,Person,Lee Kuan Hsien,Lee Kuan Yew,false,MEDIUM,LLM-proposed deviation,given-name final-syllable sub (real Chinese name),0.6667,false,TN
+synth_people,e52d6429,Person,Mahir Mohamad,Mahathir Mohamad,false,MEDIUM,LLM-proposed deviation,given-name truncation/sub (Mahir is distinct Arabic name),0.5000,false,TN
+synth_people,f4521a9b,Person,Chen Kai-shek,Chiang Kai-shek,false,MEDIUM,LLM-proposed deviation,surname swap (Chen and Chiang both real Chinese),0.6667,false,TN
+synth_people,0a74a1db,Person,Sukamto,Sukarno,true,MEDIUM,LLM-proposed deviation,surname swap to plausible-alt Indonesian,0.0000,false,FN
+synth_people,c9718a58,Person,Ferdinand Marquez,Ferdinand Marcos,false,MEDIUM,LLM-proposed deviation,surname swap (Marquez is real Spanish-Filipino),0.5000,false,TN
+synth_people,704da5d5,Person,Park Joon-hee,Park Chung-hee,false,MEDIUM,LLM-proposed deviation,given-name sub (real Korean name),0.6667,false,TN
+synth_people,2f67190a,Person,Aung San Suu Win,Aung San Suu Kyi,false,MEDIUM,LLM-proposed deviation,surname swap (Win is real Burmese),0.7500,true,FP
+synth_people,e3f3e9ed,Person,Imran Khaja,Imran Khan,true,MEDIUM,LLM-proposed deviation,surname swap (Khaja is real Pakistani),0.5000,false,FN
+synth_people,6dc206e5,Person,Pervez Musafir,Pervez Musharraf,false,MEDIUM,LLM-proposed deviation,surname swap (Musafir is real Arabic-origin),0.5000,false,TN
+synth_people,b546ef9d,Person,Indira Gokhale,Indira Gandhi,false,MEDIUM,LLM-proposed deviation,surname swap (Gokhale is real Indian — historical politician),0.5000,false,TN
+synth_people,4dcb0dc5,Person,BARZAN IBRAHIM HASSAN AL-MOSULI,BARZAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Tikriti/al-Mosuli),0.8000,true,FP
+synth_people,e03de4ea,Person,AYMAN SABAWI IBRAHIM HASAN AL-DULAIMI,AYMAN SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,ec4cac13,Person,KHAWLA BARZAN IBRAHIM HASAN AL-MASHHADANI,KHAWLA BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,d3e59d38,Person,ALI SADDAM HUSSEIN AL-RAWI,ALI SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,79801125,Person,JAMAL MUSTAFA ABDALLAH SULTAN AL-DULAIMI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,c89ce2b9,Person,WATBAN IBRAHIM HASSAN AL-MOSULI,WATBAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,94be4185,Person,RAFI ABD-AL-LATIF TILFAH AL-DULAIMI,RAFI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
+synth_people,8459584e,Person,HANI ABD-AL-LATIF TILFAH AL-RAWI,HANI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
+synth_people,fd54ba8c,Person,MOHAMMAD BARZAN IBRAHIM HASAN AL-MOSULI,MOHAMMAD BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,b3db56d4,Person,TAHIR JALIL HABBUSH AL-DULAIMI,TAHIR JALIL HABBUSH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,c4a1ee70,Person,YASIR SABAWI IBRAHIM HASAN AL-MOSULI,YASIR SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,8119657f,Person,SADDAM HUSSEIN AL-DULAIMI,SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (most famous variant),0.7500,true,FP
+synth_people,02b386af,Person,IZZAT IBRAHIM AL-MOSULI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Duri/al-Mosuli),0.7500,true,FP
+synth_people,b5ae29ae,Person,JAWHAR MAJID AL-MOSULI,JAWHAR MAJID AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
+synth_people,3d7e9865,Person,NIDAL AL-DULAIMI,NIDAL AL-RABI'I,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6667,false,TN
+synth_people,7f5c1463,Person,INTISSAR AL-DURI,INTISSAR AL-UBAYDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6667,false,TN
+synth_people,678f641a,Person,ADIB SHABAN AL-RAWI,ADIB SHABAN AL-ANI,true,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,TP
+synth_people,662358e1,Person,GHAZI HAMMUD AL-DURI,GHAZI HAMMUD AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
+synth_people,862f0398,Person,YAHIA ABDALLAH AL-DURI,YAHIA ABDALLAH AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
+synth_people,f096fb40,Person,KHAMIS SIRHAN AL-MOSULI,KHAMIS SIRHAN AL-MUHAMMAD,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
+synth_people,1048cb6a,Person,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-MOSULI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
+synth_people,caccdca8,Person,UMAR MAHMUD IRHAYYIM AL-DULAIMI,UMAR MAHMUD IRHAYYIM AL-KUBAYSI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,69687eab,Person,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-MOSULI,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-QADULI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
+synth_people,0eefb9da,Person,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-DOSARI,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-'ANIZI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (Saudi tribal),0.8413,true,FP
+synth_people,f9cd26aa,Person,TAHA YASSIN RAMADAN AL-MOSULI,TAHA YASSIN RAMADAN AL-JIZRAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,ec48123f,Person,AHMAD AL-RAYMI,AHMAD AL-HAMZI,false,MEDIUM,LLM-proposed deviation,Yemeni clan-nisbah swap,0.6667,false,TN
+synth_people,fc3ddbc8,Person,MUHANNAD AL-HIJAZI,MUHANNAD AL-NAJDI,false,MEDIUM,LLM-proposed deviation,Saudi region-nisbah swap,0.6667,false,TN
+synth_people,ba2497d9,Person,MUHAMMAD ABD AL-KARIM AL-HOUTHI,MUHAMMAD ABD AL-KARIM AL-GHAMARI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.7674,true,FP
+synth_people,199cd131,Person,OTHMAN AHMED OTHMAN AL-HARBI,OTHMAN AHMED OTHMAN AL-GHAMDI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8000,true,FP
+synth_people,d4b6c55a,Person,IBRAHIM HASSAN TALI AL-OTAIBI,IBRAHIM HASSAN TALI AL-ASIRI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8000,true,FP
+synth_people,b6f0420f,Person,MAHMOUD MOHAMMAD AHMED AL-DOSARI,MAHMOUD MOHAMMAD AHMED BAHAZIQ,false,MEDIUM,LLM-proposed deviation,Saudi family-name swap,0.6818,false,TN
+synth_people,355c3996,Person,AZZAM ABDULLAH ZUREIK AL-MAULID AL-HARBI,AZZAM ABDULLAH ZUREIK AL-MAULID AL-SUBHI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8571,true,FP
+synth_people,569c116a,Person,MU'TASSIM YAHYA 'ALI AL-HOUTHI,MU'TASSIM YAHYA 'ALI AL-RUMAYSH,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.8000,true,FP
+synth_people,e8f37da4,Person,QASIM MOHAMED MAHDI AL-HOUTHI,QASIM MOHAMED MAHDI AL-RIMI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.8000,true,FP
+synth_people,43d9249a,Person,YUSUF AL-SAN'ANI,YUSUF AL-MADANI,false,MEDIUM,LLM-proposed deviation,Yemeni/Hejazi nisbah swap,0.6667,false,TN
+synth_people,04ebb882,Person,HASAN AL-SALAHAYN SALIH AL-DERNAI,HASAN AL-SALAHAYN SALIH AL-SHA'ARI,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8333,true,FP
+synth_people,3f65546e,Person,IBRAHIM ALI ABU BAKR AL-FITURI,IBRAHIM ALI ABU BAKR TANTOUSH,false,MEDIUM,LLM-proposed deviation,Libyan family-name swap,0.7021,true,FP
+synth_people,ee3f5150,Person,ABD AL-RAHMAN SALIM IBRAHIM AL-MISURATI,ABD AL-RAHMAN SALIM IBRAHIM AL-MILAD,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8113,true,FP
+synth_people,5f34db06,Person,RAMZI MOHAMED ABDULLAH AL-HADHRAMI,RAMZI MOHAMED ABDULLAH BINALSHIBH,false,MEDIUM,LLM-proposed deviation,Yemeni nisbah/family swap,0.6818,false,TN
+synth_people,5194ba22,Person,ABDULLAH AHMED AL HAKIM,ABDULLAH YAHYA AL HAKIM,false,MEDIUM,LLM-proposed deviation,patronymic swap (Yahya/Ahmed),0.7500,true,FP
+synth_people,2704696b,Person,NESSIM BEN ALI SAHRAOUI,NESSIM BEN ROMDHANE SAHRAOUI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic-Ben swap,0.7500,true,FP
+synth_people,e37e8fdd,Person,MOHAMED BEN BELGACEM BEN HAMID AL-AOUADI,MOHAMED BEN BELGACEM BEN ABDALLAH AL-AOUADI,false,MEDIUM,LLM-proposed deviation,Tunisian grandfather-name swap,0.8571,true,FP
+synth_people,32efdb91,Person,HAMADI BEN AHMED BEN ALI BOUYEHIA,HAMADI BEN ABDUL AZIZ BEN ALI BOUYEHIA,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8143,true,FP
+synth_people,c628d057,Person,NOUREDDINE BEN MOHAMED BEN BELKASSEM AL-DRISSI,NOUREDDINE BEN ALI BEN BELKASSEM AL-DRISSI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8571,true,FP
+synth_people,26797a13,Person,HABIB BEN MOHAMED AL-LOUBIRI,HABIB BEN AHMED AL-LOUBIRI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8000,true,FP
+synth_people,6a328c02,Person,SOFIANE BEN AKHDER,SOFIANE BEN GOUMO,false,MEDIUM,LLM-proposed deviation,Libyan family swap,0.6667,false,TN
+synth_people,dc8b07a9,Person,MOHAMED BENGRINE,MOHAMED BELKALEM,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
+synth_people,8a113e58,Person,DJAMEL CHEKKALI,DJAMEL AKKACHA,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
+synth_people,fcc9dba3,Person,KAMEL BENMOHAMED,KAMEL DJERMANE,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
+synth_people,09c09032,Person,ABU UBAYDAH YUSUF AL-MAGHREBI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,Algerian/Maghreb nisbah swap,0.8000,true,FP
+synth_people,1c32f800,Person,YASSIN AOURAGH,YASSIN CHOUKA,false,MEDIUM,LLM-proposed deviation,Moroccan surname swap,0.5000,false,TN
+synth_people,a09435b5,Person,REDOUANE EL HASSANI,REDOUANE EL HABHAB,false,MEDIUM,LLM-proposed deviation,Moroccan surname swap,0.6667,false,TN
+synth_people,eb77cde5,Person,RADI ABD EL SAMIE ABU EL HASSAN EL AYASHI,RADI ABD EL SAMIE ABOU EL YAZID EL AYASHI,false,MEDIUM,LLM-proposed deviation,Egyptian middle-name swap (Yazid/Hassan),0.8667,true,FP
+synth_people,23fc5033,Person,TARIQ ANWAR EL SAYED MOHAMED,TARIQ ANWAR EL SAYED AHMED,false,MEDIUM,LLM-proposed deviation,Egyptian patronymic swap,0.7500,true,FP
+synth_people,0b661810,Person,MOSTAFA HASSAN MOSTAFA IBRAHIM,MOSTAFA KAMEL MOSTAFA IBRAHIM,false,MEDIUM,LLM-proposed deviation,Egyptian middle-name swap,0.7500,true,FP
+synth_people,18256d05,Person,HANI AL-SAYYID AL-MASRI YUSIF,HANI AL-SAYYID AL-SEBAI YUSIF,false,MEDIUM,LLM-proposed deviation,Egyptian nisbah swap,0.8000,true,FP
+synth_people,45c6cc13,Person,ABD EL KADER MAHMOUD AHMED EL SAYED,ABD EL KADER MAHMOUD MOHAMED EL SAYED,false,MEDIUM,LLM-proposed deviation,Egyptian patronymic swap,0.8333,true,FP
+synth_people,9b5c1937,Person,AKHTAR MOHAMMAD MANSOUR ABDUL MOHAMMED,AKHTAR MOHAMMAD MANSOUR SHAH MOHAMMED,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8403,true,FP
+synth_people,ff33beb0,Person,ABDUL GHANI BARADAR ABDUL HASIB TURK,ABDUL GHANI BARADAR ABDUL AHMAD TURK,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8113,true,FP
+synth_people,8161b1e4,Person,MOHAMMED QASIM MIR ABDUL KHUDAI RAHIM,MOHAMMED QASIM MIR WALI KHUDAI RAHIM,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8681,true,FP
+synth_people,5ed08226,Person,ABDUL QADEER BASIR ABDUL HAKIM,ABDUL QADEER BASIR ABDUL BASEER,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.7674,true,FP
+synth_people,d33042bc,Person,NIK MOHAMMAD ABDUL MOHAMMAD,NIK MOHAMMAD DOST MOHAMMAD,false,MEDIUM,LLM-proposed deviation,Pashtun father-name swap,0.7979,true,FP
+synth_people,82c3cac8,Person,ABDUL JALIL HAQQANI MIR MOHAMMAD,ABDUL JALIL HAQQANI WALI MOHAMMAD,false,MEDIUM,LLM-proposed deviation,Pashtun father-name swap,0.7674,true,FP
+synth_people,8df52525,Person,SHER MOHAMMAD ABBAS STANEKZAI ABDUL KHAN,SHER MOHAMMAD ABBAS STANEKZAI PADSHAH KHAN,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather swap,0.8681,true,FP
+synth_people,dfc8c4fc,Person,NOORUDDIN TURABI MUHAMMAD ABDUL,NOORUDDIN TURABI MUHAMMAD QASIM,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather swap,0.7979,true,FP
+synth_people,39a5a73e,Person,ABDUL BAQI BASIR ABDUL ARIF,ABDUL BAQI BASIR AWAL SHAH,false,MEDIUM,LLM-proposed deviation,Pashtun father-name swap,0.5665,false,TN
+synth_people,3158624e,Person,ABDUL GHAFAR QURISHI ABDUL HAMID,ABDUL GHAFAR QURISHI ABDUL GHANI,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather swap,0.8000,true,FP
+synth_people,1174dd71,Person,SAYED MOHAMMAD ABDUL AGHA,SAYED MOHAMMAD AZIM AGHA,false,MEDIUM,LLM-proposed deviation,Pashtun middle-name swap,0.7979,true,FP
+synth_people,5f7a1585,Person,NAZIRULLAH HANAFI HAMIDULLAH,NAZIRULLAH HANAFI WALIULLAH,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather swap,0.6667,false,TN
+synth_people,1e36bf33,Person,ATIQULLAH ABDUL MOHAMMAD,ATIQULLAH WALI MOHAMMAD,false,MEDIUM,LLM-proposed deviation,Pashtun father-name swap,0.7246,true,FP
+synth_people,10fc9264,Person,AREFULLAH AREF ABDULRAHMAN MOHAMMAD,AREFULLAH AREF GHAZI MOHAMMAD,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather swap,0.7500,true,FP
+synth_people,b2697240,Person,ABDUL KABIR ABDUL JAN,ABDUL KABIR MOHAMMAD JAN,false,MEDIUM,LLM-proposed deviation,Pashtun father-name swap,0.7979,true,FP
+synth_people,b630b978,Person,SALEH MOHAMMAD ZADRAN AKHTAR MUHAMMAD,SALEH MOHAMMAD KAKAR AKHTAR MUHAMMAD,false,MEDIUM,LLM-proposed deviation,Pashtun tribal-clan swap (Zadran/Kakar),0.8000,true,FP
+synth_people,669d8db6,Person,FAIZULLAH KHAN ZADRAN na,FAIZULLAH KHAN NOORZAI na,false,MEDIUM,LLM-proposed deviation,Pashtun tribal swap,0.7500,true,FP
+synth_people,6d4ee8f1,Person,ABDUL BASIR HAQQANI,ABDUL BASIR NOORZAI,false,MEDIUM,LLM-proposed deviation,Pashtun tribal swap,0.6667,false,TN
+synth_people,c10defdf,Person,MALIK NASIRZAI,MALIK NOORZAI,false,MEDIUM,LLM-proposed deviation,Pashtun tribal-clan swap,0.5000,false,TN
+synth_people,52f048a4,Person,ZIA-UR-RAHMAN GHILZAI,ZIA-UR-RAHMAN MADANI,false,MEDIUM,LLM-proposed deviation,Pashtun nisbah swap,0.7500,true,FP
+synth_people,2b907816,Person,HABIBULLAH SAFI,HABIBULLAH RESHAD,false,MEDIUM,LLM-proposed deviation,Pashtun surname swap,0.5000,false,TN
+synth_people,dd4fca52,Person,MOHAMMAD AZAM ROHANI,MOHAMMAD AZAM ELMI,false,MEDIUM,LLM-proposed deviation,Pashtun surname swap,0.6667,false,TN
+synth_people,03b63248,Person,ALLAH DAD ABDUL,ALLAH DAD MATIN,false,MEDIUM,LLM-proposed deviation,Pashtun surname swap,0.7246,true,FP
+synth_people,598feee2,Person,ABDUL LATIF NOORI,ABDUL LATIF MANSUR,false,MEDIUM,LLM-proposed deviation,Pashtun surname swap,0.5652,false,TN
+synth_people,29936e3a,Person,KO TAE BIN,KO TAE HUN,true,MEDIUM,LLM-proposed deviation,Korean given-name 2nd-syllable swap,0.7246,true,TP
+synth_people,02b9e87c,Person,KIM KYONG MIN,KIM KYONG IL,true,MEDIUM,LLM-proposed deviation,Korean given-name 2nd-syllable swap,0.6667,false,FN
+synth_people,8bfb89d7,Person,KU JA YOUNG,KU JA HYONG,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.8800,true,TP
+synth_people,593ecabd,Person,JANG YONG MIN,JANG YONG SON,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.5000,false,FN
+synth_people,f9641632,Person,KIM SOK JIN,KIM SOK CHOL,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,8dda04e2,Person,RI HONG-CHUL,RI HONG-SOP,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,26517732,Person,CHU MYO'NG,CHU HYO'K,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.5000,false,TN
+synth_people,5d7244a1,Person,MUN CHO'NG-MIN,MUN CHO'NG-CH'O'L,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,723f3795,Person,JANG YONG SON,JANG BOM SU,false,MEDIUM,LLM-proposed deviation,Korean given-name complete swap (UN-list collision),0.3333,false,TN
+synth_people,49ac5d39,Person,YO'N MUN-NAM,YO'N CHO'NG NAM,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,f0338d85,Person,PAEK JIN-HO,PAEK CHANG-HO,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,6eeb4348,Person,RA SONG-SU,RA KY'ONG-SU,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,59c6b4f2,Person,RI MYONG-CHUL,RI PYONG CHUL,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.8800,true,TP
+synth_people,112d4f5e,Person,SON YONG HYOK,SON JONG HYOK,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.9667,true,TP
+synth_people,2b49105d,Person,KIM JONG MAN,KIM JONG SIK,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,6b2d8260,Person,CHO HYO'K SAN,CHO CHUN RYONG,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.3623,false,TN
+synth_people,ccac131d,Person,CHANG SU HA,CHANG CHANG HA,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,c4f34fef,Person,PAK YONG-CHUN,PAK IL KYU,false,MEDIUM,LLM-proposed deviation,Korean given-name swap (UN-list collision),0.3333,false,TN
+synth_people,41c2b45b,Person,HAN BONG SU,HAN JANG SU,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,FN
+synth_people,a193edeb,Person,CHOE KWANG HO,CHOE SONG IL,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.3333,false,TN
+synth_people,9324accf,Person,KIM SONG MIN,KIM SONG CHOL,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
+synth_people,e9ecb327,Person,KIM HYO'K,KIM KYU,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.5000,false,TN
+synth_people,82d7aa4a,Person,YU CHA OK,YU CHOL U,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.3333,false,TN
+synth_people,398bb28e,Person,KO CHOL HUN,KO CHOL MAN,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,FN
+synth_people,1dd563fa,Person,KIM JONG SIK,KIM YONG NAM,false,MEDIUM,LLM-proposed deviation,cross-collision between UN-listed Koreans,0.6333,false,TN
+synth_people,b39cde85,Person,RUSTAM IBRAHIMOVICH ASELDEROV,RUSTAM MAGOMEDOVICH ASELDEROV,false,MEDIUM,LLM-proposed deviation,Russian patronymic swap,0.6667,false,TN
+synth_people,6185b6b2,Person,Malik Magomedovich Barkhanoev,Malik Ruslanovich Barkhanoev,false,MEDIUM,LLM-proposed deviation,Russian patronymic swap,0.6667,false,TN
+synth_people,dc80b46c,Person,Murad Khasanovich Margoshvili,Murad Iraklievich Margoshvili,false,MEDIUM,LLM-proposed deviation,Russian/Caucasian patronymic swap,0.6667,false,TN
+synth_people,8f61505e,Person,ZAURBEK MAGOMEDOVICH GUCHAEV,ZAURBEK SALIMOVICH GUCHAEV,false,MEDIUM,LLM-proposed deviation,Russian patronymic swap,0.6667,false,TN
+synth_people,adf7d55a,Person,SHAMIL ABDURAHMANOVICH ISMAILOV,SHAMIL MAGOMEDOVICH ISMAILOV,false,MEDIUM,LLM-proposed deviation,Russian patronymic swap,0.6667,false,TN
+synth_people,71c57b80,Person,RUSTAM MAGOMEDOVICH KADYROV,RUSTAM MAGOMEDOVICH ASELDEROV,false,MEDIUM,LLM-proposed deviation,Russian surname swap (real Caucasian surname),0.6667,false,TN
+synth_people,8f434b4e,Person,Malik Ruslanovich Barakhoev,Malik Ruslanovich Barkhanoev,false,MEDIUM,LLM-proposed deviation,Russian surname syllable rearrangement (multi-char),0.9037,true,FP
+synth_people,cd46b489,Person,Murad Iraklievich Maroghashvili,Murad Iraklievich Margoshvili,false,MEDIUM,LLM-proposed deviation,Georgian surname syllable rearrangement (multi-char),0.6667,false,TN
+synth_people,2b7a1682,Person,ZAURBEK SALIMOVICH GUCHKOV,ZAURBEK SALIMOVICH GUCHAEV,true,MEDIUM,LLM-proposed deviation,Russian surname tail-rewrite (multi-char),0.6667,false,FN
+synth_people,c0a2623b,Person,SHAMIL MAGOMEDOVICH ISMAGILOV,SHAMIL MAGOMEDOVICH ISMAILOV,true,MEDIUM,LLM-proposed deviation,Russian/Tatar surname syllable insert (multi-char),0.9630,true,TP
+synth_people,458ff412,Person,ABDULLAH SUNGKAR,ABDULLAH ANSHORI,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
+synth_people,7252b5b1,Person,AHMED MUNANDAR,ARIS MUNANDAR,false,MEDIUM,LLM-proposed deviation,Indonesian given-name swap,0.5000,false,TN
+synth_people,e6c2b7f0,Person,SUDARSO RIFKI,TAUFIK RIFKI,false,MEDIUM,LLM-proposed deviation,Indonesian given-name swap,0.5000,false,TN
+synth_people,4145e823,Person,MOHAMAD IQBAL ABDURRAHIM,MOHAMAD IQBAL ABDURRAHMAN,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap (multi-char),0.6667,false,TN
+synth_people,d4004070,Person,UMAR MIRDAD,UMAR PATEK,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
+synth_people,1beae477,Person,AGUS RIFAI,AGUS DWIKARNA,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
+synth_people,925e5404,Person,BAMBANG SUTRISNO,BAMBANG SUKIRNO,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
+synth_people,cde66f65,Person,PARLINDUNGAN HUTABARAT,PARLINDUNGAN SIREGAR,false,MEDIUM,LLM-proposed deviation,Indonesian Batak surname swap,0.5000,false,TN
+synth_people,2bc909d5,Person,NURJAMAN HAMBALI ISAMUDDIN,NURJAMAN RIDUAN ISAMUDDIN,false,MEDIUM,LLM-proposed deviation,Indonesian middle-name swap,0.6667,false,TN
+synth_people,866744bb,Person,OMAN ABU JIBRIL,OMAN ROCHMAN,false,MEDIUM,LLM-proposed deviation,Indonesian kunya/surname swap,0.3906,false,TN
+synth_people,3e90952c,Person,MOCHAMMAD ALWI,MOCHAMMAD ACHWAN,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
+synth_people,39a7fa2f,Person,MOHAMMAD BAHRUM SUKARNO ANGGIH TAMTOMO,MOHAMMAD BAHRUM NAIM ANGGIH TAMTOMO,false,MEDIUM,LLM-proposed deviation,Indonesian middle-name swap,0.8000,true,FP
+synth_people,fe5c5acf,Person,ABU BAKAR SUNGKAR,ABU BAKAR BA'ASYIR,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap (real different cleric),0.5652,false,TN
+synth_people,5ee29fb8,Person,ABDULPATTA ESCALON ALONTO,ABDULPATTA ESCALON ABUBAKAR,false,MEDIUM,LLM-proposed deviation,Filipino Moro family-name swap,0.6667,false,TN
+synth_people,306b89d5,Person,MYRNA AJIJUL JAMIRI,MYRNA AJIJUL MABANZA,false,MEDIUM,LLM-proposed deviation,Filipino surname swap,0.6667,false,TN
+synth_people,67368630,Person,ANGELO RAMIREZ DE GUZMAN,ANGELO RAMIREZ TRINIDAD,false,MEDIUM,LLM-proposed deviation,Filipino surname swap,0.5882,false,TN
+synth_people,81e749c8,Person,ISNILON TOTONI MISUARI,ISNILON TOTONI HAPILON,false,MEDIUM,LLM-proposed deviation,Filipino Moro surname swap (Misuari is real different MNLF leader),0.6667,false,TN
+synth_people,32691f10,Person,PIO ABOGNE DE LEON,PIO ABOGNE DE VERA,false,MEDIUM,LLM-proposed deviation,Filipino Spanish-style surname swap,0.7500,true,FP
+synth_people,4610e5ea,Person,ABDULLAHI MOHAMED MOHAMED CADDOW,ABDULLAHI OSMAN MOHAMED CADDOW,false,MEDIUM,LLM-proposed deviation,Somali patronymic swap,0.7500,true,FP
+synth_people,2c525c6d,Person,MAXAMED CABDULLAAHI CIISE,MAXAMED CABDULLAAH CIISE,true,MEDIUM,LLM-proposed deviation,Somali patronymic suffix swap (multi-char),0.9697,true,TP
+synth_people,9c380c91,Person,ABDIKADIR HASSAN ABDIKADIR,ABDIKADIR MOHAMED ABDIKADIR,false,MEDIUM,LLM-proposed deviation,Somali patronymic swap,0.6667,false,TN
+synth_people,4192561e,Person,HASSAN DAHIR FARAH,HASSAN DAHIR AWEYS,false,MEDIUM,LLM-proposed deviation,Somali clan-name swap,0.6667,false,TN
+synth_people,17981923,Person,ZAFAR ALI,ZAFAR IQBAL,false,MEDIUM,LLM-proposed deviation,Pakistani surname swap,0.5000,false,TN
+synth_people,2e178a69,Person,ZAKI-UR-REHMAN MAKKI,ZAKI-UR-REHMAN LAKHVI,false,MEDIUM,LLM-proposed deviation,Pakistani surname swap (Makki is real LeT figure),0.7500,true,FP
+synth_people,e8913d55,Person,MOHAMMED YAHYA AZHAR,MOHAMMED YAHYA MUJAHID,false,MEDIUM,LLM-proposed deviation,Pakistani surname swap,0.6667,false,TN
+synth_people,67b3589f,Person,MAHMOOD AHMED BASHIR-UD-DIN,MAHMOOD SULTAN BASHIR-UD-DIN,false,MEDIUM,LLM-proposed deviation,Pakistani middle-name swap,0.8000,true,FP
+synth_people,94017c0e,Person,ANJEM IFTIKHAR CHOUDARY MAHMOOD,ANJEM CHOUDARY,true,MEDIUM,LLM-proposed deviation,added 2 invented middle parts,0.5556,false,FN
+synth_people,6f9490ad,Person,WALIJAN ABDUL GHAFOOR HAQQANI,WALIJAN,false,MEDIUM,LLM-proposed deviation,added father+grandfather+tribal,0.3165,false,TN
+synth_people,bfbceaa8,Person,SHAMSUDDIN MOHAMMED HAQQANI,SHAMSUDDIN,false,MEDIUM,LLM-proposed deviation,added father+tribal,0.3846,false,TN
+synth_people,e005d943,Person,JANAN MOHAMMAD AHMED AGHA,JANAN AGHA,true,MEDIUM,LLM-proposed deviation,added father+grandfather names,0.5556,false,FN
+synth_people,4aa4f878,Person,ABDULHAI ABDUL GHAFOOR SALEK,ABDULHAI SALEK,true,MEDIUM,LLM-proposed deviation,added father-grandfather chain,0.5952,false,FN
+synth_people,57474b11,Person,ABDUL JALIL MOHAMMAD RASUL AYYUB,MOHAMMAD RASUL AYYUB,true,MEDIUM,LLM-proposed deviation,added prefix-name (different person),0.6881,false,FN
+synth_people,7eedab5a,Person,FAZL RABI ABDUL HAMID,FAZL RABI,true,MEDIUM,LLM-proposed deviation,added father+grandfather,0.5952,false,FN
+synth_people,e3612dc2,Person,DOST MOHAMMAD KHAN HAQQANI,DOST MOHAMMAD,true,MEDIUM,LLM-proposed deviation,added grandfather+tribal,0.5556,false,FN
+synth_people,77def66b,Person,UMAR PATEK ABDULLAH ANSHORI,UMAR PATEK,true,MEDIUM,LLM-proposed deviation,added unrelated UN-listed person's parts,0.5556,false,FN
+synth_people,b8ddc0bb,Person,GUL AHMAD WAZIRI HAKIMI,GUL AHMAD HAKIMI,true,MEDIUM,LLM-proposed deviation,added invented middle clan name,0.7895,true,TP
+synth_people,c342a3f9,Person,NOOR MOHAMMAD HAQQANI SAQIB,NOOR MOHAMMAD SAQIB,true,MEDIUM,LLM-proposed deviation,added invented middle clan name,0.7895,true,TP
+synth_people,29719af0,Person,MOHAMMAD ABDUL ABBAS AKHUND,MOHAMMAD ABBAS AKHUND,true,MEDIUM,LLM-proposed deviation,added invented middle name,0.8427,true,TP
+synth_people,049c2986,Person,AMIR SAYYID ABDULLAH,AMIR ABDULLAH,true,MEDIUM,LLM-proposed deviation,added middle title-name,0.7143,true,TP
+synth_people,72e31417,Person,MOHAMMAD JAWAD HAMID WAZIRI,MOHAMMAD JAWAD WAZIRI,true,MEDIUM,LLM-proposed deviation,added invented middle,0.7895,true,TP
+synth_people,2f68e7a7,Person,MOHAMMAD YAQOUB HAQQANI,MOHAMMAD YAQOUB,true,MEDIUM,LLM-proposed deviation,added clan name,0.7143,true,TP
+synth_people,063927be,Person,DIN MOHAMMAD ABDUL HANIF,DIN MOHAMMAD HANIF,true,MEDIUM,LLM-proposed deviation,added invented father-name,0.8427,true,TP
+synth_people,64d0ee0e,Person,SADUDDIN MULLAH SAYYED,SADUDDIN SAYYED,true,MEDIUM,LLM-proposed deviation,added title-name,0.7143,true,TP
+synth_people,f3c61a71,Person,QARI ABDUL SAIFULLAH TOKHI,QARI SAIFULLAH TOKHI,true,MEDIUM,LLM-proposed deviation,added middle-name,0.8427,true,TP
+synth_people,9b707c89,Person,ABDUL HAQQANI MANAN MOHAMMAD ISHAK,ABDUL MANAN MOHAMMAD ISHAK,true,MEDIUM,LLM-proposed deviation,added invented clan,0.8333,true,TP
+synth_people,716388a5,Person,ABDUL WALI HAMID SEDDIQI,ABDUL WALI SEDDIQI,true,MEDIUM,LLM-proposed deviation,added invented middle name,0.7895,true,TP
+synth_people,fe7bf0cd,Person,FAZL MOHAMMAD HAMID MAZLOOM,FAZL MOHAMMAD MAZLOOM,true,MEDIUM,LLM-proposed deviation,added invented middle,0.7895,true,TP
+synth_people,a4b215bd,Person,SHER ABBAS STANEKZAI,SHER MOHAMMAD ABBAS STANEKZAI PADSHAH KHAN,true,MEDIUM,LLM-proposed deviation,dropped middle+grandfather+tribal,0.8333,true,TP
+synth_people,7785e33c,Person,SAIF AL-DIN AL-RAWI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.8333,true,FP
+synth_people,7a052edb,Person,MOHAMMED MIR WALI RAHIM,MOHAMMED QASIM MIR WALI KHUDAI RAHIM,true,MEDIUM,LLM-proposed deviation,dropped 2 middle parts,0.9091,true,TP
+synth_people,c43ac765,Person,MUHAMMAD AL-AHDAL,MOHAMMAD HAMDI MOHAMMAD SADIQ AL-AHDAL,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.7005,true,FP
+synth_people,1cf6b80a,Person,JAMAL SULTAN AL-TIKRITI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,true,MEDIUM,LLM-proposed deviation,dropped 2 middle patronymics,0.9091,true,TP
+synth_people,197a42e9,Person,ABDUL GHANI TURK,ABDUL GHANI BARADAR ABDUL AHMAD TURK,true,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.8099,true,TP
+synth_people,eb275b5b,Person,AKHTAR MANSOUR,AKHTAR MOHAMMAD MANSOUR SHAH MOHAMMED,true,MEDIUM,LLM-proposed deviation,dropped middle and tail,0.7692,true,TP
+synth_people,6006d296,Person,YASSIN AL-ANABI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,dropped kunya+given+patronymic,0.5988,false,TN
+synth_people,621e38fc,Person,RAMZI ABDULLAH BINALSHIBH,RAMZI MOHAMED ABDULLAH BINALSHIBH,true,MEDIUM,LLM-proposed deviation,dropped middle (Mohamed),0.9375,true,TP
+synth_people,755b2443,Person,SIRAJUDDIN HAQQANI,SIRAJUDDIN JALLALOUDINE HAQQANI,true,MEDIUM,LLM-proposed deviation,dropped father patronymic,0.9091,true,TP
+synth_people,79edb6a9,Person,FAZEEL AL-PESHAWARI,FAZEEL-A-TUL SHAYKH ABU MOHAMMED AMEEN AL-PESHAWARI,false,MEDIUM,LLM-proposed deviation,dropped 4 middle parts,0.7538,true,FP
+synth_people,a3782dd0,Person,SALMAN BIN MUHAMMAD AL-RAWI,MUHAMMAD BIN SALMAN AL-RAWI,false,WEAK,LLM-proposed deviation,patronymic reversal (father vs son flip),1.0000,true,FP
+synth_people,cad2cc2a,Person,ABDULLAH BIN OMAR AL-MUHAMMAD,OMAR BIN ABDULLAH AL-MUHAMMAD,false,WEAK,LLM-proposed deviation,patronymic reversal,1.0000,true,FP
+synth_people,ef35369a,Person,AHMAD BIN HASAN AL-UBAIDI,HASAN BIN AHMAD AL-UBAIDI,false,WEAK,LLM-proposed deviation,patronymic reversal,1.0000,true,FP
+synth_people,d65fdd34,Person,IBRAHIM BIN AL-DIN AL-MASRI,SAIF-AL-DIN BIN IBRAHIM AL-MASRI,false,WEAK,LLM-proposed deviation,patronymic reversal + structure change,0.9677,true,FP
+synth_people,9239f110,Person,ZIMURINDA MWANGACHUCHU,INNOCENT ZIMURINDA,false,MEDIUM,LLM-proposed deviation,dropped given + added invented surname,0.5000,false,TN
+synth_people,bcc9af19,Person,LEODOMIR HABIYAREMYE,LEODOMIR MUGARAGU,false,MEDIUM,LLM-proposed deviation,Rwandan surname swap (different real name),0.5000,false,TN
+synth_people,38ec8ccf,Person,LUCIEN HABIMANA,LUCIEN NZAMBAMWITA,false,MEDIUM,LLM-proposed deviation,Rwandan surname swap,0.5000,false,TN
+synth_people,8ed16c96,Person,DABA NA TENA,DABA NAUALNA,false,MEDIUM,LLM-proposed deviation,Bissau-Guinean surname swap,0.3571,false,TN
+synth_people,8231320c,Person,ESTÊVÃO NA TCHUTO,ESTÊVÃO NA MENA,false,MEDIUM,LLM-proposed deviation,Bissau-Guinean surname swap (Na Tchuto is real other GW figure),0.6667,false,TN
+synth_people,85df6966,Person,JÚLIO NA NHASSE,JÚLIO NHATE,false,MEDIUM,LLM-proposed deviation,Bissau-Guinean surname swap,0.3571,false,TN
+synth_people,337d1be0,Person,ABDULHAI SALEK,ABDULHAI MOTMAEN,false,MEDIUM,LLM-proposed deviation,UN-list collision (two different Abdulhai entries),0.5000,false,TN
+synth_people,bcbfd294,Person,AKHTAR MOHAMMAD MANSOUR,JALALUDDIN HAQQANI,false,MEDIUM,LLM-proposed deviation,completely different Afghan figure (Taliban vs Haqqani),0.0000,false,TN
+synth_people,646b60e1,Person,FAZL RABI,FAZL MOHAMMAD MAZLOOM,false,MEDIUM,LLM-proposed deviation,shared first token only,0.4545,false,TN
+synth_people,f1e4c127,Person,SADDAM HUSSEIN AL-TIKRITI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,both Iraqi Baathists same era; completely different,0.2500,false,TN
+synth_people,cc97aac7,Person,KIM JONG SIK,RI HONG-SOP,false,MEDIUM,LLM-proposed deviation,both KP nuclear officials; completely different,0.2133,false,TN
+synth_people,b778706c,Person,ABU BAKAR BA'ASYIR,UMAR PATEK,false,MEDIUM,LLM-proposed deviation,both ID JI figures; completely different,0.0000,false,TN
+synth_people,8e9db955,Person,JANAN AGHA,JALALUDDIN HAQQANI,false,MEDIUM,LLM-proposed deviation,shared zero tokens; completely different Afghan,0.0000,false,TN
+synth_people,7f10550c,Person,HASSAN DAHIR AWEYS,ABDIKADIR MOHAMED ABDIKADIR,false,MEDIUM,LLM-proposed deviation,both Somali al-Shabaab era; completely different,0.0000,false,TN
+synth_people,68983658,Person,SALLY-ANNE FRANCES JONES,NASSER AHMED MUTHANA,false,MEDIUM,LLM-proposed deviation,both UK ISIS recruits; completely different,0.0000,false,TN
+synth_people,404b52f3,Person,ALEXANDA AMON KOTEY,MOSTAFA KAMEL MOSTAFA IBRAHIM,false,MEDIUM,LLM-proposed deviation,both UK figures; completely different,0.0000,false,TN
+synth_corp_positives,a0a95bfb,Company,Apple Incorporated,Apple Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Inc./Incorporated),1.0000,true,TP
+synth_corp_positives,39382331,Company,Siemens Aktiengesellschaft,Siemens AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG/Aktiengesellschaft),1.0000,true,TP
+synth_corp_positives,7ce1f52b,Company,BMW Aktiengesellschaft,BMW AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
+synth_corp_positives,9edd0064,Company,Vodafone Limited,Vodafone Ltd,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Ltd/Limited),1.0000,true,TP
+synth_corp_positives,9a1d8447,Company,Volkswagen Gesellschaft mit beschränkter Haftung,Volkswagen GmbH,true,MEDIUM,LLM-proposed deviation,legal-form expansion (GmbH),1.0000,true,TP
+synth_corp_positives,ca75c45c,Company,Microsoft Corporation,Microsoft Corp.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp./Corporation),0.9769,true,TP
+synth_corp_positives,60643fc0,Company,Toyota Motor Corporation,Toyota Motor Corp,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp/Corporation),0.9870,true,TP
+synth_corp_positives,c913ae2a,Company,Daimler Aktiengesellschaft,Daimler AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
+synth_corp_positives,4ea54d86,Company,Walmart Incorporated,Walmart Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion,1.0000,true,TP
+synth_corp_positives,69a6c100,Company,Lloyds Banking Group Public Limited Company,Lloyds Banking Group plc,true,MEDIUM,LLM-proposed deviation,legal-form expansion (plc),1.0000,true,TP
+synth_corp_positives,53a74d49,Company,"Apple, Inc.",Apple Inc.,true,MEDIUM,LLM-proposed deviation,comma before legal form,1.0000,true,TP
+synth_corp_positives,38a7f3d7,Company,"Bowne Global Solutions, L.L.C.",Bowne Global Solutions LLC,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
+synth_corp_positives,eadc9b68,Company,"Bowne Global Solutions, S.A.R.L.",Bowne Global Solutions SARL,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
+synth_corp_positives,5fb8dd58,Company,Volkswagen Bank G.m.b.H.,Volkswagen Bank GmbH,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
+synth_corp_positives,9c51d869,Company,"JPMorgan Chase Bank, N.A.",JPMorgan Chase Bank NA,true,STRONG,LLM-proposed deviation,periods + comma in N.A.,1.0000,true,TP
+synth_corp_positives,96798acd,Company,Bowne Global Solutions B.V.,Bowne Global Solutions BV,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
+synth_corp_positives,8986cb25,Company,HSBC Holdings p.l.c.,HSBC Holdings plc,true,MEDIUM,LLM-proposed deviation,periods in plc,1.0000,true,TP
+synth_corp_positives,15c8f669,Company,Goldman Sachs & Co. L.L.C.,Goldman Sachs & Co. LLC,true,MEDIUM,LLM-proposed deviation,periods in LLC,1.0000,true,TP
+synth_corp_positives,e037cbf0,Company,Procter & Gamble Co.,Procter and Gamble Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9583,true,TP
+synth_corp_positives,ab5147a9,Company,AT&T Inc.,AT and T Inc.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9600,true,TP
+synth_corp_positives,86b29a9f,Company,JPMorgan Chase & Co.,JPMorgan Chase and Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9583,true,TP
+synth_corp_positives,9d66d932,Company,H&M Hennes & Mauritz AB,H and M Hennes and Mauritz AB,true,MEDIUM,LLM-proposed deviation,& vs and (multiple),0.9615,true,TP
+synth_corp_positives,976e590b,Company,Standard & Poor's,Standard and Poor's,true,MEDIUM,LLM-proposed deviation,& vs and,0.9524,true,TP
+synth_corp_positives,f38d915e,Company,The Coca-Cola Company,Coca-Cola Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_corp_positives,cab98aa9,Company,The Procter & Gamble Company,Procter & Gamble Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_corp_positives,15a87c60,Company,"The Goldman Sachs Group, Inc.","Goldman Sachs Group, Inc.",true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_corp_positives,83ff91f1,Company,The Walt Disnei Company,Walt Disney Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,0.9045,true,TP
+synth_corp_positives,51671995,Company,Coca-Cola Company,Coca Cola Company,true,MEDIUM,LLM-proposed deviation,hyphen vs space in brand,1.0000,true,TP
+synth_corp_positives,aabac46f,Company,Hewlett-Packard Co.,Hewlett Packard Co.,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
+synth_corp_positives,c581c1a5,Company,Daimler-Benz AG,Daimler Benz AG,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
+synth_corp_positives,7ed4b358,Company,PricewaterhouseCoopers LLP,Pricewaterhouse Coopers LLP,true,MEDIUM,LLM-proposed deviation,joined-camelcase vs spaced,0.9949,true,TP
+synth_corp_positives,74c7da2a,Company,J.P. Morgan & Co.,JP Morgan & Co.,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_corp_positives,a5442041,Company,"S.C. Johnson & Son, Inc.","SC Johnson & Son, Inc.",true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_corp_positives,16b58055,Company,P.T. Astra International,PT Astra International,true,MEDIUM,LLM-proposed deviation,initial periods (Indonesian PT),1.0000,true,TP
+synth_corp_positives,ca82c57a,Company,C.K. Hutchison Holdings,CK Hutchison Holdings,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_corp_positives,ff6d41f5,Company,ALPHABET INC.,Alphabet Inc.,true,STRONG,LLM-proposed deviation,casing (uppercase vs title),1.0000,true,TP
+synth_corp_positives,772bb777,Company,"blackrock, inc.","BlackRock, Inc.",true,STRONG,LLM-proposed deviation,casing (lowercase vs camelcase),1.0000,true,TP
+synth_corp_positives,3da0fa16,Company,"SAMSUNG ELECTRONICS CO., LTD.","Samsung Electronics Co., Ltd.",true,MEDIUM,LLM-proposed deviation,casing,1.0000,true,TP
+synth_corp_positives,38994984,Company,Société Générale S.A.,Societe Generale S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
+synth_corp_positives,8ea160d7,Company,Crédit Agricole S.A.,Credit Agricole S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
+synth_corp_positives,9d5f2d48,Organization,"United Nations Educational, Scientific and Cultural Organization",United Nations Educational Scientific and Cultural Organization,true,MEDIUM,LLM-proposed deviation,internal-comma drop,1.0000,true,TP
+synth_corp_positives,b29c1143,Organization,The World Bank,World Bank,true,STRONG,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_corp_positives,4340481e,Organization,International Labour Organization,International Labor Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Labour/Labor),0.8958,true,TP
+synth_corp_positives,f8756744,Organization,World Health Organisation,World Health Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9769,true,TP
+synth_corp_positives,05363c0a,Organization,Organisation for Economic Co-operation and Development,Organization for Economic Co-operation and Development,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9936,true,TP
+synth_corp_positives,f5e5b8e0,Organization,North Atlantic Treaty Organization,North Atlantic Treaty Organisation,true,MEDIUM,LLM-proposed deviation,en-US/en-GB,0.9909,true,TP
+synth_corp_positives,9a79b9ae,Organization,International Federation of Red Cross and Red Crescent Societies,International Federation of the Red Cross and Red Crescent Societies,true,MEDIUM,LLM-proposed deviation,internal 'the' insertion,0.9872,true,TP
+synth_corp_positives,6b9eebd8,Organization,U.S. Department of State,United States Department of State,true,MEDIUM,LLM-proposed deviation,U.S. abbreviation expansion,0.9619,true,TP
+synth_corp_positives,d4cec93c,Organization,Government of the United Kingdom,Government of United Kingdom,true,MEDIUM,LLM-proposed deviation,internal 'the' drop,0.9850,true,TP
+synth_corp_positives,e9cf6cdd,Organization,The Bank for International Settlements,Bank for International Settlements,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
