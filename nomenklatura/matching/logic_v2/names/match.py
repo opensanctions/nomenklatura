@@ -1,8 +1,9 @@
-from typing import List, Set, Tuple
-from rigour.names import NameTypeTag, Name, NamePart
-from rigour.names import align_person_name_order, normalize_name
+from typing import List, Tuple
+from rigour.names import Alignment, CompareConfig, NameTypeTag, Name, NamePart
+from rigour.names import align_person_name_order, compare_parts, normalize_name
 from rigour.names import remove_obj_prefixes
 from rigour.names.symbol import pair_symbols
+from rigour.text import is_stopword
 from followthemoney.proxy import E, EntityProxy
 from followthemoney import model
 from followthemoney.types import registry
@@ -14,16 +15,22 @@ from nomenklatura.matching.logic_v2.names.magic import (
     SYM_WEIGHTS,
     weight_extra_match,
 )
-from nomenklatura.matching.logic_v2.names.distance import weighted_edit_similarity
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
-from nomenklatura.matching.logic_v2.names.util import Match, numbers_mismatch
+from nomenklatura.matching.logic_v2.names.util import (
+    explain_alignment,
+    is_family_name,
+    numbers_mismatch,
+)
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL
 
 
 def match_name_symbolic(
-    query: Name, result: Name, config: ScoringConfig
-) -> Tuple[FtResult, List[Match]]:
+    query: Name,
+    result: Name,
+    config: ScoringConfig,
+    compare_config: CompareConfig,
+) -> Tuple[FtResult, List[Alignment]]:
     # Stage 1: Generate all valid symbol-based pairings
     # pairings = generate_symbol_pairings(query, result)
 
@@ -35,22 +42,20 @@ def match_name_symbolic(
     extra_result_weight = config.get_float("nm_extra_result_name")
     family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
-    retmatches: List[Match] = []
+    retmatches: List[Alignment] = []
     for edges in pair_symbols(query, result):
-        matches: List[Match] = []
+        # Symbol-paired alignments arrive with score=1.0 and weight=1.0 placeholders.
+        # Override per category before composing.
+        matches: List[Alignment] = []
         for edge in edges:
-            match = Match(
-                symbol=edge.symbol,
-                qps=list(edge.query_parts),
-                rps=list(edge.result_parts),
-                score=SYM_SCORES.get(edge.symbol.category, 1.0),
-                weight=SYM_WEIGHTS.get(edge.symbol.category, 1.0),
-            )
-            matches.append(match)
+            assert edge.symbol is not None
+            edge.score = SYM_SCORES.get(edge.symbol.category, 1.0)
+            edge.weight = SYM_WEIGHTS.get(edge.symbol.category, 1.0)
+            matches.append(edge)
 
         # Remainders — parts not covered by any edge in this pairing
-        query_used = {p for edge in edges for p in edge.query_parts}
-        result_used = {p for edge in edges for p in edge.result_parts}
+        query_used = {p for edge in edges for p in edge.qps}
+        result_used = {p for edge in edges for p in edge.rps}
         query_rem = [p for p in query.parts if p not in query_used]
         result_rem = [p for p in result.parts if p not in result_used]
 
@@ -61,42 +66,57 @@ def match_name_symbolic(
                 query_rem = NamePart.tag_sort(query_rem)
                 result_rem = NamePart.tag_sort(result_rem)
 
-            matches.extend(weighted_edit_similarity(query_rem, result_rem, config))
+            # Residue-distance handoff: rigour's compare_parts owns the
+            # cost-folded DP, clustering, and per-side scoring; the
+            # Alignments it returns carry symbol=None and a per-cluster
+            # fuzzy score with weight=1.0. Matcher policy (extras
+            # penalty, stopword multiplier, family-name boost) is
+            # applied below — this is the only line in the function
+            # that crosses into the rigour primitive.
+            matches.extend(compare_parts(query_rem, result_rem, config=compare_config))
 
         # Apply additional weight and score normalisation to the generated matches based
         # on contextual clues.
         for match in matches:
             # Matches with one side empty, i.e. unmatched parts
-            # unmatched result part
             if len(match.qps) == 0:
                 bias = weight_extra_match(match.rps, result)
                 match.weight = extra_result_weight * bias
-            # unmatched query part
             elif len(match.rps) == 0:
                 bias = weight_extra_match(match.qps, query)
                 match.weight = extra_query_weight * bias
+
+            if (len(match.qps) == 1 and is_stopword(match.qps[0].form)) or (
+                len(match.rps) == 1 and is_stopword(match.rps[0].form)
+            ):
+                # Stopword multiplier: composes with whatever weight
+                # the prior branch contributed (extras override,
+                # SYM_WEIGHTS, residue default). Symmetric with the
+                # family-name boost below.
+                match.weight *= 0.7
+
             # We fall through here to apply the family-name boost to unmatched parts too.
 
-            # We have types of symbol matches and where we never score 1.0, but for
-            # literal matches, we always want to score 1.0
+            # Symbol-paired edges default to a category score (e.g. NAME → 0.9), but if
+            # both sides' surface forms agree we want a clean 1.0 — the literal-equality
+            # rescue. Use the cached qstr/rstr instead of zipping per-part comparables.
             if (
                 match.score < 1.0
-                and len(match.qps) == len(match.rps)
                 and match.qps
-                and all(
-                    q.comparable == r.comparable for q, r in zip(match.qps, match.rps)
-                )
+                and match.rps
+                and match.qstr == match.rstr
             ):
                 match.score = 1.0
+
             # We treat family names matches as more important (but configurable) because
             # they're just globally less murky and changeable than given names.
-            if match.is_family_name():
+            if is_family_name(match):
                 match.weight *= family_name_weight
 
         # Sum up and average all the weights to get the final score for this pairing.
         # score = sum(weights) / len(weights) if len(weights) > 0 else 0.0
-        total_weight = sum(match.weight for match in matches)
-        total_score = sum(match.weighted_score for match in matches)
+        total_weight = sum(m.weight for m in matches)
+        total_score = sum(m.score * m.weight for m in matches)
         score = total_score / total_weight if total_weight > 0 else 0.0
         if score > retval.score:
             # We are not turning the matches into a detail string here because this is the hot
@@ -113,7 +133,7 @@ def match_name_symbolic(
     return retval, retmatches
 
 
-def _get_object_names(entity: EntityProxy) -> Set[str]:
+def _get_object_names(entity: EntityProxy) -> set[str]:
     """Get the names of an object entity, such as a vessel or asset."""
     names = entity.get_type_values(registry.name, matchable=True)
     if not names:
@@ -168,16 +188,14 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     common = set(query_comparable).intersection(result_comparable)
     if len(common) > 0:
         longest = max(common, key=len)
-        match = Match(
-            qps=query_comparable[longest].parts,
-            rps=result_comparable[longest].parts,
-            score=1.0,
-        )
+        q_name = query_comparable[longest]
+        r_name = result_comparable[longest]
+        align = Alignment(qps=q_name.parts, rps=r_name.parts, score=1.0)
         return FtResult(
-            score=match.score,
-            detail=str(match),
-            query=query_comparable[longest].original,
-            candidate=result_comparable[longest].original,
+            score=1.0,
+            detail=explain_alignment(align),
+            query=q_name.original,
+            candidate=r_name.original,
         )
 
     # Remove short names that are contained in longer names.
@@ -187,22 +205,32 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = Name.consolidate_names(query_names)
     result_names = Name.consolidate_names(result_names)
 
+    # Build the residue-distance config once per name_match. ScoringConfig
+    # is invariant for the lifetime of a matcher run, so the inner symbolic
+    # / pair loop reuses one CompareConfig instance across every
+    # compare_parts call instead of rebuilding from a get_float() per pair.
+    compare_config = CompareConfig(
+        budget_tolerance=config.get_float("nm_fuzzy_cutoff_factor"),
+    )
+
     best = FtResult(score=FNUL, detail=None)
-    best_matches: List[Match] = []
+    best_matches: List[Alignment] = []
 
     # This combinatorial explosion is the single biggest determinant of the name
     # matching speed: 1 x 1 is very fast, 2 x 5 still good, but 3 x 200 gets out
     # of hand. We need to consider more ways to prune pairs before we do a full
     # symbolic + fuzzy match on them.
     for query_name, result_name in names_product(query_names, result_names):
-        ftres, ftmatches = match_name_symbolic(query_name, result_name, config)
+        ftres, ftmatches = match_name_symbolic(
+            query_name, result_name, config, compare_config
+        )
         if ftres.score >= best.score:
             best = ftres
             best_matches = ftmatches
             if best.score == 1.0:
                 break
     if len(best_matches) > 0 and best.detail is None:
-        best.detail = " ".join(str(m) for m in best_matches)
+        best.detail = " ".join(explain_alignment(m) for m in best_matches)
     if best.detail is None:
         best.detail = "No name match found."
     return best
