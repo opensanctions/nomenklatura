@@ -276,7 +276,7 @@ nk_unit_tests,Person,Thomas Lindemann,Iain Thomas Rankin,false,MEDIUM,lindemann_
 nk_unit_tests,Person,Michelle Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity
 nk_unit_tests,Person,Michele Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity
 nk_unit_tests,Person,Michele Nichaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity
-nk_unit_tests,Person,Michele Nychaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity
+nk_unit_tests,Person,Michele Nychaela,Michaela Michelle Micheli,false,MEDIUM,duplicative_tps,test_duplicative_name_similarity
 nk_unit_tests,Person,Michele Mugaloo,Michaela Michelle Micheli,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity
 nk_unit_tests,Person,Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity
 nk_unit_tests,Person,Michaela,Michelle Obama,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity
@@ -324,7 +324,7 @@ synth_companies,Company,Vital Holding S.A.,Vitol Holding S.A.,true,MEDIUM,LLM-pr
 synth_companies,Company,Schell plc,Shell plc,true,MEDIUM,LLM-proposed deviation,added consonant (real surname)
 synth_companies,Company,China State Construction Equipment Corporation,China State Construction Engineering Corporation,false,MEDIUM,LLM-proposed deviation,domain-word swap
 synth_companies,Company,Tayota Motor Corporation,Toyota Motor Corporation,true,MEDIUM,LLM-proposed deviation,vowel reorder
-synth_companies,Company,McKenton Corporation,McKesson Corporation,true,MEDIUM,LLM-proposed deviation,plausible-alternate Scottish surname
+synth_companies,Company,McKenton Corporation,McKesson Corporation,false,MEDIUM,LLM-proposed deviation,plausible-alternate Scottish surname
 synth_companies,Company,Macrosoft Corporation,Microsoft Corporation,true,MEDIUM,LLM-proposed deviation,prefix antonym (micro/macro)
 synth_companies,Company,"Sencora, Inc.","Cencora, Inc.",true,MEDIUM,LLM-proposed deviation,initial-letter sub
 synth_companies,Company,Trafalgura Group Pte. Ltd.,Trafigura Group Pte. Ltd.,true,MEDIUM,LLM-proposed deviation,internal vowel sub
@@ -817,3 +817,11 @@ cust_cases,Organization,Stripe LLC,Stripe Limited Liability Company,true,STRONG,
 cust_cases,Organization,Stripe LLC,Strip Limited Liability Company,true,STRONG,Customer-provided deviation,Legal-form expansion
 cust_cases,Organization,Sparkles Business Corporation,Sporks Business Corporation,false,STRONG,Customer-provided deviation,Discounting common company name parts
 cust_cases,Person,"فرناندو بيريز",Fernando Pérez,true,STRONG,Customer-provided deviation,Alphabetic transliteration of Arabic name
+cluster_align,Company,vanderbilt corp,van der bilt corp,true,STRONG,token_merge_split,"Star-pattern transitive closure at the residue layer (`vanderbilt` paired with `van`,`der`,`bilt` as one cluster). Currently scores 0.219 at the full-matcher level — not a clustering bug; matcher-policy aggregation issue worth investigating separately. Any cluster-rule change should preserve the cluster shape regardless of the score outcome."
+cluster_align,Company,"BAE Systems, Inc.","BAE Industries, Inc.",false,MEDIUM,overlap_threshold_fragility,"0.51-threshold fragility example cited in plans/weighted-distance.md. `Systems`/`Industries` overlap fraction is alignment-shape-dependent. Currently 0.708 → FP. Connectivity rule + matcher-policy reconciliation are the open spec items."
+cluster_align,Person,MOHAMAD IQBAL ABDURRAHIM,MOHAMAD IQBAL ABDURRAHMAN,true,MEDIUM,transposition_typo,"3-character drift at long-token suffix. Cited in plans/weighted-distance.md as Phase-4 outcome flip. Currently TP."
+cluster_align,Person,Bashar al-Assad,Hafez al-Assad,false,MEDIUM,stopword_particle,"`al-` particle behaviour. Stopword down-weight (0.7 multiplier) interacts with cluster threshold. Currently TN."
+cluster_align,Person,Vladimir Vladimirovich Putin,Vladimir Putin,true,STRONG,extra_middle_token,"Patronymic surfaces as solo with extras-weight; aggregate carries through. Currently TP. Watch under connectivity rule — solo could shift to paired-zero."
+cluster_align,Company,"Banco Santander, S.A.","Banco Santander Mexico, S.A.",false,WEAK,geographic_qualifier,"Geographic qualifier as extra. `Banco Santander` matches strongly; `Mexico` extras-weight isn't enough to drag below 0.7. Currently 0.938 → FP. Borderline case — labelling is debatable."
+cluster_align,Person,Osama bin Laden,Usama ibn Laden,true,STRONG,particle_transliteration,"`bin`/`ibn` and `Osama`/`Usama` are transliteration variants. Tests confusable cost tier + clustering composing across multiple residue parts. Currently TP."
+cluster_align,Company,Volkswagen AG,Siemens AG,false,STRONG,shared_org_class,"Shared org-class token (`AG`) peels off via symbol pairing; residue (`Volkswagen` vs `Siemens`) shouldn't cluster. Sanity check that symbol-paired evidence doesn't leak. Currently TN."
