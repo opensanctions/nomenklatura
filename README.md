@@ -76,7 +76,7 @@ The key implementation detail of nomenklatura is the `Resolver`, a graph structu
 
 ## Contact, contributions etc.
 
-This codebase is licensed under the terms of an MIT license (see [LICENSE](nomenklatura/LICENSE)).
+This codebase is licensed under the terms of an MIT license (see [LICENSE](/LICENSE)).
 
 We're keen for any contributions, bug fixes and feature suggestions, please use the GitHub issue tracker for this repository. 
 
