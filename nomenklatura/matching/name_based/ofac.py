@@ -6,11 +6,12 @@ score within +/-5 points on 95.7% of a 164-row parity fixture; mean
 absolute error 1.5 points.
 
 This is not a "good" name matcher in the academic sense - it
-inherits OFAC's quirks (single-token explosions, length-asymmetric
-behavior, the per-pair JW < 0.5 cliff). For a recall-vs-precision
-calibrated screener, see `nomenklatura.matching.logic_v2`. This
-module exists so customers can self-serve "what would OFAC say
-about this name?" without round-tripping to treasury.gov.
+inherits OFAC's quirks (single-token explosions, token-order
+asymmetry, the per-token-pair scoring cliff at JW 0.5). For a
+recall-vs-precision calibrated screener, see
+`logic_v2`. This module exists so customers
+can self-serve "what would OFAC say about this name?" without
+round-tripping to treasury.gov.
 
 Three mechanisms each match an observed quirk:
 
@@ -20,26 +21,19 @@ Three mechanisms each match an observed quirk:
    gated on the literal `input[0] == candidate[0]`.
 
 2. **Jaro-Winkler without the 0.7 boost threshold**
-   (`_simmetrics_jw`). The 1990 Winkler paper recommends only applying
-   the prefix bonus when pure Jaro >= 0.7. Modern libs (rigour,
-   rapidfuzz, jellyfish) honour that threshold. The classic
-   SimMetrics-Java library does not - it applies the bonus
-   unconditionally. OFAC's front end is ASP.NET WebForms with
+   (`_simmetrics_jw`). OFAC's front end is ASP.NET WebForms with
    AjaxControlToolkit (vintage 2008-2012 .NET 3.5/4.0 stack), so
-   SimMetrics-style is the most likely JW their contractor reached
-   for. This single change recovers the long-candidate cluster
-   (`VLADIMIR PUTIN <-> VLADIMIROVKA ADVANCED WEAPONS AND RESEARCH
-   COMPLEX` 82 vs standard JW 64). We get pure Jaro from
-   `rigour._core.raw_jaro` and apply the prefix bonus ourselves.
+   SimMetrics-Java-style JW - prefix bonus applied unconditionally
+   rather than gated on `pure Jaro >= 0.7` - is the most likely
+   variant their contractor reached for. See `_simmetrics_jw` for
+   the algorithmic detail and the long-candidate evidence.
 
-3. **Per-input-token best-pairing JW with a 0.5 floor**
-   (`_per_token_score`). `GEORGE BUSH <-> HASWANI, George` scores 50
-   in OFAC (a perfect GEORGE-George match averaged with a near-zero
-   BUSH-HASWANI). A simple mean would give 73; zeroing the
-   BUSH-HASWANI pair (JW = 0.46 < 0.5) gives 50 exactly. Combined
-   with dropping <=2-char input tokens (with single-token safety),
-   this also resolves the KIM JONG UN case where OFAC matches 5
-   different individuals at 100.
+3. **Per-token best-pairing JW with a 0.5 floor**
+   (`_per_token_score`), plus dropping <=2-char query tokens
+   (`_drop_short_tokens`). The short-token rule resolves the
+   KIM JONG UN case where OFAC matches 5 different individuals at
+   100 - `UN` gets dropped, leaving `KIM JONG` as the comparison.
+   See `_per_token_score` for the floor mechanism.
 
 The score is the max of the two techniques (FAQ 249).
 
@@ -111,7 +105,7 @@ def _drop_short_tokens(tokens: List[str]) -> List[str]:
 
 def _whole_string_score(query: str, candidate: str) -> float:
     """Whole-string SimMetrics-JW, gated by `input[0] == candidate[0]`.
-    FAQ 249 Technique 1."""
+    FAQ 249's whole-string technique."""
     query_norm = " ".join(_tokens(query))
     candidate_norm = " ".join(_tokens(candidate))
     if not query_norm or not candidate_norm or query_norm[0] != candidate_norm[0]:
@@ -120,19 +114,33 @@ def _whole_string_score(query: str, candidate: str) -> float:
 
 
 def _per_token_score(query: str, candidate: str) -> float:
-    """Per-input-token best-pairing JW, mean over input tokens. Pairs
-    with JW < `PER_PAIR_JW_FLOOR` contribute 0 to the mean - the soft
-    first-letter check that's implicit in JW magnitude. Per-token
-    comparisons rarely fall below the 0.7 Jaro floor, so the standard
-    threshold-honoring JW is fine here. FAQ 249 Technique 2."""
+    """Per-token best-pairing JW score, FAQ 249's per-name-part technique.
+
+    Tokenise both names; drop short query tokens (see
+    `_drop_short_tokens`). For each remaining query token, find its
+    best Jaro-Winkler match against any candidate token; zero pairs
+    scoring below `PER_PAIR_JW_FLOOR`. Return the mean across kept
+    query tokens.
+
+    The floor acts as a soft first-letter check: tokens with
+    mismatched leading characters land below it naturally, without
+    an explicit gate. Example: `GEORGE BUSH <-> HASWANI, George`
+    scores 50 in OFAC because `BUSH<->HASWANI` is 0.46 (zeroed); a
+    plain mean would give 73.
+
+    Per-token JW rarely sits in the 0.6-0.7 band where the 1990
+    threshold matters, so `raw_jaro_winkler` is fine here."""
     query_tokens = _drop_short_tokens(_tokens(query))
     candidate_tokens = _tokens(candidate)
     if not query_tokens or not candidate_tokens:
         return 0.0
     pair_scores = []
-    for qt in query_tokens:
+    for query_token in query_tokens:
         best = max(
-            (raw_jaro_winkler(qt, ct) for ct in candidate_tokens),
+            (
+                raw_jaro_winkler(query_token, candidate_token)
+                for candidate_token in candidate_tokens
+            ),
             default=0.0,
         )
         pair_scores.append(best if best >= PER_PAIR_JW_FLOOR else 0.0)
@@ -160,15 +168,17 @@ def ofac_name_score(query: E, result: E, config: ScoringConfig) -> FtResult:
     if not query_names or not result_names:
         return FtResult(score=FNUL, detail=None)
     best: float = FNUL
-    best_q: Optional[str] = None
-    best_c: Optional[str] = None
-    for q in query_names:
-        for c in result_names:
-            score = ofac_score(q, c) / 100.0
+    best_query: Optional[str] = None
+    best_candidate: Optional[str] = None
+    for query_name in query_names:
+        for candidate_name in result_names:
+            score = ofac_score(query_name, candidate_name) / 100.0
             if score > best:
                 best = score
-                best_q = q
-                best_c = c
-    if best_q is None:
+                best_query = query_name
+                best_candidate = candidate_name
+    if best_query is None:
         return FtResult(score=FNUL, detail=None)
-    return FtResult(score=best, detail=None, query=best_q, candidate=best_c)
+    return FtResult(
+        score=best, detail=None, query=best_query, candidate=best_candidate
+    )
