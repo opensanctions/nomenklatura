@@ -68,23 +68,31 @@ WINKLER_PREFIX_MAX = 4      # standard Winkler prefix cap (1990 paper)
 WINKLER_WEIGHT = 0.1        # standard Winkler scaling factor (1990 paper)
 
 
-def _simmetrics_jw(a: str, b: str) -> float:
+def _simmetrics_jw(left: str, right: str) -> float:
     """SimMetrics-style Jaro-Winkler: prefix bonus applied
-    unconditionally (no 0.7 boost threshold). See module docstring
-    for why this matches OFAC where standard threshold-honoring JW
-    does not."""
-    if not a or not b:
+    unconditionally (no 0.7 boost threshold). The 1990 Winkler
+    paper gates the bonus on `pure Jaro >= 0.7`; modern libraries
+    honour that, the classic SimMetrics-Java library does not.
+    The threshold-honouring variant under-scores long candidates
+    with shared prefixes - e.g.
+    `VLADIMIR PUTIN <-> VLADIMIROVKA ADVANCED WEAPONS AND RESEARCH
+    COMPLEX` lands at 82 in OFAC but just 64 with standard JW. We
+    compute pure Jaro via `raw_jaro` and apply the prefix bonus
+    ourselves to recover that cluster."""
+    if not left or not right:
         return 0.0
-    j = raw_jaro(a, b)
-    if j == 0.0:
+    jaro = raw_jaro(left, right)
+    if jaro == 0.0:
         return 0.0
     prefix_matches = 0
-    for ca, cb in zip(a[:WINKLER_PREFIX_MAX], b[:WINKLER_PREFIX_MAX]):
-        if ca == cb:
+    for left_char, right_char in zip(
+        left[:WINKLER_PREFIX_MAX], right[:WINKLER_PREFIX_MAX]
+    ):
+        if left_char == right_char:
             prefix_matches += 1
         else:
             break
-    return j + prefix_matches * WINKLER_WEIGHT * (1 - j)
+    return jaro + prefix_matches * WINKLER_WEIGHT * (1 - jaro)
 
 
 def _tokens(s: str) -> List[str]:
