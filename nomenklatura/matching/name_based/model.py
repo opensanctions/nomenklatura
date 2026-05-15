@@ -36,15 +36,22 @@ class NameMatcher(HeuristicAlgorithm):
 
 class OFACMatcher(HeuristicAlgorithm):
     """An algorithm that emulates the public OFAC Sanctions List Search tool at
-    sanctionssearch.ofac.treas.gov. Reverse-engineered from FAQ 249 and parity
-    fixtures captured against the live tool. Scores name-only (FAQ 251) - DOB,
-    country, ID and other attributes are not features. The intent is parity with
-    OFAC's reported scores within +/-5 points on the parity fixture, not
-    academic-quality name matching."""
+    sanctionssearch.ofac.treas.gov, with mismatch qualifiers layered on top.
+    Reverse-engineered from FAQ 249 and parity fixtures captured against the
+    live tool. Name scoring tracks OFAC's reported score within +/-5 points on
+    the parity fixture. Qualifier features (country, DOB, gender, orgid
+    mismatches) reduce the name score - this departs from FAQ 251 (which says
+    only the name field influences the Score) but mirrors how OFAC users
+    actually triage matches via FAQ 5."""
 
     NAME = "ofac"
     features = [
         Feature(func=ofac_name_score, weight=1.0),
+        Feature(func=country_mismatch, weight=-0.1, qualifier=True),
+        Feature(func=dob_year_disjoint, weight=-0.1, qualifier=True),
+        Feature(func=dob_day_disjoint, weight=-0.15, qualifier=True),
+        Feature(func=gender_mismatch, weight=-0.1, qualifier=True),
+        Feature(func=orgid_disjoint, weight=-0.1, qualifier=True),
     ]
 
     @classmethod
@@ -58,6 +65,7 @@ class OFACMatcher(HeuristicAlgorithm):
 
 
 class NameQualifiedMatcher(HeuristicAlgorithm):
+    # update these two
     """Same as the name-based algorithm, but scores will be reduced if a mis-match
     of birth dates and nationalities is found for persons, or different
     tax/registration identifiers are included for organizations and companies."""

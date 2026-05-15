@@ -119,8 +119,11 @@ def test_ofac_matcher_compare():
     assert OFACMatcher.compare(a, b, config).score < 0.8
 
 
-def test_ofac_matcher_name_only():
-    # Name-only by FAQ 251: DOB / country mismatches do not affect the score.
-    a = e("Person", name="VLADIMIR PUTIN", birthDate="1952-10-07", country="ru")
-    b = e("Person", name="PUTIN, Vladimir", birthDate="1980-01-01", country="us")
+def test_ofac_matcher_qualifier_penalties():
+    # Country / DOB mismatches reduce the name score (departs from FAQ 251).
+    a = e("Person", name="VLADIMIR PUTIN")
+    b = e("Person", name="PUTIN, Vladimir")
     assert OFACMatcher.compare(a, b, config).score == 1.0
+    a.add("country", "ru")
+    b.add("country", "us")
+    assert OFACMatcher.compare(a, b, config).score < 1.0
