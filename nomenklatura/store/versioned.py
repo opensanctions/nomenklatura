@@ -4,9 +4,9 @@ from redis.client import Redis
 from typing import Generator, List, Optional, Set, Tuple, Dict
 from followthemoney import DS, SE, Schema, registry, Property, Statement
 from followthemoney.statement.util import pack_prop, unpack_prop
+from followthemoney.dataset.versions import Version
 
 from nomenklatura.kv import b, bv, get_redis, close_redis
-from nomenklatura.versions import Version
 from nomenklatura.resolver import Linker, Identifier, StrIdent
 from nomenklatura.store.base import Store, View, Writer
 
