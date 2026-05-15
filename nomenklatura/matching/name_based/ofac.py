@@ -95,28 +95,28 @@ def _simmetrics_jw(left: str, right: str) -> float:
     return jaro + prefix_matches * WINKLER_WEIGHT * (1 - jaro)
 
 
-def _tokens(s: str) -> List[str]:
+def _tokens(name: str) -> List[str]:
     """Tokenise via rigour's Unicode-aware splitter, then uppercase.
     Apostrophes / commas / periods are deleted (combining-mark
     category), not split on - `O'BRIEN` stays one token."""
-    return [t.upper() for t in tokenize_name(s)]
+    return [token.upper() for token in tokenize_name(name)]
 
 
-def _drop_short_tokens(toks: List[str]) -> List[str]:
+def _drop_short_tokens(tokens: List[str]) -> List[str]:
     """Strip tokens of length <= SHORT_TOKEN_MAX_LEN, but never empty
     the list - a single-char query like `Z` keeps its lone token."""
-    kept = [t for t in toks if len(t) > SHORT_TOKEN_MAX_LEN]
-    return kept or toks
+    kept = [t for t in tokens if len(t) > SHORT_TOKEN_MAX_LEN]
+    return kept or tokens
 
 
 def _whole_string_score(query: str, candidate: str) -> float:
     """Whole-string SimMetrics-JW, gated by `input[0] == candidate[0]`.
     FAQ 249 Technique 1."""
-    q = " ".join(_tokens(query))
-    c = " ".join(_tokens(candidate))
-    if not q or not c or q[0] != c[0]:
+    query_norm = " ".join(_tokens(query))
+    candidate_norm = " ".join(_tokens(candidate))
+    if not query_norm or not candidate_norm or query_norm[0] != candidate_norm[0]:
         return 0.0
-    return _simmetrics_jw(q, c)
+    return _simmetrics_jw(query_norm, candidate_norm)
 
 
 def _per_token_score(query: str, candidate: str) -> float:
