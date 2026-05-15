@@ -42,7 +42,7 @@ class OFACMatcher(HeuristicAlgorithm):
     OFAC's reported scores within +/-5 points on the parity fixture, not
     academic-quality name matching."""
 
-    NAME = "ofac-2021"
+    NAME = "ofac"
     features = [
         Feature(func=ofac_name_score, weight=1.0),
     ]
