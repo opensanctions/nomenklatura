@@ -7,6 +7,7 @@ from nomenklatura.matching.name_based.misc import orgid_disjoint
 from nomenklatura.matching.name_based.misc import dob_day_disjoint, dob_year_disjoint
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
+from nomenklatura.matching.name_based.ofac import ofac_name_score
 
 
 class NameMatcher(HeuristicAlgorithm):
@@ -21,6 +22,29 @@ class NameMatcher(HeuristicAlgorithm):
     features = [
         Feature(func=jaro_name_parts, weight=0.5),
         Feature(func=soundex_name_parts, weight=0.5),
+    ]
+
+    @classmethod
+    def compute_score(
+        cls, scores: Dict[str, float], weights: Dict[str, float]
+    ) -> float:
+        score = 0.0
+        for feat in cls.features:
+            score += scores.get(feat.name, 0.0) * weights.get(feat.name, 0.0)
+        return score
+
+
+class OFACMatcher(HeuristicAlgorithm):
+    """An algorithm that emulates the public OFAC Sanctions List Search tool at
+    sanctionssearch.ofac.treas.gov. Reverse-engineered from FAQ 249 and parity
+    fixtures captured against the live tool. Scores name-only (FAQ 251) - DOB,
+    country, ID and other attributes are not features. The intent is parity with
+    OFAC's reported scores within +/-5 points on the parity fixture, not
+    academic-quality name matching."""
+
+    NAME = "ofac-2021"
+    features = [
+        Feature(func=ofac_name_score, weight=1.0),
     ]
 
     @classmethod
