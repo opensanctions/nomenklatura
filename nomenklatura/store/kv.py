@@ -161,7 +161,7 @@ class KVWriter(Writer[DS, SE]):
         self.dataset = dataset
         self.version = version
         self.ds_ver = f"{dataset.name}:{version}"
-        self._pipeline: Pipeline = self.store.db.pipeline()
+        self._pipeline: "Pipeline[bytes]" = self.store.db.pipeline()
         self._batch_size = 0
 
     def flush(self) -> None:
