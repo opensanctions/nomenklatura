@@ -147,38 +147,35 @@ def _per_token_score(query: str, candidate: str) -> float:
     return sum(pair_scores) / len(pair_scores)
 
 
-def ofac_score(query: str, candidate: str) -> int:
-    """Approximate OFAC's Sanctions List Search score for a `query`
-    name against a `candidate` name on the SDN list. Returns an
-    integer 0-100 mirroring OFAC's slider scale.
-
-    Tracks OFAC's reported score within +/-5 points on 95.7% of a
-    164-row parity fixture; mean absolute error 1.5 points."""
-    whole = _whole_string_score(query, candidate)
-    per_token = _per_token_score(query, candidate)
-    return round(max(whole, per_token) * 100)
-
-
 def ofac_name_score(query: E, result: E, config: ScoringConfig) -> FtResult:
     """Compare two entities by taking the maximum OFAC-style score
     over every (query name, candidate name) pair. Mirrors OFAC's
     alias-aware scoring, where the reported score is against the
-    best of an entity's aliases."""
+    best of an entity's aliases. `detail` reports the two technique
+    scores (whole-string and per-token) for the winning pair, so
+    consumers can tell which mechanism drove the match."""
     query_names, result_names = type_pair(query, result, registry.name)
     if not query_names or not result_names:
         return FtResult(score=FNUL, detail=None)
     best: float = FNUL
     best_query: Optional[str] = None
     best_candidate: Optional[str] = None
+    best_whole: float = FNUL
+    best_per_token: float = FNUL
     for query_name in query_names:
         for candidate_name in result_names:
-            score = ofac_score(query_name, candidate_name) / 100.0
+            whole = _whole_string_score(query_name, candidate_name)
+            per_token = _per_token_score(query_name, candidate_name)
+            score = max(whole, per_token)
             if score > best:
                 best = score
                 best_query = query_name
                 best_candidate = candidate_name
+                best_whole = whole
+                best_per_token = per_token
     if best_query is None:
         return FtResult(score=FNUL, detail=None)
+    detail = f"whole-string={best_whole:.2f}, per-token={best_per_token:.2f}"
     return FtResult(
-        score=best, detail=None, query=best_query, candidate=best_candidate
+        score=best, detail=detail, query=best_query, candidate=best_candidate
     )
