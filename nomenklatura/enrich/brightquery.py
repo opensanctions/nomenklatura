@@ -117,7 +117,15 @@ class BrightQueryEnricher(Enricher[DS]):
         resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
         if not resp_data:
             log.info("BrightQuery search: %r", payload)
-            response = self.session.post(self.BASE_URL, json=payload, timeout=15)
+            try:
+                response = self.session.post(
+                    self.BASE_URL,
+                    json=payload,
+                    timeout=(10, 60),
+                )
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
+                log.error("BrightQuery connection failed for %r: %s", payload, exc)
+                return
             # When no results are found, the API helpfully doesn't return JSON
             # but just a 204 with an empty response body.
             if response.status_code == 204:
