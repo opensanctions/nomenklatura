@@ -44,7 +44,7 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get install -y -qq libicu-dev
+          sudo apt-get install -y -qq libicu-dev libleveldb-dev
           python -m pip install --upgrade pip wheel pyicu
           pip install -e '.[dev]'
       - name: Check type annotations (strict)
@@ -69,7 +69,7 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get install -y -qq libicu-dev
+          sudo apt-get install -y -qq libicu-dev libleveldb-dev
           python -m pip install --upgrade pip wheel pyicu
           pip install -e '.[dev]'
       - name: Create a release
