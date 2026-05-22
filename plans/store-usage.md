@@ -172,24 +172,24 @@ validator, `HashDelta` for the delta exporter, an optional
 small-bounded fragment cache). The store must support iteration
 without requiring the consumer to materialise the scope in memory.
 
+This applies to the store implementation too — `entities()` must be
+streaming, not "build a full canonical-id map then yield." Today's
+`KVStore.entities()` materialises the canonical→source map up-front;
+fine at sanctions scale (~648 MB peak in the bench), unacceptable at
+enrichment scale (~150M entities). Flag as a known
+implementation-side gap against this demand.
+
 ## Work budget
 
-Anchored to today's full-database export of ~90 min, of which ~45 min
-is store-build cost (LevelDB hydration + optimize) and ~45 min is
-the retrieval pass.
+Anchored to today's full-database export of ~90 min (rough), of which
+~45 min is store-build cost (LevelDB hydration + optimize) and ~45 min
+is the retrieval pass. The 45-min number is approximate; for the
+purposes of the demands below, treat it as the order-of-magnitude
+budget rather than a hard contract.
 
 An eager-built, long-lived store eliminates the build cost from the
-consumer's ledger. The retrieval pass therefore has headroom:
-
-- **Ceiling:** ~1.2× the current ~45 min retrieval cost (≈54 min) is
-  still a net win versus today. Past 1.2×, the business case erodes.
-- **Realistic target:** with proper batching and a consumer-local
-  linker (see implementation guardrails below), retrieval over a
-  same-DC network store should land near ~1.0–1.1× of today's
-  LevelDB-local retrieval. The dominant per-entity work (statement
-  assembly, linker application, adjacency walks) is the same in
-  both architectures; the network adds bounded overhead, not
-  multiplicative cost.
+consumer's ledger. The retrieval pass therefore has headroom up to
+~1.2× today's retrieval (≈54 min) before the business case erodes.
 
 What scales with what, per pass:
 
@@ -199,6 +199,57 @@ What scales with what, per pass:
 | Export (entity loop) | O(\|scope\| × adjacency × number of view-using exporters). Adjacency redundancy across exporters is real today; whether it's de-duplicated in the store or in zavod is an implementation choice. |
 | Export (`feed_unconsolidated`) | O(Σ statements). |
 | Delta finalisation | O(\|delta set\|). |
+
+## Access-pattern ceiling on network-resident stores
+
+The consumer code's dominant access pattern is **random-access per
+neighbour**: the export loop's `view.get_adjacent(entity)` fans out
+into one `view.get_entity(neighbour)` per neighbour, and the
+validation loop's `DanglingReferencesValidator` calls
+`view.has_entity(ref)` once per outbound entity-typed reference. At
+full-DB scale that produces order-of-magnitude **10⁷–10⁸ random-access
+operations per pass**.
+
+For a local store, those ops cost ~15 µs each and the math works. For
+a network-resident store at GCP same-AZ pod-to-pod latencies
+(~200–500 µs RTT), the math doesn't:
+
+| RTT | 50M ops | 100M ops |
+| --- | --- | --- |
+| 200 µs | ~2.8 h | ~5.6 h |
+| 400 µs | ~5.6 h | ~11.1 h |
+
+**This is fundamental to the access pattern, not the store
+implementation.** Every store-side optimisation we've evaluated
+(aggregate-hash key layout, dataset-presence index, server-side
+scripts) moves per-call cost within a ~2× factor; none can beat the
+RTT × N wall. At the access counts above, even an unrealistically
+cheap network store (50 µs/call) blows past the 1-hour mark.
+
+Empirical anchor (sanctions collection, 374K entities, localhost
+KVRocks vs local LevelDB; see `contrib/store_perf.py`):
+
+| Phase | KV (KVRocks) | LevelDB | KV / Level |
+| --- | --- | --- | --- |
+| WRITE | 23,078 stmts/s | 46,270 stmts/s | 0.50× |
+| READ (entities iteration) | 14,184 ents/s | 41,453 ents/s | 0.34× (KV ~2.9× slower) |
+| POINT LOOKUP | 1,750 lookups/s | 64,267 lookups/s | 0.027× (KV ~37× slower) |
+
+`entities()` is "only" ~3× slower because it streams: batched marker
+discovery + pipelined `HGETALL` keeps per-entity round-trips low.
+`get_entity` is ~37× slower because it must fan out across all
+(dataset, version) pairs in scope on every call (85 datasets in the
+sanctions scope) and the empty responses still cost wire time. Moving
+this to GCP same-AZ RTTs pushes the per-call cost above 700 µs and
+the gap to LevelDB widens.
+
+**Consequence for the demands:** a 45-min budget at this RTT regime
+requires the consumer's effective network-call count drop from
+**O(\|scope\| × adjacency)** to roughly **O(\|scope\|)**. The current
+exporters/validators code does not satisfy this. Closing the gap is
+an *access-pattern* problem on the consumer side, not a store-design
+problem on the implementation side. The implementation guardrails
+below remain necessary but are insufficient on their own.
 
 ## Implementation guardrails for a network-resident store
 
@@ -234,11 +285,15 @@ realise that target — not on whether the network approach is viable.
   become intolerable, resumable iteration becomes a real demand —
   but it isn't one yet.
 
-## Latent demand (not active today)
+## Latent demands (not active today)
 
-**Validation and export are currently two separate iterations of the
-same view.** Nothing structurally forces this. A future consolidation
-could fuse them into one pass and roughly halve retrieval work.
-Today's code does not ask for this and the demands above don't
-require it; recording it here so a future cost squeeze has an
-obvious place to find savings.
+- **Validation and export run as two separate iterations of the same
+  view.** Nothing structurally forces this. Fusing them into one pass
+  roughly halves retrieval work. Today's code does not ask for this.
+- **The consumer assumes random-access per neighbour is cheap.** True
+  for a local store, untrue for a network store at the scales above.
+  Reshaping the consumer's access pattern (fused iteration with
+  pre-batched 1-hop neighbourhood, bulk preload to a local
+  materialised view, etc.) is required if a network-resident store
+  is to fit the budget. The shapes of this demand are not yet locked;
+  see the access-pattern discussion accompanying this document.

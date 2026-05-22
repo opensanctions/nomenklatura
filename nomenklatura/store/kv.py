@@ -129,20 +129,27 @@ class KVStore(Store[DS, SE]):
 
     def drop_version(self, dataset: str, version: str) -> None:
         prefix = f"d:{dataset}:{version}:".encode(E)
-        pipeline = self.db.pipeline()
-        cmds = 0
-        for key in self.db.scan_iter(match=prefix + b"*"):
-            pipeline.delete(key)
-            cmds += 1
-            if cmds >= 1_000:
-                pipeline.execute()
-                pipeline = self.db.pipeline()
-                cmds = 0
-        if cmds > 0:
-            pipeline.execute()
+        BATCH = 1000
+        total = 0
+        # Drain the prefix in waves. Interleaving DEL with the same scan_iter
+        # cursor is unreliable against KVRocks for large keysets — the cursor
+        # is sensitive to the keys being deleted while it's iterating, and
+        # leaves keys behind. Restarting scan_iter from cursor 0 after each
+        # batch is robust: each pass collects whatever the previous pass
+        # missed; the loop terminates once a full scan returns nothing.
+        while True:
+            keys: List[bytes] = list(
+                self.db.scan_iter(match=prefix + b"*", count=BATCH)
+            )
+            if not keys:
+                break
+            for i in range(0, len(keys), BATCH):
+                chunk = keys[i : i + BATCH]
+                self.db.delete(*chunk)
+            total += len(keys)
 
         self.db.delete(f"meta:versions:{dataset}:{version}".encode(E))
-        log.info("Dropped store version: %s (%s)", dataset, version)
+        log.info("Dropped store version: %s (%s) — %d keys", dataset, version, total)
 
     def close(self) -> None:
         close_redis()
