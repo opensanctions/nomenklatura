@@ -32,7 +32,8 @@ class BrightQueryEnricher(Enricher[DS]):
 
         retries = Retry(
             total=5,
-            backoff_factor=3,
+            backoff_factor=40,
+            backoff_max=600,
             status_forcelist=[
                 504,  # 504 Gateway Timeout
                 502,  # 502 Bad Gateway
@@ -117,7 +118,7 @@ class BrightQueryEnricher(Enricher[DS]):
         resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
         if not resp_data:
             log.info("BrightQuery search: %r", payload)
-            response = self.session.post(self.BASE_URL, json=payload, timeout=15)
+            response = self.session.post(self.BASE_URL, json=payload, timeout=(10, 300))
             # When no results are found, the API helpfully doesn't return JSON
             # but just a 204 with an empty response body.
             if response.status_code == 204:
