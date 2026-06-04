@@ -9,6 +9,7 @@ from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.sql import SQLStore
+from nomenklatura.store.kv import KVStore
 
 SimpleMemoryStore = MemoryStore[Dataset, StatementEntity]
 
@@ -19,6 +20,7 @@ __all__ = [
     "MemoryStore",
     "SimpleMemoryStore",
     "SQLStore",
+    "KVStore",
     "load_entity_file_store",
 ]
 
