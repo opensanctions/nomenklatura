@@ -6,7 +6,6 @@ from pprint import pprint
 from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
-from followthemoney import registry, EntityProxy
 from followthemoney.util import PathLike
 from numpy.typing import NDArray
 from sklearn import metrics  # type: ignore
@@ -20,6 +19,8 @@ from nomenklatura.matching.erun.model import EntityResolveRegression
 from nomenklatura.matching.pairs import JudgedPair, read_pairs
 
 log = logging.getLogger(__name__)
+
+RANDOM_SEED = 42
 
 
 def pair_convert(pair: JudgedPair) -> Tuple[List[float], int]:
@@ -48,34 +49,11 @@ def pairs_to_arrays(
     return np.array(xrows), np.array(yrows)
 
 
-def _entity_weight(entity: EntityProxy) -> float:
-    """This weights up entities with more matchable properties, to push down the
-    value of name-only matches."""
-    weight = 0.0
-    # types = set()
-    for prop, _ in entity.itervalues():
-        if prop.matchable:
-            inc_weight = 0.2 if prop.type == registry.name else 1.0
-            weight += inc_weight
-            # types.add(prop.type)
-    # if entity.schema.is_a("LegalEntity") and types == {registry.name}:
-    #     weight = weight * 0.5
-    return weight
-
-
-def weighted_pair_sort(pairs: List[JudgedPair]) -> List[JudgedPair]:
-    for pair in pairs:
-        left_weight = _entity_weight(pair.left)
-        right_weight = _entity_weight(pair.right)
-        # pair.weight = (left_weight + right_weight) / 2.0
-        pair.weight = min(left_weight, right_weight)
-    return sorted(pairs, key=lambda p: -p.weight)
-
-
 def build_dataset(
     pairs_file: PathLike,
 ) -> Tuple[NDArray[np.float32], NDArray[np.float32]]:
     """Load and balance a dataset from a JSON file."""
+    random.seed(RANDOM_SEED)
     pairs: List[JudgedPair] = []
     for pair in read_pairs(pairs_file):
         if not pair.left.schema.matchable or not pair.right.schema.matchable:
@@ -114,15 +92,15 @@ def build_dataset(
 
 def train_matcher(pairs_file: PathLike) -> None:
     X, y = build_dataset(pairs_file)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.30, random_state=RANDOM_SEED
+    )
     logreg = LogisticRegression(
-        penalty="elasticnet",
         solver="saga",
-        l1_ratio=0.5,
+        l1_ratio=0.5,  # elasticnet; penalty type is now derived from l1_ratio
         C=1.2,
         max_iter=2000,
-        random_state=42,
-        n_jobs=-1,  # Use all cores
+        random_state=RANDOM_SEED,
     )
     log.info("Training model...")
     pipe = make_pipeline(StandardScaler(with_mean=False), logreg)
