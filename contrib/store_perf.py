@@ -8,7 +8,7 @@ from zavod.integration.dedupe import get_dataset_linker
 
 from zavod.store import get_store
 
-# from nomenklatura.versions import Version
+# from followthemoney.dataset import Version
 # from nomenklatura.store.versioned import (
 #     VersionedRedisStore,
 #     VersionedRedisView,
