@@ -2,9 +2,9 @@ import orjson
 import fakeredis
 from pathlib import Path
 from followthemoney import model, Dataset, StatementEntity as Entity
+from followthemoney.dataset.versions import Version
 from rigour.time import datetime_iso, utc_now
 
-from nomenklatura.versions import Version
 from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
 from nomenklatura.store.versioned import VersionedRedisStore
