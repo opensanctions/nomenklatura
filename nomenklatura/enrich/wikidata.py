@@ -35,6 +35,7 @@ class WikidataEnricher(Enricher[DS]):
     ):
         super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
+        self.aliases = bool(self.get_config_bool("aliases", False))
         self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 
     def keep_entity(self, entity: StatementEntity) -> bool:
@@ -57,25 +58,12 @@ class WikidataEnricher(Enricher[DS]):
                     yield proxy
             return
 
-        for name in entity.get("name", quiet=True):
-            params = {
-                "format": "json",
-                "search": name,
-                "action": "wbsearchentities",
-                "language": "en",
-                "strictlanguage": "false",
-            }
-            data = self.http_get_json_cached(WikidataClient.WD_API, params=params)
-            if "search" not in data:
-                self.http_remove_cache(WikidataClient.WD_API, params=params)
-                log.info("Search response [%s] does not include results" % name)
-                continue
-            for result in data["search"]:
-                item = self.client.fetch_item(result["id"])
-                if item is not None:
-                    proxy = self.item_proxy(entity, item, schema=entity.schema.name)
-                    if proxy is not None and self.keep_entity(proxy):
-                        yield proxy
+        for qid in self.client.search_items(entity, aliases=self.aliases):
+            item = self.client.fetch_item(qid)
+            if item is not None:
+                proxy = self.item_proxy(entity, item, schema=entity.schema.name)
+                if proxy is not None and self.keep_entity(proxy):
+                    yield proxy
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         wikidata_id = self.get_wikidata_id(match)

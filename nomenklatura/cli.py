@@ -17,9 +17,12 @@ from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
+from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui
 from nomenklatura.matching.bench import bench_matcher
+from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.reconcile import reconcile as run_reconcile
 
 INDEX_SEGMENT = "xref-index"
 
@@ -116,6 +119,42 @@ def xref_file(
     )
     resolver.commit()
     log.info("Xref complete in: %r", resolver)
+
+
+@cli.command(
+    "wikidata-reconcile",
+    help="Match persons against Wikidata, auto-merging hits above a threshold",
+)
+@click.argument("path", type=InPath)
+@click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
+@click.option("--algorithm", default=EntityResolveRegression.NAME)
+@click.option("--aliases/--no-aliases", is_flag=True, default=False)
+def wikidata_reconcile(
+    path: Path,
+    threshold: float = 0.96,
+    algorithm: str = EntityResolveRegression.NAME,
+    aliases: bool = False,
+) -> None:
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    algorithm_type = get_algorithm(algorithm)
+    if algorithm_type is None:
+        raise click.Abort(f"Unknown algorithm: {algorithm}")
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    cache = Cache.make_default(dataset)
+    client = WikidataClient(cache)
+    run_reconcile(
+        resolver,
+        store,
+        client,
+        dataset,
+        algorithm_type,
+        threshold,
+        aliases=aliases,
+    )
+    resolver.commit()
+    log.info("Reconcile complete in: %r", resolver)
 
 
 @cli.command("prune", help="Remove dedupe candidates")
