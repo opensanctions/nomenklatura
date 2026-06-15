@@ -36,6 +36,9 @@ class WikidataClient(object):
     ) -> None:
         self.cache = cache
         self.session = session or Session()
+        # Wikimedia rejects requests with the default requests UA (403), so set a
+        # descriptive User-Agent on the session for all API and SPARQL calls.
+        self.session.headers["User-Agent"] = USER_AGENT
         self.cache_days = cache_days
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 

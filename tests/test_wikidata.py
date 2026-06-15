@@ -168,6 +168,14 @@ def test_search_items_aliases(test_cache: Cache):
         assert client.search_items(entity, aliases=True) == ["Q6279", "Q12345"]
 
 
+def test_client_user_agent(test_cache: Cache):
+    from followthemoney.settings import USER_AGENT
+
+    # Wikimedia returns 403 for the default requests UA; ensure ours is set.
+    client = WikidataClient(test_cache)
+    assert client.session.headers["User-Agent"] == USER_AGENT
+
+
 def test_candidate_proxy(test_cache: Cache):
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     with requests_mock.Mocker(real_http=False) as m:
