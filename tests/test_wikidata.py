@@ -95,6 +95,62 @@ def test_client_query(test_cache: Cache):
             assert result.plain("person") is not None
 
 
+def test_search_items(test_cache: Cache):
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    entity = Entity.from_data(
+        dataset,
+        {"schema": "Person", "id": "p1", "properties": {"name": ["Vladimir Putin"]}},
+    )
+    search = {
+        "search": [
+            {"id": "Q7747", "label": "Vladimir Putin"},
+            {"id": "Q1058", "label": "someone else"},
+            # Non-QID ids (e.g. property/lexeme hits) are filtered out:
+            {"id": "P31", "label": "instance of"},
+            {"label": "no id at all"},
+        ]
+    }
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=search)
+        client = WikidataClient(test_cache)
+        qids = client.search_items(entity)
+        assert qids == ["Q7747", "Q1058"]
+
+    # Empty result set: no `search` key returns no candidates and isn't cached.
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json={})
+        client = WikidataClient(test_cache)
+        empty = Entity.from_data(
+            dataset,
+            {"schema": "Person", "id": "p2", "properties": {"name": ["Nobody Here"]}},
+        )
+        assert client.search_items(empty) == []
+
+
+def test_search_items_multi_name(test_cache: Cache):
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    entity = Entity.from_data(
+        dataset,
+        {
+            "schema": "Person",
+            "id": "p3",
+            "properties": {"name": ["Joseph Biden", "Joe Biden"]},
+        },
+    )
+
+    def by_name(request, context):
+        name = request.qs.get("search", [""])[0]
+        if "joseph" in name:
+            return {"search": [{"id": "Q6279"}]}
+        return {"search": [{"id": "Q6279"}, {"id": "Q12345"}]}
+
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=by_name)
+        client = WikidataClient(test_cache)
+        # Both names searched, hits unioned, QIDs de-duplicated, order preserved:
+        assert client.search_items(entity, multi_name=True) == ["Q6279", "Q12345"]
+
+
 def test_model(test_cache: Cache):
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(
