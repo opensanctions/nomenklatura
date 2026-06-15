@@ -10,6 +10,7 @@ from rigour.ids.wikidata import is_qid
 from followthemoney import StatementEntity, registry
 from followthemoney.settings import USER_AGENT
 from nomenklatura.cache import Cache
+from nomenklatura.wikidata.util import make_session
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.query import SparqlResponse
@@ -35,10 +36,9 @@ class WikidataClient(object):
         self, cache: Cache, session: Optional[Session] = None, cache_days: int = 14
     ) -> None:
         self.cache = cache
-        self.session = session or Session()
-        # Wikimedia rejects requests with the default requests UA (403), so set a
-        # descriptive User-Agent on the session for all API and SPARQL calls.
-        self.session.headers["User-Agent"] = USER_AGENT
+        # A bare session gets 403'd (default UA) and throttled by Wikidata, so
+        # default to a configured session with a descriptive UA and retries.
+        self.session = session or make_session()
         self.cache_days = cache_days
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 

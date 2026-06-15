@@ -168,10 +168,24 @@ def test_search_items_aliases(test_cache: Cache):
         assert client.search_items(entity, aliases=True) == ["Q6279", "Q12345"]
 
 
+def test_make_session():
+    from followthemoney.settings import USER_AGENT
+    from nomenklatura.wikidata.util import make_session
+
+    session = make_session()
+    # Wikimedia 403s the default requests UA; ours must be descriptive.
+    assert session.headers["User-Agent"] == USER_AGENT
+    retries = session.get_adapter("https://www.wikidata.org/").max_retries
+    assert retries.total == 3
+    # Back off on rate-limit / Retry-After statuses:
+    assert 429 in retries.status_forcelist
+    assert 503 in retries.status_forcelist
+
+
 def test_client_user_agent(test_cache: Cache):
     from followthemoney.settings import USER_AGENT
 
-    # Wikimedia returns 403 for the default requests UA; ensure ours is set.
+    # The client's default session carries our UA (set via make_session).
     client = WikidataClient(test_cache)
     assert client.session.headers["User-Agent"] == USER_AGENT
 

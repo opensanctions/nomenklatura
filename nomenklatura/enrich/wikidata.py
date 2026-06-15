@@ -36,7 +36,9 @@ class WikidataEnricher(Enricher[DS]):
         super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
         self.aliases = bool(self.get_config_bool("aliases", False))
-        self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
+        # Let the client build its own Wikidata-tuned session (UA + retries)
+        # rather than the generic enricher session, which has no retry policy.
+        self.client = WikidataClient(cache, cache_days=self.cache_days)
 
     def keep_entity(self, entity: StatementEntity) -> bool:
         if check_person_cutoff(entity):
