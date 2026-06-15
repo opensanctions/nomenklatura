@@ -4,10 +4,25 @@ from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 
 from nomenklatura.cache import Cache
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import load_entity_file_store
+from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.wikidata import LangText, WikidataClient
+from nomenklatura.wikidata.reconcile import candidate_proxy, reconcile
 from nomenklatura.enrich.wikidata import clean_wikidata_name
 
 from .conftest import wd_read_response
+
+
+def _wd_dispatch(search_results):
+    """Mock callback: serve search results for wbsearchentities, fixtures else."""
+
+    def handler(request, context):
+        if "wbsearchentities" in request.qs.get("action", []):
+            return {"search": search_results}
+        return wd_read_response(request, context)
+
+    return handler
 
 
 def test_lang_text():
@@ -151,6 +166,54 @@ def test_search_items_aliases(test_cache: Cache):
         assert client.search_items(entity) == ["Q6279"]
         # aliases=True also searches the alias; hits unioned, de-duplicated:
         assert client.search_items(entity, aliases=True) == ["Q6279", "Q12345"]
+
+
+def test_candidate_proxy(test_cache: Cache):
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
+        client = WikidataClient(test_cache)
+        item = client.fetch_item("Q7747")
+        assert item is not None
+        proxy = candidate_proxy(dataset, item)
+        assert proxy.schema.name == "Person"
+        assert proxy.id == "Q7747"
+        assert "Vladimir Putin" in proxy.get("name")
+        assert proxy.get("birthDate") == ["1952-10-07"]
+        assert proxy.get("gender") == ["male"]
+        # Putin holds both Soviet (historical) and Russian citizenship:
+        assert "ru" in proxy.get("country")
+
+
+def test_reconcile_auto(tmp_path, resolver: Resolver[Entity]):
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-putin", "schema": "Person", '
+        '"properties": {"name": ["Vladimir Putin"], "birthDate": ["1952-10-07"]}}\n'
+        '{"id": "os-nobody", "schema": "Person", '
+        '"properties": {"name": ["Jane Q Nobody"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+
+    cache = Cache.make_default(dataset)
+    with requests_mock.Mocker(real_http=False) as m:
+        # Both persons' searches return Putin's QID; only the real Putin scores.
+        m.register_uri(
+            "GET",
+            WikidataClient.WD_API,
+            json=_wd_dispatch([{"id": "Q7747"}]),
+        )
+        client = WikidataClient(cache)
+        reconcile(
+            resolver, store, client, dataset, EntityResolveRegression, threshold=0.5
+        )
+
+    # The matching person is linked to the QID; the non-matching one is not.
+    assert resolver.get_canonical("os-putin") == "Q7747"
+    assert resolver.get_canonical("os-nobody") == "os-nobody"
+    cache.close()
 
 
 def test_model(test_cache: Cache):
