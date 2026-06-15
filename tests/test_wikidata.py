@@ -127,28 +127,30 @@ def test_search_items(test_cache: Cache):
         assert client.search_items(empty) == []
 
 
-def test_search_items_multi_name(test_cache: Cache):
+def test_search_items_aliases(test_cache: Cache):
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     entity = Entity.from_data(
         dataset,
         {
             "schema": "Person",
             "id": "p3",
-            "properties": {"name": ["Joseph Biden", "Joe Biden"]},
+            "properties": {"name": ["Joe Biden"], "alias": ["Joseph Biden"]},
         },
     )
 
     def by_name(request, context):
         name = request.qs.get("search", [""])[0]
         if "joseph" in name:
-            return {"search": [{"id": "Q6279"}]}
-        return {"search": [{"id": "Q6279"}, {"id": "Q12345"}]}
+            return {"search": [{"id": "Q6279"}, {"id": "Q12345"}]}
+        return {"search": [{"id": "Q6279"}]}
 
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=by_name)
         client = WikidataClient(test_cache)
-        # Both names searched, hits unioned, QIDs de-duplicated, order preserved:
-        assert client.search_items(entity, multi_name=True) == ["Q6279", "Q12345"]
+        # Default: only the name is searched, not the alias.
+        assert client.search_items(entity) == ["Q6279"]
+        # aliases=True also searches the alias; hits unioned, de-duplicated:
+        assert client.search_items(entity, aliases=True) == ["Q6279", "Q12345"]
 
 
 def test_model(test_cache: Cache):

@@ -117,27 +117,24 @@ class WikidataClient(object):
         return SparqlResponse(clean_text, data)
 
     def search_items(
-        self, entity: StatementEntity, multi_name: bool = False
+        self, entity: StatementEntity, aliases: bool = False
     ) -> List[str]:
         """Find Wikidata QIDs that might be the same as an OpenSanctions entity.
 
         Reach for this when reconciling an OS entity against Wikidata: it runs the
-        entity's name(s) through the `wbsearchentities` API and returns candidate
-        QIDs for a downstream matcher to rank. It deliberately returns only QIDs —
-        the caller decides which items to fetch and how to project them — so the
-        client stays decoupled from the matcher's needs.
+        entity's names through the `wbsearchentities` API and returns candidate
+        QIDs for a downstream matcher to rank. It returns only QIDs — the caller
+        decides which items to fetch and how to project them — so the client stays
+        decoupled from the matcher's needs.
 
-        With `multi_name`, every name on the entity is searched and the hits
-        unioned (better recall for transliterated or aliased names, at the cost of
-        more API calls); otherwise only the primary/display name is used.
+        All `name` values are searched. With `aliases`, the search also covers
+        aliases (every matchable name-type value), trading more API calls for
+        better recall on transliterated or aliased names.
         """
-        if multi_name:
+        if aliases:
             names = entity.get_type_values(registry.name, matchable=True)
         else:
-            names = []
-            caption = entity.caption
-            if caption is not None and caption != entity.id:
-                names = [caption]
+            names = entity.get("name", quiet=True)
         qids: List[str] = []
         seen: Set[str] = set()
         for name in names:

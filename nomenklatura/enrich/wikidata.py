@@ -35,7 +35,7 @@ class WikidataEnricher(Enricher[DS]):
     ):
         super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
-        self.multi_names = bool(self.get_config_bool("multi_names", False))
+        self.aliases = bool(self.get_config_bool("aliases", False))
         self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 
     def keep_entity(self, entity: StatementEntity) -> bool:
@@ -58,7 +58,7 @@ class WikidataEnricher(Enricher[DS]):
                     yield proxy
             return
 
-        for qid in self.client.search_items(entity, multi_name=self.multi_names):
+        for qid in self.client.search_items(entity, aliases=self.aliases):
             item = self.client.fetch_item(qid)
             if item is not None:
                 proxy = self.item_proxy(entity, item, schema=entity.schema.name)
