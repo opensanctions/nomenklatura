@@ -7,7 +7,7 @@ from normality import squash_spaces
 from rigour.urls import build_url
 from rigour.util import MEMO_SMALL
 from rigour.ids.wikidata import is_qid
-from followthemoney import StatementEntity
+from followthemoney import StatementEntity, registry
 from followthemoney.settings import USER_AGENT
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
@@ -131,13 +131,13 @@ class WikidataClient(object):
         unioned (better recall for transliterated or aliased names, at the cost of
         more API calls); otherwise only the primary/display name is used.
         """
-        names = entity.get("name", quiet=True)
-        if not multi_name:
+        if multi_name:
+            names = entity.get_type_values(registry.name, matchable=True)
+        else:
+            names = []
             caption = entity.caption
-            if caption is not None and caption in names:
+            if caption is not None and caption != entity.id:
                 names = [caption]
-            elif names:
-                names = [names[0]]
         qids: List[str] = []
         seen: Set[str] = set()
         for name in names:
