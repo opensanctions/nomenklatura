@@ -126,12 +126,12 @@ def xref_file(
     help="Match persons against Wikidata, auto-merging hits above a threshold",
 )
 @click.argument("path", type=InPath)
-@click.option("-t", "--threshold", type=click.FLOAT, default=0.7)
+@click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
 @click.option("--algorithm", default=EntityResolveRegression.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
 def wikidata_reconcile(
     path: Path,
-    threshold: float = 0.7,
+    threshold: float = 0.96,
     algorithm: str = EntityResolveRegression.NAME,
     aliases: bool = False,
 ) -> None:
