@@ -1,5 +1,6 @@
 import logging
-from typing import List, Optional, Set, Tuple, Type
+from dataclasses import dataclass
+from typing import Generic, List, Optional, Set, Tuple, Type
 from followthemoney import Dataset, DS, SE, StatementEntity, registry
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
@@ -134,16 +135,19 @@ def rank_candidates(
     config: ScoringConfig,
     entity: SE,
     aliases: bool = False,
-) -> List[Tuple[Item, float]]:
-    """Search Wikidata for an entity and return its candidate items, best first.
+    limit: int = 10,
+) -> List[Tuple[Item, float, StatementEntity]]:
+    """Search Wikidata for an entity and return its candidates, best first.
 
     Shared by the headless and interactive reconcile paths: it runs the search,
     fetches each hit, projects it with `candidate_proxy`, scores it against the
-    entity, and returns `(item, score)` pairs sorted by descending score. Items
-    that aren't human (no proxy) are dropped.
+    entity, and returns `(item, score, proxy)` triples sorted by descending
+    score. The proxy is returned so callers (the review prep) don't rebuild it.
+    Items that aren't human (no proxy) are dropped. `limit` is the per-name search
+    cap (default 10, a touch above the API's 7, for better reconciliation recall).
     """
-    scored: List[Tuple[Item, float]] = []
-    for qid in client.search_items(entity, aliases=aliases):
+    scored: List[Tuple[Item, float, StatementEntity]] = []
+    for qid in client.search_items(entity, aliases=aliases, limit=limit):
         item = client.fetch_item(qid)
         if item is None:
             continue
@@ -151,9 +155,83 @@ def rank_candidates(
         if candidate is None:
             continue
         score = algorithm.compare(entity, candidate, config).score
-        scored.append((item, score))
-    scored.sort(key=lambda pair: pair[1], reverse=True)
+        scored.append((item, score, candidate))
+    scored.sort(key=lambda triple: triple[1], reverse=True)
     return scored
+
+
+@dataclass
+class ReviewItem(Generic[SE]):
+    """One person and its ranked Wikidata candidates, prepared for review."""
+
+    person: SE
+    candidates: List[Tuple[Item, float, StatementEntity]]
+
+    @property
+    def top_score(self) -> float:
+        """Best candidate score; -inf when there are none, so it sorts last."""
+        return self.candidates[0][1] if self.candidates else float("-inf")
+
+
+def prepare_review(
+    resolver: Resolver[SE],
+    store: Store[DS, SE],
+    client: WikidataClient,
+    dataset: Dataset,
+    algorithm: Type[ScoringAlgorithm],
+    aliases: bool = False,
+    retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
+) -> Tuple[List["ReviewItem[SE]"], List[QSCommand]]:
+    """Fetch and rank every person's candidates up front, before the TUI.
+
+    Reach for this to drive the interactive review without per-screen network
+    stalls: it does all the searching, fetching and scoring here — with normal
+    logging visible — enriches already-linked persons, and returns the review
+    items sorted by descending top-candidate score together with the
+    linked-person enrichment commands. The TUI then runs purely in memory.
+    `source_url` is a fallback citation for entities lacking their own.
+    """
+    config = algorithm.default_config()
+    view = store.default_view()
+    resolver.begin()
+    items: List[ReviewItem[SE]] = []
+    enrich_commands: List[QSCommand] = []
+    seen, linked_count = 0, 0
+    for index, entity in enumerate(view.entities()):
+        if index and index % CACHE_INTERVAL == 0:
+            client.cache.flush()
+        if not entity.schema.is_a("Person") or entity.id is None:
+            continue
+        current = resolver.get_canonical(entity.id)
+        linked = current if is_qid(current) else entity_qid(entity)
+        if linked is not None:
+            item = client.fetch_item(linked)
+            if item is not None:
+                enrich_commands.extend(
+                    propose_enrich(entity, item, retrieved, source_url)
+                )
+            linked_count += 1
+            continue
+        seen += 1
+        candidates: List[Tuple[Item, float, StatementEntity]] = []
+        for cand_item, score, proxy in rank_candidates(
+            client, dataset, algorithm, config, entity, aliases
+        ):
+            if cand_item.id is None:
+                continue
+            # Drop candidates already judged (negative/unsure/positive).
+            if not resolver.check_candidate(entity.id, cand_item.id):
+                continue
+            candidates.append((cand_item, score, proxy))
+        items.append(ReviewItem(entity, candidates))
+        best = " (best %.3f)" % candidates[0][1] if candidates else ""
+        log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)
+    resolver.commit()
+    client.cache.flush()
+    items.sort(key=lambda review: review.top_score, reverse=True)
+    log.info("Prepared %d person(s) for review; %d already linked.", len(items), linked_count)
+    return items, enrich_commands
 
 
 def reconcile(
@@ -166,6 +244,7 @@ def reconcile(
     aliases: bool = False,
     user: Optional[str] = None,
     retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
 ) -> Tuple[List[QSCommand], List[QSCommand]]:
     """Match the persons in a store against Wikidata, auto-merge, and emit QS.
 
@@ -196,11 +275,16 @@ def reconcile(
         if linked is not None:
             item = client.fetch_item(linked)
             if item is not None:
-                enrich_commands.extend(propose_enrich(entity, item, retrieved))
+                enrich_commands.extend(
+                    propose_enrich(entity, item, retrieved, source_url)
+                )
             continue
         seen += 1
         ranked = rank_candidates(client, dataset, algorithm, config, entity, aliases)
-        best_item, best_score = ranked[0] if ranked else (None, 0.0)
+        best_item: Optional[Item] = None
+        best_score = 0.0
+        if ranked:
+            best_item, best_score, _ = ranked[0]
         if (
             best_item is not None
             and best_score > threshold
@@ -217,7 +301,7 @@ def reconcile(
             merged += 1
         else:
             # No acceptable match: propose a new Wikidata item for review.
-            create_commands.extend(propose_create(entity, retrieved))
+            create_commands.extend(propose_create(entity, retrieved, source_url))
     resolver.commit()
     log.info("Reconciled %d of %d unlinked persons to Wikidata.", merged, seen)
     return enrich_commands, create_commands

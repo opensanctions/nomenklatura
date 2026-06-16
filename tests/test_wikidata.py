@@ -142,6 +142,25 @@ def test_search_items(test_cache: Cache):
         assert client.search_items(empty) == []
 
 
+def test_search_items_limit(test_cache: Cache):
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    entity = Entity.from_data(
+        dataset,
+        {"schema": "Person", "id": "p1", "properties": {"name": ["Someone"]}},
+    )
+    seen = {}
+
+    def handler(request, context):
+        seen["limit"] = request.qs.get("limit", [None])[0]
+        return {"search": [{"id": "Q1"}]}
+
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=handler)
+        client = WikidataClient(test_cache)
+        client.search_items(entity, limit=3)
+    assert seen["limit"] == "3"
+
+
 def test_search_items_aliases(test_cache: Cache):
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     entity = Entity.from_data(
@@ -298,10 +317,14 @@ def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity]):
 
 def _reconcile_state(resolver, store, cache):
     from nomenklatura.tui.reconcile import ReconcileState
+    from nomenklatura.wikidata.reconcile import prepare_review
 
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     client = WikidataClient(cache)
-    return ReconcileState(resolver, store, client, dataset, EntityResolveRegression)
+    items, enrich = prepare_review(
+        resolver, store, client, dataset, EntityResolveRegression
+    )
+    return ReconcileState(resolver, store, dataset, items, enrich_commands=enrich)
 
 
 def test_create_preview():

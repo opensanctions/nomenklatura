@@ -1,4 +1,4 @@
-from typing import Generic, List, Optional, Tuple, Type, cast
+from typing import Generic, List, Optional, Tuple, cast
 
 from rich.console import RenderableType
 from rich.text import Text
@@ -8,70 +8,60 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Footer
 
 from followthemoney import DS, SE, Dataset, StatementEntity, registry
-from rigour.ids.wikidata import is_qid
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store
 from nomenklatura.tui.comparison import render_comparison
 from nomenklatura.tui.util import apply_judgement
-from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.propose import propose_create, propose_enrich
-from nomenklatura.wikidata.reconcile import (
-    candidate_proxy,
-    create_preview,
-    rank_candidates,
-)
-from nomenklatura.wikidata.util import entity_qid
+from nomenklatura.wikidata.reconcile import ReviewItem, create_preview
 from nomenklatura.wikidata.write import QSCommand
 
 
 class ReconcileState(Generic[DS, SE]):
-    """Drives the interactive review: which person, which ranked candidates, what's queued.
+    """Drives the interactive review over a precomputed list of ranked candidates.
 
-    Iterates persons in the store, holding the current person's ranked Wikidata
-    candidates in memory. Already-linked persons are enriched silently and
-    skipped. A confirmed candidate records a POSITIVE judgement and queues
-    enrichment; "none of the above" queues item creation; skip does neither. The
-    accumulated `enrich_commands`/`create_commands` are serialized after the app
-    exits.
+    All searching/fetching/scoring happens before the app boots (see
+    `prepare_review`); this state just walks the resulting `ReviewItem`s in
+    memory. A confirmed candidate records a POSITIVE judgement and queues
+    enrichment; "none of the above" queues item creation; no-match/unsure record
+    that judgement and drop the candidate; skip does neither. `enrich_commands`
+    is seeded with the already-linked persons' enrichment and grown by confirms;
+    both command lists are serialized after the app exits.
     """
 
     def __init__(
         self,
         resolver: Resolver[SE],
         store: Store[DS, SE],
-        client: WikidataClient,
         dataset: Dataset,
-        algorithm: Type[ScoringAlgorithm],
-        aliases: bool = False,
+        items: List["ReviewItem[SE]"],
+        enrich_commands: Optional[List[QSCommand]] = None,
         retrieved: Optional[str] = None,
+        source_url: Optional[str] = None,
         user: Optional[str] = None,
         url_base: Optional[str] = None,
     ) -> None:
         self.resolver = resolver
         self.store = store
-        self.client = client
         self.dataset = dataset
-        self.algorithm = algorithm
-        self.config = algorithm.default_config()
-        self.aliases = aliases
         self.retrieved = retrieved
+        self.source_url = source_url
         self.user = user
         self.url_base = url_base
         self.view = store.default_view()
         self.latinize = False
-        self._iter = self.view.entities()
+        self.items = items
+        self._index = -1
         self.person: Optional[SE] = None
         # Ranked candidates for the current person: (item, score, display proxy).
-        # The proxy is always a StatementEntity (built by candidate_proxy), distinct
-        # from the store's SE type.
         self.candidates: List[Tuple[Item, float, StatementEntity]] = []
         # Index into candidates; == len(candidates) means the "none of the above" row.
         self.highlight = 0
-        self.enrich_commands: List[QSCommand] = []
+        # Seeded with enrichment for already-linked persons; confirms add more.
+        self.enrich_commands: List[QSCommand] = list(enrich_commands or [])
         self.create_commands: List[QSCommand] = []
 
     @property
@@ -84,41 +74,24 @@ class ReconcileState(Generic[DS, SE]):
         return self.load()
 
     def load(self) -> bool:
-        """Advance to the next unlinked person, ranking its candidates.
-
-        Returns False when the person stream is exhausted. Already-linked persons
-        are enriched here and skipped over — they need no decision.
-        """
+        """Advance to the next prepared person. Returns False when exhausted."""
         self.person = None
         self.candidates = []
         self.highlight = 0
-        for entity in self._iter:
-            if not entity.schema.is_a("Person") or entity.id is None:
+        while self._index + 1 < len(self.items):
+            self._index += 1
+            item = self.items[self._index]
+            if item.person.id is None:
                 continue
-            current = self.resolver.get_canonical(entity.id)
-            linked = current if is_qid(current) else entity_qid(entity)
-            if linked is not None:
-                item = self.client.fetch_item(linked)
-                if item is not None:
-                    self.enrich_commands.extend(
-                        propose_enrich(entity, item, self.retrieved)
-                    )
-                continue
-            ranked = rank_candidates(
-                self.client, self.dataset, self.algorithm, self.config, entity, self.aliases
-            )
-            candidates: List[Tuple[Item, float, StatementEntity]] = []
-            for item, score in ranked:
-                if item.id is None:
-                    continue
-                # Skip candidates already judged (negative/unsure/positive) — a
-                # past decision means "don't suggest this pair again".
-                if not self.resolver.check_candidate(entity.id, item.id):
-                    continue
-                proxy = candidate_proxy(self.dataset, item)
-                if proxy is not None:
-                    candidates.append((item, score, proxy))
-            self.person = entity
+            # Re-check against live resolver state: a QID matched earlier this
+            # session may no longer be an eligible candidate.
+            candidates = [
+                candidate
+                for candidate in item.candidates
+                if candidate[0].id is not None
+                and self.resolver.check_candidate(item.person.id, candidate[0].id)
+            ]
+            self.person = item.person
             self.candidates = candidates
             return True
         return False
@@ -127,7 +100,9 @@ class ReconcileState(Generic[DS, SE]):
         if self.person is None or self.person.id is None:
             return
         if self.at_create:
-            self.create_commands.extend(propose_create(self.person, self.retrieved))
+            self.create_commands.extend(
+                propose_create(self.person, self.retrieved, self.source_url)
+            )
         else:
             item = self.candidates[self.highlight][0]
             if item.id is not None and self.resolver.check_candidate(
@@ -137,7 +112,7 @@ class ReconcileState(Generic[DS, SE]):
                     self.resolver, self.store, self.person.id, item.id, Judgement.POSITIVE
                 )
                 self.enrich_commands.extend(
-                    propose_enrich(self.person, item, self.retrieved)
+                    propose_enrich(self.person, item, self.retrieved, self.source_url)
                 )
                 # apply_judgement committed the transaction; reopen for the next read.
                 self.resolver.begin()

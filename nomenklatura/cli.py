@@ -131,6 +131,12 @@ def xref_file(
 @click.option("--algorithm", default=EntityResolveRegression.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
 @click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
+@click.option(
+    "--source-url",
+    type=str,
+    default=None,
+    help="Fallback QS reference URL for entities without a sourceUrl",
+)
 @click.option("--review", is_flag=True, default=False, help="Confirm matches in a TUI")
 def wikidata_reconcile(
     path: Path,
@@ -138,6 +144,7 @@ def wikidata_reconcile(
     algorithm: str = EntityResolveRegression.NAME,
     aliases: bool = False,
     retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
     review: bool = False,
 ) -> None:
     resolver = Resolver[Entity].make_default()
@@ -159,6 +166,7 @@ def wikidata_reconcile(
                 algorithm_type,
                 aliases=aliases,
                 retrieved=retrieved,
+                source_url=source_url,
             )
         else:
             enrich_commands, create_commands = run_reconcile(
@@ -170,6 +178,7 @@ def wikidata_reconcile(
                 threshold,
                 aliases=aliases,
                 retrieved=retrieved,
+                source_url=source_url,
             )
     finally:
         # Persist cached API responses even if the run is cancelled or errors.

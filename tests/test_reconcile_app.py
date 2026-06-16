@@ -13,6 +13,7 @@ from nomenklatura.tui.reconcile import (
     ReconcileApp,
     ReconcileState,
 )
+from nomenklatura.wikidata.reconcile import prepare_review
 
 from .conftest import wd_read_response
 
@@ -42,9 +43,12 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
         )
         client = WikidataClient(cache)
+        items, enrich = prepare_review(
+            resolver, store, client, dataset, EntityResolveRegression
+        )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, store, dataset, items, enrich_commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -76,9 +80,12 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
         )
         client = WikidataClient(cache)
+        items, enrich = prepare_review(
+            resolver, store, client, dataset, EntityResolveRegression
+        )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, store, dataset, items, enrich_commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -105,9 +112,12 @@ async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity])
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=_dispatch([]))
         client = WikidataClient(cache)
+        items, enrich = prepare_review(
+            resolver, store, client, dataset, EntityResolveRegression
+        )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, store, dataset, items, enrich_commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile

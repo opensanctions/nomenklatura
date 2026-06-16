@@ -9,6 +9,7 @@ from nomenklatura.tui.reconcile import ReconcileApp, ReconcileState
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.resolver import Resolver
 from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.reconcile import prepare_review
 from nomenklatura.wikidata.write import QSCommand
 
 __all__ = ["dedupe_ui", "reconcile_ui"]
@@ -30,17 +31,20 @@ def reconcile_ui(
     algorithm: Type[ScoringAlgorithm],
     aliases: bool = False,
     retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
     user: Optional[str] = None,
     url_base: Optional[str] = None,
 ) -> Tuple[List[QSCommand], List[QSCommand]]:
     """Run the interactive Wikidata reconciliation UI; return the queued QS commands.
 
-    Presents each unlinked person against its ranked Wikidata candidates for a
-    human decision (confirm / create / skip) and returns the accumulated
-    `(enrich_commands, create_commands)` for the caller to serialize.
+    All candidates are fetched, scored and sorted up front (with logging
+    visible), then each unlinked person is presented against its ranked Wikidata
+    candidates for a human decision (confirm / no-match / unsure / create / skip).
+    Returns the accumulated `(enrich_commands, create_commands)` for the caller
+    to serialize.
     """
-    app = ReconcileApp[DS, SE]()
-    app.reconcile = ReconcileState(
+    # Fetch and rank everything before the TUI boots, with logging on screen.
+    items, enrich_commands = prepare_review(
         resolver,
         store,
         client,
@@ -48,6 +52,17 @@ def reconcile_ui(
         algorithm,
         aliases=aliases,
         retrieved=retrieved,
+        source_url=source_url,
+    )
+    app = ReconcileApp[DS, SE]()
+    app.reconcile = ReconcileState(
+        resolver,
+        store,
+        dataset,
+        items,
+        enrich_commands=enrich_commands,
+        retrieved=retrieved,
+        source_url=source_url,
         user=user,
         url_base=url_base,
     )
