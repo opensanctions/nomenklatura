@@ -120,7 +120,7 @@ class WikidataClient(object):
         return SparqlResponse(clean_text, data)
 
     def search_items(
-        self, entity: StatementEntity, aliases: bool = False
+        self, entity: StatementEntity, aliases: bool = False, limit: int = 7
     ) -> List[str]:
         """Find Wikidata QIDs that might be the same as an OpenSanctions entity.
 
@@ -132,7 +132,9 @@ class WikidataClient(object):
 
         All `name` values are searched. With `aliases`, the search also covers
         aliases (every matchable name-type value), trading more API calls for
-        better recall on transliterated or aliased names.
+        better recall on transliterated or aliased names. `limit` is the per-name
+        result cap (the `wbsearchentities` default is 7, max 50); raise it for
+        better recall on common names.
         """
         if aliases:
             names = entity.get_type_values(registry.name, matchable=True)
@@ -141,13 +143,13 @@ class WikidataClient(object):
         qids: List[str] = []
         seen: Set[str] = set()
         for name in names:
-            for qid in self._search_name(name):
+            for qid in self._search_name(name, limit=limit):
                 if qid not in seen:
                     seen.add(qid)
                     qids.append(qid)
         return qids
 
-    def _search_name(self, name: str) -> List[str]:
+    def _search_name(self, name: str, limit: int = 7) -> List[str]:
         if not name.strip():
             return []
         params = {
@@ -156,6 +158,7 @@ class WikidataClient(object):
             "type": "item",
             "language": "en",
             "strictlanguage": "false",
+            "limit": str(limit),
             "search": name,
         }
         url = build_url(self.WD_API, params=params)
