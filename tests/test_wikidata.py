@@ -244,6 +244,57 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity]):
     cache.close()
 
 
+def test_entity_qid():
+    from nomenklatura.wikidata.util import entity_qid
+
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    # A Wikidata-sourced entity carries the QID as its own id:
+    by_id = Entity.from_data(dataset, {"schema": "Person", "id": "Q7747"})
+    assert entity_qid(by_id) == "Q7747"
+
+    # A cross-referenced entity carries it in the wikidataId property:
+    by_prop = Entity.from_data(
+        dataset,
+        {"schema": "Person", "id": "os-1", "properties": {"wikidataId": ["Q42"]}},
+    )
+    assert entity_qid(by_prop) == "Q42"
+
+    # The id wins over the property when both are present:
+    both = Entity.from_data(
+        dataset,
+        {"schema": "Person", "id": "Q7747", "properties": {"wikidataId": ["Q42"]}},
+    )
+    assert entity_qid(both) == "Q7747"
+
+    # An unlinked reconciliation candidate has neither:
+    none = Entity.from_data(dataset, {"schema": "Person", "id": "os-2"})
+    assert entity_qid(none) is None
+
+
+def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity]):
+    # A person already linked via the wikidataId property is enriched, not
+    # re-searched or proposed for creation.
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-putin", "schema": "Person", "properties": '
+        '{"name": ["Vladimir Putin"], "wikidataId": ["Q7747"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    cache = Cache.make_default(dataset)
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
+        client = WikidataClient(cache)
+        enrich_commands, create_commands = reconcile(
+            resolver, store, client, dataset, EntityResolveRegression, threshold=0.5
+        )
+    # No CREATE for a linked entity; enrichment was attempted against Q7747.
+    assert create_commands == []
+    assert isinstance(enrich_commands, list)
+    cache.close()
+
+
 def test_model(test_cache: Cache):
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(

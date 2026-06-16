@@ -1,14 +1,34 @@
 from functools import partial
+from typing import Optional
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+from followthemoney import StatementEntity
 from followthemoney.settings import USER_AGENT
+from rigour.ids.wikidata import is_qid
 
 # Retry on server errors plus the rate-limit / Retry-After statuses (429, 503).
 # urllib3 honours the Retry-After header for these by default, which is how we
 # back off cleanly when Wikidata throttles us.
 RETRY_STATUSES = [500, 502, 504] + list(Retry.RETRY_AFTER_STATUS_CODES)
 HTTP_TIMEOUT = 90
+
+
+def entity_qid(entity: StatementEntity) -> Optional[str]:
+    """Return the Wikidata QID an entity is already linked to, if any.
+
+    Reach for this before searching Wikidata for a person: an entity may carry
+    its QID either as its own id (Wikidata-sourced entities) or in a
+    `wikidataId` property (cross-referenced ones). The id wins — it's the
+    stronger assertion — and we fall back to the property. Returns None when the
+    entity isn't linked yet, i.e. it's a reconciliation candidate.
+    """
+    if entity.id is not None and is_qid(entity.id):
+        return entity.id
+    for value in entity.get("wikidataId", quiet=True):
+        if is_qid(value):
+            return value
+    return None
 
 
 def make_session(

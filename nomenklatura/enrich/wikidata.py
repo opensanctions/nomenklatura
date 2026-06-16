@@ -4,12 +4,12 @@ from typing import Generator, Optional, Set
 from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.helpers import check_person_cutoff
 from requests import Session
-from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Claim, Item
 from nomenklatura.wikidata.props import (
@@ -87,12 +87,7 @@ class WikidataEnricher(Enricher[DS]):
         yield from self.item_graph(proxy, item)
 
     def get_wikidata_id(self, entity: StatementEntity) -> Optional[str]:
-        if entity.id is not None and is_qid(entity.id):
-            return str(entity.id)
-        for value in entity.get("wikidataId", quiet=True):
-            if is_qid(value):
-                return value
-        return None
+        return entity_qid(entity)
 
     def make_link(
         self,

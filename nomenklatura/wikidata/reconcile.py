@@ -10,6 +10,7 @@ from nomenklatura.store import Store
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.model import Item
+from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.propose import propose_create, propose_enrich
 from nomenklatura.wikidata.write import QSCommand
 
@@ -88,9 +89,11 @@ def reconcile(
         if not entity.schema.is_a("Person") or entity.id is None:
             continue
         current = resolver.get_canonical(entity.id)
-        if is_qid(current):
-            # Already linked to a Wikidata item on an earlier pass: enrich it.
-            item = client.fetch_item(current)
+        # Linked either by a resolver merge (canonical is a QID) or by the entity
+        # carrying its own QID (id or wikidataId property): enrich, don't search.
+        linked = current if is_qid(current) else entity_qid(entity)
+        if linked is not None:
+            item = client.fetch_item(linked)
             if item is not None:
                 enrich_commands.extend(propose_enrich(entity, item, retrieved))
             continue
