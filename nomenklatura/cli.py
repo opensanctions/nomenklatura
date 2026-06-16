@@ -147,16 +147,20 @@ def wikidata_reconcile(
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     cache = Cache.make_default(dataset)
     client = WikidataClient(cache)
-    enrich_commands, create_commands = run_reconcile(
-        resolver,
-        store,
-        client,
-        dataset,
-        algorithm_type,
-        threshold,
-        aliases=aliases,
-        retrieved=retrieved,
-    )
+    try:
+        enrich_commands, create_commands = run_reconcile(
+            resolver,
+            store,
+            client,
+            dataset,
+            algorithm_type,
+            threshold,
+            aliases=aliases,
+            retrieved=retrieved,
+        )
+    finally:
+        # Persist cached API responses even if the run is cancelled or errors.
+        cache.close()
     resolver.commit()
     # QS batches sit next to the input file: entities.ijson.{enrich,create}.qs
     _write_qs(path.with_name(path.name + ".enrich.qs"), enrich_commands)

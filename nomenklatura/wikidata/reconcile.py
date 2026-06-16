@@ -18,6 +18,11 @@ log = logging.getLogger(__name__)
 # Wikidata sex-or-gender (P21) items mapped to FtM gender values.
 GENDERS = {"Q6581097": "male", "Q6581072": "female"}
 
+# How often to commit the API-response cache. Each person triggers several
+# (slow) Wikidata calls, so a long run that's cancelled would otherwise lose
+# every cached response; flushing periodically keeps the work that's done.
+CACHE_INTERVAL = 10
+
 
 def candidate_proxy(dataset: Dataset, item: Item) -> StatementEntity:
     """Project a Wikidata item into a minimal Person proxy for matching.
@@ -77,7 +82,9 @@ def reconcile(
     enrich_commands: List[QSCommand] = []
     create_commands: List[QSCommand] = []
     seen, merged = 0, 0
-    for entity in view.entities():
+    for index, entity in enumerate(view.entities()):
+        if index and index % CACHE_INTERVAL == 0:
+            client.cache.flush()
         if not entity.schema.is_a("Person") or entity.id is None:
             continue
         current = resolver.get_canonical(entity.id)
