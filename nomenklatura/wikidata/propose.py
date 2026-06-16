@@ -74,19 +74,26 @@ def _wd_lang(lang: Optional[str]) -> str:
     return iso_639_alpha2(lang) or MULTI_LANG
 
 
-def _references(entity: StatementEntity, retrieved: Optional[str]) -> List[Snak]:
+def _references(
+    entity: StatementEntity,
+    retrieved: Optional[str],
+    source_url: Optional[str] = None,
+) -> List[Snak]:
     """Build the citation snaks for statements derived from this entity.
 
-    Uses the entity's first `sourceUrl` as `S854` and the optional process-wide
-    `retrieved` date as `S813`. Sourcing is best-effort: an entity with no
-    `sourceUrl` still produces commands, but unsourced — we warn rather than
-    drop them, since the operator reviews the batch before it runs.
+    Uses the entity's first `sourceUrl` as `S854`, falling back to `source_url`
+    (e.g. the dataset's URL when running inside zavod) when the entity carries
+    none, plus the optional process-wide `retrieved` date as `S813`. Sourcing is
+    best-effort: with no URL at all, an entity still produces commands, but
+    unsourced — we warn rather than drop them, since the operator reviews the
+    batch before it runs.
     """
     urls = entity.get("sourceUrl", quiet=True)
-    if not urls:
+    url = urls[0] if urls else source_url
+    if url is None:
         log.warning("No sourceUrl on %s; emitting unsourced QuickStatements", entity.id)
         return []
-    return url_reference(urls[0], retrieved=retrieved)
+    return url_reference(url, retrieved=retrieved)
 
 
 def _name_statements(entity: StatementEntity) -> List[Tuple[str, str]]:
@@ -163,6 +170,7 @@ def propose_enrich(
     entity: StatementEntity,
     item: Item,
     retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
 ) -> List[QSCommand]:
     """Diff an OS person against a matched Wikidata item into enrichment commands.
 
@@ -170,11 +178,12 @@ def propose_enrich(
     only for what Wikidata is missing — never a label (which QS would overwrite)
     and never a competing single value. Missing names land as aliases (`Axx`,
     append-only); P31/P569/P21/P27 are added only when absent. The result targets
-    the item's QID and is safe to run as-is.
+    the item's QID and is safe to run as-is. `source_url` is a fallback citation
+    for entities that carry no `sourceUrl` of their own.
     """
     target = item.id
     known = _known_from_item(item)
-    references = _references(entity, retrieved)
+    references = _references(entity, retrieved, source_url)
     cmds: List[QSCommand] = []
     for text, lang in _name_statements(entity):
         if text.casefold() in known.name_texts:
@@ -187,6 +196,7 @@ def propose_enrich(
 def propose_create(
     entity: StatementEntity,
     retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
 ) -> List[QSCommand]:
     """Compose `CREATE` commands for an OS person with no acceptable Wikidata match.
 
@@ -194,9 +204,10 @@ def propose_create(
     item with the person's primary name as the label, the remaining names as
     aliases, and the same sourced property set as enrichment. QuickStatements
     assigns the new QID asynchronously, so the entity↔QID link is recaptured on a
-    later reconciliation pass — there is nothing to read back here.
+    later reconciliation pass — there is nothing to read back here. `source_url`
+    is a fallback citation for entities that carry no `sourceUrl` of their own.
     """
-    references = _references(entity, retrieved)
+    references = _references(entity, retrieved, source_url)
     cmds: List[QSCommand] = [CreateItem()]
     names = _name_statements(entity)
     if not names:

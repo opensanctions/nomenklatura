@@ -138,6 +138,31 @@ def test_propose_unsourced_still_emits(caplog):
     assert "No sourceUrl" in caplog.text
 
 
+def test_propose_source_url_fallback():
+    # An entity without its own sourceUrl uses the passed fallback (e.g. dataset
+    # URL under zavod).
+    entity = Entity.from_data(DATASET, {"schema": "Person", "id": "os-x"})
+    entity.add("name", "Sam Doe")
+    entity.add("birthDate", "1950-01-01")
+    commands = propose_enrich(entity, _empty_item(), source_url="https://os.org/ds")
+    p569 = _statement(commands, "P569")
+    assert p569 is not None
+    assert p569.references[0][0] == "S854"
+    assert p569.references[0][1].render() == '"https://os.org/ds"'
+
+
+def test_propose_source_url_prefers_entity():
+    # The entity's own sourceUrl wins over the fallback.
+    entity = Entity.from_data(DATASET, {"schema": "Person", "id": "os-x"})
+    entity.add("name", "Sam Doe")
+    entity.add("birthDate", "1950-01-01")
+    entity.add("sourceUrl", "https://entity.example/own")
+    commands = propose_enrich(entity, _empty_item(), source_url="https://os.org/ds")
+    p569 = _statement(commands, "P569")
+    assert p569 is not None
+    assert p569.references[0][1].render() == '"https://entity.example/own"'
+
+
 def test_serialize_create_roundtrip():
     # The composed batch renders to valid tab-separated V1 lines.
     commands = propose_create(_person(), retrieved="2026-06-14")
