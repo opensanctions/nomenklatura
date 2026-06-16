@@ -228,13 +228,19 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity]):
             json=_wd_dispatch([{"id": "Q7747"}]),
         )
         client = WikidataClient(cache)
-        reconcile(
+        enrich_commands, create_commands = reconcile(
             resolver, store, client, dataset, EntityResolveRegression, threshold=0.5
         )
 
     # The matching person is linked to the QID; the non-matching one is not.
     assert resolver.get_canonical("os-putin") == "Q7747"
     assert resolver.get_canonical("os-nobody") == "os-nobody"
+
+    # The unmatched person yields a CREATE batch; both lists are returned.
+    from nomenklatura.wikidata.write import CreateItem
+
+    assert isinstance(enrich_commands, list)
+    assert any(isinstance(c, CreateItem) for c in create_commands)
     cache.close()
 
 

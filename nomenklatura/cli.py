@@ -23,6 +23,7 @@ from nomenklatura.tui import dedupe_ui
 from nomenklatura.matching.bench import bench_matcher
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import reconcile as run_reconcile
+from nomenklatura.wikidata.write import QSCommand, serialize
 
 INDEX_SEGMENT = "xref-index"
 
@@ -129,11 +130,13 @@ def xref_file(
 @click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
 @click.option("--algorithm", default=EntityResolveRegression.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
+@click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
 def wikidata_reconcile(
     path: Path,
     threshold: float = 0.96,
     algorithm: str = EntityResolveRegression.NAME,
     aliases: bool = False,
+    retrieved: Optional[str] = None,
 ) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
@@ -144,7 +147,7 @@ def wikidata_reconcile(
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     cache = Cache.make_default(dataset)
     client = WikidataClient(cache)
-    run_reconcile(
+    enrich_commands, create_commands = run_reconcile(
         resolver,
         store,
         client,
@@ -152,9 +155,21 @@ def wikidata_reconcile(
         algorithm_type,
         threshold,
         aliases=aliases,
+        retrieved=retrieved,
     )
     resolver.commit()
+    # QS batches sit next to the input file: entities.ijson.{enrich,create}.qs
+    _write_qs(path.with_name(path.name + ".enrich.qs"), enrich_commands)
+    _write_qs(path.with_name(path.name + ".create.qs"), create_commands)
     log.info("Reconcile complete in: %r", resolver)
+
+
+def _write_qs(path: Path, commands: list[QSCommand]) -> None:
+    text = serialize(commands)
+    if len(text):
+        text += "\n"
+    path.write_text(text)
+    log.info("Wrote %d QuickStatements commands: %s", len(commands), path)
 
 
 @cli.command("prune", help="Remove dedupe candidates")

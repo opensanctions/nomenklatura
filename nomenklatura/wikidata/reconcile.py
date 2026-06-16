@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Type
+from typing import List, Optional, Tuple, Type
 from followthemoney import Dataset, DS, SE, StatementEntity
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
@@ -10,6 +10,8 @@ from nomenklatura.store import Store
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.model import Item
+from nomenklatura.wikidata.propose import propose_create, propose_enrich
+from nomenklatura.wikidata.write import QSCommand
 
 log = logging.getLogger(__name__)
 
@@ -56,47 +58,65 @@ def reconcile(
     threshold: float,
     aliases: bool = False,
     user: Optional[str] = None,
-) -> None:
-    """Match the persons in a store against Wikidata and auto-merge confident hits.
+    retrieved: Optional[str] = None,
+) -> Tuple[List[QSCommand], List[QSCommand]]:
+    """Match the persons in a store against Wikidata, auto-merge, and emit QS.
 
-    For each person not already linked to a QID, search Wikidata for candidates,
-    score each with the given algorithm, and — if the best score clears the
-    threshold — record a POSITIVE resolver judgement linking the entity to that
-    QID. This is the headless half of the reconcile tool: no UI, no human review,
-    just the xref-style auto-merge applied to Wikidata search hits.
+    For each person: those already linked to a QID are diffed against their
+    Wikidata item into enrichment commands; those matched above the threshold are
+    recorded as POSITIVE judgements but *not* enriched (an auto-merge is a guess,
+    and we only push edits from links we already trust — they enrich on a later
+    pass once linked); those with no acceptable match become item-creation
+    commands. Returns `(enrich_commands, create_commands)` for the caller to
+    serialize into the two QuickStatements batches. This is the headless half of
+    the reconcile tool: no UI, just xref-style auto-merge plus reviewable QS.
     """
     config = algorithm.default_config()
     view = store.default_view()
     resolver.begin()
+    enrich_commands: List[QSCommand] = []
+    create_commands: List[QSCommand] = []
     seen, merged = 0, 0
     for entity in view.entities():
         if not entity.schema.is_a("Person") or entity.id is None:
             continue
         current = resolver.get_canonical(entity.id)
         if is_qid(current):
-            # Already linked to a Wikidata item on an earlier pass.
+            # Already linked to a Wikidata item on an earlier pass: enrich it.
+            item = client.fetch_item(current)
+            if item is not None:
+                enrich_commands.extend(propose_enrich(entity, item, retrieved))
             continue
         seen += 1
-        best_qid: Optional[str] = None
+        best_item: Optional[Item] = None
         best_score = 0.0
         for qid in client.search_items(entity, aliases=aliases):
             item = client.fetch_item(qid)
             if item is None:
                 continue
+            log.info("Comparing %s to %s (%s)", entity.id, item.id, item.label)
             candidate = candidate_proxy(dataset, item)
             score = algorithm.compare(entity, candidate, config).score
             if score > best_score:
                 best_score = score
-                best_qid = item.id
-        if best_qid is None or best_score <= threshold:
-            continue
-        if not resolver.check_candidate(current, best_qid):
-            continue
-        log.info("Auto-merge [%.3f]: %s <> %s", best_score, entity.id, best_qid)
-        canonical = resolver.decide(
-            entity.id, best_qid, Judgement.POSITIVE, user=user, score=best_score
-        )
-        store.update(canonical.id)
-        merged += 1
+                best_item = item
+        if (
+            best_item is not None
+            and best_score > threshold
+            and resolver.check_candidate(current, best_item.id)
+        ):
+            # Record the link, but don't enrich off it: an auto-merge is an
+            # unconfirmed guess, and we only push Wikidata edits from links we
+            # already trust. It gets enriched on a later pass as "already linked".
+            log.info("Auto-merge [%.3f]: %s <> %s", best_score, entity.id, best_item.id)
+            canonical = resolver.decide(
+                entity.id, best_item.id, Judgement.POSITIVE, user=user, score=best_score
+            )
+            store.update(canonical.id)
+            merged += 1
+        else:
+            # No acceptable match: propose a new Wikidata item for review.
+            create_commands.extend(propose_create(entity, retrieved))
     resolver.commit()
     log.info("Reconciled %d of %d unlinked persons to Wikidata.", merged, seen)
+    return enrich_commands, create_commands
