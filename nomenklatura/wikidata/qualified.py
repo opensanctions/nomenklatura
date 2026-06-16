@@ -1,31 +1,8 @@
 from typing import Set
-from followthemoney.helpers import dates_years
+from followthemoney.helpers import post_summary
 
 from nomenklatura.wikidata.model import Claim
 from nomenklatura.wikidata.lang import LangText
-
-
-def post_summary(
-    position: LangText,
-    start_dates: Set[str],
-    end_dates: Set[str],
-    dates: Set[str],
-) -> LangText:
-    """Make a string summary for a Post object."""
-    start = min(dates_years(start_dates), default="")
-    end = min(dates_years(end_dates), default="")
-    date_range = None
-    if len(start) or len(end):
-        date_range = f"{start}-{end}"
-    dates_ = dates_years(dates)
-    if date_range is None and len(dates_):
-        date_range = ", ".join(sorted(dates_))
-
-    label = position.text
-    if date_range:
-        label = f"{label} ({date_range})"
-    original = position.text or position.original
-    return LangText(label, position.lang, original=original)
 
 
 def qualify_value(value: LangText, claim: Claim) -> LangText:
@@ -48,4 +25,6 @@ def qualify_value(value: LangText, claim: Claim) -> LangText:
         if qual.text.text is not None:
             dates.add(qual.text.text)
 
-    return post_summary(value, starts, ends, dates)
+    label = post_summary(value.text, None, starts, ends, dates)
+    original = value.text or value.original
+    return LangText(label, value.lang, original=original)
