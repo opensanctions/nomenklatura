@@ -51,12 +51,15 @@ def render_comparison(
     score: float,
     latinize: bool = False,
     url_base: Optional[str] = None,
+    score_label: Optional[str] = None,
 ) -> Union[Table, Text]:
     if left is None or right is None:
         return Text("No candidates loaded.", justify="center")
 
     table = Table(expand=True)
-    score_text = "Score: %.3f" % score
+    # `score_label` overrides the score header — used to title a preview column
+    # (e.g. the "create a new item" view) where a numeric score is meaningless.
+    score_text = score_label if score_label is not None else "Score: %.3f" % score
     table.add_column(score_text, justify="right", no_wrap=True, ratio=2)
     table.add_column(render_column(left), ratio=5)
     table.add_column(render_column(right), ratio=5)

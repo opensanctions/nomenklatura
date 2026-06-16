@@ -1,5 +1,9 @@
 from typing import Generator, Tuple
-from followthemoney import registry, Property, SE
+from followthemoney import DS, registry, Property, SE
+
+from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import Store
 
 TYPE_ORDER = {
     registry.name: -6,
@@ -9,6 +13,26 @@ TYPE_ORDER = {
     registry.string: -1,
     registry.text: 3,
 }
+
+
+def apply_judgement(
+    resolver: Resolver[SE],
+    store: Store[DS, SE],
+    left_id: str,
+    right_id: str,
+    judgement: Judgement,
+) -> str:
+    """Record a judgement between two entity ids and reflect it in the store.
+
+    The `decide → store.update → commit` triad is easy to get wrong (the store
+    must be re-keyed to the new canonical id, and the order matters), so both the
+    dedupe and reconcile UIs route through here. Returns the canonical id the two
+    entities now share.
+    """
+    canonical = resolver.decide(left_id, right_id, judgement=judgement)
+    store.update(canonical.id)
+    resolver.commit()
+    return canonical.id
 
 
 def comparison_props(left: SE, right: SE) -> Generator[Property, None, None]:

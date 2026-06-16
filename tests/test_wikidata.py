@@ -198,13 +198,14 @@ def test_candidate_proxy(test_cache: Cache):
         item = client.fetch_item("Q7747")
         assert item is not None
         proxy = candidate_proxy(dataset, item)
+        assert proxy is not None
         assert proxy.schema.name == "Person"
         assert proxy.id == "Q7747"
         assert "Vladimir Putin" in proxy.get("name")
         assert proxy.get("birthDate") == ["1952-10-07"]
         assert proxy.get("gender") == ["male"]
-        # Putin holds both Soviet (historical) and Russian citizenship:
-        assert "ru" in proxy.get("country")
+        # P27 maps to citizenship; Putin holds Soviet (historical) + Russian:
+        assert "ru" in proxy.get("citizenship")
 
 
 def test_reconcile_auto(tmp_path, resolver: Resolver[Entity]):
@@ -292,6 +293,112 @@ def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity]):
     # No CREATE for a linked entity; enrichment was attempted against Q7747.
     assert create_commands == []
     assert isinstance(enrich_commands, list)
+    cache.close()
+
+
+def _reconcile_state(resolver, store, cache):
+    from nomenklatura.tui.reconcile import ReconcileState
+
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    client = WikidataClient(cache)
+    return ReconcileState(resolver, store, client, dataset, EntityResolveRegression)
+
+
+def test_create_preview():
+    from nomenklatura.wikidata.reconcile import create_preview
+
+    dataset = Dataset.make({"name": "wikidata"})
+    person = Entity.from_data(dataset, {"schema": "Person", "id": "os-x"})
+    person.add("name", "Jane Doe")
+    person.add("birthDate", "1970-01-01")
+    # A placeholder stub, not a projection of the person's values.
+    preview = create_preview(dataset, person)
+    assert preview.get("name") == ["[NEW ITEM]"]
+    assert preview.get("birthDate") == []
+
+
+def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity]):
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-putin", "schema": "Person", "properties": '
+        '{"name": ["Vladimir Putin"], "birthDate": ["1952-10-07"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=_wd_dispatch([{"id": "Q7747"}]))
+        state = _reconcile_state(resolver, store, cache)
+        assert state.start() is True
+        assert state.person is not None
+        assert state.candidates[0][0].id == "Q7747"
+        # Highlight the top candidate and confirm the match.
+        state.highlight = 0
+        state.confirm()
+    assert resolver.get_canonical("os-putin") == "Q7747"
+    cache.close()
+
+
+def test_reconcile_state_create(tmp_path, resolver: Resolver[Entity]):
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-nobody", "schema": "Person", '
+        '"properties": {"name": ["Jane Q Nobody"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+    with requests_mock.Mocker(real_http=False) as m:
+        # No search hits: the only row is "None of the above".
+        m.register_uri("GET", WikidataClient.WD_API, json=_wd_dispatch([]))
+        state = _reconcile_state(resolver, store, cache)
+        assert state.start() is True
+        assert state.candidates == []
+        assert state.at_create is True
+        state.confirm()
+    from nomenklatura.wikidata.write import CreateItem
+
+    assert any(isinstance(c, CreateItem) for c in state.create_commands)
+    assert resolver.get_canonical("os-nobody") == "os-nobody"
+    cache.close()
+
+
+def test_reconcile_state_skip(tmp_path, resolver: Resolver[Entity]):
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-nobody", "schema": "Person", '
+        '"properties": {"name": ["Jane Q Nobody"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=_wd_dispatch([]))
+        state = _reconcile_state(resolver, store, cache)
+        assert state.start() is True
+        state.skip()
+    assert state.enrich_commands == []
+    assert state.create_commands == []
+    assert resolver.get_canonical("os-nobody") == "os-nobody"
+    cache.close()
+
+
+def test_reconcile_state_linked_skipped(tmp_path, resolver: Resolver[Entity]):
+    # A person already linked via wikidataId is enriched silently, gets no screen.
+    path = tmp_path / "entities.ijson"
+    path.write_text(
+        '{"id": "os-putin", "schema": "Person", "properties": '
+        '{"name": ["Vladimir Putin"], "wikidataId": ["Q7747"]}}\n'
+    )
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
+        state = _reconcile_state(resolver, store, cache)
+        # No reviewable person; the linked one was enriched during load.
+        assert state.start() is False
+        assert state.person is None
     cache.close()
 
 

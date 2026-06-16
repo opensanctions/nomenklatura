@@ -19,7 +19,7 @@ from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
 from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.xref import xref as run_xref
-from nomenklatura.tui import dedupe_ui
+from nomenklatura.tui import dedupe_ui, reconcile_ui
 from nomenklatura.matching.bench import bench_matcher
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import reconcile as run_reconcile
@@ -131,12 +131,14 @@ def xref_file(
 @click.option("--algorithm", default=EntityResolveRegression.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
 @click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
+@click.option("--review", is_flag=True, default=False, help="Confirm matches in a TUI")
 def wikidata_reconcile(
     path: Path,
     threshold: float = 0.96,
     algorithm: str = EntityResolveRegression.NAME,
     aliases: bool = False,
     retrieved: Optional[str] = None,
+    review: bool = False,
 ) -> None:
     resolver = Resolver[Entity].make_default()
     resolver.begin()
@@ -148,16 +150,27 @@ def wikidata_reconcile(
     cache = Cache.make_default(dataset)
     client = WikidataClient(cache)
     try:
-        enrich_commands, create_commands = run_reconcile(
-            resolver,
-            store,
-            client,
-            dataset,
-            algorithm_type,
-            threshold,
-            aliases=aliases,
-            retrieved=retrieved,
-        )
+        if review:
+            enrich_commands, create_commands = reconcile_ui(
+                resolver,
+                store,
+                client,
+                dataset,
+                algorithm_type,
+                aliases=aliases,
+                retrieved=retrieved,
+            )
+        else:
+            enrich_commands, create_commands = run_reconcile(
+                resolver,
+                store,
+                client,
+                dataset,
+                algorithm_type,
+                threshold,
+                aliases=aliases,
+                retrieved=retrieved,
+            )
     finally:
         # Persist cached API responses even if the run is cancelled or errors.
         cache.close()

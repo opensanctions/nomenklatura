@@ -231,7 +231,7 @@ class DedupeWidget(Widget):
 
 
 class DedupeApp(App[int], Generic[DS, SE]):
-    CSS_PATH = "app.tcss"
+    CSS_PATH = "dedupe.tcss"
     dedupe: DedupeState[DS, SE]
 
     BINDINGS = [
