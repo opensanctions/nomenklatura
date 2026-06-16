@@ -47,7 +47,7 @@ class WikidataEnricher(Enricher[DS]):
         if not entity.schema.is_a("Person"):
             return
 
-        wikidata_id = self.get_wikidata_id(entity)
+        wikidata_id = entity_qid(entity)
 
         # Already has an ID associated with it:
         if wikidata_id is not None:
@@ -66,7 +66,7 @@ class WikidataEnricher(Enricher[DS]):
                     yield proxy
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
-        wikidata_id = self.get_wikidata_id(match)
+        wikidata_id = entity_qid(match)
         if wikidata_id is None:
             return
         item = self.client.fetch_item(wikidata_id)
@@ -85,9 +85,6 @@ class WikidataEnricher(Enricher[DS]):
             proxy.add("topics", "role.pep")
         yield proxy
         yield from self.item_graph(proxy, item)
-
-    def get_wikidata_id(self, entity: StatementEntity) -> Optional[str]:
-        return entity_qid(entity)
 
     def make_link(
         self,
