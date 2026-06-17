@@ -17,7 +17,6 @@ from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DedupeAlgorithm
-from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui, reconcile_ui
 from nomenklatura.matching.bench import bench_matcher
@@ -128,7 +127,7 @@ def xref_file(
 )
 @click.argument("path", type=InPath)
 @click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
-@click.option("--algorithm", default=EntityResolveRegression.NAME)
+@click.option("--algorithm", default=DedupeAlgorithm.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
 @click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
 @click.option(
@@ -147,7 +146,7 @@ def xref_file(
 def wikidata_reconcile(
     path: Path,
     threshold: float = 0.96,
-    algorithm: str = EntityResolveRegression.NAME,
+    algorithm: str = DedupeAlgorithm.NAME,
     aliases: bool = False,
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
