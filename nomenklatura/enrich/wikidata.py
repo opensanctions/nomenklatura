@@ -4,12 +4,12 @@ from typing import Generator, Optional, Set
 from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.helpers import check_person_cutoff
 from requests import Session
-from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Claim, Item
 from nomenklatura.wikidata.props import (
@@ -35,6 +35,8 @@ class WikidataEnricher(Enricher[DS]):
     ):
         super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
+        self.aliases = bool(self.get_config_bool("aliases", False))
+        self.search_limit = self.get_config_int("search_limit", 7)
         self.client = WikidataClient(cache, self.session, cache_days=self.cache_days)
 
     def keep_entity(self, entity: StatementEntity) -> bool:
@@ -46,7 +48,7 @@ class WikidataEnricher(Enricher[DS]):
         if not entity.schema.is_a("Person"):
             return
 
-        wikidata_id = self.get_wikidata_id(entity)
+        wikidata_id = entity_qid(entity)
 
         # Already has an ID associated with it:
         if wikidata_id is not None:
@@ -57,28 +59,17 @@ class WikidataEnricher(Enricher[DS]):
                     yield proxy
             return
 
-        for name in entity.get("name", quiet=True):
-            params = {
-                "format": "json",
-                "search": name,
-                "action": "wbsearchentities",
-                "language": "en",
-                "strictlanguage": "false",
-            }
-            data = self.http_get_json_cached(WikidataClient.WD_API, params=params)
-            if "search" not in data:
-                self.http_remove_cache(WikidataClient.WD_API, params=params)
-                log.info("Search response [%s] does not include results" % name)
-                continue
-            for result in data["search"]:
-                item = self.client.fetch_item(result["id"])
-                if item is not None:
-                    proxy = self.item_proxy(entity, item, schema=entity.schema.name)
-                    if proxy is not None and self.keep_entity(proxy):
-                        yield proxy
+        for qid in self.client.search_items(
+            entity, aliases=self.aliases, limit=self.search_limit
+        ):
+            item = self.client.fetch_item(qid)
+            if item is not None:
+                proxy = self.item_proxy(entity, item, schema=entity.schema.name)
+                if proxy is not None and self.keep_entity(proxy):
+                    yield proxy
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
-        wikidata_id = self.get_wikidata_id(match)
+        wikidata_id = entity_qid(match)
         if wikidata_id is None:
             return
         item = self.client.fetch_item(wikidata_id)
@@ -97,14 +88,6 @@ class WikidataEnricher(Enricher[DS]):
             proxy.add("topics", "role.pep")
         yield proxy
         yield from self.item_graph(proxy, item)
-
-    def get_wikidata_id(self, entity: StatementEntity) -> Optional[str]:
-        if entity.id is not None and is_qid(entity.id):
-            return str(entity.id)
-        for value in entity.get("wikidataId", quiet=True):
-            if is_qid(value):
-                return value
-        return None
 
     def make_link(
         self,

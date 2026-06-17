@@ -1,0 +1,24 @@
+ReconcileApp {
+    layout: vertical;
+}
+
+ReconcileWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+CandidateTable {
+    height: auto;
+    max-height: 40%;
+    border: solid white;
+}
+
+ComparePanel {
+    height: 1fr;
+    border: solid white;
+}
+
+CompareWidget {
+    width: 1fr;
+    height: auto;
+}

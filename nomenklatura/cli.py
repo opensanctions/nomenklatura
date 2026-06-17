@@ -17,9 +17,13 @@ from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DefaultAlgorithm
+from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.xref import xref as run_xref
-from nomenklatura.tui import dedupe_ui
+from nomenklatura.tui import dedupe_ui, reconcile_ui
 from nomenklatura.matching.bench import bench_matcher
+from nomenklatura.wikidata.client import WikidataClient
+from nomenklatura.wikidata.reconcile import reconcile as run_reconcile
+from nomenklatura.wikidata.write import QSCommand, serialize
 
 INDEX_SEGMENT = "xref-index"
 
@@ -116,6 +120,96 @@ def xref_file(
     )
     resolver.commit()
     log.info("Xref complete in: %r", resolver)
+
+
+@cli.command(
+    "wikidata-reconcile",
+    help="Match persons against Wikidata, auto-merging hits above a threshold",
+)
+@click.argument("path", type=InPath)
+@click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
+@click.option("--algorithm", default=EntityResolveRegression.NAME)
+@click.option("--aliases/--no-aliases", is_flag=True, default=False)
+@click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
+@click.option(
+    "--source-url",
+    type=str,
+    default=None,
+    help="Fallback QS reference URL for entities without a sourceUrl",
+)
+@click.option("--review", is_flag=True, default=False, help="Confirm matches in a TUI")
+@click.option(
+    "--create",
+    is_flag=True,
+    default=False,
+    help="(headless only) propose new items for unmatched persons",
+)
+def wikidata_reconcile(
+    path: Path,
+    threshold: float = 0.96,
+    algorithm: str = EntityResolveRegression.NAME,
+    aliases: bool = False,
+    retrieved: Optional[str] = None,
+    source_url: Optional[str] = None,
+    review: bool = False,
+    create: bool = False,
+) -> None:
+    if review and create:
+        # In review mode creates come from a keypress, so --create is meaningless;
+        # it only gates the headless speculative-create bulk. Fail loudly rather
+        # than silently ignore it.
+        raise click.UsageError("--create cannot be combined with --review")
+    resolver = Resolver[Entity].make_default()
+    resolver.begin()
+    store = load_entity_file_store(path, resolver=resolver)
+    algorithm_type = get_algorithm(algorithm)
+    if algorithm_type is None:
+        raise click.Abort(f"Unknown algorithm: {algorithm}")
+    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+    cache = Cache.make_default(dataset)
+    client = WikidataClient(cache)
+    try:
+        if review:
+            commands = reconcile_ui(
+                resolver,
+                store,
+                client,
+                dataset,
+                algorithm_type,
+                aliases=aliases,
+                retrieved=retrieved,
+                source_url=source_url,
+            )
+        else:
+            commands = run_reconcile(
+                resolver,
+                store,
+                client,
+                dataset,
+                algorithm_type,
+                threshold,
+                aliases=aliases,
+                create=create,
+                retrieved=retrieved,
+                source_url=source_url,
+            )
+    finally:
+        # Persist cached API responses even if the run is cancelled or errors.
+        cache.close()
+    resolver.commit()
+    # One QS batch sits next to the input file: entities.ijson.qs. Each create is
+    # a contiguous CREATE…LAST unit, so it coexists with enrich statements (which
+    # target existing QIDs) in a single batch the operator runs in the QS UI.
+    _write_qs(path.with_name(path.name + ".qs"), commands)
+    log.info("Reconcile complete in: %r", resolver)
+
+
+def _write_qs(path: Path, commands: list[QSCommand]) -> None:
+    text = serialize(commands)
+    if len(text):
+        text += "\n"
+    path.write_text(text)
+    log.info("Wrote %d QuickStatements commands: %s", len(commands), path)
 
 
 @cli.command("prune", help="Remove dedupe candidates")
