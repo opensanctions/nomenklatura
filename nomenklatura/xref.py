@@ -7,7 +7,7 @@ from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.blocker import Index
-from nomenklatura.matching import DefaultAlgorithm, ScoringAlgorithm, ScoringConfig
+from nomenklatura.matching import DedupeAlgorithm, ScoringAlgorithm, ScoringConfig
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def xref(
     auto_threshold: Optional[float] = None,
     min_threshold: float = 0.01,
     focus_datasets: Set[str] = set(),
-    algorithm: Type[ScoringAlgorithm] = DefaultAlgorithm,
+    algorithm: Type[ScoringAlgorithm] = DedupeAlgorithm,
     heuristic: Optional[
         Callable[[Resolver[SE], SE, SE, float], Optional[float]]
     ] = None,
