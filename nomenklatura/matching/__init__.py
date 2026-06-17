@@ -1,7 +1,7 @@
 from typing import List, Type, Optional
 from nomenklatura.matching.regression_v1.model import RegressionV1
 from nomenklatura.matching.regression_v1.train import train_matcher as train_v1_matcher
-from nomenklatura.matching.name_based import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.name_based import NameMatcher, NameQualifiedMatcher, OFACMatcher
 from nomenklatura.matching.erun.model import EntityResolveRegression
 from nomenklatura.matching.erun.train import train_matcher as train_erun_matcher
 from nomenklatura.matching.logic_v1.model import LogicV1
@@ -13,6 +13,7 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
     LogicV2,
     NameMatcher,
     NameQualifiedMatcher,
+    OFACMatcher,
     RegressionV1,
     EntityResolveRegression,
 ]
@@ -37,6 +38,7 @@ __all__ = [
     "ScoringAlgorithm",
     "NameMatcher",
     "NameQualifiedMatcher",
+    "OFACMatcher",
     "ScoringConfig",
     "LogicV1",
     "LogicV2",
