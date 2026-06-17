@@ -1,3 +1,4 @@
+import re
 import pytest
 import requests_mock
 from followthemoney import Dataset
@@ -27,6 +28,17 @@ def _dispatch(results):
     return handler
 
 
+# Reviewing a candidate now fetches Wikipedia summaries from the CDN REST
+# endpoint; stub it so the offline tests don't hit the network.
+SUMMARY_URL = re.compile(r"\.wikipedia\.org/api/rest_v1/page/summary/")
+
+
+def _mock_summary(m):
+    m.register_uri(
+        "GET", SUMMARY_URL, json={"extract": "Vladimir Putin is a politician."}
+    )
+
+
 @pytest.mark.asyncio
 async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
     path = tmp_path / "entities.ijson"
@@ -42,6 +54,7 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
         m.register_uri(
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
         )
+        _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(
             resolver, store, client, dataset, EntityResolveRegression
@@ -79,6 +92,7 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
         m.register_uri(
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
         )
+        _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(
             resolver, store, client, dataset, EntityResolveRegression

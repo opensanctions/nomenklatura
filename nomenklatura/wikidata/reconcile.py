@@ -18,6 +18,7 @@ from nomenklatura.wikidata.propose import propose_create, propose_enrich
 from nomenklatura.wikidata.props import PROPS_DIRECT, PROPS_QUALIFIED, PROPS_TOPICS
 from nomenklatura.wikidata.qualified import qualify_value
 from nomenklatura.wikidata.value import clean_wikidata_name, is_alias_strong
+from nomenklatura.wikidata.wikipedia import item_wikipedia_summaries, preferred_langs
 from nomenklatura.wikidata.write import QSCommand
 
 log = logging.getLogger(__name__)
@@ -26,6 +27,11 @@ log = logging.getLogger(__name__)
 # (slow) Wikidata calls, so a long run that's cancelled would otherwise lose
 # every cached response; flushing periodically keeps the work that's done.
 CACHE_INTERVAL = 10
+
+# How many top-ranked candidates per person get Wikipedia summaries fetched for
+# review. Summaries are reviewer context only (the matcher ignores them), so we
+# limit the per-person REST cost to the handful a reviewer actually compares.
+REVIEW_SUMMARY_CANDIDATES = 5
 
 
 def candidate_proxy(dataset: Dataset, item: Item) -> Optional[StatementEntity]:
@@ -109,9 +115,8 @@ def candidate_proxy(dataset: Dataset, item: Item) -> Optional[StatementEntity]:
         value.apply(proxy, ftm_prop)
 
     for wikilink in item.wikilinks:
-        if wikilink.site == "enwiki":
+        if wikilink.url is not None:
             proxy.add("wikipediaUrl", wikilink.url, lang=wikilink.lang)
-            break
     return proxy
 
 
@@ -252,6 +257,16 @@ def prepare_review(
             linked_count += 1
             continue
         seen += 1
+        # Attach Wikipedia summaries to the top candidates so the reviewer sees
+        # who each item is. Fetched here (not in candidate_proxy) because it's a
+        # per-candidate REST call the matcher doesn't need: only the few
+        # candidates a reviewer compares are worth the calls.
+        langs = preferred_langs(entity)
+        for cand_item, _, proxy in candidates[:REVIEW_SUMMARY_CANDIDATES]:
+            for summary in item_wikipedia_summaries(
+                client.cache, client.session, cand_item, langs
+            ):
+                summary.apply(proxy, "summary")
         items.append(ReviewItem(entity, candidates))
         best = " (best %.3f)" % candidates[0][1] if candidates else ""
         log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)

@@ -1,3 +1,4 @@
+import re
 import pytest
 import requests_mock
 from followthemoney import Dataset
@@ -351,6 +352,11 @@ def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity]):
     cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=_wd_dispatch([{"id": "Q7747"}]))
+        m.register_uri(
+            "GET",
+            re.compile(r"\.wikipedia\.org/api/rest_v1/page/summary/"),
+            json={"extract": "Vladimir Putin is a politician."},
+        )
         state = _reconcile_state(resolver, store, cache)
         assert state.start() is True
         assert state.person is not None
