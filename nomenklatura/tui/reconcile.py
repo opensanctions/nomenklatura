@@ -16,6 +16,7 @@ from nomenklatura.tui.comparison import render_comparison
 from nomenklatura.tui.util import apply_judgement
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.propose import propose_create, propose_enrich
+from nomenklatura.wikidata.reconcile import position_claims
 from nomenklatura.wikidata.reconcile import ReviewItem, create_preview
 from nomenklatura.wikidata.write import QSCommand
 
@@ -111,8 +112,11 @@ class ReconcileState(Generic[DS, SE]):
                 apply_judgement(
                     self.resolver, self.store, self.person.id, item.id, Judgement.POSITIVE
                 )
+                positions = position_claims(self.view, self.person)
                 self.commands.extend(
-                    propose_enrich(self.person, item, self.retrieved, self.source_url)
+                    propose_enrich(
+                        self.person, item, self.retrieved, self.source_url, positions
+                    )
                 )
                 # apply_judgement committed the transaction; reopen for the next read.
                 self.resolver.begin()

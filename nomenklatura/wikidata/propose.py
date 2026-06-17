@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from followthemoney import registry, StatementEntity
 from rigour.langs import iso_639_alpha2
@@ -29,6 +29,21 @@ GENDER_QIDS = {"male": "Q6581097", "female": "Q6581072"}
 
 
 @dataclass
+class PositionClaim:
+    """A position to assert as P39, already resolved to a Wikidata QID.
+
+    Reach for this as the input to position enrichment: the reconcile walk
+    traverses Person → Occupancy → Position and hands these in, so this emitter
+    stays free of the store. `start`/`end` are the curated qualifier dates
+    (`startDate ?? periodStart`, `endDate ?? periodEnd`) or None when unknown.
+    """
+
+    qid: str
+    start: Optional[str] = None
+    end: Optional[str] = None
+
+
+@dataclass
 class _Known:
     """What Wikidata already holds, so the diff only emits what's missing."""
 
@@ -36,6 +51,7 @@ class _Known:
     has_birth_date: bool = False
     has_gender: bool = False
     citizenship_qids: Set[str] = field(default_factory=set)
+    position_qids: Set[str] = field(default_factory=set)
     # Casefolded label + alias texts, to avoid re-adding a name WD already lists.
     name_texts: Set[str] = field(default_factory=set)
 
@@ -53,6 +69,8 @@ def _known_from_item(item: Item) -> _Known:
             known.has_gender = True
         elif claim.property == "P27" and claim.qid is not None:
             known.citizenship_qids.add(claim.qid)
+        elif claim.property == "P39" and claim.qid is not None:
+            known.position_qids.add(claim.qid)
     for label in item.labels:
         if label.text is not None:
             known.name_texts.add(label.text.casefold())
@@ -166,20 +184,56 @@ def _property_statements(
     return cmds
 
 
+def _position_statements(
+    positions: List[PositionClaim],
+    target: str,
+    known: _Known,
+    references: List[Snak],
+) -> List[QSCommand]:
+    """Emit P39 (position held) for QID-bearing positions Wikidata lacks.
+
+    Conservative by design: a post QID the item already holds is skipped whole
+    (no period-merging). A QID seen through a single occupancy carries P580/P582
+    date qualifiers; one seen through several (re-election) emits a bare
+    statement, so we never imply a continuous tenure across a gap.
+    """
+    by_qid: Dict[str, List[PositionClaim]] = {}
+    for claim in positions:
+        if claim.qid in known.position_qids:
+            continue
+        by_qid.setdefault(claim.qid, []).append(claim)
+    cmds: List[QSCommand] = []
+    for qid, claims in by_qid.items():
+        qualifiers: List[Snak] = []
+        if len(claims) == 1:
+            start = QSValue.date(claims[0].start) if claims[0].start else None
+            if start is not None:
+                qualifiers.append(("P580", start))
+            end = QSValue.date(claims[0].end) if claims[0].end else None
+            if end is not None:
+                qualifiers.append(("P582", end))
+        value = QSValue.item(qid)
+        cmds.append(AddStatement(target, "P39", value, qualifiers, references))
+    return cmds
+
+
 def propose_enrich(
     entity: StatementEntity,
     item: Item,
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
+    positions: Optional[List[PositionClaim]] = None,
 ) -> List[QSCommand]:
     """Diff an OS person against a matched Wikidata item into enrichment commands.
 
     Reach for this once a person is resolved to a QID: it emits QuickStatements
     only for what Wikidata is missing — never a label (which QS would overwrite)
     and never a competing single value. Missing names land as aliases (`Axx`,
-    append-only); P31/P569/P21/P27 are added only when absent. The result targets
-    the item's QID and is safe to run as-is. `source_url` is a fallback citation
-    for entities that carry no `sourceUrl` of their own.
+    append-only); P31/P569/P21/P27 are added only when absent. `positions` (when
+    the caller has resolved the person's QID-bearing positions) become P39
+    statements for any post the item doesn't already hold. The result targets the
+    item's QID and is safe to run as-is. `source_url` is a fallback citation for
+    entities that carry no `sourceUrl` of their own.
     """
     target = item.id
     known = _known_from_item(item)
@@ -190,6 +244,8 @@ def propose_enrich(
             continue
         cmds.append(SetAlias(target, lang, text))
     cmds.extend(_property_statements(entity, target, known, references))
+    if positions:
+        cmds.extend(_position_statements(positions, target, known, references))
     return cmds
 
 

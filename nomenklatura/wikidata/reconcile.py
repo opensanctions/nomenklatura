@@ -7,14 +7,18 @@ from rigour.territories import get_territory_by_qid
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.store import Store
+from nomenklatura.store import Store, View
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.util import entity_qid
-from nomenklatura.wikidata.propose import propose_create, propose_enrich
+from nomenklatura.wikidata.propose import (
+    PositionClaim,
+    propose_create,
+    propose_enrich,
+)
 from nomenklatura.wikidata.props import PROPS_DIRECT, PROPS_QUALIFIED, PROPS_TOPICS
 from nomenklatura.wikidata.qualified import qualify_value
 from nomenklatura.wikidata.value import clean_wikidata_name, is_alias_strong
@@ -133,6 +137,41 @@ def create_preview(dataset: Dataset, person: SE) -> StatementEntity:
     return proxy
 
 
+def _first(entity: SE, prop: str) -> Optional[str]:
+    values = entity.get(prop, quiet=True)
+    return values[0] if values else None
+
+
+def position_claims(view: View[DS, SE], person: SE) -> List[PositionClaim]:
+    """Resolve a person's QID-bearing positions into P39 enrichment input.
+
+    Reach for this before enriching a linked/confirmed person: it walks holder →
+    Occupancy → post → Position and keeps only positions that already carry a
+    Wikidata QID (the new PEP crawlers key Position ids by QID, so this is
+    reliable), pairing each with curated tenure dates — P580 from
+    `startDate ?? periodStart`, P582 from `endDate ?? periodEnd`. Positions
+    without a QID are skipped; we never look one up. Store-coupled, so it stays
+    out of the pure emitter.
+    """
+    if person.id is None:
+        return []
+    claims: List[PositionClaim] = []
+    for prop, occupancy in view.get_inverted(person.id):
+        if prop.name != "positionOccupancies":
+            continue
+        for post_id in occupancy.get("post", quiet=True):
+            position = view.get_entity(post_id)
+            if position is None:
+                continue
+            qid = entity_qid(position)
+            if qid is None:
+                continue
+            start = _first(occupancy, "startDate") or _first(occupancy, "periodStart")
+            end = _first(occupancy, "endDate") or _first(occupancy, "periodEnd")
+            claims.append(PositionClaim(qid=qid, start=start, end=end))
+    return claims
+
+
 def rank_candidates(
     client: WikidataClient,
     dataset: Dataset,
@@ -245,6 +284,7 @@ def prepare_review(
     for entities lacking their own.
     """
     resolver.begin()
+    view = store.default_view()
     items: List[ReviewItem[SE]] = []
     commands: List[QSCommand] = []
     seen, linked_count = 0, 0
@@ -252,7 +292,10 @@ def prepare_review(
         resolver, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
-            commands.extend(propose_enrich(entity, linked_item, retrieved, source_url))
+            positions = position_claims(view, entity)
+            commands.extend(
+                propose_enrich(entity, linked_item, retrieved, source_url, positions)
+            )
             linked_count += 1
             continue
         seen += 1
@@ -303,13 +346,17 @@ def reconcile(
     auto-merge plus reviewable QS.
     """
     resolver.begin()
+    view = store.default_view()
     commands: List[QSCommand] = []
     seen, merged = 0, 0
     for entity, linked_item, candidates in iter_persons(
         resolver, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
-            commands.extend(propose_enrich(entity, linked_item, retrieved, source_url))
+            positions = position_claims(view, entity)
+            commands.extend(
+                propose_enrich(entity, linked_item, retrieved, source_url, positions)
+            )
             continue
         seen += 1
         # candidates are already filtered against existing judgements, so the top
