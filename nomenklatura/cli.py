@@ -16,8 +16,7 @@ from nomenklatura.matching import train_v1_matcher, train_erun_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
-from nomenklatura.matching import get_algorithm, DefaultAlgorithm
-from nomenklatura.matching import EntityResolveRegression
+from nomenklatura.matching import get_algorithm, DedupeAlgorithm
 from nomenklatura.xref import xref as run_xref
 from nomenklatura.tui import dedupe_ui, reconcile_ui
 from nomenklatura.matching.bench import bench_matcher
@@ -66,7 +65,7 @@ def cli() -> None:
 @click.option("-p", "--data-path", type=Path, default=None)
 @click.option("-a", "--auto-threshold", type=click.FLOAT, default=None)
 @click.option("-l", "--limit", type=click.INT, default=5000)
-@click.option("--algorithm", default=DefaultAlgorithm.NAME)
+@click.option("--algorithm", default=DedupeAlgorithm.NAME)
 @click.option("--scored/--unscored", is_flag=True, type=click.BOOL, default=True)
 @click.option(
     "-f",
@@ -87,7 +86,7 @@ def xref_file(
     path: Path,
     data_path: Optional[Path] = None,
     auto_threshold: Optional[float] = None,
-    algorithm: str = DefaultAlgorithm.NAME,
+    algorithm: str = DedupeAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
     clear: bool = False,
@@ -128,7 +127,7 @@ def xref_file(
 )
 @click.argument("path", type=InPath)
 @click.option("-t", "--threshold", type=click.FLOAT, default=0.96)
-@click.option("--algorithm", default=EntityResolveRegression.NAME)
+@click.option("--algorithm", default=DedupeAlgorithm.NAME)
 @click.option("--aliases/--no-aliases", is_flag=True, default=False)
 @click.option("--retrieved", type=str, default=None, help="Retrieved date for QS refs")
 @click.option(
@@ -147,7 +146,7 @@ def xref_file(
 def wikidata_reconcile(
     path: Path,
     threshold: float = 0.96,
-    algorithm: str = EntityResolveRegression.NAME,
+    algorithm: str = DedupeAlgorithm.NAME,
     aliases: bool = False,
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,

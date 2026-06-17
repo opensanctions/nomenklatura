@@ -19,6 +19,7 @@ ALGORITHMS: List[Type[ScoringAlgorithm]] = [
 ]
 
 DefaultAlgorithm = RegressionV1
+DedupeAlgorithm = EntityResolveRegression
 
 
 def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
@@ -35,6 +36,7 @@ __all__ = [
     "train_v1_matcher",
     "train_erun_matcher",
     "DefaultAlgorithm",
+    "DedupeAlgorithm",
     "ScoringAlgorithm",
     "NameMatcher",
     "NameQualifiedMatcher",
