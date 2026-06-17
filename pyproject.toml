@@ -50,6 +50,7 @@ dev = [
     "flake8>=2.6.0",
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
     "coverage>=4.1",
     "types-setuptools",
     "types-requests",
