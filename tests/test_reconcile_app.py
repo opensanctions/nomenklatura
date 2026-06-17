@@ -61,7 +61,7 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, enrich_commands=enrich
+            resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -99,7 +99,7 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, enrich_commands=enrich
+            resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -131,7 +131,7 @@ async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity])
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, enrich_commands=enrich
+            resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -146,5 +146,5 @@ async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity])
             await pilot.press("x")
         from nomenklatura.wikidata.write import CreateItem
 
-        assert any(isinstance(c, CreateItem) for c in state.create_commands)
+        assert any(isinstance(c, CreateItem) for c in state.commands)
     cache.close()

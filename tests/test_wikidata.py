@@ -249,19 +249,25 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity]):
             json=_wd_dispatch([{"id": "Q7747"}]),
         )
         client = WikidataClient(cache)
-        enrich_commands, create_commands = reconcile(
-            resolver, store, client, dataset, EntityResolveRegression, threshold=0.5
+        commands = reconcile(
+            resolver, store, client, dataset, EntityResolveRegression,
+            threshold=0.5, create=True,
+        )
+        # Without create=True the unmatched person yields no create commands.
+        no_create = reconcile(
+            resolver, store, client, dataset, EntityResolveRegression,
+            threshold=0.5, create=False,
         )
 
     # The matching person is linked to the QID; the non-matching one is not.
     assert resolver.get_canonical("os-putin") == "Q7747"
     assert resolver.get_canonical("os-nobody") == "os-nobody"
 
-    # The unmatched person yields a CREATE batch; both lists are returned.
+    # create=True yields a CREATE for the miss; create=False yields none.
     from nomenklatura.wikidata.write import CreateItem
 
-    assert isinstance(enrich_commands, list)
-    assert any(isinstance(c, CreateItem) for c in create_commands)
+    assert any(isinstance(c, CreateItem) for c in commands)
+    assert not any(isinstance(c, CreateItem) for c in no_create)
     cache.close()
 
 
@@ -307,12 +313,13 @@ def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity]):
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
         client = WikidataClient(cache)
-        enrich_commands, create_commands = reconcile(
+        commands = reconcile(
             resolver, store, client, dataset, EntityResolveRegression, threshold=0.5
         )
     # No CREATE for a linked entity; enrichment was attempted against Q7747.
-    assert create_commands == []
-    assert isinstance(enrich_commands, list)
+    from nomenklatura.wikidata.write import CreateItem
+
+    assert not any(isinstance(c, CreateItem) for c in commands)
     cache.close()
 
 
@@ -322,10 +329,10 @@ def _reconcile_state(resolver, store, cache):
 
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     client = WikidataClient(cache)
-    items, enrich = prepare_review(
+    items, commands = prepare_review(
         resolver, store, client, dataset, EntityResolveRegression
     )
-    return ReconcileState(resolver, store, dataset, items, enrich_commands=enrich)
+    return ReconcileState(resolver, store, dataset, items, commands=commands)
 
 
 def test_create_preview():
@@ -387,7 +394,7 @@ def test_reconcile_state_create(tmp_path, resolver: Resolver[Entity]):
         state.confirm()
     from nomenklatura.wikidata.write import CreateItem
 
-    assert any(isinstance(c, CreateItem) for c in state.create_commands)
+    assert any(isinstance(c, CreateItem) for c in state.commands)
     assert resolver.get_canonical("os-nobody") == "os-nobody"
     cache.close()
 
@@ -406,8 +413,7 @@ def test_reconcile_state_skip(tmp_path, resolver: Resolver[Entity]):
         state = _reconcile_state(resolver, store, cache)
         assert state.start() is True
         state.skip()
-    assert state.enrich_commands == []
-    assert state.create_commands == []
+    assert state.commands == []
     assert resolver.get_canonical("os-nobody") == "os-nobody"
     cache.close()
 

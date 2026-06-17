@@ -138,6 +138,12 @@ def xref_file(
     help="Fallback QS reference URL for entities without a sourceUrl",
 )
 @click.option("--review", is_flag=True, default=False, help="Confirm matches in a TUI")
+@click.option(
+    "--create",
+    is_flag=True,
+    default=False,
+    help="(headless only) propose new items for unmatched persons",
+)
 def wikidata_reconcile(
     path: Path,
     threshold: float = 0.96,
@@ -146,7 +152,13 @@ def wikidata_reconcile(
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
     review: bool = False,
+    create: bool = False,
 ) -> None:
+    if review and create:
+        # In review mode creates come from a keypress, so --create is meaningless;
+        # it only gates the headless speculative-create bulk. Fail loudly rather
+        # than silently ignore it.
+        raise click.UsageError("--create cannot be combined with --review")
     resolver = Resolver[Entity].make_default()
     resolver.begin()
     store = load_entity_file_store(path, resolver=resolver)
@@ -158,7 +170,7 @@ def wikidata_reconcile(
     client = WikidataClient(cache)
     try:
         if review:
-            enrich_commands, create_commands = reconcile_ui(
+            commands = reconcile_ui(
                 resolver,
                 store,
                 client,
@@ -169,7 +181,7 @@ def wikidata_reconcile(
                 source_url=source_url,
             )
         else:
-            enrich_commands, create_commands = run_reconcile(
+            commands = run_reconcile(
                 resolver,
                 store,
                 client,
@@ -177,6 +189,7 @@ def wikidata_reconcile(
                 algorithm_type,
                 threshold,
                 aliases=aliases,
+                create=create,
                 retrieved=retrieved,
                 source_url=source_url,
             )
@@ -184,9 +197,10 @@ def wikidata_reconcile(
         # Persist cached API responses even if the run is cancelled or errors.
         cache.close()
     resolver.commit()
-    # QS batches sit next to the input file: entities.ijson.{enrich,create}.qs
-    _write_qs(path.with_name(path.name + ".enrich.qs"), enrich_commands)
-    _write_qs(path.with_name(path.name + ".create.qs"), create_commands)
+    # One QS batch sits next to the input file: entities.ijson.qs. Each create is
+    # a contiguous CREATE…LAST unit, so it coexists with enrich statements (which
+    # target existing QIDs) in a single batch the operator runs in the QS UI.
+    _write_qs(path.with_name(path.name + ".qs"), commands)
     log.info("Reconcile complete in: %r", resolver)
 
 

@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Type
 from followthemoney import DS, SE, Dataset
 
 from nomenklatura.store import Store
@@ -34,17 +34,16 @@ def reconcile_ui(
     source_url: Optional[str] = None,
     user: Optional[str] = None,
     url_base: Optional[str] = None,
-) -> Tuple[List[QSCommand], List[QSCommand]]:
+) -> List[QSCommand]:
     """Run the interactive Wikidata reconciliation UI; return the queued QS commands.
 
     All candidates are fetched, scored and sorted up front (with logging
     visible), then each unlinked person is presented against its ranked Wikidata
     candidates for a human decision (confirm / no-match / unsure / create / skip).
-    Returns the accumulated `(enrich_commands, create_commands)` for the caller
-    to serialize.
+    Returns the accumulated QuickStatements commands for the caller to serialize.
     """
     # Fetch and rank everything before the TUI boots, with logging on screen.
-    items, enrich_commands = prepare_review(
+    items, commands = prepare_review(
         resolver,
         store,
         client,
@@ -60,7 +59,7 @@ def reconcile_ui(
         store,
         dataset,
         items,
-        enrich_commands=enrich_commands,
+        commands=commands,
         retrieved=retrieved,
         source_url=source_url,
         user=user,
@@ -73,4 +72,4 @@ def reconcile_ui(
         app.run()
     finally:
         logging.disable(logging.NOTSET)
-    return app.reconcile.enrich_commands, app.reconcile.create_commands
+    return app.reconcile.commands

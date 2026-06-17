@@ -27,9 +27,9 @@ class ReconcileState(Generic[DS, SE]):
     `prepare_review`); this state just walks the resulting `ReviewItem`s in
     memory. A confirmed candidate records a POSITIVE judgement and queues
     enrichment; "none of the above" queues item creation; no-match/unsure record
-    that judgement and drop the candidate; skip does neither. `enrich_commands`
-    is seeded with the already-linked persons' enrichment and grown by confirms;
-    both command lists are serialized after the app exits.
+    that judgement and drop the candidate; skip does neither. `commands` is
+    seeded with the already-linked persons' enrichment and grown by both
+    confirms and creates; it is serialized after the app exits.
     """
 
     def __init__(
@@ -38,7 +38,7 @@ class ReconcileState(Generic[DS, SE]):
         store: Store[DS, SE],
         dataset: Dataset,
         items: List["ReviewItem[SE]"],
-        enrich_commands: Optional[List[QSCommand]] = None,
+        commands: Optional[List[QSCommand]] = None,
         retrieved: Optional[str] = None,
         source_url: Optional[str] = None,
         user: Optional[str] = None,
@@ -60,9 +60,9 @@ class ReconcileState(Generic[DS, SE]):
         self.candidates: List[Tuple[Item, float, StatementEntity]] = []
         # Index into candidates; == len(candidates) means the "none of the above" row.
         self.highlight = 0
-        # Seeded with enrichment for already-linked persons; confirms add more.
-        self.enrich_commands: List[QSCommand] = list(enrich_commands or [])
-        self.create_commands: List[QSCommand] = []
+        # Seeded with enrichment for already-linked persons; confirms and creates
+        # both append here, and the whole list is serialized on exit.
+        self.commands: List[QSCommand] = list(commands or [])
 
     @property
     def at_create(self) -> bool:
@@ -100,7 +100,7 @@ class ReconcileState(Generic[DS, SE]):
         if self.person is None or self.person.id is None:
             return
         if self.at_create:
-            self.create_commands.extend(
+            self.commands.extend(
                 propose_create(self.person, self.retrieved, self.source_url)
             )
         else:
@@ -111,7 +111,7 @@ class ReconcileState(Generic[DS, SE]):
                 apply_judgement(
                     self.resolver, self.store, self.person.id, item.id, Judgement.POSITIVE
                 )
-                self.enrich_commands.extend(
+                self.commands.extend(
                     propose_enrich(self.person, item, self.retrieved, self.source_url)
                 )
                 # apply_judgement committed the transaction; reopen for the next read.

@@ -240,20 +240,19 @@ def prepare_review(
     stalls: it does all the searching, fetching and scoring here — with normal
     logging visible — enriches already-linked persons, and returns the review
     items sorted by descending top-candidate score together with the
-    linked-person enrichment commands. The TUI then runs purely in memory.
-    `source_url` is a fallback citation for entities lacking their own.
+    linked-person enrichment commands the reviewer's own decisions get appended
+    to. The TUI then runs purely in memory. `source_url` is a fallback citation
+    for entities lacking their own.
     """
     resolver.begin()
     items: List[ReviewItem[SE]] = []
-    enrich_commands: List[QSCommand] = []
+    commands: List[QSCommand] = []
     seen, linked_count = 0, 0
     for entity, linked_item, candidates in iter_persons(
         resolver, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
-            enrich_commands.extend(
-                propose_enrich(entity, linked_item, retrieved, source_url)
-            )
+            commands.extend(propose_enrich(entity, linked_item, retrieved, source_url))
             linked_count += 1
             continue
         seen += 1
@@ -274,7 +273,7 @@ def prepare_review(
     client.cache.flush()
     items.sort(key=lambda review: review.top_score, reverse=True)
     log.info("Prepared %d person(s) for review; %d already linked.", len(items), linked_count)
-    return items, enrich_commands
+    return items, commands
 
 
 def reconcile(
@@ -285,10 +284,11 @@ def reconcile(
     algorithm: Type[ScoringAlgorithm],
     threshold: float,
     aliases: bool = False,
+    create: bool = True,
     user: Optional[str] = None,
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
-) -> Tuple[List[QSCommand], List[QSCommand]]:
+) -> List[QSCommand]:
     """Match the persons in a store against Wikidata, auto-merge, and emit QS.
 
     For each person: those already linked to a QID are diffed against their
@@ -296,21 +296,20 @@ def reconcile(
     recorded as POSITIVE judgements but *not* enriched (an auto-merge is a guess,
     and we only push edits from links we already trust — they enrich on a later
     pass once linked); those with no acceptable match become item-creation
-    commands. Returns `(enrich_commands, create_commands)` for the caller to
-    serialize into the two QuickStatements batches. This is the headless half of
-    the reconcile tool: no UI, just xref-style auto-merge plus reviewable QS.
+    commands — but only when `create` is set, since a headless create is a
+    speculative new item for every miss, not a human decision; leave it off to
+    emit enrichments alone. Returns the QuickStatements commands to serialize.
+    This is the headless half of the reconcile tool: no UI, just xref-style
+    auto-merge plus reviewable QS.
     """
     resolver.begin()
-    enrich_commands: List[QSCommand] = []
-    create_commands: List[QSCommand] = []
+    commands: List[QSCommand] = []
     seen, merged = 0, 0
     for entity, linked_item, candidates in iter_persons(
         resolver, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
-            enrich_commands.extend(
-                propose_enrich(entity, linked_item, retrieved, source_url)
-            )
+            commands.extend(propose_enrich(entity, linked_item, retrieved, source_url))
             continue
         seen += 1
         # candidates are already filtered against existing judgements, so the top
@@ -330,9 +329,9 @@ def reconcile(
             )
             store.update(canonical.id)
             merged += 1
-        else:
+        elif create:
             # No acceptable match: propose a new Wikidata item for review.
-            create_commands.extend(propose_create(entity, retrieved, source_url))
+            commands.extend(propose_create(entity, retrieved, source_url))
     resolver.commit()
     log.info("Reconciled %d of %d unlinked persons to Wikidata.", merged, seen)
-    return enrich_commands, create_commands
+    return commands
