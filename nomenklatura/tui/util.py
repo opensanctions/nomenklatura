@@ -12,7 +12,13 @@ TYPE_ORDER = {
     registry.country: -3,
     registry.string: -1,
     registry.text: 3,
+    registry.url: 5,
 }
+
+# Properties shown even though they're non-matchable instances of a matchable
+# type. The filter below hides those by default (to drop noise like alephUrl),
+# but a Wikipedia link is exactly the kind of context a reviewer wants.
+ALWAYS_SHOW = {"wikipediaUrl"}
 
 
 def apply_judgement(
@@ -52,7 +58,7 @@ def comparison_props(left: SE, right: SE) -> Generator[Property, None, None]:
     for prop in sorted(props, key=sort_props):
         if prop.hidden:
             continue
-        if prop.type.matchable and not prop.matchable:
+        if prop.name not in ALWAYS_SHOW and prop.type.matchable and not prop.matchable:
             continue
         # if prop.type == registry.entity:
         #     continue
