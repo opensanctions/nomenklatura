@@ -1,9 +1,9 @@
 """Emulation of OFAC's Sanctions List Search scoring.
 
 Reverse-engineered from the public tool at
-`sanctionssearch.ofac.treas.gov` plus FAQ 249. Tracks OFAC's reported
-score within +/-5 points on 95.7% of a 164-row parity fixture; mean
-absolute error 1.5 points.
+`sanctionssearch.ofac.treas.gov` plus FAQ 249. It closely tracks the
+scores the OFAC tool reports, but is an emulation rather than an exact
+reimplementation - expect small deviations.
 
 This is not a "good" name matcher in the academic sense - it
 inherits OFAC's quirks (single-token explosions, token-order

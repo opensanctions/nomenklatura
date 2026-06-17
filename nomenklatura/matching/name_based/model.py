@@ -14,9 +14,10 @@ class OFACMatcher(HeuristicAlgorithm):
     """An algorithm that emulates the public OFAC Sanctions List Search tool at
     sanctionssearch.ofac.treas.gov, with mismatch qualifiers layered on top.
     Reverse-engineered from FAQ 249 and parity fixtures captured against the
-    live tool. Name scoring tracks OFAC's reported score within +/-5 points on
-    the parity fixture. Qualifier features (country, DOB, gender, orgid
-    mismatches) reduce the name score - this departs from FAQ 251 (which says
+    live tool. Name scoring closely tracks OFAC's reported score, but is an
+    emulation rather than an exact reimplementation. Qualifier features
+    (country, DOB, gender, orgid mismatches) reduce the name score - this
+    departs from FAQ 251 (which says
     only the name field influences the Score) but mirrors how OFAC users
     actually triage matches via FAQ 5."""
 
@@ -41,11 +42,10 @@ class OFACMatcher(HeuristicAlgorithm):
 
 
 class NameMatcher(HeuristicAlgorithm):
-    """Deprecated in favour of `OFACMatcher`, which actually reproduces OFAC's
-    public Sanctions List Search behaviour within +/-5 points on a captured
-    parity fixture. This algorithm matches on entity name using phonetic
-    comparisons and Jaro-Winkler edit distance, vaguely based on FAQ #249, but
-    does not reach OFAC parity."""
+    """Deprecated in favour of `OFACMatcher`, which actually emulates OFAC's
+    public Sanctions List Search behaviour. This algorithm matches on entity
+    name using phonetic comparisons and Jaro-Winkler edit distance, vaguely
+    based on FAQ #249, but does not reach OFAC parity."""
 
     NAME = "name-based"
     features = [
