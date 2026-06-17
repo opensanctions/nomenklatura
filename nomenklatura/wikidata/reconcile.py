@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Generic, List, Optional, Set, Tuple, Type
+from typing import Generic, Iterator, List, Optional, Set, Tuple, Type
 from followthemoney import Dataset, DS, SE, StatementEntity, registry
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
@@ -160,6 +160,52 @@ def rank_candidates(
     return scored
 
 
+def iter_persons(
+    resolver: Resolver[SE],
+    store: Store[DS, SE],
+    client: WikidataClient,
+    dataset: Dataset,
+    algorithm: Type[ScoringAlgorithm],
+    aliases: bool = False,
+) -> Iterator[Tuple[SE, Optional[Item], List[Tuple[Item, float, StatementEntity]]]]:
+    """Walk persons once, classifying each for the headless and review paths.
+
+    Yields one tuple per Person: an already-linked person as `(entity, item, [])`
+    so the caller can enrich it, and an unlinked person as `(entity, None,
+    candidates)` where candidates are scored, best-first, and already filtered
+    against existing judgements. This is the shared walk — iteration, cache
+    flushing, linked-detection and ranking — leaving enrichment, judgements, QS
+    emission and the resolver transaction to the caller.
+    """
+    config = algorithm.default_config()
+    view = store.default_view()
+    for index, entity in enumerate(view.entities()):
+        if index and index % CACHE_INTERVAL == 0:
+            client.cache.flush()
+        if not entity.schema.is_a("Person") or entity.id is None:
+            continue
+        current = resolver.get_canonical(entity.id)
+        # Linked by a resolver merge (canonical is a QID) or by the entity's own
+        # QID (id or wikidataId property): hand it back for enrichment.
+        linked = current if is_qid(current) else entity_qid(entity)
+        if linked is not None:
+            item = client.fetch_item(linked)
+            if item is not None:
+                yield entity, item, []
+            continue
+        candidates: List[Tuple[Item, float, StatementEntity]] = []
+        for cand_item, score, proxy in rank_candidates(
+            client, dataset, algorithm, config, entity, aliases
+        ):
+            if cand_item.id is None:
+                continue
+            # Drop candidates already judged (negative/unsure/positive).
+            if not resolver.check_candidate(current, cand_item.id):
+                continue
+            candidates.append((cand_item, score, proxy))
+        yield entity, None, candidates
+
+
 @dataclass
 class ReviewItem(Generic[SE]):
     """One person and its ranked Wikidata candidates, prepared for review."""
@@ -192,38 +238,20 @@ def prepare_review(
     linked-person enrichment commands. The TUI then runs purely in memory.
     `source_url` is a fallback citation for entities lacking their own.
     """
-    config = algorithm.default_config()
-    view = store.default_view()
     resolver.begin()
     items: List[ReviewItem[SE]] = []
     enrich_commands: List[QSCommand] = []
     seen, linked_count = 0, 0
-    for index, entity in enumerate(view.entities()):
-        if index and index % CACHE_INTERVAL == 0:
-            client.cache.flush()
-        if not entity.schema.is_a("Person") or entity.id is None:
-            continue
-        current = resolver.get_canonical(entity.id)
-        linked = current if is_qid(current) else entity_qid(entity)
-        if linked is not None:
-            item = client.fetch_item(linked)
-            if item is not None:
-                enrich_commands.extend(
-                    propose_enrich(entity, item, retrieved, source_url)
-                )
+    for entity, linked_item, candidates in iter_persons(
+        resolver, store, client, dataset, algorithm, aliases
+    ):
+        if linked_item is not None:
+            enrich_commands.extend(
+                propose_enrich(entity, linked_item, retrieved, source_url)
+            )
             linked_count += 1
             continue
         seen += 1
-        candidates: List[Tuple[Item, float, StatementEntity]] = []
-        for cand_item, score, proxy in rank_candidates(
-            client, dataset, algorithm, config, entity, aliases
-        ):
-            if cand_item.id is None:
-                continue
-            # Drop candidates already judged (negative/unsure/positive).
-            if not resolver.check_candidate(entity.id, cand_item.id):
-                continue
-            candidates.append((cand_item, score, proxy))
         items.append(ReviewItem(entity, candidates))
         best = " (best %.3f)" % candidates[0][1] if candidates else ""
         log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)
@@ -257,43 +285,31 @@ def reconcile(
     serialize into the two QuickStatements batches. This is the headless half of
     the reconcile tool: no UI, just xref-style auto-merge plus reviewable QS.
     """
-    config = algorithm.default_config()
-    view = store.default_view()
     resolver.begin()
     enrich_commands: List[QSCommand] = []
     create_commands: List[QSCommand] = []
     seen, merged = 0, 0
-    for index, entity in enumerate(view.entities()):
-        if index and index % CACHE_INTERVAL == 0:
-            client.cache.flush()
-        if not entity.schema.is_a("Person") or entity.id is None:
-            continue
-        current = resolver.get_canonical(entity.id)
-        # Linked either by a resolver merge (canonical is a QID) or by the entity
-        # carrying its own QID (id or wikidataId property): enrich, don't search.
-        linked = current if is_qid(current) else entity_qid(entity)
-        if linked is not None:
-            item = client.fetch_item(linked)
-            if item is not None:
-                enrich_commands.extend(
-                    propose_enrich(entity, item, retrieved, source_url)
-                )
+    for entity, linked_item, candidates in iter_persons(
+        resolver, store, client, dataset, algorithm, aliases
+    ):
+        if linked_item is not None:
+            enrich_commands.extend(
+                propose_enrich(entity, linked_item, retrieved, source_url)
+            )
             continue
         seen += 1
-        ranked = rank_candidates(client, dataset, algorithm, config, entity, aliases)
+        # candidates are already filtered against existing judgements, so the top
+        # one is mergeable; we only re-check the score against the threshold.
         best_item: Optional[Item] = None
         best_score = 0.0
-        if ranked:
-            best_item, best_score, _ = ranked[0]
-        if (
-            best_item is not None
-            and best_score > threshold
-            and resolver.check_candidate(current, best_item.id)
-        ):
+        if candidates:
+            best_item, best_score, _ = candidates[0]
+        if best_item is not None and best_score > threshold:
             # Record the link, but don't enrich off it: an auto-merge is an
             # unconfirmed guess, and we only push Wikidata edits from links we
             # already trust. It gets enriched on a later pass as "already linked".
             log.info("Auto-merge [%.3f]: %s <> %s", best_score, entity.id, best_item.id)
+            assert entity.id is not None  # iter_persons never yields id-less entities
             canonical = resolver.decide(
                 entity.id, best_item.id, Judgement.POSITIVE, user=user, score=best_score
             )
