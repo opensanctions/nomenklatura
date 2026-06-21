@@ -45,7 +45,6 @@ class DedupeState(Generic[DS, SE]):
     def load(self) -> bool:
         self.left = None
         self.right = None
-        self.resolver.load_into_memory()
         for left_id, right_id, score in self.resolver.get_candidates():
             left_id = self.resolver.get_canonical(left_id)
             right_id = self.resolver.get_canonical(right_id)
