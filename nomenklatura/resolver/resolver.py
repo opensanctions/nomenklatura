@@ -18,6 +18,7 @@ from sqlalchemy import (
     Table,
     Unicode,
     or_,
+    select,
     text,
 )
 from sqlalchemy.sql.expression import delete, insert, update
@@ -52,7 +53,7 @@ class Resolver(Linker[SE]):
         self._max_ts: Optional[str] = None
         # Suggestions remain in the table; hot reads use these derived indexes.
         self._linker: Linker[SE] = Linker({})
-        self._blockers: Dict[Pair, Judgement] = {}
+        self._blockers: Dict[Tuple[str, str], Judgement] = {}
 
         unique_kw: Dict[str, Any] = {"unique": True}
         if session.is_sqlite:
@@ -88,27 +89,32 @@ class Resolver(Linker[SE]):
         if create:
             session.create(self._table)
 
-    def _index_edge(self, edge: Edge) -> None:
-        """Fold a single live edge into the in-memory indexes."""
-        if edge.judgement == Judgement.POSITIVE:
-            self._linker.add(edge.source.id, edge.target.id)
-        elif edge.judgement in (Judgement.NEGATIVE, Judgement.UNSURE):
-            self._blockers[edge.key] = edge.judgement
+    def _index_row(self, target: str, source: str, judgement: Judgement) -> None:
+        """Fold a live database row into the in-memory indexes."""
+        if judgement == Judgement.POSITIVE:
+            self._linker.add(source, target)
+        elif judgement in (Judgement.NEGATIVE, Judgement.UNSURE):
+            self._blockers[(target, source)] = judgement
 
     def _load_all(self) -> None:
         """Rebuild both indexes from scratch over every live edge."""
         self._linker = Linker({})
         self._blockers = {}
         max_ts: Optional[str] = None
-        stmt = self._table.select().where(self._table.c.deleted_at.is_(None))
+        stmt = select(
+            self._table.c.target,
+            self._table.c.source,
+            self._table.c.judgement,
+            self._table.c.created_at,
+        ).where(self._table.c.deleted_at.is_(None))
         cursor = self._session.execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
-                edge = Edge.from_dict(row._mapping)
-                if edge.created_at is not None:
-                    if max_ts is None or edge.created_at > max_ts:
-                        max_ts = edge.created_at
-                self._index_edge(edge)
+                target, source, judgement_, created_at = row
+                if created_at is not None:
+                    if max_ts is None or created_at > max_ts:
+                        max_ts = created_at
+                self._index_row(target, source, Judgement(judgement_))
         cursor.close()
         self._max_ts = max_ts
 
@@ -121,7 +127,13 @@ class Resolver(Linker[SE]):
         if self._max_ts is None:
             self._load_all()
             return
-        stmt = self._table.select().where(
+        stmt = select(
+            self._table.c.target,
+            self._table.c.source,
+            self._table.c.judgement,
+            self._table.c.created_at,
+            self._table.c.deleted_at,
+        ).where(
             or_(
                 self._table.c.created_at >= self._max_ts,
                 self._table.c.deleted_at >= self._max_ts,
@@ -132,18 +144,19 @@ class Resolver(Linker[SE]):
         needs_rebuild = False
         while batch := cursor.fetchmany(10000):
             for row in batch:
-                edge = Edge.from_dict(row._mapping)
-                if edge.created_at is not None and edge.created_at > max_ts:
-                    max_ts = edge.created_at
-                if edge.deleted_at is not None:
-                    if edge.deleted_at > max_ts:
-                        max_ts = edge.deleted_at
-                    if edge.judgement == Judgement.POSITIVE:
+                target, source, judgement_, created_at, deleted_at = row
+                judgement = Judgement(judgement_)
+                if created_at is not None and created_at > max_ts:
+                    max_ts = created_at
+                if deleted_at is not None:
+                    if deleted_at > max_ts:
+                        max_ts = deleted_at
+                    if judgement == Judgement.POSITIVE:
                         needs_rebuild = True
                     else:
-                        self._blockers.pop(edge.key, None)
+                        self._blockers.pop((target, source), None)
                 else:
-                    self._index_edge(edge)
+                    self._index_row(target, source, judgement)
         cursor.close()
         if needs_rebuild:
             self._load_all()
@@ -233,25 +246,27 @@ class Resolver(Linker[SE]):
 
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
         """Get the existing decision between two entities with dedupe factored in."""
-        entity = Identifier.get(entity_id)
-        other = Identifier.get(other_id)
+        entity = str(entity_id)
+        other = str(other_id)
         if entity == other:
             return Judgement.POSITIVE
-        entity_connected = self.connected(entity)
+        entity_connected = self._linker.connected_ids(entity)
         if other in entity_connected:
             return Judgement.POSITIVE
         # Check QIDs after connected because we sometimes insert an edge to say
         # one QID is canonical for another. Not common but important.
-        if is_qid(entity.id) and is_qid(other.id):
+        if is_qid(entity) and is_qid(other):
             return Judgement.NEGATIVE
 
         # Any blocking (negative/unsure) edge spanning the two clusters decides
         # the pair. A positive edge can't span them — it would have merged the
         # clusters above — so only blockers remain to check.
-        other_connected = self.connected(other)
+        other_connected = self._linker.connected_ids(other)
         for e in entity_connected:
             for o in other_connected:
-                judgement = self._blockers.get(Identifier.pair(e, o))
+                judgement = self._blockers.get((e, o))
+                if judgement is None:
+                    judgement = self._blockers.get((o, e))
                 if judgement is not None:
                     return judgement
 

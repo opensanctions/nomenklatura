@@ -180,6 +180,8 @@ def test_linker(resolver: Resolver[StatementEntity], db_session):
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
     assert linker.get_canonical("a3") == "a3"
+    assert linker.connected_ids("a1") == linker._mapping["a1"]
+    assert linker.connected_ids("unknown") == ("unknown",)
 
     # get_referents with canonicals=False excludes NK- and QID entries
     refs_no_canon = linker.get_referents("Q123", canonicals=False)
