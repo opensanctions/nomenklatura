@@ -13,7 +13,9 @@ from followthemoney import Dataset, StatementEntity as Entity
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
-from nomenklatura.db import close_db, get_engine, get_metadata, make_session, Session
+from sqlalchemy import MetaData
+
+from nomenklatura.db import close_db, get_engine, make_session, Session
 from nomenklatura.resolver import Resolver
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
@@ -31,10 +33,14 @@ def wrap_test():
     if settings.DB_URL.startswith("sqlite"):
         settings.DB_URL = "sqlite:///:memory:"
     yield
-    # Dispose of connections to let open transactions for resources not
-    # managed by the setup/teardown abort.
+    # Drop every table, reflecting the live schema rather than a single
+    # MetaData: Cache and Resolver now own per-instance MetaData, so a global
+    # drop_all would miss their tables and leak committed rows across tests on
+    # a persistent Postgres. (On in-memory sqlite the engine is disposed below
+    # anyway, but reflecting is harmless there.)
     engine = get_engine()
-    meta = get_metadata()
+    meta = MetaData()
+    meta.reflect(bind=engine)
     meta.drop_all(bind=engine)
     close_db()
     get_redis.cache_clear()
