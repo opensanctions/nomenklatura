@@ -1,10 +1,11 @@
 #
-# Don't forget to call self._invalidate from methods that modify edges.
+# The in-memory state (the cluster linker and the blocker cache) is a pure
+# function of the table: write methods only touch the DB, then call
+# _update_from_db to refresh. Don't mutate the indexes directly.
 #
 from datetime import timedelta
 import getpass
 import logging
-from collections import defaultdict
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
@@ -49,16 +50,11 @@ class Resolver(Linker[SE]):
         self._session = session
         # The initial load only needs active edges.
         self._max_ts: Optional[str] = None
-        self.edges: Dict[Pair, Edge] = {}
-        self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
-        # Derived positive-cluster index for the hot reads. Maintained
-        # incrementally on positive adds; rebuilt wholesale after a positive
-        # edge is removed (rare), since the flat map cannot un-merge in place.
+        # In-memory indexes, both pure functions of the table refreshed by
+        # _update_from_db: the positive-merge cluster map that answers the hot
+        # reads, and a raw-keyed cache of blocking (negative/unsure) judgements.
+        # No full edge graph is held — suggestions live only in the table.
         self._linker: Linker[SE] = Linker({})
-        self._linker_dirty = False
-        # Blocking judgements (negative/unsure) keyed by raw id pair. Raw keys
-        # never drift on merges, so this is maintained fully incrementally — a
-        # removed blocker is just a pop, no rebuild.
         self._blockers: Dict[Pair, Judgement] = {}
 
         unique_kw: Dict[str, Any] = {"unique": True}
@@ -88,82 +84,80 @@ class Resolver(Linker[SE]):
         if create:
             session.create(self._table)
 
-    def _update_from_db(self) -> None:
-        """Apply new deletes and unseen edges from the database."""
-        stmt = self._table.select()
-        if self._max_ts is None:
-            stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        else:
-            stmt = stmt.where(
-                or_(
-                    self._table.c.deleted_at > self._max_ts,
-                    self._table.c.created_at > self._max_ts,
-                )
-            )
-        stmt.order_by(self._table.c.deleted_at.asc().nulls_last())
-        stmt.order_by(self._table.c.created_at.asc())
+    def _index_edge(self, edge: Edge) -> None:
+        """Fold a single live edge into the in-memory indexes."""
+        if edge.judgement == Judgement.POSITIVE:
+            self._linker.add(edge.source.id, edge.target.id)
+        elif edge.judgement in (Judgement.NEGATIVE, Judgement.UNSURE):
+            self._blockers[edge.key] = edge.judgement
+
+    def _load_all(self) -> None:
+        """Rebuild both indexes from scratch over every live edge."""
+        self._linker = Linker({})
+        self._blockers = {}
+        max_ts: Optional[str] = None
+        stmt = self._table.select().where(self._table.c.deleted_at.is_(None))
         cursor = self._session.execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
                 edge = Edge.from_dict(row._mapping)
-                if self._max_ts is None:
-                    self._max_ts = edge.created_at
-                if self._max_ts is not None:
-                    if edge.created_at is not None:
-                        self._max_ts = max(self._max_ts, edge.created_at)
-                    if edge.deleted_at is not None:
-                        self._max_ts = max(self._max_ts, edge.deleted_at)
-                self._update_edge(edge)
+                if edge.created_at is not None:
+                    if max_ts is None or edge.created_at > max_ts:
+                        max_ts = edge.created_at
+                self._index_edge(edge)
         cursor.close()
+        self._max_ts = max_ts
 
-    def _update_edge(self, edge: Edge) -> None:
-        if edge.deleted_at is None:
-            if edge.judgement != Judgement.NO_JUDGEMENT:
-                edge.score = None
-            self.edges[edge.key] = edge
-            self.nodes[edge.source].add(edge)
-            self.nodes[edge.target].add(edge)
-            if edge.judgement == Judgement.POSITIVE:
-                self._linker.add(edge.source.id, edge.target.id)
-            elif edge.judgement in (Judgement.NEGATIVE, Judgement.UNSURE):
-                self._blockers[edge.key] = edge.judgement
+    def _update_from_db(self) -> None:
+        """Refresh the indexes from edges written since the last load.
+
+        Additive deltas (new positive merges, new blockers) fold straight in.
+        A soft-deleted positive edge can split a cluster, which the flat map
+        can't undo in place, so any such removal triggers a full rebuild;
+        deleted blockers are simply dropped. The window is inclusive
+        (``>= _max_ts``) and every apply is idempotent, so an edge written in
+        the same instant as the high-water mark is never missed nor double-
+        counted. Reads its own uncommitted writes via the shared connection.
+        """
+        if self._max_ts is None:
+            self._load_all()
+            return
+        stmt = self._table.select().where(
+            or_(
+                self._table.c.created_at >= self._max_ts,
+                self._table.c.deleted_at >= self._max_ts,
+            )
+        )
+        cursor = self._session.execute(stmt)
+        max_ts = self._max_ts
+        needs_rebuild = False
+        while batch := cursor.fetchmany(10000):
+            for row in batch:
+                edge = Edge.from_dict(row._mapping)
+                if edge.created_at is not None and edge.created_at > max_ts:
+                    max_ts = edge.created_at
+                if edge.deleted_at is not None:
+                    if edge.deleted_at > max_ts:
+                        max_ts = edge.deleted_at
+                    if edge.judgement == Judgement.POSITIVE:
+                        needs_rebuild = True
+                    else:
+                        self._blockers.pop(edge.key, None)
+                else:
+                    self._index_edge(edge)
+        cursor.close()
+        if needs_rebuild:
+            self._load_all()
         else:
-            existed = self.edges.pop(edge.key, None)
-            self._blockers.pop(edge.key, None)
-            for node in (edge.source, edge.target):
-                if node in self.nodes:
-                    self.nodes[node].discard(edge)
-                    if len(self.nodes[node]) == 0:
-                        del self.nodes[node]
-            # A removed positive edge may split a cluster; the flat map can't
-            # do that incrementally, so flag a rebuild on next read.
-            if existed is not None and existed.judgement == Judgement.POSITIVE:
-                self._linker_dirty = True
-
-    def _rebuild_linker(self) -> None:
-        linker: Linker[SE] = Linker({})
-        for edge in self.edges.values():
-            if edge.judgement == Judgement.POSITIVE:
-                linker.add(edge.source.id, edge.target.id)
-        self._linker = linker
-        self._linker_dirty = False
-
-    def _linker_view(self) -> Linker[SE]:
-        if self._linker_dirty:
-            self._rebuild_linker()
-        return self._linker
-
-    def _invalidate(self) -> None:
-        pass
+            self._max_ts = max_ts
 
     def load_into_memory(self) -> None:
-        """Populate the in-memory edge graph from the database.
+        """Load the in-memory indexes from the database.
 
-        Resolver reads use this graph; call again to pick up database writes
+        Resolver reads use these indexes; call again to pick up database writes
         made by another session.
         """
         self._update_from_db()
-        self._invalidate()
 
     def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
@@ -193,7 +187,7 @@ class Resolver(Linker[SE]):
         return Edge.from_dict(row._mapping)
 
     def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._linker_view().connected(node)
+        return self._linker.connected(node)
 
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
@@ -205,7 +199,7 @@ class Resolver(Linker[SE]):
 
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
-        return self._linker_view().canonicals()
+        return self._linker.canonicals()
 
     def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
@@ -321,9 +315,7 @@ class Resolver(Linker[SE]):
         edge = self.get_edge(left_id, right_id)
         if edge is not None:
             if edge.judgement == Judgement.NO_JUDGEMENT:
-                # Just update score
-
-                # database
+                # Just update the score; a suggestion touches neither index.
                 stmt = update(self._table)
                 stmt = stmt.where(self._table.c.target == edge.target.id)
                 stmt = stmt.where(self._table.c.source == edge.source.id)
@@ -333,9 +325,6 @@ class Resolver(Linker[SE]):
                 )
                 stmt = stmt.values({"score": score})
                 self._session.execute(stmt)
-
-                # local state
-                edge.score = score
             return edge.target
         return self.decide(
             left_id, right_id, Judgement.NO_JUDGEMENT, score=score, user=user
@@ -349,6 +338,28 @@ class Resolver(Linker[SE]):
         user: Optional[str] = None,
         score: Optional[float] = None,
     ) -> Identifier:
+        result = self._decide(left_id, right_id, judgement, user=user, score=score)
+        # Suggestions don't touch the indexes; everything else does, so refresh
+        # so the caller's next read sees the merge/blocker it just wrote.
+        if judgement != Judgement.NO_JUDGEMENT:
+            self._update_from_db()
+        return result
+
+    def _decide(
+        self,
+        left_id: StrIdent,
+        right_id: StrIdent,
+        judgement: Judgement,
+        user: Optional[str] = None,
+        score: Optional[float] = None,
+    ) -> Identifier:
+        """Write a judgement to the table without refreshing the indexes.
+
+        Recurses to canonicalise positive matches; the public ``decide``
+        refreshes once at the end. The recursion only ever reads the endpoints
+        it is given against a fresh canonical, so the stale-during-recursion
+        index is never consulted for an edge written earlier in the same call.
+        """
         edge = self.get_edge(left_id, right_id)
         if edge is None:
             edge = Edge(left_id, right_id, judgement=judgement)
@@ -362,8 +373,8 @@ class Resolver(Linker[SE]):
             if not target.canonical:
                 canonical = Identifier.make()
                 self._remove_edge(edge)
-                self.decide(edge.source, canonical, judgement=judgement, user=user)
-                self.decide(edge.target, canonical, judgement=judgement, user=user)
+                self._decide(edge.source, canonical, judgement=judgement, user=user)
+                self._decide(edge.target, canonical, judgement=judgement, user=user)
                 return canonical
 
         edge.judgement = judgement
@@ -371,12 +382,10 @@ class Resolver(Linker[SE]):
         edge.user = user or getpass.getuser()
         edge.score = score or edge.score
         self._register(edge)
-        if judgement != Judgement.NO_JUDGEMENT:
-            self._invalidate()
         return edge.target
 
     def _register(self, edge: Edge) -> None:
-        """Ensure the edge exists in the resolver, as provided."""
+        """Write the edge to the table, superseding any live edge for the pair."""
         if edge.judgement != Judgement.NO_JUDGEMENT:
             edge.score = None
 
@@ -389,10 +398,9 @@ class Resolver(Linker[SE]):
 
         stmt = insert(self._table).values(edge.to_dict())
         self._session.execute(stmt)
-        self._update_edge(edge)
 
     def _remove_edge(self, edge: Edge) -> None:
-        """Remove an edge from the graph."""
+        """Soft-delete the live row for the edge's pair, if any."""
         edge.deleted_at = timestamp()
         stmt = update(self._table)
         stmt = stmt.values({"deleted_at": edge.deleted_at})
@@ -400,10 +408,9 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.source == edge.source.id)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._session.execute(stmt)
-        self._update_edge(edge)
 
     def _remove_node(self, node: Identifier) -> None:
-        """Remove a node from the graph."""
+        """Soft-delete every live edge touching the node."""
         deleted_at = timestamp()
         stmt = update(self._table)
         stmt = stmt.values({"deleted_at": deleted_at})
@@ -415,19 +422,11 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         self._session.execute(stmt)
 
-        edges = self.nodes.get(node)
-        if edges is None:
-            return
-        for edge in list(edges):
-            edge.deleted_at = deleted_at
-            if edge.judgement != Judgement.NO_JUDGEMENT:
-                self._update_edge(edge)
-
     def remove(self, node_id: StrIdent) -> None:
         """Remove all edges linking to the given node from the graph."""
         node = Identifier.get(node_id)
         self._remove_node(node)
-        self._invalidate()
+        self._update_from_db()
 
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
@@ -438,7 +437,7 @@ class Resolver(Linker[SE]):
         for part in self.connected(node):
             affected.add(str(part))
             self._remove_node(part)
-        self._invalidate()
+        self._update_from_db()
         return affected
 
     def prune(
@@ -446,97 +445,122 @@ class Resolver(Linker[SE]):
         cleanup_after: timedelta = timedelta(days=6 * 30),
         user: Optional[str] = None,
     ) -> None:
-        """Remove suggested (i.e. NO_JUDGEMENT) edges."""
-        # database
+        """Drop suggestions and simplify the merge graph, then refresh.
+
+        Three independent passes: discard NO_JUDGEMENT suggestions, redirect
+        positive edges that still point at a raw id onto their canonical, and
+        collapse old canonical-to-canonical intermediate merges. All three are
+        canonical-preserving — no node changes which cluster it resolves to —
+        so ``get_canonical`` stays valid against the pre-prune index throughout,
+        and a single refresh at the end rebuilds the simplified graph.
+        """
+        self._prune_suggestions(user=user)
+        self._prune_noncanonical_targets()
+        cutoff_ts = (utc_now() - cleanup_after).isoformat()[:28]
+        self._prune_intermediate_merges(cutoff_ts)
+        self._update_from_db()
+
+    def _live_edges(self, *conditions: Any) -> List[Edge]:
+        """Materialise the live edges matching the given column conditions."""
+        stmt = self._table.select().where(self._table.c.deleted_at.is_(None))
+        for condition in conditions:
+            stmt = stmt.where(condition)
+        cursor = self._session.execute(stmt)
+        edges = [Edge.from_dict(row._mapping) for row in cursor]
+        cursor.close()
+        return edges
+
+    def _prune_suggestions(self, user: Optional[str] = None) -> None:
+        """Hard-delete NO_JUDGEMENT suggestions (optionally for one user)."""
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
         if user is not None:
             stmt = stmt.where(self._table.c.user == user)
         self._session.execute(stmt)
 
-        # local state
+    def _prune_noncanonical_targets(self) -> None:
+        """Replace raw positive merge links with edges onto the canonical.
+
+        A positive edge whose target is a raw id bridges two members — e.g. a
+        member-to-member link that merged two existing clusters. Rewriting only
+        one endpoint onto the canonical can drop that bridge and split the
+        cluster when the endpoint already resolves to the winning canonical, so
+        attach *both* endpoints: connectivity is preserved whichever canonical
+        wins, and neither replacement edge has a raw target. The rewrites are
+        canonical-preserving, so ``get_canonical`` stays valid for the rest of
+        the pass against the pre-prune index.
+        """
         now = timestamp()
-        for edge in list(self.edges.values()):
-            if user is not None and edge.user != user:
+        positive = self._table.c.judgement == Judgement.POSITIVE.value
+        for edge in self._live_edges(positive):
+            if edge.target.canonical:
                 continue
-            if edge.judgement == Judgement.NO_JUDGEMENT:
-                edge.deleted_at = now
-                self._update_edge(edge)
-
-        cutoff = utc_now() - cleanup_after
-        cutoff_ts = cutoff.isoformat()[:28]
-
-        for edge in list(self.edges.values()):
-            if edge.deleted_at is not None:
+            canonical = Identifier.get(self.get_canonical(edge.target.id))
+            if not canonical.canonical:
+                log.warning("Invalid target: %s -> %s" % (edge.source, edge.target))
                 continue
+            log.info(
+                "Rewriting edge: %s = %s -> %s" % (edge.target, edge.source, canonical)
+            )
+            self._remove_edge(edge)
+            for member in (edge.source, edge.target):
+                self._register(
+                    Edge(
+                        left_id=member,
+                        right_id=canonical,
+                        judgement=Judgement.POSITIVE,
+                        user=edge.user,
+                        created_at=now,
+                    )
+                )
 
-            # Cleanup job 1: Positive merges where the target is not canonical.
-            if edge.judgement == Judgement.POSITIVE and not edge.target.canonical:
-                nu_target = Identifier.get(self.get_canonical(edge.target.id))
-                if not nu_target.canonical:
-                    log.warning("Invalid target: %s -> %s" % (edge.source, edge.target))
+    def _prune_intermediate_merges(self, cutoff_ts: str) -> None:
+        """Collapse old canonical-to-canonical merges onto the final canonical."""
+        now = timestamp()
+        positive = self._table.c.judgement == Judgement.POSITIVE.value
+        old = self._table.c.created_at < cutoff_ts
+        removed: Set[Pair] = set()
+        for edge in self._live_edges(positive, old):
+            if edge.key in removed:
+                continue
+            if not (edge.source.canonical and edge.target.canonical):
+                continue
+            canonical = Identifier.get(self.get_canonical(edge.source.id))
+            log.info(
+                "Removing intermediate merge: %s -> %s (%s)"
+                % (edge.source, edge.target, canonical)
+            )
+            touching = or_(
+                self._table.c.source == edge.source.id,
+                self._table.c.target == edge.source.id,
+            )
+            for linked_edge in self._live_edges(touching):
+                if linked_edge.key == edge.key or linked_edge.key in removed:
                     continue
-                log.info(
-                    "Rewriting edge: %s = %s -> %s"
-                    % (edge.target, edge.source, nu_target)
-                )
-                nu_edge = Edge(
-                    left_id=edge.source,
-                    right_id=nu_target,
-                    judgement=Judgement.POSITIVE,
-                    user=edge.user,
-                    created_at=now,
-                )
-                self._remove_edge(edge)
-                self._register(nu_edge)
-
-            # Cleanup job 2: Positive merges older than cutoff where both sides
-            # are canonical. These can be simplified and the intermediate canonical IDs
-            # removed.
-            if (
-                edge.source.canonical
-                and edge.target.canonical
-                and edge.judgement == Judgement.POSITIVE
-                and edge.created_at is not None
-                and edge.created_at < cutoff_ts
-            ):
-                canonical = Identifier.get(self.get_canonical(edge.source.id))
-                log.info(
-                    "Removing intermediate merge: %s -> %s (%s)"
-                    % (edge.source, edge.target, canonical)
-                )
-                linked = self.nodes.get(edge.source, set())
-                for linked_edge in list(linked):
-                    if linked_edge == edge:
-                        continue
-                    if linked_edge.deleted_at is not None:
-                        continue
-                    if linked_edge.other(edge.source) == canonical:
-                        log.warning(
-                            " -> Skipping self-referential edge: %s" % linked_edge
+                if linked_edge.other(edge.source) == canonical:
+                    log.warning(" -> Skipping self-referential edge: %s" % linked_edge)
+                else:
+                    log.info(
+                        " -> Rewriting edge: %s <-> %s -> %s (%s)"
+                        % (
+                            edge.source,
+                            linked_edge.other(edge.source),
+                            canonical,
+                            linked_edge.judgement,
                         )
-                    else:
-                        log.info(
-                            " -> Rewriting edge: %s <-> %s -> %s (%s)"
-                            % (
-                                edge.source,
-                                linked_edge.other(edge.source),
-                                canonical,
-                                linked_edge.judgement,
-                            )
-                        )
-                        nu_edge = Edge(
-                            left_id=linked_edge.other(edge.source),
-                            right_id=canonical,
-                            judgement=linked_edge.judgement,
-                            user=linked_edge.user,
-                            created_at=now,
-                        )
-                        self._register(nu_edge)
-                    self._remove_edge(linked_edge)
-                self._remove_edge(edge)
-
-        self._invalidate()
+                    )
+                    nu_edge = Edge(
+                        left_id=linked_edge.other(edge.source),
+                        right_id=canonical,
+                        judgement=linked_edge.judgement,
+                        user=linked_edge.user,
+                        created_at=now,
+                    )
+                    self._register(nu_edge)
+                self._remove_edge(linked_edge)
+                removed.add(linked_edge.key)
+            self._remove_edge(edge)
+            removed.add(edge.key)
 
     def apply_statement(self, stmt: Statement) -> Statement:
         """Canonicalise Statement Entity IDs and ID values"""
@@ -575,7 +599,7 @@ class Resolver(Linker[SE]):
                 if edge_count % 10000 == 0:
                     log.info("Loaded %s edges." % edge_count)
         log.info("Done. Loaded %s edges." % edge_count)
-        self._invalidate()
+        self._update_from_db()
 
     def __repr__(self) -> str:
         parts = self._session.engine.url
