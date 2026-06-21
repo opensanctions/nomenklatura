@@ -3,7 +3,6 @@ import requests_mock
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 
-from nomenklatura.cache import Cache
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.util import make_session
 from nomenklatura.wikidata.wikipedia import (
@@ -45,19 +44,18 @@ def test_preferred_langs_multilingual_country() -> None:
     assert langs[:4] == ["deu", "fra", "ita", "roh"]
 
 
-def test_fetch_summary_negative_cache() -> None:
-    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+def test_fetch_summary_negative_cache(cache_factory) -> None:
+    cache = cache_factory(Dataset.make({"name": "wikidata"}))
     session = make_session()
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", SUMMARY_URL, status_code=404)
         assert fetch_summary(cache, session, "en", "Nobody") is None
     # A second call is served from the empty-string sentinel, no HTTP needed.
     assert fetch_summary(cache, session, "en", "Nobody") is None
-    cache.close()
 
 
-def test_item_summaries_preferred_only_and_capped() -> None:
-    cache = Cache.make_default(Dataset.make({"name": "wikidata"}))
+def test_item_summaries_preferred_only_and_capped(cache_factory) -> None:
+    cache = cache_factory(Dataset.make({"name": "wikidata"}))
     session = make_session()
     # enwiki/dewiki are preferred; the made-up 'xxwiki' is not and must be skipped.
     item = _item("enwiki", "dewiki", "xxwiki")
@@ -72,4 +70,3 @@ def test_item_summaries_preferred_only_and_capped() -> None:
         # No fill from the non-preferred language even with budget to spare.
         many = item_wikipedia_summaries(cache, session, item, ["deu", "eng"])
         assert {s.lang for s in many} == {"deu", "eng"}
-    cache.close()

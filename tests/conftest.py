@@ -1,6 +1,6 @@
 import json
 import shutil
-from typing import Any, Dict, Generator, List
+from typing import Any, Callable, Dict, Generator, List
 from sqlalchemy import MetaData
 import yaml
 import pytest
@@ -14,7 +14,7 @@ from followthemoney import Dataset, StatementEntity as Entity
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
-from nomenklatura.db import close_db, get_engine, get_metadata
+from nomenklatura.db import close_db, get_engine, get_metadata, make_session, Session
 from nomenklatura.resolver import Resolver
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
@@ -96,12 +96,33 @@ def test_dataset() -> Dataset:
 
 
 @pytest.fixture(scope="function")
-def test_cache(test_dataset: Dataset) -> Generator[Cache, None, None]:
-    engine = get_engine(settings.DB_URL)
-    metadata = get_metadata()
-    cache = Cache(engine, metadata, test_dataset, create=True)
-    yield cache
-    cache.close()
+def db_session() -> Generator[Session, None, None]:
+    """One unit-of-work session per test, disposed on teardown.
+
+    Mirrors the production ownership model (the test is the owner) and, more
+    importantly, guarantees the connection is released — no test can leak an
+    open transaction into the next.
+    """
+    session = make_session()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture(scope="function")
+def test_cache(db_session: Session, test_dataset: Dataset) -> Cache:
+    return Cache(db_session, test_dataset, create=True)
+
+
+@pytest.fixture(scope="function")
+def cache_factory(db_session: Session) -> Callable[[Dataset], Cache]:
+    """Build a cache for an arbitrary dataset on the per-test session.
+
+    Replaces the old ``Cache.make_default`` in tests that need a cache for a
+    dataset other than ``test_dataset`` (wikidata, enrichers, ...).
+    """
+    return lambda dataset: Cache(db_session, dataset, create=True)
 
 
 @pytest.fixture(scope="function")

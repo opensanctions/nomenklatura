@@ -1,6 +1,5 @@
 import requests_mock
 from followthemoney import Dataset, StatementEntity
-from nomenklatura.cache import Cache
 from nomenklatura.enrich import make_enricher, enrich, match, Enricher
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -62,13 +61,13 @@ RESPONSE = [
 ]
 
 
-def load_enricher() -> Enricher[Dataset]:
-    cache = Cache.make_default(dataset)
+def load_enricher(cache_factory) -> Enricher[Dataset]:
+    cache = cache_factory(dataset)
     return make_enricher(dataset, cache, {"type": PATH})
 
 
-def test_nominatim_match():
-    enricher = load_enricher()
+def test_nominatim_match(cache_factory):
+    enricher = load_enricher(cache_factory)
     with requests_mock.Mocker(real_http=False) as m:
         m.get("/search.php", json=RESPONSE)
         full = "Kopenhagener Str. 47, Berlin"
@@ -87,9 +86,9 @@ def test_nominatim_match():
     enricher.close()
 
 
-def test_nominatim_match_list(resolver: Resolver[StatementEntity]):
+def test_nominatim_match_list(resolver: Resolver[StatementEntity], cache_factory):
     resolver.begin()
-    enricher = load_enricher()
+    enricher = load_enricher(cache_factory)
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
@@ -106,8 +105,8 @@ def test_nominatim_match_list(resolver: Resolver[StatementEntity]):
     enricher.close()
 
 
-def test_nominatim_enrich():
-    enricher = load_enricher()
+def test_nominatim_enrich(cache_factory):
+    enricher = load_enricher(cache_factory)
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}
     ent = StatementEntity.from_data(dataset, data)
@@ -118,9 +117,9 @@ def test_nominatim_enrich():
     enricher.close()
 
 
-def test_nominatim_enrich_list(resolver: Resolver[StatementEntity]):
+def test_nominatim_enrich_list(resolver: Resolver[StatementEntity], cache_factory):
     resolver.begin()
-    enricher = load_enricher()
+    enricher = load_enricher(cache_factory)
 
     full = "Kopenhagener Str. 47, Berlin"
     data = {"schema": "Address", "id": "xxx", "properties": {"full": [full]}}

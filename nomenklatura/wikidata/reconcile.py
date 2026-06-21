@@ -5,6 +5,7 @@ from followthemoney import Dataset, DS, SE, StatementEntity, registry
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
+from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store, View
@@ -206,6 +207,7 @@ def rank_candidates(
 
 def iter_persons(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
@@ -225,7 +227,7 @@ def iter_persons(
     view = store.default_view()
     for index, entity in enumerate(view.entities()):
         if index and index % CACHE_INTERVAL == 0:
-            client.cache.flush()
+            session.checkpoint()
         if not entity.schema.is_a("Person") or entity.id is None:
             continue
         current = resolver.get_canonical(entity.id)
@@ -265,6 +267,7 @@ class ReviewItem(Generic[SE]):
 
 def prepare_review(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
@@ -289,7 +292,7 @@ def prepare_review(
     commands: List[QSCommand] = []
     seen, linked_count = 0, 0
     for entity, linked_item, candidates in iter_persons(
-        resolver, store, client, dataset, algorithm, aliases
+        resolver, session, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
             positions = position_claims(view, entity)
@@ -313,7 +316,7 @@ def prepare_review(
         best = " (best %.3f)" % candidates[0][1] if candidates else ""
         log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)
     resolver.commit()
-    client.cache.flush()
+    session.checkpoint()
     items.sort(key=lambda review: review.top_score, reverse=True)
     log.info("Prepared %d person(s) for review; %d already linked.", len(items), linked_count)
     return items, commands
@@ -321,6 +324,7 @@ def prepare_review(
 
 def reconcile(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
@@ -350,7 +354,7 @@ def reconcile(
     commands: List[QSCommand] = []
     seen, merged = 0, 0
     for entity, linked_item, candidates in iter_persons(
-        resolver, store, client, dataset, algorithm, aliases
+        resolver, session, store, client, dataset, algorithm, aliases
     ):
         if linked_item is not None:
             positions = position_claims(view, entity)

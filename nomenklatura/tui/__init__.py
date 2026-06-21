@@ -7,6 +7,7 @@ from nomenklatura.store import Store
 from nomenklatura.tui.dedupe import DedupeApp, DedupeState
 from nomenklatura.tui.reconcile import ReconcileApp, ReconcileState
 from nomenklatura.matching import ScoringAlgorithm
+from nomenklatura.db import Session
 from nomenklatura.resolver import Resolver
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import prepare_review
@@ -25,6 +26,7 @@ def dedupe_ui(
 
 def reconcile_ui(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
@@ -45,6 +47,7 @@ def reconcile_ui(
     # Fetch and rank everything before the TUI boots, with logging on screen.
     items, commands = prepare_review(
         resolver,
+        session,
         store,
         client,
         dataset,

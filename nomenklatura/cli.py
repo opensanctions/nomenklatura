@@ -12,6 +12,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
+from nomenklatura.db import make_session, Session
 from nomenklatura.matching import train_v1_matcher, train_erun_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
@@ -31,11 +32,13 @@ log = logging.getLogger(__name__)
 ResPath = click.Path(dir_okay=False, writable=True, path_type=Path)
 
 
-def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
+def _load_enricher(
+    session: Session, path: Path
+) -> Tuple[Dataset, Enricher[Dataset]]:
     with open(path, "r") as fh:
         data = yaml.safe_load(fh)
         dataset = Dataset.make(data)
-        cache = Cache.make_default(dataset)
+        cache = Cache(session, dataset, create=True)
         enricher = make_enricher(dataset, cache, data)
         if enricher is None:
             raise TypeError("Could not load enricher")
@@ -165,12 +168,14 @@ def wikidata_reconcile(
     if algorithm_type is None:
         raise click.Abort(f"Unknown algorithm: {algorithm}")
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-    cache = Cache.make_default(dataset)
+    session = make_session()
+    cache = Cache(session, dataset, create=True)
     client = WikidataClient(cache)
     try:
         if review:
             commands = reconcile_ui(
                 resolver,
+                session,
                 store,
                 client,
                 dataset,
@@ -182,6 +187,7 @@ def wikidata_reconcile(
         else:
             commands = run_reconcile(
                 resolver,
+                session,
                 store,
                 client,
                 dataset,
@@ -194,7 +200,7 @@ def wikidata_reconcile(
             )
     finally:
         # Persist cached API responses even if the run is cancelled or errors.
-        cache.close()
+        session.commit()
     resolver.commit()
     # One QS batch sits next to the input file: entities.ijson.qs. Each create is
     # a contiguous CREATE…LAST unit, so it coexists with enrich statements (which
@@ -285,17 +291,17 @@ def match_command(
     outpath: Path,
 ) -> None:
     resolver = Resolver[Entity].make_default()
-    _, enricher = _load_enricher(config)
-
-    try:
-        resolver.begin()
-        with path_writer(outpath) as fh:
-            stream = path_entities(entities, Entity)
-            for proxy in match(enricher, resolver, stream):
-                write_entity(fh, proxy)
-        resolver.commit()
-    finally:
-        enricher.close()
+    with make_session() as session:
+        _, enricher = _load_enricher(session, config)
+        try:
+            resolver.begin()
+            with path_writer(outpath) as fh:
+                stream = path_entities(entities, Entity)
+                for proxy in match(enricher, resolver, stream):
+                    write_entity(fh, proxy)
+            resolver.commit()
+        finally:
+            enricher.close()
 
 
 @cli.command("enrich", help="Fetch extra info from an enrichment source")
@@ -308,16 +314,17 @@ def enrich_command(
     outpath: Path,
 ) -> None:
     resolver = Resolver[Entity].make_default()
-    _, enricher = _load_enricher(config)
-    try:
-        resolver.begin()
-        with path_writer(outpath) as fh:
-            stream = path_entities(entities, Entity)
-            for proxy in enrich(enricher, resolver, stream):
-                write_entity(fh, proxy)
-        resolver.commit()
-    finally:
-        enricher.close()
+    with make_session() as session:
+        _, enricher = _load_enricher(session, config)
+        try:
+            resolver.begin()
+            with path_writer(outpath) as fh:
+                stream = path_entities(entities, Entity)
+                for proxy in enrich(enricher, resolver, stream):
+                    write_entity(fh, proxy)
+            resolver.commit()
+        finally:
+            enricher.close()
 
 
 @cli.command("apply-statements", help="Apply a resolver file to a set of statements")

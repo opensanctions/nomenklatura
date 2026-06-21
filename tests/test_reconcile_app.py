@@ -4,7 +4,6 @@ import requests_mock
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 
-from nomenklatura.cache import Cache
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.matching import EntityResolveRegression
@@ -40,7 +39,9 @@ def _mock_summary(m):
 
 
 @pytest.mark.asyncio
-async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
+async def test_reconcile_app_navigation(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-x", "schema": "Person", '
@@ -49,7 +50,7 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
     resolver.begin()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
-    cache = Cache.make_default(dataset)
+    cache = cache_factory(dataset)
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
@@ -57,7 +58,7 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
         _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, db_session, store, client, dataset, EntityResolveRegression
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
@@ -74,11 +75,12 @@ async def test_reconcile_app_navigation(tmp_path, resolver: Resolver[Entity]):
             assert state.highlight == 1, "down should move to 'none of the above'"
             await pilot.press("up")
             assert state.highlight == 0, "up should move back to the candidate"
-    cache.close()
 
 
 @pytest.mark.asyncio
-async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
+async def test_reconcile_app_negative(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-x", "schema": "Person", '
@@ -87,7 +89,7 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
     resolver.begin()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
-    cache = Cache.make_default(dataset)
+    cache = cache_factory(dataset)
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(
             "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
@@ -95,7 +97,7 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
         _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, db_session, store, client, dataset, EntityResolveRegression
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
@@ -109,11 +111,12 @@ async def test_reconcile_app_negative(tmp_path, resolver: Resolver[Entity]):
             assert state.candidates == []
     # The negative judgement persists so the pair won't be suggested again.
     assert resolver.get_judgement("os-x", "Q7747").value == "negative"
-    cache.close()
 
 
 @pytest.mark.asyncio
-async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity]):
+async def test_reconcile_app_no_candidates(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-x", "schema": "Person", '
@@ -122,12 +125,12 @@ async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity])
     resolver.begin()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
-    cache = Cache.make_default(dataset)
+    cache = cache_factory(dataset)
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=_dispatch([]))
         client = WikidataClient(cache)
         items, enrich = prepare_review(
-            resolver, store, client, dataset, EntityResolveRegression
+            resolver, db_session, store, client, dataset, EntityResolveRegression
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
@@ -147,4 +150,3 @@ async def test_reconcile_app_no_candidates(tmp_path, resolver: Resolver[Entity])
         from nomenklatura.wikidata.write import CreateItem
 
         assert any(isinstance(c, CreateItem) for c in state.commands)
-    cache.close()
