@@ -68,6 +68,12 @@ class Resolver(Linker[SE]):
             text("target"),
             **unique_kw,
         )
+        # Backs the candidate scan: NO_JUDGEMENT suggestions ordered by score.
+        suggested = Index(
+            f"{table_name}_judgement_score",
+            text("judgement"),
+            text("score"),
+        )
         self._table = Table(
             table_name,
             MetaData(),
@@ -80,6 +86,7 @@ class Resolver(Linker[SE]):
             Column("created_at", Unicode(28)),
             Column("deleted_at", Unicode(28), nullable=True),
             unique_pair,
+            suggested,
         )
         if create:
             session.create(self._table)
