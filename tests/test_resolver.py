@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Dict, Tuple
@@ -321,6 +322,59 @@ def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
     resolver.prune()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
+    db_session.checkpoint()
+
+
+def test_prune_rewrites_noncanonical_target(
+    resolver: Resolver[StatementEntity], db_session
+):
+    # Merging two existing clusters via raw ids leaves a positive edge whose
+    # target is a raw (non-canonical) id. prune's first cleanup job rewrites it
+    # to point at the canonical.
+    resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide("b1", "b2", Judgement.POSITIVE)
+    resolver.decide("a1", "b1", Judgement.POSITIVE)
+
+    cross = resolver.get_edge("a1", "b1")
+    assert cross is not None and cross.judgement == Judgement.POSITIVE, cross
+    assert not (cross.target.canonical and cross.source.canonical), cross
+    canon = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon for n in ("a2", "b1", "b2"))
+
+    resolver.prune()
+
+    # The raw cross-edge is gone, connectivity is preserved, and no positive
+    # edge with a non-canonical target survives.
+    assert resolver.get_edge("a1", "b1") is None
+    canon2 = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
+    for edge in resolver.get_judgements():
+        if edge.judgement == Judgement.POSITIVE:
+            assert edge.target.canonical, edge
+    db_session.checkpoint()
+
+
+def test_prune_simplifies_intermediate_merge(
+    resolver: Resolver[StatementEntity], db_session
+):
+    # A direct canonical<->canonical positive edge is an intermediate merge.
+    # prune's second job (past the cutoff) rewrites the members onto the final
+    # canonical and removes the intermediate edge.
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    resolver.decide(canon_a, canon_b, Judgement.POSITIVE)
+
+    assert resolver.get_edge(canon_a, canon_b) is not None
+    canon = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon for n in ("a2", "b1", "b2"))
+
+    # Negative cleanup window puts the cutoff in the future so fresh edges qualify.
+    resolver.prune(cleanup_after=timedelta(days=-3650))
+
+    # The intermediate edge is gone and connectivity is preserved.
+    assert resolver.get_edge(canon_a, canon_b) is None
+    canon2 = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
     db_session.checkpoint()
 
 
