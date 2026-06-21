@@ -40,14 +40,7 @@ def reconcile_ui(
     user: Optional[str] = None,
     url_base: Optional[str] = None,
 ) -> List[QSCommand]:
-    """Run the interactive Wikidata reconciliation UI; return the queued QS commands.
-
-    All candidates are fetched, scored and sorted up front (with logging
-    visible), then each unlinked person is presented against its ranked Wikidata
-    candidates for a human decision (confirm / no-match / unsure / create / skip).
-    Returns the accumulated QuickStatements commands for the caller to serialize.
-    """
-    # Fetch and rank everything before the TUI boots, with logging on screen.
+    """Review pre-ranked Wikidata candidates and return queued commands."""
     items, commands = prepare_review(
         resolver,
         session,

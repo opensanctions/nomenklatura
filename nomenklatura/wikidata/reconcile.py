@@ -28,14 +28,10 @@ from nomenklatura.wikidata.write import QSCommand
 
 log = logging.getLogger(__name__)
 
-# How often to commit the API-response cache. Each person triggers several
-# (slow) Wikidata calls, so a long run that's cancelled would otherwise lose
-# every cached response; flushing periodically keeps the work that's done.
+# Bound cache loss when a long reconciliation is interrupted.
 CACHE_INTERVAL = 10
 
-# How many top-ranked candidates per person get Wikipedia summaries fetched for
-# review. Summaries are reviewer context only (the matcher ignores them), so we
-# limit the per-person REST cost to the handful a reviewer actually compares.
+# Summaries are display-only, so fetch them only for likely candidates.
 REVIEW_SUMMARY_CANDIDATES = 5
 
 
@@ -214,15 +210,7 @@ def iter_persons(
     algorithm: Type[ScoringAlgorithm],
     aliases: bool = False,
 ) -> Iterator[Tuple[SE, Optional[Item], List[Tuple[Item, float, StatementEntity]]]]:
-    """Walk persons once, classifying each for the headless and review paths.
-
-    Yields one tuple per Person: an already-linked person as `(entity, item, [])`
-    so the caller can enrich it, and an unlinked person as `(entity, None,
-    candidates)` where candidates are scored, best-first, and already filtered
-    against existing judgements. This is the shared walk — iteration, cache
-    flushing, linked-detection and ranking — leaving enrichment, judgements, QS
-    emission and the resolver transaction to the caller.
-    """
+    """Yield linked items or ranked candidates for each person."""
     config = algorithm.default_config()
     view = store.default_view()
     for index, entity in enumerate(view.entities()):
@@ -231,8 +219,6 @@ def iter_persons(
         if not entity.schema.is_a("Person") or entity.id is None:
             continue
         current = resolver.get_canonical(entity.id)
-        # Linked by a resolver merge (canonical is a QID) or by the entity's own
-        # QID (id or wikidataId property): hand it back for enrichment.
         linked = current if is_qid(current) else entity_qid(entity)
         if linked is not None:
             item = client.fetch_item(linked)
@@ -245,7 +231,6 @@ def iter_persons(
         ):
             if cand_item.id is None:
                 continue
-            # Drop candidates already judged (negative/unsure/positive).
             if not resolver.check_candidate(current, cand_item.id):
                 continue
             candidates.append((cand_item, score, proxy))
@@ -276,16 +261,7 @@ def prepare_review(
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
 ) -> Tuple[List["ReviewItem[SE]"], List[QSCommand]]:
-    """Fetch and rank every person's candidates up front, before the TUI.
-
-    Reach for this to drive the interactive review without per-screen network
-    stalls: it does all the searching, fetching and scoring here — with normal
-    logging visible — enriches already-linked persons, and returns the review
-    items sorted by descending top-candidate score together with the
-    linked-person enrichment commands the reviewer's own decisions get appended
-    to. The TUI then runs purely in memory. `source_url` is a fallback citation
-    for entities lacking their own.
-    """
+    """Prepare ranked candidates and linked-person enrichments for review."""
     resolver.load_into_memory()
     view = store.default_view()
     items: List[ReviewItem[SE]] = []
@@ -302,10 +278,6 @@ def prepare_review(
             linked_count += 1
             continue
         seen += 1
-        # Attach Wikipedia summaries to the top candidates so the reviewer sees
-        # who each item is. Fetched here (not in candidate_proxy) because it's a
-        # per-candidate REST call the matcher doesn't need: only the few
-        # candidates a reviewer compares are worth the calls.
         langs = preferred_langs(entity)
         for cand_item, _, proxy in candidates[:REVIEW_SUMMARY_CANDIDATES]:
             for summary in item_wikipedia_summaries(
@@ -335,19 +307,7 @@ def reconcile(
     retrieved: Optional[str] = None,
     source_url: Optional[str] = None,
 ) -> List[QSCommand]:
-    """Match the persons in a store against Wikidata, auto-merge, and emit QS.
-
-    For each person: those already linked to a QID are diffed against their
-    Wikidata item into enrichment commands; those matched above the threshold are
-    recorded as POSITIVE judgements but *not* enriched (an auto-merge is a guess,
-    and we only push edits from links we already trust — they enrich on a later
-    pass once linked); those with no acceptable match become item-creation
-    commands — but only when `create` is set, since a headless create is a
-    speculative new item for every miss, not a human decision; leave it off to
-    emit enrichments alone. Returns the QuickStatements commands to serialize.
-    This is the headless half of the reconcile tool: no UI, just xref-style
-    auto-merge plus reviewable QS.
-    """
+    """Reconcile persons automatically and return QuickStatements commands."""
     resolver.load_into_memory()
     view = store.default_view()
     commands: List[QSCommand] = []
@@ -362,16 +322,12 @@ def reconcile(
             )
             continue
         seen += 1
-        # candidates are already filtered against existing judgements, so the top
-        # one is mergeable; we only re-check the score against the threshold.
         best_item: Optional[Item] = None
         best_score = 0.0
         if candidates:
             best_item, best_score, _ = candidates[0]
         if best_item is not None and best_score > threshold:
-            # Record the link, but don't enrich off it: an auto-merge is an
-            # unconfirmed guess, and we only push Wikidata edits from links we
-            # already trust. It gets enriched on a later pass as "already linked".
+            # Only established links are trusted as sources for Wikidata edits.
             log.info("Auto-merge [%.3f]: %s <> %s", best_score, entity.id, best_item.id)
             assert entity.id is not None  # iter_persons never yields id-less entities
             canonical = resolver.decide(
@@ -380,7 +336,6 @@ def reconcile(
             store.update(canonical.id)
             merged += 1
         elif create:
-            # No acceptable match: propose a new Wikidata item for review.
             commands.extend(propose_create(entity, retrieved, source_url))
     session.checkpoint()
     log.info("Reconciled %d of %d unlinked persons to Wikidata.", merged, seen)

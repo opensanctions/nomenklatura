@@ -30,12 +30,10 @@ def test_session_checkpoint_persists_and_continues(tmp_path: Path):
     session.execute(insert(table).values(key="a", value="1"))
     session.checkpoint()
 
-    # A fresh connection sees the committed row...
     other = make_session(url)
     assert "a" in _keys(other, _kv_table(other))
     other.close()
 
-    # ...and the original session keeps working without a manual begin.
     session.execute(insert(table).values(key="b", value="2"))
     session.commit()
     assert session._conn is None
@@ -77,7 +75,6 @@ def test_session_context_manager_commits_on_clean_exit(tmp_path: Path):
 
 def test_session_context_manager_rolls_back_on_error(tmp_path: Path):
     url = f"sqlite:///{tmp_path / 'kv.db'}"
-    # Create + commit the table first so the rollback below only drops the row.
     setup = make_session(url)
     _kv_table(setup)
     setup.commit()

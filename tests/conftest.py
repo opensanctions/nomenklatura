@@ -33,11 +33,7 @@ def wrap_test():
     if settings.DB_URL.startswith("sqlite"):
         settings.DB_URL = "sqlite:///:memory:"
     yield
-    # Drop every table, reflecting the live schema rather than a single
-    # MetaData: Cache and Resolver now own per-instance MetaData, so a global
-    # drop_all would miss their tables and leak committed rows across tests on
-    # a persistent Postgres. (On in-memory sqlite the engine is disposed below
-    # anyway, but reflecting is harmless there.)
+    # Reflect so per-instance metadata tables are dropped between tests.
     engine = get_engine()
     meta = MetaData()
     meta.reflect(bind=engine)
@@ -93,12 +89,7 @@ def test_dataset() -> Dataset:
 
 @pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
-    """One unit-of-work session per test, disposed on teardown.
-
-    Mirrors the production ownership model (the test is the owner) and, more
-    importantly, guarantees the connection is released — no test can leak an
-    open transaction into the next.
-    """
+    """Yield one unit-of-work session per test."""
     session = make_session()
     try:
         yield session
@@ -113,11 +104,7 @@ def test_cache(db_session: Session, test_dataset: Dataset) -> Cache:
 
 @pytest.fixture(scope="function")
 def cache_factory(db_session: Session) -> Callable[[Dataset], Cache]:
-    """Build a cache for an arbitrary dataset on the per-test session.
-
-    Replaces the old ``Cache.make_default`` in tests that need a cache for a
-    dataset other than ``test_dataset`` (wikidata, enrichers, ...).
-    """
+    """Build caches for arbitrary datasets on the per-test session."""
     return lambda dataset: Cache(db_session, dataset, create=True)
 
 

@@ -233,12 +233,9 @@ def test_update_from_db():
     On SQLite this is not concurrent - it only tests the update loading.
     On Postgres this also tests transaction winners.
     """
-    # Two sessions over the same db (same cached engine, even in-memory sqlite).
-    # Create + commit the table on the first session before the second attaches:
-    # session.create() runs CREATE TABLE inside the session's transaction, so an
-    # uncommitted create on session1 would block session2's create on Postgres.
     session1 = make_session()
     r1 = Resolver(session1, create=True)
+    # PostgreSQL locks the uncommitted table creation.
     session1.checkpoint()
     session2 = make_session()
     r2 = Resolver(session2, create=True)

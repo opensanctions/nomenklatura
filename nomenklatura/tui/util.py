@@ -30,13 +30,7 @@ def apply_judgement(
     right_id: str,
     judgement: Judgement,
 ) -> str:
-    """Record a judgement between two entity ids and reflect it in the store.
-
-    The `decide → store.update → checkpoint` triad is easy to get wrong (the
-    store must be re-keyed to the new canonical id, and the order matters), so
-    both the dedupe and reconcile UIs route through here. Returns the canonical
-    id the two entities now share.
-    """
+    """Record a judgement and re-key the store before committing it."""
     canonical = resolver.decide(left_id, right_id, judgement=judgement)
     store.update(canonical.id)
     session.checkpoint()

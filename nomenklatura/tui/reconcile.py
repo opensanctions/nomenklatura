@@ -23,16 +23,7 @@ from nomenklatura.wikidata.write import QSCommand
 
 
 class ReconcileState(Generic[DS, SE]):
-    """Drives the interactive review over a precomputed list of ranked candidates.
-
-    All searching/fetching/scoring happens before the app boots (see
-    `prepare_review`); this state just walks the resulting `ReviewItem`s in
-    memory. A confirmed candidate records a POSITIVE judgement and queues
-    enrichment; "none of the above" queues item creation; no-match/unsure record
-    that judgement and drop the candidate; skip does neither. `commands` is
-    seeded with the already-linked persons' enrichment and grown by both
-    confirms and creates; it is serialized after the app exits.
-    """
+    """Manage interactive review of pre-ranked Wikidata candidates."""
 
     def __init__(
         self,
@@ -60,12 +51,9 @@ class ReconcileState(Generic[DS, SE]):
         self.items = items
         self._index = -1
         self.person: Optional[SE] = None
-        # Ranked candidates for the current person: (item, score, display proxy).
         self.candidates: List[Tuple[Item, float, StatementEntity]] = []
-        # Index into candidates; == len(candidates) means the "none of the above" row.
+        # The index after the last candidate represents "none of the above".
         self.highlight = 0
-        # Seeded with enrichment for already-linked persons; confirms and creates
-        # both append here, and the whole list is serialized on exit.
         self.commands: List[QSCommand] = list(commands or [])
 
     @property
@@ -87,8 +75,7 @@ class ReconcileState(Generic[DS, SE]):
             item = self.items[self._index]
             if item.person.id is None:
                 continue
-            # Re-check against live resolver state: a QID matched earlier this
-            # session may no longer be an eligible candidate.
+            # Earlier decisions may have invalidated a prepared candidate.
             candidates = [
                 candidate
                 for candidate in item.candidates
@@ -129,13 +116,7 @@ class ReconcileState(Generic[DS, SE]):
         self.load()
 
     def reject(self, judgement: Judgement) -> None:
-        """Record a non-positive judgement on the highlighted candidate; drop it.
-
-        Used for "no match" (NEGATIVE) and "unsure": the judgement is written so
-        the pair is never suggested again (now or on a later run), and the
-        candidate leaves the list without advancing to the next person — so you
-        can cull wrong suggestions and then confirm or create.
-        """
+        """Reject the highlighted candidate without advancing the person."""
         if self.person is None or self.person.id is None or self.at_create:
             return
         item = self.candidates[self.highlight][0]
@@ -187,9 +168,7 @@ class CandidateTable(DataTable[Text]):
 
 
 class ComparePanel(VerticalScroll):
-    # Not focusable: otherwise it steals keyboard focus from the candidate list
-    # (its long content makes it scrollable), leaving the arrow keys scrolling
-    # the comparison instead of moving the highlight. Mouse wheel still scrolls.
+    # Keep arrow-key navigation on the candidate table.
     can_focus = False
 
 
@@ -199,9 +178,6 @@ class CompareWidget(ReconcileAppWidget):
         if state.person is None:
             return Text("No more persons to reconcile. Press Q to quit.", justify="center")
         if state.at_create:
-            # Preview what creating a new item would write, in the same table
-            # shape as a candidate — the person on the left, the proposed new
-            # item on the right.
             preview = create_preview(state.dataset, state.person)
             return render_comparison(
                 state.view,
@@ -231,9 +207,7 @@ class ReconcileWidget(Widget):
 class ReconcileApp(App[int], Generic[DS, SE]):
     CSS_PATH = "reconcile.tcss"
     reconcile: ReconcileState[DS, SE]
-    # Per table row, the state.highlight it maps to, or None for a non-selectable
-    # informational row (e.g. "no candidates"). Keeps the table-row index and the
-    # state's candidate index decoupled.
+    # Maps table rows to candidate indexes; informational rows map to None.
     _row_highlights: List[Optional[int]] = []
 
     BINDINGS = [

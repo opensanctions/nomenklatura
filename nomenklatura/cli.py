@@ -156,9 +156,7 @@ def wikidata_reconcile(
     create: bool = False,
 ) -> None:
     if review and create:
-        # In review mode creates come from a keypress, so --create is meaningless;
-        # it only gates the headless speculative-create bulk. Fail loudly rather
-        # than silently ignore it.
+        # Review mode creates items interactively.
         raise click.UsageError("--create cannot be combined with --review")
     session = make_session()
     try:
@@ -198,11 +196,8 @@ def wikidata_reconcile(
                 source_url=source_url,
             )
     finally:
-        # Persist cached API responses and judgements even if cancelled or errored.
+        # Keep completed requests and judgements after an interrupted run.
         session.commit()
-    # One QS batch sits next to the input file: entities.ijson.qs. Each create is
-    # a contiguous CREATE…LAST unit, so it coexists with enrich statements (which
-    # target existing QIDs) in a single batch the operator runs in the QS UI.
     _write_qs(path.with_name(path.name + ".qs"), commands)
     log.info("Reconcile complete in: %r", resolver)
 

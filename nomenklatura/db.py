@@ -74,39 +74,19 @@ def get_metadata() -> MetaData:
 
 
 def is_postgres(dialect: Dialect) -> bool:
-    """Whether the given dialect is PostgreSQL.
-
-    The single source of truth for the dialect predicate that gates upserts,
-    partial indexes, and other backend-specific SQL across the stack. Use it
-    instead of comparing ``dialect.name`` inline — SQLAlchemy reports Postgres
-    as ``"postgresql"`` (never ``"postgres"``), and scattered checks had drifted
-    into three different spellings of this one question.
-    """
+    """Return whether the dialect is PostgreSQL."""
     return dialect.name == "postgresql"
 
 
 def is_sqlite(dialect: Dialect) -> bool:
-    """Whether the given dialect is SQLite. See :func:`is_postgres`."""
+    """Return whether the dialect is SQLite."""
     return dialect.name == "sqlite"
 
 
 class Session:
-    """A single unit of work over one database connection.
+    """Own a single database connection for one unit of work.
 
-    Hand one to the data-access objects that should share a transaction (Cache,
-    Resolver, the stateful zavod tables) so the *owner* of the work — a zavod
-    Context, a CLI command — controls one commit boundary, instead of each
-    object conjuring and holding its own connection. Runs in SQLAlchemy
-    "commit-as-you-go" mode: the first ``execute`` opens a transaction and
-    ``checkpoint`` ends it while keeping the connection ready for the next, so a
-    long run commits on a frequent cadence and never pins Postgres ``xmin`` for
-    hours (the cause of the cache/resolver table bloat in production).
-
-    The session is deliberately domain-blind: it owns connection lifetime and
-    dialect, and nothing else. It holds no ``MetaData`` — table definitions are
-    a consumer/module concern (a ``Table`` runs on any connection regardless of
-    which registry it belongs to). Flushing a consumer's buffers or reloading an
-    in-memory graph around a checkpoint is the owner's job, not the session's.
+    Use this to give several data-access objects the same commit boundary.
     """
 
     def __init__(self, engine: Engine) -> None:
@@ -115,7 +95,7 @@ class Session:
 
     @property
     def connection(self) -> Connection:
-        """The live connection, checked out from the pool on first use."""
+        """Get the connection, checking it out on first use."""
         if self._conn is None:
             self._conn = self.engine.connect()
         return self._conn
@@ -136,34 +116,17 @@ class Session:
         return self.connection.execute(statement)
 
     def create(self, *tables: Table) -> None:
-        """Issue ``CREATE TABLE ... IF NOT EXISTS`` for the given tables.
-
-        Creates whatever ``Table`` objects you hand it on this session's
-        connection — independent of which ``MetaData`` they belong to — so the
-        DDL rides on the same connection as the rest of the unit of work.
-        Assumes the tables have no inter-table foreign keys (true across the
-        stack); if that changes, group by metadata and use ``create_all``.
-        """
+        """Create the given tables on this session's connection."""
         for table in tables:
             table.create(bind=self.connection, checkfirst=True)
 
     def checkpoint(self) -> None:
-        """Commit the current transaction and keep going on the same connection.
-
-        The cadence primitive: call this periodically through a long run (e.g.
-        every N entities) so committed rows become vacuumable and no single
-        transaction stays open for the whole run. The next ``execute`` begins a
-        fresh transaction automatically; the connection is *not* released.
-        """
+        """Commit the current transaction without releasing the connection."""
         if self._conn is not None:
             self._conn.commit()
 
     def commit(self) -> None:
-        """Commit and dispose the connection — the terminal end of the work.
-
-        Use ``checkpoint`` mid-run; use ``commit`` once, when the unit of work
-        is finished and the connection should go back to the pool.
-        """
+        """Commit and return the connection to the pool."""
         if self._conn is not None:
             self._conn.commit()
             self._conn.close()
@@ -195,12 +158,7 @@ class Session:
 
 
 def make_session(url: Optional[str] = None) -> Session:
-    """Build a unit-of-work session, the single entry point for a db handle.
-
-    Reuses the process-wide connection pool (one engine per URL) but hands back
-    a fresh session with its own connection, so transaction lifetime is
-    explicitly owned by the caller rather than floating in module-level caches.
-    """
+    """Build a unit-of-work session from the shared engine pool."""
     return Session(get_engine(url))
 
 

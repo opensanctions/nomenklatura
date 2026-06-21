@@ -47,8 +47,7 @@ class Resolver(Linker[SE]):
         table_name: str = "resolver",
     ) -> None:
         self._session = session
-        # Start with None to skip deletes on first load.
-        # We don't have to process deletes to represent the state on first load.
+        # The initial load only needs active edges.
         self._max_ts: Optional[str] = None
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
@@ -129,10 +128,8 @@ class Resolver(Linker[SE]):
     def load_into_memory(self) -> None:
         """Populate the in-memory edge graph from the database.
 
-        The hot reads (get_canonical/get_judgement/connected) walk this graph,
-        not the DB, so a consumer loads once and then reads in memory. Call it
-        again to pick up edges written since — the load is incremental on
-        ``_max_ts``.
+        Resolver reads use this graph; call again to pick up database writes
+        made by another session.
         """
         self._update_from_db()
         self._invalidate()
