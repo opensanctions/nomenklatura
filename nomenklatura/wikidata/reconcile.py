@@ -286,7 +286,7 @@ def prepare_review(
     to. The TUI then runs purely in memory. `source_url` is a fallback citation
     for entities lacking their own.
     """
-    resolver.begin()
+    resolver.load_into_memory()
     view = store.default_view()
     items: List[ReviewItem[SE]] = []
     commands: List[QSCommand] = []
@@ -315,7 +315,6 @@ def prepare_review(
         items.append(ReviewItem(entity, candidates))
         best = " (best %.3f)" % candidates[0][1] if candidates else ""
         log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)
-    resolver.commit()
     session.checkpoint()
     items.sort(key=lambda review: review.top_score, reverse=True)
     log.info("Prepared %d person(s) for review; %d already linked.", len(items), linked_count)
@@ -349,7 +348,7 @@ def reconcile(
     This is the headless half of the reconcile tool: no UI, just xref-style
     auto-merge plus reviewable QS.
     """
-    resolver.begin()
+    resolver.load_into_memory()
     view = store.default_view()
     commands: List[QSCommand] = []
     seen, merged = 0, 0
@@ -383,6 +382,6 @@ def reconcile(
         elif create:
             # No acceptable match: propose a new Wikidata item for review.
             commands.extend(propose_create(entity, retrieved, source_url))
-    resolver.commit()
+    session.checkpoint()
     log.info("Reconciled %d of %d unlinked persons to Wikidata.", merged, seen)
     return commands

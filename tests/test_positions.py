@@ -75,7 +75,7 @@ def _store(tmp_path, resolver, *lines: str):
 
 
 def test_position_claims_dates_and_qid(tmp_path, resolver: Resolver[Entity]):
-    resolver.begin()
+    resolver.load_into_memory()
     store = _store(
         tmp_path,
         resolver,
@@ -95,7 +95,7 @@ def test_position_claims_dates_and_qid(tmp_path, resolver: Resolver[Entity]):
 def test_position_claims_period_fallback_and_skips_unqid(
     tmp_path, resolver: Resolver[Entity]
 ):
-    resolver.begin()
+    resolver.load_into_memory()
     store = _store(
         tmp_path,
         resolver,

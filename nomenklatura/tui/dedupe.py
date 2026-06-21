@@ -11,6 +11,7 @@ from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
 
 from followthemoney import DS, SE, Dataset, StatementEntity
 
+from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.resolver.edge import Edge
@@ -23,10 +24,12 @@ HISTORY_LENGTH = 20
 class DedupeState(Generic[DS, SE]):
     def __init__(
         self,
+        session: Session,
         resolver: Resolver[SE],
         store: Store[DS, SE],
         url_base: Optional[str] = None,
     ):
+        self.session = session
         self.store = store
         self.resolver = resolver
         self.view = store.default_view(external=True)
@@ -42,7 +45,7 @@ class DedupeState(Generic[DS, SE]):
     def load(self) -> bool:
         self.left = None
         self.right = None
-        self.resolver.begin()
+        self.resolver.load_into_memory()
         for left_id, right_id, score in self.resolver.get_candidates():
             left_id = self.resolver.get_canonical(left_id)
             right_id = self.resolver.get_canonical(right_id)
@@ -78,14 +81,14 @@ class DedupeState(Generic[DS, SE]):
                     judgement=judgement,
                 )
                 self.store.update(canonical.id)
-        self.resolver.commit()
+        self.session.checkpoint()
         self.load()
 
     def edit(self, edge: Edge, judgement: Judgement) -> None:
         self.resolver.decide(edge.source, edge.target, judgement)
         self.store.update(edge.source.id)
         self.store.update(edge.target.id)
-        self.resolver.commit()
+        self.session.checkpoint()
         self.load()
 
 

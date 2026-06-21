@@ -47,7 +47,7 @@ async def test_reconcile_app_navigation(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Vladimir Putin"]}}\n'
     )
-    resolver.begin()
+    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
@@ -62,7 +62,7 @@ async def test_reconcile_app_navigation(
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, commands=enrich
+            db_session, resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -86,7 +86,7 @@ async def test_reconcile_app_negative(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Vladimir Putin"]}}\n'
     )
-    resolver.begin()
+    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
@@ -101,7 +101,7 @@ async def test_reconcile_app_negative(
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, commands=enrich
+            db_session, resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile
@@ -122,7 +122,7 @@ async def test_reconcile_app_no_candidates(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Nobody At All"]}}\n'
     )
-    resolver.begin()
+    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
@@ -134,7 +134,7 @@ async def test_reconcile_app_no_candidates(
         )
         app = ReconcileApp[Dataset, Entity]()
         app.reconcile = ReconcileState(
-            resolver, store, dataset, items, commands=enrich
+            db_session, resolver, store, dataset, items, commands=enrich
         )
         async with app.run_test() as pilot:
             state = app.reconcile

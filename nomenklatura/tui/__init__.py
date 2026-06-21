@@ -17,10 +17,13 @@ __all__ = ["dedupe_ui", "reconcile_ui"]
 
 
 def dedupe_ui(
-    resolver: Resolver[SE], store: Store[DS, SE], url_base: Optional[str] = None
+    resolver: Resolver[SE],
+    session: Session,
+    store: Store[DS, SE],
+    url_base: Optional[str] = None,
 ) -> None:
     app = DedupeApp[DS, SE]()
-    app.dedupe = DedupeState(resolver, store, url_base=url_base)
+    app.dedupe = DedupeState(session, resolver, store, url_base=url_base)
     app.run()
 
 
@@ -58,6 +61,7 @@ def reconcile_ui(
     )
     app = ReconcileApp[DS, SE]()
     app.reconcile = ReconcileState(
+        session,
         resolver,
         store,
         dataset,

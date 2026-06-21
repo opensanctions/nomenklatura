@@ -137,19 +137,6 @@ class Resolver(Linker[SE]):
         self._update_from_db()
         self._invalidate()
 
-    def cleanup_dead_edges(self) -> None:
-        """Hard-delete soft-deleted NO_JUDGEMENT edges.
-
-        Reach for this from the session owner before a checkpoint to reclaim
-        rows; it used to ride inside the now-removed ``commit()``.
-        """
-        clean_stmt = delete(self._table)
-        clean_stmt = clean_stmt.where(
-            self._table.c.judgement == Judgement.NO_JUDGEMENT.value
-        )
-        clean_stmt = clean_stmt.where(self._table.c.deleted_at.is_not(None))
-        self._session.execute(clean_stmt)
-
     def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.

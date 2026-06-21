@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Type
 from followthemoney import Schema, DS, SE
 from pathlib import Path
 
+from nomenklatura.db import Session
 from nomenklatura.store import Store
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
@@ -26,6 +27,7 @@ def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
 
 def xref(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     index_dir: Path,
     limit: int = 5000,
@@ -65,7 +67,7 @@ def xref(
         scores: List[float] = []
         suggested = 0
         idx = 0
-        resolver.begin()
+        resolver.load_into_memory()
         pairs = index.pairs(max_pairs=max_pairs)
         for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
@@ -84,8 +86,7 @@ def xref(
                 break
 
             if suggested % 10000 == 0 and suggested > 0:
-                resolver.commit()
-                resolver.begin()
+                session.checkpoint()
 
             left_id = resolver.get_canonical(left_id_.id)
             right_id = resolver.get_canonical(right_id_.id)
@@ -148,7 +149,7 @@ def xref(
                 break
             suggested += 1
         _print_stats(idx, suggested, scores)
-        resolver.commit()
+        session.checkpoint()
     except KeyboardInterrupt:
         log.info("User cancelled, xref will end gracefully.")
     finally:

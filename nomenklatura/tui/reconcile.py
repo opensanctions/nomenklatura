@@ -9,6 +9,7 @@ from textual.widgets import DataTable, Footer
 
 from followthemoney import DS, SE, Dataset, StatementEntity, registry
 
+from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store
@@ -35,6 +36,7 @@ class ReconcileState(Generic[DS, SE]):
 
     def __init__(
         self,
+        session: Session,
         resolver: Resolver[SE],
         store: Store[DS, SE],
         dataset: Dataset,
@@ -45,6 +47,7 @@ class ReconcileState(Generic[DS, SE]):
         user: Optional[str] = None,
         url_base: Optional[str] = None,
     ) -> None:
+        self.session = session
         self.resolver = resolver
         self.store = store
         self.dataset = dataset
@@ -71,7 +74,7 @@ class ReconcileState(Generic[DS, SE]):
         return self.highlight >= len(self.candidates)
 
     def start(self) -> bool:
-        self.resolver.begin()
+        self.resolver.load_into_memory()
         return self.load()
 
     def load(self) -> bool:
@@ -110,7 +113,12 @@ class ReconcileState(Generic[DS, SE]):
                 self.person.id, item.id
             ):
                 apply_judgement(
-                    self.resolver, self.store, self.person.id, item.id, Judgement.POSITIVE
+                    self.session,
+                    self.resolver,
+                    self.store,
+                    self.person.id,
+                    item.id,
+                    Judgement.POSITIVE,
                 )
                 positions = position_claims(self.view, self.person)
                 self.commands.extend(
@@ -118,8 +126,6 @@ class ReconcileState(Generic[DS, SE]):
                         self.person, item, self.retrieved, self.source_url, positions
                     )
                 )
-                # apply_judgement committed the transaction; reopen for the next read.
-                self.resolver.begin()
         self.load()
 
     def reject(self, judgement: Judgement) -> None:
@@ -135,9 +141,8 @@ class ReconcileState(Generic[DS, SE]):
         item = self.candidates[self.highlight][0]
         if item.id is not None:
             apply_judgement(
-                self.resolver, self.store, self.person.id, item.id, judgement
+                self.session, self.resolver, self.store, self.person.id, item.id, judgement
             )
-            self.resolver.begin()
         del self.candidates[self.highlight]
         if self.highlight > len(self.candidates):
             self.highlight = len(self.candidates)

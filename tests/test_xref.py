@@ -7,9 +7,12 @@ from nomenklatura.xref import xref
 
 
 def test_xref_candidates(
-    index_path: Path, resolver: Resolver[StatementEntity], dstore: SimpleMemoryStore
+    index_path: Path,
+    resolver: Resolver[StatementEntity],
+    dstore: SimpleMemoryStore,
+    db_session,
 ):
-    xref(resolver, dstore, index_path)
+    xref(resolver, db_session, dstore, index_path)
     view = dstore.default_view(external=True)
     candidates = list(resolver.get_candidates(limit=20))
     assert len(candidates) == 20

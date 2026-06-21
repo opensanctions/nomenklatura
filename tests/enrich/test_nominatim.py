@@ -87,7 +87,7 @@ def test_nominatim_match(cache_factory):
 
 
 def test_nominatim_match_list(resolver: Resolver[StatementEntity], cache_factory):
-    resolver.begin()
+    resolver.load_into_memory()
     enricher = load_enricher(cache_factory)
 
     full = "Kopenhagener Str. 47, Berlin"
@@ -118,7 +118,7 @@ def test_nominatim_enrich(cache_factory):
 
 
 def test_nominatim_enrich_list(resolver: Resolver[StatementEntity], cache_factory):
-    resolver.begin()
+    resolver.load_into_memory()
     enricher = load_enricher(cache_factory)
 
     full = "Kopenhagener Str. 47, Berlin"
