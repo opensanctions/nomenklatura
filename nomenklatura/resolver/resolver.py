@@ -182,8 +182,15 @@ class Resolver(Linker[SE]):
         return linker
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
-        key = Identifier.pair(left_id, right_id)
-        return self.edges.get(key)
+        (target, source) = Identifier.pair(left_id, right_id)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.target == target.id)
+        stmt = stmt.where(self._table.c.source == source.id)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        row = self._session.execute(stmt).first()
+        if row is None:
+            return None
+        return Edge.from_dict(row._mapping)
 
     def connected(self, node: Identifier) -> Set[Identifier]:
         return self._linker_view().connected(node)
@@ -198,12 +205,7 @@ class Resolver(Linker[SE]):
 
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
-        for node in self.nodes.keys():
-            if not node.canonical:
-                continue
-            canonical = self.get_canonical(node.id)
-            if canonical == node.id:
-                yield node
+        return self._linker_view().canonicals()
 
     def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
@@ -231,10 +233,9 @@ class Resolver(Linker[SE]):
             for o in right_connected:
                 if e == o:
                     continue
-                edge = self.edges.get(Identifier.pair(e, o))
-                if edge is None:
-                    continue
-                return edge
+                edge = self.get_edge(e, o)
+                if edge is not None:
+                    return edge
         return None
 
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
@@ -287,10 +288,14 @@ class Resolver(Linker[SE]):
 
     def _get_suggested(self) -> List[Edge]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
-        edges_all = self.edges.values()
-        candidates = (e for e in edges_all if e.judgement == Judgement.NO_JUDGEMENT)
-        cmp = lambda x: x.score or -1.0  # noqa
-        return sorted(candidates, key=cmp, reverse=True)
+        stmt = self._table.select()
+        stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt = stmt.order_by(self._table.c.score.desc().nulls_last())
+        cursor = self._session.execute(stmt)
+        edges = [Edge.from_dict(row._mapping) for row in cursor]
+        cursor.close()
+        return edges
 
     def get_candidates(
         self, limit: Optional[int] = None
