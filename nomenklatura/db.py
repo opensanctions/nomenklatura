@@ -73,6 +73,23 @@ def get_metadata() -> MetaData:
     return MetaData()
 
 
+def is_postgres(dialect: Dialect) -> bool:
+    """Whether the given dialect is PostgreSQL.
+
+    The single source of truth for the dialect predicate that gates upserts,
+    partial indexes, and other backend-specific SQL across the stack. Use it
+    instead of comparing ``dialect.name`` inline — SQLAlchemy reports Postgres
+    as ``"postgresql"`` (never ``"postgres"``), and scattered checks had drifted
+    into three different spellings of this one question.
+    """
+    return dialect.name == "postgresql"
+
+
+def is_sqlite(dialect: Dialect) -> bool:
+    """Whether the given dialect is SQLite. See :func:`is_postgres`."""
+    return dialect.name == "sqlite"
+
+
 class Session:
     """A single unit of work over one database connection.
 
@@ -106,6 +123,14 @@ class Session:
     @property
     def dialect(self) -> Dialect:
         return self.engine.dialect
+
+    @property
+    def is_postgres(self) -> bool:
+        return is_postgres(self.dialect)
+
+    @property
+    def is_sqlite(self) -> bool:
+        return is_sqlite(self.dialect)
 
     def execute(self, statement: Executable) -> CursorResult[Any]:
         return self.connection.execute(statement)
@@ -217,11 +242,11 @@ def _upsert_statement_batch(
     dialect: Dialect, conn: Connection, table: Table, batch: List[Mapping[str, Any]]
 ) -> None:
     """Create an upsert statement for the given table and engine."""
-    if dialect.name == "sqlite":
+    if is_sqlite(dialect):
         lstmt = sqlite_insert(table).values(batch)
         lstmt = lstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(lstmt)
-    elif dialect.name in ("postgresql", "postgres"):
+    elif is_postgres(dialect):
         pstmt = psql_insert(table).values(batch)
         pstmt = pstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(pstmt)
@@ -237,7 +262,7 @@ def insert_statements(
     batch_size: int = settings.STATEMENT_BATCH,
 ) -> None:
     dataset_count: int = 0
-    is_postgresql = "postgres" in engine.dialect.name
+    is_postgresql = is_postgres(engine.dialect)
     if not is_postgresql:
         sqlite_max_batch = SQLITE_MAX_VARS // len(table.columns)
         batch_size = min(batch_size, sqlite_max_batch)

@@ -54,9 +54,9 @@ class Resolver(Linker[SE]):
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
 
         unique_kw: Dict[str, Any] = {"unique": True}
-        if session.dialect.name == "sqlite":
+        if session.is_sqlite:
             unique_kw["sqlite_where"] = text("deleted_at IS NULL")
-        if session.dialect.name in ("postgresql", "postgres"):
+        if session.is_postgres:
             unique_kw["postgresql_where"] = text("deleted_at IS NULL")
         unique_pair = Index(
             f"{table_name}_source_target_uniq",
