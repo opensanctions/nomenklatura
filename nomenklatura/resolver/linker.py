@@ -18,14 +18,10 @@ class Linker(Generic[SE]):
         self._mapping: Dict[str, Tuple[str, ...]] = mapping
 
     def add(self, left: str, right: str) -> str:
-        """Fold a positive judgement into the cluster map, returning the canonical.
+        """Merge two identifier clusters and return their canonical.
 
-        The single union primitive: merge the clusters of two IDs and re-point
-        every member at the merged tuple, canonical first. Idempotent — re-adding
-        an edge already inside a cluster rewrites the same tuple — which is what
-        lets the resolver replay a delta without tracking what it already saw.
-        This is the only mutation the map needs: incremental splits never happen,
-        a removed merge is handled by rebuilding the map from scratch.
+        Idempotence lets the resolver replay database updates without tracking
+        which edges it has already applied.
         """
         idents = {left, right}
         for node in (left, right):

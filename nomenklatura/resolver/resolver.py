@@ -50,10 +50,7 @@ class Resolver(Linker[SE]):
         self._session = session
         # The initial load only needs active edges.
         self._max_ts: Optional[str] = None
-        # In-memory indexes, both pure functions of the table refreshed by
-        # _update_from_db: the positive-merge cluster map that answers the hot
-        # reads, and a raw-keyed cache of blocking (negative/unsure) judgements.
-        # No full edge graph is held — suggestions live only in the table.
+        # Suggestions remain in the table; hot reads use these derived indexes.
         self._linker: Linker[SE] = Linker({})
         self._blockers: Dict[Pair, Judgement] = {}
 
@@ -116,15 +113,10 @@ class Resolver(Linker[SE]):
         self._max_ts = max_ts
 
     def _update_from_db(self) -> None:
-        """Refresh the indexes from edges written since the last load.
+        """Apply this session's recent writes to the indexes.
 
-        Additive deltas (new positive merges, new blockers) fold straight in.
-        A soft-deleted positive edge can split a cluster, which the flat map
-        can't undo in place, so any such removal triggers a full rebuild;
-        deleted blockers are simply dropped. The window is inclusive
-        (``>= _max_ts``) and every apply is idempotent, so an edge written in
-        the same instant as the high-water mark is never missed nor double-
-        counted. Reads its own uncommitted writes via the shared connection.
+        Removing a positive edge may split a cluster and requires a full rebuild.
+        Use ``load_into_memory`` to pick up writes from other sessions.
         """
         if self._max_ts is None:
             self._load_all()
@@ -346,8 +338,7 @@ class Resolver(Linker[SE]):
         score: Optional[float] = None,
     ) -> Identifier:
         result = self._decide(left_id, right_id, judgement, user=user, score=score)
-        # Suggestions don't touch the indexes; everything else does, so refresh
-        # so the caller's next read sees the merge/blocker it just wrote.
+        # Suggestions are not indexed in memory.
         if judgement != Judgement.NO_JUDGEMENT:
             self._update_from_db()
         return result
@@ -360,12 +351,9 @@ class Resolver(Linker[SE]):
         user: Optional[str] = None,
         score: Optional[float] = None,
     ) -> Identifier:
-        """Write a judgement to the table without refreshing the indexes.
+        """Write a judgement without refreshing the indexes.
 
-        Recurses to canonicalise positive matches; the public ``decide``
-        refreshes once at the end. The recursion only ever reads the endpoints
-        it is given against a fresh canonical, so the stale-during-recursion
-        index is never consulted for an edge written earlier in the same call.
+        Used recursively so ``decide`` can refresh once after canonicalisation.
         """
         edge = self.get_edge(left_id, right_id)
         if edge is None:
@@ -452,14 +440,10 @@ class Resolver(Linker[SE]):
         cleanup_after: timedelta = timedelta(days=6 * 30),
         user: Optional[str] = None,
     ) -> None:
-        """Drop suggestions and simplify the merge graph, then refresh.
+        """Drop suggestions and simplify the merge graph.
 
-        Three independent passes: discard NO_JUDGEMENT suggestions, redirect
-        positive edges that still point at a raw id onto their canonical, and
-        collapse old canonical-to-canonical intermediate merges. All three are
-        canonical-preserving — no node changes which cluster it resolves to —
-        so ``get_canonical`` stays valid against the pre-prune index throughout,
-        and a single refresh at the end rebuilds the simplified graph.
+        Rewrites preserve cluster membership, allowing one refresh after all
+        pruning passes complete.
         """
         self._prune_suggestions(user=user)
         self._prune_noncanonical_targets()
@@ -486,16 +470,10 @@ class Resolver(Linker[SE]):
         self._session.execute(stmt)
 
     def _prune_noncanonical_targets(self) -> None:
-        """Replace raw positive merge links with edges onto the canonical.
+        """Replace raw positive merge links with canonical links.
 
-        A positive edge whose target is a raw id bridges two members — e.g. a
-        member-to-member link that merged two existing clusters. Rewriting only
-        one endpoint onto the canonical can drop that bridge and split the
-        cluster when the endpoint already resolves to the winning canonical, so
-        attach *both* endpoints: connectivity is preserved whichever canonical
-        wins, and neither replacement edge has a raw target. The rewrites are
-        canonical-preserving, so ``get_canonical`` stays valid for the rest of
-        the pass against the pre-prune index.
+        Attach both endpoints to avoid splitting a cluster when one already
+        resolves to the winning canonical.
         """
         now = timestamp()
         positive = self._table.c.judgement == Judgement.POSITIVE.value

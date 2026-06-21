@@ -78,7 +78,6 @@ def test_resolver(resolver: Resolver[StatementEntity], db_session):
     # subsequent suggest() updates score
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 8.0
     ccn = resolver.decide("c1", "c2", Judgement.POSITIVE)
-    # positive decide() replaces the non-canon edge with two towards canonical
     assert resolver.get_edge("c1", "c2") is None
     assert (ccnc2 := resolver.get_edge(ccn, "c2")) and ccnc2.score is None
     assert resolver.get_edge(ccn, "c1") is not None
@@ -225,13 +224,7 @@ def test_linker_non_canonical_cluster():
 
 
 def test_update_from_db():
-    """
-    This tests that one resolver instance can load updates from the db made by
-    another instance.
-
-    On SQLite this is not concurrent - it only tests the update loading.
-    On Postgres this also tests transaction winners.
-    """
+    """Load committed decisions made by another resolver session."""
     session1 = make_session()
     r1 = Resolver(session1, create=True)
     # PostgreSQL locks the uncommitted table creation.
@@ -246,11 +239,7 @@ def test_update_from_db():
         canon_a = r1.decide("a1", "a2", Judgement.POSITIVE, user="r1")
         canon_b = r2.decide("b1", "b2", Judgement.POSITIVE, user="r2")
         assert set(r1.canonicals()) == {canon_a}
-        # decide() refreshes from the db. On Postgres the two sessions hold
-        # separate connections, so r2's refresh can't see r1's uncommitted edge
-        # and each sees only its own decision. In-memory sqlite shares one
-        # connection (SingletonThreadPool), so that isolation doesn't hold —
-        # only assert it where the transaction model provides it.
+        # PostgreSQL sessions cannot see each other's uncommitted decisions.
         if session2.is_postgres:
             assert set(r2.canonicals()) == {canon_b}
         else:
@@ -261,10 +250,8 @@ def test_update_from_db():
 
         r1.load_into_memory()
         r2.load_into_memory()
-        # They see each others' decisions
         assert set(r1.canonicals()) == {canon_a, canon_b}
         assert set(r2.canonicals()) == {canon_a, canon_b}
-        # Validity for delete check
         assert Identifier.get("a2") in r1.connected(canon_a)
         assert Identifier.get("b2") in r2.connected(canon_b)
         r1.remove("b2")
@@ -274,7 +261,6 @@ def test_update_from_db():
 
         r1.load_into_memory()
         r2.load_into_memory()
-        # They see each others' deletes
         assert Identifier.get("a2") not in r1.connected(canon_a)
         assert Identifier.get("b2") not in r2.connected(canon_b)
         session1.checkpoint()
@@ -300,8 +286,7 @@ def test_resolver_store_load(
             assert len(fh.readlines()) == 4
 
         other_table_resolver.load(path)
-        # All four dumped edges land as live judgements (the dump carries no
-        # deleted_at, so the removed a3 edge reloads live).
+        # Dumps do not preserve deletion metadata.
         assert len(list(other_table_resolver.get_judgements())) == 4
 
         edge = other_table_resolver.get_edge("a2", "b2")
@@ -336,9 +321,7 @@ def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
 def test_prune_rewrites_noncanonical_target(
     resolver: Resolver[StatementEntity], db_session
 ):
-    # Merging two existing clusters via raw ids leaves a positive edge whose
-    # target is a raw (non-canonical) id. prune's first cleanup job rewrites it
-    # to point at the canonical.
+    # Merge two existing clusters through raw members.
     resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide("a1", "b1", Judgement.POSITIVE)
@@ -351,8 +334,6 @@ def test_prune_rewrites_noncanonical_target(
 
     resolver.prune()
 
-    # The raw cross-edge is gone, connectivity is preserved, and no positive
-    # edge with a non-canonical target survives.
     assert resolver.get_edge("a1", "b1") is None
     canon2 = resolver.get_canonical("a1")
     assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
@@ -365,9 +346,7 @@ def test_prune_rewrites_noncanonical_target(
 def test_prune_simplifies_intermediate_merge(
     resolver: Resolver[StatementEntity], db_session
 ):
-    # A direct canonical<->canonical positive edge is an intermediate merge.
-    # prune's second job (past the cutoff) rewrites the members onto the final
-    # canonical and removes the intermediate edge.
+    # Merge two clusters through their canonical identifiers.
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
     canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide(canon_a, canon_b, Judgement.POSITIVE)
@@ -376,10 +355,9 @@ def test_prune_simplifies_intermediate_merge(
     canon = resolver.get_canonical("a1")
     assert all(resolver.get_canonical(n) == canon for n in ("a2", "b1", "b2"))
 
-    # Negative cleanup window puts the cutoff in the future so fresh edges qualify.
+    # Put the cleanup cutoff in the future so fresh edges qualify.
     resolver.prune(cleanup_after=timedelta(days=-3650))
 
-    # The intermediate edge is gone and connectivity is preserved.
     assert resolver.get_edge(canon_a, canon_b) is None
     canon2 = resolver.get_canonical("a1")
     assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
@@ -439,6 +417,5 @@ def test_table_name(
     assert other_table_resolver.get_canonical("a1") == a_canon
     assert set(other_table_resolver.canonicals()) == {a_canon}
     assert other_table_resolver.get_edge("a1", a_canon) is not None
-    # Only this resolver's own two edges live in the other table.
     assert len(list(other_table_resolver.get_judgements())) == 2
     assert "another_table" in repr(other_table_resolver)
