@@ -77,7 +77,6 @@ def other_table_resolver(db_session: Session) -> Resolver[Entity]:
 
 @pytest.fixture(scope="function")
 def dstore(donations_path: Path, resolver: Resolver[Entity]) -> SimpleMemoryStore:
-    resolver.load_into_memory()
     return load_entity_file_store(donations_path, resolver)
 
 

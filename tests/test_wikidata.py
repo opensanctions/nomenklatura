@@ -236,7 +236,6 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity], cache_factory, db_
         '{"id": "os-nobody", "schema": "Person", '
         '"properties": {"name": ["Jane Q Nobody"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
 
@@ -304,7 +303,6 @@ def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity], cache_facto
         '{"id": "os-putin", "schema": "Person", "properties": '
         '{"name": ["Vladimir Putin"], "wikidataId": ["Q7747"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
     cache = cache_factory(dataset)
@@ -350,7 +348,6 @@ def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity], cache_fac
         '{"id": "os-putin", "schema": "Person", "properties": '
         '{"name": ["Vladimir Putin"], "birthDate": ["1952-10-07"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     cache = cache_factory(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:
@@ -375,7 +372,6 @@ def test_reconcile_state_create(tmp_path, resolver: Resolver[Entity], cache_fact
         '{"id": "os-nobody", "schema": "Person", '
         '"properties": {"name": ["Jane Q Nobody"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     cache = cache_factory(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:
@@ -397,7 +393,6 @@ def test_reconcile_state_skip(tmp_path, resolver: Resolver[Entity], cache_factor
         '{"id": "os-nobody", "schema": "Person", '
         '"properties": {"name": ["Jane Q Nobody"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     cache = cache_factory(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:
@@ -415,7 +410,6 @@ def test_reconcile_state_linked_skipped(tmp_path, resolver: Resolver[Entity], ca
         '{"id": "os-putin", "schema": "Person", "properties": '
         '{"name": ["Vladimir Putin"], "wikidataId": ["Q7747"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     cache = cache_factory(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:

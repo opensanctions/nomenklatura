@@ -47,7 +47,6 @@ async def test_reconcile_app_navigation(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Vladimir Putin"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
@@ -86,7 +85,6 @@ async def test_reconcile_app_negative(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Vladimir Putin"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
@@ -122,7 +120,6 @@ async def test_reconcile_app_no_candidates(
         '{"id": "os-x", "schema": "Person", '
         '"properties": {"name": ["Nobody At All"]}}\n'
     )
-    resolver.load_into_memory()
     store = load_entity_file_store(path, resolver=resolver)
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
