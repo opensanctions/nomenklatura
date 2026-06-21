@@ -68,6 +68,10 @@ def xref(
         suggested = 0
         idx = 0
         resolver.load_into_memory()
+        # Release the load's read transaction before the scan: all the reads in
+        # the loop (get_canonical/check_candidate) are in-memory, so nothing
+        # needs to hold a transaction open until the first suggestion is written.
+        session.checkpoint()
         pairs = index.pairs(max_pairs=max_pairs)
         for idx, ((left_id_, right_id_), score) in enumerate(pairs):
             if idx % 1000 == 0 and idx > 0:
