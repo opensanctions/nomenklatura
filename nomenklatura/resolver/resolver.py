@@ -161,10 +161,10 @@ class Resolver(Linker[SE]):
     def load_into_memory(self) -> None:
         """Load the in-memory indexes from the database.
 
-        Resolver reads use these indexes; call again to pick up database writes
-        made by another session.
+        Call this to pick up database writes made by another session. A full
+        rebuild is required because commit order can differ from write order.
         """
-        self._update_from_db()
+        self._load_all()
 
     def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
