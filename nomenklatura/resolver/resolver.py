@@ -19,12 +19,11 @@ from sqlalchemy import (
     or_,
     text,
 )
-from sqlalchemy.engine import Connection, Engine, Transaction
 from sqlalchemy.sql.expression import delete, insert, update
 from followthemoney import registry, Statement, SE
 from followthemoney.util import PathLike
 
-from nomenklatura.db import get_engine
+from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
@@ -43,24 +42,21 @@ class Resolver(Linker[SE]):
 
     def __init__(
         self,
-        engine: Engine,
-        metadata: MetaData,
+        session: Session,
         create: bool = False,
         table_name: str = "resolver",
     ) -> None:
-        self._engine = engine
-        self._conn: Optional[Connection] = None
-        self._transaction: Optional[Transaction] = None
-        # Start with None to skip deletes on first BEGIN.
+        self._session = session
+        # Start with None to skip deletes on first load.
         # We don't have to process deletes to represent the state on first load.
         self._max_ts: Optional[str] = None
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
 
         unique_kw: Dict[str, Any] = {"unique": True}
-        if engine.dialect.name == "sqlite":
+        if session.dialect.name == "sqlite":
             unique_kw["sqlite_where"] = text("deleted_at IS NULL")
-        if engine.dialect.name in ("postgresql", "postgres"):
+        if session.dialect.name in ("postgresql", "postgres"):
             unique_kw["postgresql_where"] = text("deleted_at IS NULL")
         unique_pair = Index(
             f"{table_name}_source_target_uniq",
@@ -70,7 +66,7 @@ class Resolver(Linker[SE]):
         )
         self._table = Table(
             table_name,
-            metadata,
+            MetaData(),
             Column("id", Integer(), primary_key=True),
             Column("target", Unicode(512), index=True),
             Column("source", Unicode(512), index=True),
@@ -80,10 +76,9 @@ class Resolver(Linker[SE]):
             Column("created_at", Unicode(28)),
             Column("deleted_at", Unicode(28), nullable=True),
             unique_pair,
-            extend_existing=True,
         )
         if create:
-            metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
+            session.create(self._table)
 
     def _update_from_db(self) -> None:
         """Apply new deletes and unseen edges from the database."""
@@ -99,7 +94,7 @@ class Resolver(Linker[SE]):
             )
         stmt.order_by(self._table.c.deleted_at.asc().nulls_last())
         stmt.order_by(self._table.c.created_at.asc())
-        cursor = self._get_connection().execute(stmt)
+        cursor = self._session.execute(stmt)
         while batch := cursor.fetchmany(10000):
             for row in batch:
                 edge = Edge.from_dict(row._mapping)
@@ -128,75 +123,32 @@ class Resolver(Linker[SE]):
                     if len(self.nodes[node]) == 0:
                         del self.nodes[node]
 
-    @classmethod
-    def make_default(cls, engine: Optional[Engine] = None) -> "Resolver[SE]":
-        if engine is None:
-            engine = get_engine()
-        meta = MetaData()
-        return cls(engine, meta, create=True)
-
     def _invalidate(self) -> None:
         pass
 
-    def begin(self, load_edges: bool = True) -> None:
-        """
-        Start a new transaction in Begin Once style. Callers are responsible for
-        committing or rolling back the transaction.
+    def load_into_memory(self) -> None:
+        """Populate the in-memory edge graph from the database.
 
-        https://docs.sqlalchemy.org/en/20/core/connections.html#begin-once
+        The hot reads (get_canonical/get_judgement/connected) walk this graph,
+        not the DB, so a consumer loads once and then reads in memory. Call it
+        again to pick up edges written since — the load is incremental on
+        ``_max_ts``.
         """
-        if self._conn is None:
-            self._conn = self._engine.connect()
-        if self._transaction is None:
-            self._transaction = self._conn.begin()
-        if load_edges:
-            self._update_from_db()
+        self._update_from_db()
         self._invalidate()
 
-    def commit(self) -> None:
-        if self._transaction is None or self._conn is None:
-            self._transaction = None
-            self._conn = None
-            return
+    def cleanup_dead_edges(self) -> None:
+        """Hard-delete soft-deleted NO_JUDGEMENT edges.
 
-        # Swipe up all NO JUDGEMENT edges that have been deleted:
+        Reach for this from the session owner before a checkpoint to reclaim
+        rows; it used to ride inside the now-removed ``commit()``.
+        """
         clean_stmt = delete(self._table)
         clean_stmt = clean_stmt.where(
             self._table.c.judgement == Judgement.NO_JUDGEMENT.value
         )
         clean_stmt = clean_stmt.where(self._table.c.deleted_at.is_not(None))
-        self._conn.execute(clean_stmt)
-
-        self._transaction.commit()
-        self._transaction = None
-        self._conn.close()
-        self._conn = None
-
-    def rollback(self) -> None:
-        if self._transaction is not None:
-            self._transaction.rollback()
-            self._transaction = None
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
-
-    def close(self) -> None:
-        """Close the resolver connection."""
-        if self._transaction is not None:
-            self._transaction.rollback()
-            self._transaction = None
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
-        self.edges.clear()
-        self.nodes.clear()
-        self._max_ts = None
-        self._invalidate()
-
-    def _get_connection(self) -> Connection:
-        if self._transaction is None or self._conn is None:
-            raise RuntimeError("No transaction in progress.")
-        return self._conn
+        self._session.execute(clean_stmt)
 
     def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
@@ -207,23 +159,22 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
         stmt.order_by(self._table.c.created_at.asc())
-        with self._engine.connect() as conn:
-            cursor = conn.execute(stmt)
-            while batch := cursor.fetchmany(20000):
-                for row in batch:
-                    source_id: str = row.source
-                    target_id: str = row.target
-                    idents = set([Identifier.get(source_id), Identifier.get(target_id)])
-                    sources = mapping.get(source_id)
-                    if sources is not None:
-                        idents.update(Identifier.get(n) for n in sources)
-                    targets = mapping.get(target_id)
-                    if targets is not None:
-                        idents.update(Identifier.get(n) for n in targets)
-                    cluster = tuple(i.id for i in sorted(idents, reverse=True))
-                    for node in cluster:
-                        mapping[node] = cluster
-            cursor.close()
+        cursor = self._session.execute(stmt)
+        while batch := cursor.fetchmany(20000):
+            for row in batch:
+                source_id: str = row.source
+                target_id: str = row.target
+                idents = set([Identifier.get(source_id), Identifier.get(target_id)])
+                sources = mapping.get(source_id)
+                if sources is not None:
+                    idents.update(Identifier.get(n) for n in sources)
+                targets = mapping.get(target_id)
+                if targets is not None:
+                    idents.update(Identifier.get(n) for n in targets)
+                cluster = tuple(i.id for i in sorted(idents, reverse=True))
+                for node in cluster:
+                    mapping[node] = cluster
+        cursor.close()
         return Linker(mapping)
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
@@ -347,7 +298,7 @@ class Resolver(Linker[SE]):
         stmt = stmt.order_by(self._table.c.created_at.desc())
         if limit is not None:
             stmt = stmt.limit(limit)
-        cursor = self._get_connection().execute(stmt)
+        cursor = self._session.execute(stmt)
         while batch := cursor.fetchmany(25):
             for row in batch:
                 yield Edge.from_dict(row._mapping)
@@ -395,7 +346,7 @@ class Resolver(Linker[SE]):
                     self._table.c.judgement == Judgement.NO_JUDGEMENT.value
                 )
                 stmt = stmt.values({"score": score})
-                self._get_connection().execute(stmt)
+                self._session.execute(stmt)
 
                 # local state
                 edge.score = score
@@ -448,10 +399,10 @@ class Resolver(Linker[SE]):
         ustmt = ustmt.where(self._table.c.source == edge.source.id)
         ustmt = ustmt.where(self._table.c.target == edge.target.id)
         ustmt = ustmt.where(self._table.c.deleted_at.is_(None))
-        self._get_connection().execute(ustmt)
+        self._session.execute(ustmt)
 
         stmt = insert(self._table).values(edge.to_dict())
-        self._get_connection().execute(stmt)
+        self._session.execute(stmt)
         self._update_edge(edge)
 
     def _remove_edge(self, edge: Edge) -> None:
@@ -462,7 +413,7 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.target == edge.target.id)
         stmt = stmt.where(self._table.c.source == edge.source.id)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        self._get_connection().execute(stmt)
+        self._session.execute(stmt)
         self._update_edge(edge)
 
     def _remove_node(self, node: Identifier) -> None:
@@ -476,7 +427,7 @@ class Resolver(Linker[SE]):
         )
         stmt = stmt.where(cond)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        self._get_connection().execute(stmt)
+        self._session.execute(stmt)
 
         edges = self.nodes.get(node)
         if edges is None:
@@ -515,7 +466,7 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
         if user is not None:
             stmt = stmt.where(self._table.c.user == user)
-        self._get_connection().execute(stmt)
+        self._session.execute(stmt)
 
         # local state
         now = timestamp()
@@ -619,7 +570,7 @@ class Resolver(Linker[SE]):
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
         stmt.order_by(self._table.c.created_at.asc())
         with open(path, "w") as fh:
-            cursor = self._get_connection().execute(stmt)
+            cursor = self._session.execute(stmt)
             for row in cursor.yield_per(20000):
                 edge = Edge.from_dict(row._mapping)
                 fh.write(edge.to_line())
@@ -641,6 +592,6 @@ class Resolver(Linker[SE]):
         self._invalidate()
 
     def __repr__(self) -> str:
-        parts = self._engine.url
+        parts = self._session.engine.url
         url = f"{parts.drivername}://{parts.host or ''}/{parts.database}/{self._table.name}"
         return f"<Resolver({url})>"

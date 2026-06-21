@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 from followthemoney import Statement, StatementEntity
 
 from nomenklatura import settings
+from nomenklatura.db import make_session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
@@ -30,8 +31,7 @@ def test_qid_identifier():
     assert max(nk, regular) == nk
 
 
-def test_resolver(resolver: Resolver[StatementEntity]):
-    resolver.begin()
+def test_resolver(resolver: Resolver[StatementEntity], db_session):
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
     assert Identifier.get("a2") in resolver.connected(Identifier.get("a1"))
@@ -103,11 +103,10 @@ def test_resolver(resolver: Resolver[StatementEntity]):
     assert resolver.get_judgement("b1", "b2") == Judgement.POSITIVE
 
     # Can we actually commit after all these operations?
-    resolver.commit()
+    db_session.checkpoint()
 
 
-def test_cluster_to_cluster(resolver: Resolver[StatementEntity]):
-    resolver.begin()
+def test_cluster_to_cluster(resolver: Resolver[StatementEntity], db_session):
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     b_canon = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide(a_canon, b_canon, Judgement.UNSURE)
@@ -153,18 +152,17 @@ def test_cluster_to_cluster(resolver: Resolver[StatementEntity]):
     assert "a3" not in connected
 
     # Can we actually commit after all these operations?
-    resolver.commit()
+    db_session.checkpoint()
 
 
-def test_linker(resolver: Resolver[StatementEntity]):
-    resolver.begin()
+def test_linker(resolver: Resolver[StatementEntity], db_session):
     canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
     canon_a = resolver.decide(canon_a, "a3", Judgement.POSITIVE)
     resolver.remove("a3")
     canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
     resolver.decide("a1", "Q123", Judgement.POSITIVE)
     resolver.decide("a2", "c2", Judgement.NEGATIVE)
-    resolver.commit()
+    db_session.checkpoint()
     linker = resolver.get_linker()
 
     assert len(linker.connected(canon_a)) == 4
@@ -235,25 +233,26 @@ def test_update_from_db():
     On SQLite this is not concurrent - it only tests the update loading.
     On Postgres this also tests transaction winners.
     """
-    r1 = Resolver.make_default()
-    # we don't get_engine.cache_clear() because we want the same db,
-    # even when using in-memory sqlite.
-    r2 = Resolver.make_default()
+    # Two sessions over the same db (same cached engine, even in-memory sqlite).
+    session1 = make_session()
+    session2 = make_session()
+    r1 = Resolver(session1, create=True)
+    r2 = Resolver(session2, create=True)
 
     try:
-        r1.begin()
-        r2.begin()
+        r1.load_into_memory()
+        r2.load_into_memory()
         assert set(r1.canonicals()) == set()
         canon_a = r1.decide("a1", "a2", Judgement.POSITIVE, user="r1")
         canon_b = r2.decide("b1", "b2", Judgement.POSITIVE, user="r2")
         assert set(r1.canonicals()) == {canon_a}
         assert set(r2.canonicals()) == {canon_b}
         r1.suggest(canon_a, "a3", 1.0, "test user")
-        r1.commit()
-        r2.commit()
+        session1.checkpoint()
+        session2.checkpoint()
 
-        r1.begin()
-        r2.begin()
+        r1.load_into_memory()
+        r2.load_into_memory()
         # They see each others' decisions
         assert set(r1.canonicals()) == {canon_a, canon_b}
         assert set(r2.canonicals()) == {canon_a, canon_b}
@@ -262,26 +261,19 @@ def test_update_from_db():
         assert Identifier.get("b2") in r2.connected(canon_b)
         r1.remove("b2")
         r2.remove("a2")
-        r1.commit()
-        r2.commit()
+        session1.checkpoint()
+        session2.checkpoint()
 
-        r1.begin()
-        r2.begin()
+        r1.load_into_memory()
+        r2.load_into_memory()
         # They see each others' deletes
         assert Identifier.get("a2") not in r1.connected(canon_a)
         assert Identifier.get("b2") not in r2.connected(canon_b)
-        r1.commit()
-        r2.commit()
-
-        # r1.begin()
-        # from pprint import pprint
-        # from sqlalchemy import text
-        # pprint(r1._get_connection().execute(text("SELECT * FROM resolver")).fetchall())
-        # assert False
+        session1.checkpoint()
+        session2.checkpoint()
     finally:
-        r1.rollback()
-        r2.rollback()
-        r1._table.drop(r1._engine)
+        session1.close()
+        session2.close()
 
 
 def test_resolver_store_load(
@@ -289,7 +281,6 @@ def test_resolver_store_load(
 ):
     with NamedTemporaryFile("w") as fh:
         path = Path(fh.name)
-        resolver.begin()
         canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
         resolver.decide(canon_a, "a3", Judgement.POSITIVE)
         resolver.remove("a3")
@@ -300,7 +291,6 @@ def test_resolver_store_load(
         with open(path, "r") as fh:
             assert len(fh.readlines()) == 4
 
-        other_table_resolver.begin()
         other_table_resolver.load(path)
         assert len(other_table_resolver.edges) == len(resolver.edges)
 
@@ -313,8 +303,7 @@ def test_resolver_store_load(
         assert edge is None, edge
 
 
-def test_resolver_candidates(resolver: Resolver[StatementEntity]):
-    resolver.begin()
+def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
 
@@ -331,11 +320,10 @@ def test_resolver_candidates(resolver: Resolver[StatementEntity]):
     resolver.prune()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
-    resolver.commit()
+    db_session.checkpoint()
 
 
 def test_get_judgements(resolver: Resolver[StatementEntity]):
-    resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide(canon, "a3", Judgement.POSITIVE)
     resolver.decide(canon, "a4", Judgement.POSITIVE)
@@ -357,7 +345,6 @@ def test_get_judgements(resolver: Resolver[StatementEntity]):
 def test_resolver_statements(
     resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
 ):
-    resolver.begin()
     canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     resolver.decide("a2", "b2", Judgement.NEGATIVE)
 
@@ -369,22 +356,21 @@ def test_resolver_statements(
     assert stmt.value == "b2"
 
     # A resolver that doesn't know about the entity doesn't alter stmt.
-    other_table_resolver.begin()
     stmt = other_table_resolver.apply_statement(stmt)
     assert stmt.canonical_id == "a1"
     assert stmt.value == "b2"
 
 
 def test_table_name(
-    resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
+    resolver: Resolver[StatementEntity],
+    other_table_resolver: Resolver[StatementEntity],
+    db_session,
 ):
     """Make fairly sure that we're hitting the correct table"""
-    resolver.begin()
     resolver.decide("b1", "b2", Judgement.POSITIVE)  # No a1
     resolver.decide("c1", "c2", Judgement.POSITIVE)  # 4 edges
-    resolver.commit()
+    db_session.checkpoint()
 
-    other_table_resolver.begin()
     a_canon = other_table_resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert other_table_resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
     assert other_table_resolver.get_canonical("a1") == a_canon

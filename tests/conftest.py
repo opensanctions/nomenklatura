@@ -1,7 +1,6 @@
 import json
 import shutil
 from typing import Any, Callable, Dict, Generator, List
-from sqlalchemy import MetaData
 import yaml
 import pytest
 from urllib.error import HTTPError
@@ -67,26 +66,18 @@ def donations_json(donations_path: Path) -> List[Dict[str, Any]]:
 
 
 @pytest.fixture(scope="function")
-def resolver() -> Generator[Resolver[Entity], None, None]:
-    resolver = Resolver[Entity].make_default()
-    yield resolver
-    resolver.close()
-    resolver._table.drop(resolver._engine, checkfirst=True)
+def resolver(db_session: Session) -> Resolver[Entity]:
+    return Resolver[Entity](db_session, create=True)
 
 
 @pytest.fixture(scope="function")
-def other_table_resolver():
-    engine = get_engine()
-    meta = MetaData()
-    resolver = Resolver(engine, meta, create=True, table_name="another_table")
-    yield resolver
-    resolver.rollback()
-    resolver._table.drop(engine)
+def other_table_resolver(db_session: Session) -> Resolver[Entity]:
+    return Resolver(db_session, create=True, table_name="another_table")
 
 
 @pytest.fixture(scope="function")
 def dstore(donations_path: Path, resolver: Resolver[Entity]) -> SimpleMemoryStore:
-    resolver.begin()
+    resolver.load_into_memory()
     return load_entity_file_store(donations_path, resolver)
 
 
