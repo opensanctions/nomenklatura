@@ -51,6 +51,15 @@ class Resolver(Linker[SE]):
         self._max_ts: Optional[str] = None
         self.edges: Dict[Pair, Edge] = {}
         self.nodes: Dict[Identifier, Set[Edge]] = defaultdict(set)
+        # Derived positive-cluster index for the hot reads. Maintained
+        # incrementally on positive adds; rebuilt wholesale after a positive
+        # edge is removed (rare), since the flat map cannot un-merge in place.
+        self._linker: Linker[SE] = Linker({})
+        self._linker_dirty = False
+        # Blocking judgements (negative/unsure) keyed by raw id pair. Raw keys
+        # never drift on merges, so this is maintained fully incrementally — a
+        # removed blocker is just a pop, no rebuild.
+        self._blockers: Dict[Pair, Judgement] = {}
 
         unique_kw: Dict[str, Any] = {"unique": True}
         if session.is_sqlite:
@@ -114,13 +123,35 @@ class Resolver(Linker[SE]):
             self.edges[edge.key] = edge
             self.nodes[edge.source].add(edge)
             self.nodes[edge.target].add(edge)
+            if edge.judgement == Judgement.POSITIVE:
+                self._linker.add(edge.source.id, edge.target.id)
+            elif edge.judgement in (Judgement.NEGATIVE, Judgement.UNSURE):
+                self._blockers[edge.key] = edge.judgement
         else:
-            self.edges.pop(edge.key, None)
+            existed = self.edges.pop(edge.key, None)
+            self._blockers.pop(edge.key, None)
             for node in (edge.source, edge.target):
                 if node in self.nodes:
                     self.nodes[node].discard(edge)
                     if len(self.nodes[node]) == 0:
                         del self.nodes[node]
+            # A removed positive edge may split a cluster; the flat map can't
+            # do that incrementally, so flag a rebuild on next read.
+            if existed is not None and existed.judgement == Judgement.POSITIVE:
+                self._linker_dirty = True
+
+    def _rebuild_linker(self) -> None:
+        linker: Linker[SE] = Linker({})
+        for edge in self.edges.values():
+            if edge.judgement == Judgement.POSITIVE:
+                linker.add(edge.source.id, edge.target.id)
+        self._linker = linker
+        self._linker_dirty = False
+
+    def _linker_view(self) -> Linker[SE]:
+        if self._linker_dirty:
+            self._rebuild_linker()
+        return self._linker
 
     def _invalidate(self) -> None:
         pass
@@ -138,7 +169,7 @@ class Resolver(Linker[SE]):
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
         """
-        mapping: Dict[str, Tuple[str, ...]] = {}
+        linker: Linker[SE] = Linker({})
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement == Judgement.POSITIVE.value)
         stmt = stmt.where(self._table.c.deleted_at.is_(None))
@@ -146,41 +177,16 @@ class Resolver(Linker[SE]):
         cursor = self._session.execute(stmt)
         while batch := cursor.fetchmany(20000):
             for row in batch:
-                source_id: str = row.source
-                target_id: str = row.target
-                idents = set([Identifier.get(source_id), Identifier.get(target_id)])
-                sources = mapping.get(source_id)
-                if sources is not None:
-                    idents.update(Identifier.get(n) for n in sources)
-                targets = mapping.get(target_id)
-                if targets is not None:
-                    idents.update(Identifier.get(n) for n in targets)
-                cluster = tuple(i.id for i in sorted(idents, reverse=True))
-                for node in cluster:
-                    mapping[node] = cluster
+                linker.add(row.source, row.target)
         cursor.close()
-        return Linker(mapping)
+        return linker
 
     def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
         key = Identifier.pair(left_id, right_id)
         return self.edges.get(key)
 
-    def _traverse(self, node: Identifier, seen: Set[Identifier]) -> Set[Identifier]:
-        """Returns the set of nodes connected to the given node via positive judgement."""
-        connected = set([node])
-        if node in seen:
-            return connected
-        seen.add(node)
-        for edge in self.nodes.get(node, []):
-            if edge.judgement == Judgement.POSITIVE:
-                other = edge.other(node)
-                rec = self._traverse(other, seen)
-                connected.update(rec)
-        return connected
-
-    # @lru_cache(maxsize=200000)
     def connected(self, node: Identifier) -> Set[Identifier]:
-        return self._traverse(node, set())
+        return self._linker_view().connected(node)
 
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
@@ -231,12 +237,6 @@ class Resolver(Linker[SE]):
                 return edge
         return None
 
-    def _pair_judgement(self, left: Identifier, right: Identifier) -> Judgement:
-        edge = self.get_edge(left, right)
-        if edge is not None:
-            return edge.judgement
-        return Judgement.NO_JUDGEMENT
-
     def get_judgement(self, entity_id: StrIdent, other_id: StrIdent) -> Judgement:
         """Get the existing decision between two entities with dedupe factored in."""
         entity = Identifier.get(entity_id)
@@ -251,17 +251,14 @@ class Resolver(Linker[SE]):
         if is_qid(entity.id) and is_qid(other.id):
             return Judgement.NEGATIVE
 
-        # HACK: this would mark pairs only as unsure if the unsure judgement
-        # had been made on the current canonical combination:
-        # canon_edge = self._pair_judgement(max(entity_connected), max(other_connected))
-        # if canon_edge == Judgement.UNSURE:
-        #     return Judgement.UNSURE
-
+        # Any blocking (negative/unsure) edge spanning the two clusters decides
+        # the pair. A positive edge can't span them — it would have merged the
+        # clusters above — so only blockers remain to check.
         other_connected = self.connected(other)
         for e in entity_connected:
             for o in other_connected:
-                judgement = self._pair_judgement(e, o)
-                if judgement != Judgement.NO_JUDGEMENT:
+                judgement = self._blockers.get(Identifier.pair(e, o))
+                if judgement is not None:
                     return judgement
 
         return Judgement.NO_JUDGEMENT

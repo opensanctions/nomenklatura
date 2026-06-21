@@ -17,6 +17,27 @@ class Linker(Generic[SE]):
     def __init__(self, mapping: Dict[str, Tuple[str, ...]]) -> None:
         self._mapping: Dict[str, Tuple[str, ...]] = mapping
 
+    def add(self, left: str, right: str) -> str:
+        """Fold a positive judgement into the cluster map, returning the canonical.
+
+        The single union primitive: merge the clusters of two IDs and re-point
+        every member at the merged tuple, canonical first. Idempotent — re-adding
+        an edge already inside a cluster rewrites the same tuple — which is what
+        lets the resolver replay a delta without tracking what it already saw.
+        This is the only mutation the map needs: incremental splits never happen,
+        a removed merge is handled by rebuilding the map from scratch.
+        """
+        idents = {left, right}
+        for node in (left, right):
+            cluster = self._mapping.get(node)
+            if cluster is not None:
+                idents.update(cluster)
+        # Sort via Identifier ordering (weight, id) so the canonical lands first.
+        members = tuple(i.id for i in sorted(map(Identifier.get, idents), reverse=True))
+        for node in members:
+            self._mapping[node] = members
+        return members[0]
+
     def connected(self, node: Identifier) -> Set[Identifier]:
         """Return all entities connected to the given node. Constructs Identifier
         objects on the fly from the internal string representation."""
