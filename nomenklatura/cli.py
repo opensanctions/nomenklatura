@@ -161,16 +161,16 @@ def wikidata_reconcile(
         # than silently ignore it.
         raise click.UsageError("--create cannot be combined with --review")
     session = make_session()
-    resolver = Resolver[Entity](session, create=True)
-    resolver.load_into_memory()
-    store = load_entity_file_store(path, resolver=resolver)
-    algorithm_type = get_algorithm(algorithm)
-    if algorithm_type is None:
-        raise click.Abort(f"Unknown algorithm: {algorithm}")
-    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-    cache = Cache(session, dataset, create=True)
-    client = WikidataClient(cache)
     try:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        store = load_entity_file_store(path, resolver=resolver)
+        algorithm_type = get_algorithm(algorithm)
+        if algorithm_type is None:
+            raise click.Abort(f"Unknown algorithm: {algorithm}")
+        dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+        cache = Cache(session, dataset, create=True)
+        client = WikidataClient(cache)
         if review:
             commands = reconcile_ui(
                 resolver,
