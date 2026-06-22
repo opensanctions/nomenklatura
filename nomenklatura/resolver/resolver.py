@@ -326,23 +326,20 @@ class Resolver(Linker[SE]):
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
         should make a decision about whether they are the same or not."""
-        edge = self.get_edge(left_id, right_id)
-        if edge is not None:
-            if edge.judgement == Judgement.NO_JUDGEMENT:
-                # Just update the score; a suggestion touches neither index.
-                stmt = update(self._table)
-                stmt = stmt.where(self._table.c.target == edge.target.id)
-                stmt = stmt.where(self._table.c.source == edge.source.id)
-                stmt = stmt.where(self._table.c.deleted_at.is_(None))
-                stmt = stmt.where(
-                    self._table.c.judgement == Judgement.NO_JUDGEMENT.value
-                )
-                stmt = stmt.values({"score": score})
-                self._session.execute(stmt)
-            return edge.target
-        return self.decide(
-            left_id, right_id, Judgement.NO_JUDGEMENT, score=score, user=user
+        edge = Edge(left_id, right_id, judgement=Judgement.NO_JUDGEMENT)
+        edge.created_at = timestamp()
+        edge.user = user or getpass.getuser()
+        edge.score = score
+
+        stmt = self._session.insert(self._table).values(edge.to_dict())
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[self._table.c.source, self._table.c.target],
+            index_where=self._table.c.deleted_at.is_(None),
+            set_={"score": stmt.excluded.score},
+            where=self._table.c.judgement == Judgement.NO_JUDGEMENT.value,
         )
+        self._session.execute(stmt)
+        return edge.target
 
     def decide(
         self,

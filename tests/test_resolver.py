@@ -77,6 +77,13 @@ def test_resolver(resolver: Resolver[StatementEntity], db_session):
     resolver.suggest("c1", "c2", 8.0)
     # subsequent suggest() updates score
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 8.0
+    resolver.suggest("c1", "c2", 0.0)
+    assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 0.0
+    resolver.decide("guard1", "guard2", Judgement.NEGATIVE)
+    resolver.suggest("guard1", "guard2", 9.0)
+    assert (guard := resolver.get_edge("guard1", "guard2"))
+    assert guard.judgement == Judgement.NEGATIVE
+    assert guard.score is None
     ccn = resolver.decide("c1", "c2", Judgement.POSITIVE)
     assert resolver.get_edge("c1", "c2") is None
     assert (ccnc2 := resolver.get_edge(ccn, "c2")) and ccnc2.score is None
