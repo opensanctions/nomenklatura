@@ -89,13 +89,16 @@ class Cache(object):
     def set_json(self, key: str, value: Any) -> None:
         return self.set(key, json.dumps(value))
 
-    def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
+    def get(
+        self, key: str, max_age: Optional[int] = None, randomize: bool = True
+    ) -> Optional[Value]:
         if max_age is not None and max_age < 1:
             return None
 
         cache_cutoff = None
         if max_age is not None:
-            cache_cutoff = naive_now() - randomize_cache(max_age)
+            delta = randomize_cache(max_age) if randomize else timedelta(days=max_age)
+            cache_cutoff = naive_now() - delta
 
         cache = self._preload.get(key)
         if cache is not None:

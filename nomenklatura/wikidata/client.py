@@ -43,7 +43,12 @@ class WikidataClient(object):
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
     @lru_cache(maxsize=MEMO_SMALL)
-    def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
+    def fetch_item(
+        self,
+        qid: str,
+        cache_days: Optional[int] = None,
+        randomize: bool = True,
+    ) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
         params = {
@@ -55,12 +60,15 @@ class WikidataClient(object):
         }
         url = build_url(self.WD_API, params=params)
         cache_days = cache_days or self.cache_days
-        raw = self.cache.get(url, max_age=cache_days)
+        raw = self.cache.get(url, max_age=cache_days, randomize=randomize)
         if raw is None:
+            log.debug("Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days)
             res = self.session.get(url)
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
+        else:
+            log.debug("Cache HIT fetching Wikidata item: %s cache_days=%s", qid, cache_days)
         data = json.loads(raw)
         entity = data.get("entities", {}).get(qid)
         if entity is None:
@@ -68,7 +76,7 @@ class WikidataClient(object):
         item = Item(self, entity)
         if item.id != qid:
             # Redirected/merged item:
-            return self.fetch_item(item.id, cache_days=cache_days)
+            return self.fetch_item(item.id, cache_days=cache_days, randomize=randomize)
         return item
 
     @lru_cache(maxsize=100000)
@@ -98,14 +106,21 @@ class WikidataClient(object):
         self.cache.set_json(cache_key, label.pack())
         return label
 
-    def query(self, query_text: str) -> SparqlResponse:
-        """Query the Wikidata SPARQL endpoint."""
+    def query(
+        self, query_text: str, cache_days: Optional[int] = None
+    ) -> SparqlResponse:
+        """Query the Wikidata SPARQL endpoint.
+
+        Args:
+          cache_days: overrides the client-level default for this call.
+        """
         clean_text = squash_spaces(query_text)
         if len(clean_text) == 0:
             raise RuntimeError("Invalid query: %r" % query_text)
         params = {"query": clean_text}
         url = build_url(self.QUERY_API, params=params)
-        raw = self.cache.get(url, max_age=self.cache_days)
+        effective_cache = cache_days if cache_days is not None else self.cache_days
+        raw = self.cache.get(url, max_age=effective_cache)
         if raw is None:
             res = self.session.get(url, headers=self.QUERY_HEADERS)
             res.raise_for_status()
@@ -116,7 +131,9 @@ class WikidataClient(object):
         except json.JSONDecodeError as err:
             self.cache.delete(url)
             log.exception("Failed to parse JSON: %s", err)
-            return SparqlResponse(clean_text, {})
+            return SparqlResponse(
+                clean_text, {"head": {"vars": []}, "results": {"bindings": []}}
+            )
         return SparqlResponse(clean_text, data)
 
     def search_items(
