@@ -327,6 +327,30 @@ def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
     db_session.checkpoint()
 
 
+def test_rename_qid_node(resolver: Resolver[StatementEntity], db_session):
+    resolver.decide("os-1", "Q123", Judgement.POSITIVE)
+    resolver.decide("os-2", "Q456", Judgement.POSITIVE)
+    resolver.decide("os-3", "Q123", Judgement.NEGATIVE)
+    resolver.suggest("os-4", "Q123", 0.75, user="test")
+
+    assert resolver.get_canonical("os-1") == "Q123"
+    assert resolver.get_judgement("os-3", "Q123") == Judgement.NEGATIVE
+
+    assert resolver.rename_node("Q123", "Q789") == 3
+
+    assert resolver.get_canonical("os-1") == "Q789"
+    assert resolver.get_judgement("os-1", "Q789") == Judgement.POSITIVE
+    assert resolver.get_judgement("os-3", "Q789") == Judgement.NEGATIVE
+    assert resolver.get_judgement("os-3", "Q123") == Judgement.NO_JUDGEMENT
+    assert ("Q789", "os-4", 0.75) in list(resolver.get_candidates())
+    assert resolver.get_edge("os-1", "Q123") is None
+    assert resolver.get_edge("os-3", "Q123") is None
+    assert resolver.get_edge("os-4", "Q123") is None
+
+    assert resolver.get_canonical("os-2") == "Q456"
+    db_session.checkpoint()
+
+
 def test_prune_rewrites_noncanonical_target(
     resolver: Resolver[StatementEntity], db_session
 ):

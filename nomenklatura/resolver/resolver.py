@@ -435,6 +435,45 @@ class Resolver(Linker[SE]):
         self._remove_node(node)
         self._update_from_db()
 
+    def rename_node(self, old_id: StrIdent, new_id: StrIdent) -> int:
+        """Rewrite every live edge touching an identifier to its replacement.
+
+        Use this when an external identifier has been merged upstream, for
+        example when Wikidata redirects one QID to another and downstream
+        resolver state should pretend the old QID never existed.
+        """
+        old = Identifier.get(old_id)
+        new = Identifier.get(new_id)
+        if old == new:
+            return 0
+
+        now = timestamp()
+        touching = or_(
+            self._table.c.source == old.id,
+            self._table.c.target == old.id,
+        )
+        changed = 0
+        for edge in self._live_edges(touching):
+            left = new if edge.target == old else edge.target
+            right = new if edge.source == old else edge.source
+            self._remove_edge(edge)
+            if left == right:
+                changed += 1
+                continue
+            self._register(
+                Edge(
+                    left_id=left,
+                    right_id=right,
+                    judgement=edge.judgement,
+                    score=edge.score,
+                    user=edge.user,
+                    created_at=now,
+                )
+            )
+            changed += 1
+        self._update_from_db()
+        return changed
+
     def explode(self, node_id: StrIdent) -> Set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
         This is the hard way to make sure we re-do context once we realise
