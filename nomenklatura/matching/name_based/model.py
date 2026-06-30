@@ -42,7 +42,7 @@ class OFACMatcher(HeuristicAlgorithm):
 
 
 class NameMatcher(HeuristicAlgorithm):
-    """Deprecated in favour of `OFACMatcher`, which actually emulates OFAC's
+    """Deprecated in favour of `ofac`, which actually emulates OFAC's
     public Sanctions List Search behaviour. This algorithm matches on entity
     name using phonetic comparisons and Jaro-Winkler edit distance, vaguely
     based on FAQ #249, but does not reach OFAC parity."""
@@ -64,7 +64,7 @@ class NameMatcher(HeuristicAlgorithm):
 
 
 class NameQualifiedMatcher(HeuristicAlgorithm):
-    """Deprecated in favour of `OFACMatcher`, which carries the same qualifier
+    """Deprecated in favour of `ofac`, which carries the same qualifier
     weights on top of a name score that actually reaches OFAC parity. Same as
     the name-based algorithm, but scores are reduced if a mis-match of birth
     dates and nationalities is found for persons, or different
