@@ -111,11 +111,14 @@ class WikidataEnricher(Enricher[DS]):
             return None
         if proxy.id is None or other.id is None:
             return None
+
         # Hacky: if an entity is a PEP, then by definition their relatives and
         # associates are RCA (relatives and close associates).
-        if "role.pep" in proxy.get("topics", quiet=True):
-            if "role.pep" not in other.get("topics"):
-                other.add("topics", "role.rca")
+        # if "role.pep" in proxy.get("topics", quiet=True):
+        #     if "role.pep" not in other.get("topics"):
+        #         other.add("topics", "role.rca")
+        # Removed as per: https://github.com/opensanctions/opensanctions/issues/3354
+
         yield other
         yield from self.item_graph(other, item, depth=depth - 1, seen=seen)
         link = self.make_entity(proxy, schema)
