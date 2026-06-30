@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Dict, Tuple
@@ -35,7 +36,8 @@ def test_resolver(resolver: Resolver[StatementEntity], db_session):
     a_canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
     assert a_canon.canonical, a_canon
     assert Identifier.get("a2") in resolver.connected(Identifier.get("a1"))
-    assert set(n.id for n in resolver.nodes) == {"a1", "a2", a_canon.id}
+    cluster = resolver.connected(Identifier.get("a1"))
+    assert set(n.id for n in cluster) == {"a1", "a2", a_canon.id}
 
     assert resolver.get_judgement("a1", "a2") == Judgement.POSITIVE
     resolver.decide("b1", "b2", Judgement.POSITIVE)
@@ -73,18 +75,21 @@ def test_resolver(resolver: Resolver[StatementEntity], db_session):
     resolver.suggest("c1", "c2", 7.0)
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 7.0
     resolver.suggest("c1", "c2", 8.0)
-    edge_count = len(resolver.edges)
     # subsequent suggest() updates score
     assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 8.0
-    assert c1c2 in resolver.edges, resolver.edges
+    resolver.suggest("c1", "c2", 0.0)
+    assert (c1c2 := resolver.get_edge("c1", "c2")) and c1c2.score == 0.0
+    resolver.decide("guard1", "guard2", Judgement.NEGATIVE)
+    resolver.suggest("guard1", "guard2", 9.0)
+    assert (guard := resolver.get_edge("guard1", "guard2"))
+    assert guard.judgement == Judgement.NEGATIVE
+    assert guard.score is None
     ccn = resolver.decide("c1", "c2", Judgement.POSITIVE)
     assert resolver.get_edge("c1", "c2") is None
     assert (ccnc2 := resolver.get_edge(ccn, "c2")) and ccnc2.score is None
-    # positive decide() replaces non-canon edge with two towards canonical
-
-    assert ccnc2.key in resolver.edges, resolver.edges
-    assert c1c2.key not in resolver.edges, resolver.edges
-    assert len(resolver.edges) == edge_count + 1
+    assert resolver.get_edge(ccn, "c1") is not None
+    assert resolver.get_canonical("c1") == ccn
+    assert resolver.get_canonical("c2") == ccn
 
     assert "a1" in resolver.get_referents(a_canon.id)
     assert "a1" in resolver.get_referents(a_canon.id, canonicals=False)
@@ -182,6 +187,8 @@ def test_linker(resolver: Resolver[StatementEntity], db_session):
     assert linker.get_canonical("c2") == "c2"
     assert linker.get_canonical("x1") == "x1"
     assert linker.get_canonical("a3") == "a3"
+    assert linker.connected_ids("a1") == linker._mapping["a1"]
+    assert linker.connected_ids("unknown") == ("unknown",)
 
     # get_referents with canonicals=False excludes NK- and QID entries
     refs_no_canon = linker.get_referents("Q123", canonicals=False)
@@ -226,13 +233,7 @@ def test_linker_non_canonical_cluster():
 
 
 def test_update_from_db():
-    """
-    This tests that one resolver instance can load updates from the db made by
-    another instance.
-
-    On SQLite this is not concurrent - it only tests the update loading.
-    On Postgres this also tests transaction winners.
-    """
+    """Load committed decisions made by another resolver session."""
     session1 = make_session()
     r1 = Resolver(session1, create=True)
     # PostgreSQL locks the uncommitted table creation.
@@ -247,17 +248,19 @@ def test_update_from_db():
         canon_a = r1.decide("a1", "a2", Judgement.POSITIVE, user="r1")
         canon_b = r2.decide("b1", "b2", Judgement.POSITIVE, user="r2")
         assert set(r1.canonicals()) == {canon_a}
-        assert set(r2.canonicals()) == {canon_b}
+        # PostgreSQL sessions cannot see each other's uncommitted decisions.
+        if session2.is_postgres:
+            assert set(r2.canonicals()) == {canon_b}
+        else:
+            assert canon_b in set(r2.canonicals())
         r1.suggest(canon_a, "a3", 1.0, "test user")
         session1.checkpoint()
         session2.checkpoint()
 
         r1.load_into_memory()
         r2.load_into_memory()
-        # They see each others' decisions
         assert set(r1.canonicals()) == {canon_a, canon_b}
         assert set(r2.canonicals()) == {canon_a, canon_b}
-        # Validity for delete check
         assert Identifier.get("a2") in r1.connected(canon_a)
         assert Identifier.get("b2") in r2.connected(canon_b)
         r1.remove("b2")
@@ -267,7 +270,6 @@ def test_update_from_db():
 
         r1.load_into_memory()
         r2.load_into_memory()
-        # They see each others' deletes
         assert Identifier.get("a2") not in r1.connected(canon_a)
         assert Identifier.get("b2") not in r2.connected(canon_b)
         session1.checkpoint()
@@ -293,7 +295,8 @@ def test_resolver_store_load(
             assert len(fh.readlines()) == 4
 
         other_table_resolver.load(path)
-        assert len(other_table_resolver.edges) == len(resolver.edges)
+        # Dumps do not preserve deletion metadata.
+        assert len(list(other_table_resolver.get_judgements())) == 4
 
         edge = other_table_resolver.get_edge("a2", "b2")
         assert edge is not None, edge
@@ -321,6 +324,76 @@ def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
     resolver.prune()
     candidates = list(resolver.get_candidates())
     assert len(candidates) == 0, candidates
+    db_session.checkpoint()
+
+
+def test_rename_qid_node(resolver: Resolver[StatementEntity], db_session):
+    resolver.decide("os-1", "Q123", Judgement.POSITIVE)
+    resolver.decide("os-2", "Q456", Judgement.POSITIVE)
+    resolver.decide("os-3", "Q123", Judgement.NEGATIVE)
+    resolver.suggest("os-4", "Q123", 0.75, user="test")
+
+    assert resolver.get_canonical("os-1") == "Q123"
+    assert resolver.get_judgement("os-3", "Q123") == Judgement.NEGATIVE
+
+    assert resolver.rename_node("Q123", "Q789") == 3
+
+    assert resolver.get_canonical("os-1") == "Q789"
+    assert resolver.get_judgement("os-1", "Q789") == Judgement.POSITIVE
+    assert resolver.get_judgement("os-3", "Q789") == Judgement.NEGATIVE
+    assert resolver.get_judgement("os-3", "Q123") == Judgement.NO_JUDGEMENT
+    assert ("Q789", "os-4", 0.75) in list(resolver.get_candidates())
+    assert resolver.get_edge("os-1", "Q123") is None
+    assert resolver.get_edge("os-3", "Q123") is None
+    assert resolver.get_edge("os-4", "Q123") is None
+
+    assert resolver.get_canonical("os-2") == "Q456"
+    db_session.checkpoint()
+
+
+def test_prune_rewrites_noncanonical_target(
+    resolver: Resolver[StatementEntity], db_session
+):
+    # Merge two existing clusters through raw members.
+    resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide("b1", "b2", Judgement.POSITIVE)
+    resolver.decide("a1", "b1", Judgement.POSITIVE)
+
+    cross = resolver.get_edge("a1", "b1")
+    assert cross is not None and cross.judgement == Judgement.POSITIVE, cross
+    assert not (cross.target.canonical and cross.source.canonical), cross
+    canon = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon for n in ("a2", "b1", "b2"))
+
+    resolver.prune()
+
+    assert resolver.get_edge("a1", "b1") is None
+    canon2 = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
+    for edge in resolver.get_judgements():
+        if edge.judgement == Judgement.POSITIVE:
+            assert edge.target.canonical, edge
+    db_session.checkpoint()
+
+
+def test_prune_simplifies_intermediate_merge(
+    resolver: Resolver[StatementEntity], db_session
+):
+    # Merge two clusters through their canonical identifiers.
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    canon_b = resolver.decide("b1", "b2", Judgement.POSITIVE)
+    resolver.decide(canon_a, canon_b, Judgement.POSITIVE)
+
+    assert resolver.get_edge(canon_a, canon_b) is not None
+    canon = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon for n in ("a2", "b1", "b2"))
+
+    # Put the cleanup cutoff in the future so fresh edges qualify.
+    resolver.prune(cleanup_after=timedelta(days=-3650))
+
+    assert resolver.get_edge(canon_a, canon_b) is None
+    canon2 = resolver.get_canonical("a1")
+    assert all(resolver.get_canonical(n) == canon2 for n in ("a1", "a2", "b1", "b2"))
     db_session.checkpoint()
 
 
@@ -377,5 +450,5 @@ def test_table_name(
     assert other_table_resolver.get_canonical("a1") == a_canon
     assert set(other_table_resolver.canonicals()) == {a_canon}
     assert other_table_resolver.get_edge("a1", a_canon) is not None
-    assert len(other_table_resolver.edges) == 2
+    assert len(list(other_table_resolver.get_judgements())) == 2
     assert "another_table" in repr(other_table_resolver)

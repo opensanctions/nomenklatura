@@ -17,7 +17,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Connection, CursorResult, Dialect, Engine
 from sqlalchemy.sql.expression import Executable
+from sqlalchemy.dialects.postgresql import Insert as PostgreSQLInsert
 from sqlalchemy.dialects.postgresql import insert as psql_insert
+from sqlalchemy.dialects.sqlite import Insert as SQLiteInsert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from nomenklatura import settings
@@ -114,6 +116,16 @@ class Session:
 
     def execute(self, statement: Executable) -> CursorResult[Any]:
         return self.connection.execute(statement)
+
+    def insert(self, table: Table) -> PostgreSQLInsert | SQLiteInsert:
+        """Build an insert that supports the active database's upsert API."""
+        if self.is_sqlite:
+            return sqlite_insert(table)
+        if self.is_postgres:
+            return psql_insert(table)
+        raise NotImplementedError(
+            f"Upsert not implemented for dialect {self.dialect.name}"
+        )
 
     def create(self, *tables: Table) -> None:
         """Create the given tables on this session's connection."""

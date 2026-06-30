@@ -17,13 +17,32 @@ class Linker(Generic[SE]):
     def __init__(self, mapping: Dict[str, Tuple[str, ...]]) -> None:
         self._mapping: Dict[str, Tuple[str, ...]] = mapping
 
+    def add(self, left: str, right: str) -> str:
+        """Merge two identifier clusters and return their canonical.
+
+        Idempotence lets the resolver replay database updates without tracking
+        which edges it has already applied.
+        """
+        idents: Set[str] = set()
+        for node in (left, right):
+            cluster = self._mapping.get(node)
+            if cluster is not None:
+                idents.update(cluster)
+        idents.update((left, right))
+        # Sort via Identifier ordering (weight, id) so the canonical lands first.
+        members = tuple(i.id for i in sorted(map(Identifier.get, idents), reverse=True))
+        for node in members:
+            self._mapping[node] = members
+        return members[0]
+
     def connected(self, node: Identifier) -> Set[Identifier]:
         """Return all entities connected to the given node. Constructs Identifier
         objects on the fly from the internal string representation."""
-        cluster = self._mapping.get(node.id)
-        if cluster is None:
-            return {node}
-        return {Identifier.get(n) for n in cluster}
+        return {Identifier.get(n) for n in self.connected_ids(node.id)}
+
+    def connected_ids(self, entity_id: str) -> Tuple[str, ...]:
+        """Return the stored identifiers connected to an entity ID."""
+        return self._mapping.get(entity_id, (entity_id,))
 
     def get_canonical(self, entity_id: str) -> str:
         """Return the canonical identifier for the given entity ID."""
