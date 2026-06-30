@@ -7,15 +7,13 @@ from typing import Any, cast, Dict, Optional, Union, Generator
 from datetime import datetime, timedelta
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
-from sqlalchemy.engine import Engine, Connection, Transaction
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
-from sqlalchemy.exc import OperationalError, InvalidRequestError
 from sqlalchemy.dialects.postgresql import insert as upsert
 from rigour.time import naive_now
 from followthemoney import Dataset
 
-from nomenklatura.db import get_engine, get_metadata
+from nomenklatura.db import Session
 
 
 log = logging.getLogger(__name__)
@@ -38,32 +36,22 @@ def randomize_cache(days: int) -> timedelta:
 
 class Cache(object):
     def __init__(
-        self, engine: Engine, metadata: MetaData, dataset: Dataset, create: bool = False
+        self, session: Session, dataset: Dataset, create: bool = False
     ) -> None:
         self.dataset = dataset
-        self._engine = engine
-        self._conn: Optional[Connection] = None
-        self._transaction: Optional[Transaction] = None
+        self._session = session
         self._table = Table(
             "cache",
-            metadata,
+            MetaData(),
             Column("key", Unicode(), primary_key=True),
             Column("text", Unicode(), nullable=True),
             Column("dataset", Unicode(), nullable=False),
             Column("timestamp", DateTime, index=True),
-            extend_existing=True,
         )
         if create:
-            metadata.create_all(bind=engine, checkfirst=True, tables=[self._table])
+            session.create(self._table)
 
         self._preload: Dict[str, CacheValue] = {}
-
-    @property
-    def conn(self) -> Connection:
-        if self._conn is None:
-            self._conn = self._engine.connect()
-            self._transaction = self._conn.begin()
-        return self._conn
 
     def set(self, key: str, value: Value) -> None:
         self._preload.pop(key, None)
@@ -73,18 +61,14 @@ class Cache(object):
             "dataset": self.dataset.name,
             "text": value,
         }
-        try:
-            istmt = upsert(self._table).values(cache)
-            values = dict(
-                timestamp=istmt.excluded.timestamp,
-                text=istmt.excluded.text,
-                dataset=istmt.excluded.dataset,
-            )
-            stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
-            self.conn.execute(stmt)
-        except (OperationalError, InvalidRequestError) as exc:
-            log.exception("Error while saving to cache: %s" % exc)
-            self.reset()
+        istmt = upsert(self._table).values(cache)
+        values = dict(
+            timestamp=istmt.excluded.timestamp,
+            text=istmt.excluded.text,
+            dataset=istmt.excluded.dataset,
+        )
+        stmt = istmt.on_conflict_do_update(index_elements=["key"], set_=values)
+        self._session.execute(stmt)
 
     def set_json(self, key: str, value: Any) -> None:
         return self.set(key, json.dumps(value))
@@ -112,13 +96,8 @@ class Cache(object):
             q = q.filter(self._table.c.timestamp > cache_cutoff)
         q = q.order_by(self._table.c.timestamp.desc())
         q = q.limit(1)
-        try:
-            result = self.conn.execute(q)
-            row = result.fetchone()
-        except InvalidRequestError as ire:
-            log.exception("Cache fetch error: %s", ire)
-            self.reset()
-            return None
+        result = self._session.execute(q)
+        row = result.fetchone()
         if row is not None:
             return cast(Optional[str], row.text)
         return None
@@ -136,19 +115,14 @@ class Cache(object):
         self._preload.pop(key, None)
         pq = delete(self._table)
         pq = pq.where(self._table.c.key == key)
-        try:
-            self.conn.execute(pq)
-        except InvalidRequestError as ire:
-            log.exception("Cache delete error: %s", ire)
-            self.reset()
-            return None
+        self._session.execute(pq)
 
     def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
         q = select(self._table)
         if like is not None:
             q = q.filter(self._table.c.key.like(like))
 
-        result = self.conn.execute(q)
+        result = self._session.execute(q)
         for row in result.yield_per(10000):
             yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
@@ -158,40 +132,12 @@ class Cache(object):
             self._preload[cache.key] = cache
 
     def clear(self) -> None:
-        try:
-            pq = delete(self._table)
-            pq = pq.where(self._table.c.dataset == self.dataset.name)
-            self.conn.execute(pq)
-        except InvalidRequestError:
-            log.exception("Cannot clear cache from database")
-            self.reset()
-
-    def reset(self) -> None:
-        if self._conn is not None:
-            self._conn.close()
-        self._conn = None
-        self._transaction = None
-
-    def flush(self) -> None:
-        # log.info("Flushing cache.")
-        if self._transaction is not None:
-            try:
-                self._transaction.commit()
-            except InvalidRequestError:
-                log.exception("Transaction was failed, cannot store cache state.")
-        self.reset()
-
-    def close(self) -> None:
-        self.flush()
+        pq = delete(self._table)
+        pq = pq.where(self._table.c.dataset == self.dataset.name)
+        self._session.execute(pq)
 
     def __repr__(self) -> str:
         return f"<Cache({self._table!r})>"
 
     def __hash__(self) -> int:
         return hash((self.dataset.name, self._table.name))
-
-    @classmethod
-    def make_default(cls, dataset: Dataset) -> "Cache":
-        engine = get_engine()
-        metadata = get_metadata()
-        return cls(engine, metadata, dataset, create=True)

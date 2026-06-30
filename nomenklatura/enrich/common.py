@@ -227,6 +227,5 @@ class Enricher(BaseEnricher[DS], ABC):
         raise NotImplementedError()
 
     def close(self) -> None:
-        self.cache.close()
         if self._session is not None:
             self._session.close()

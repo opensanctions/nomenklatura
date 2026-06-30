@@ -1,7 +1,6 @@
 import json
 import shutil
-from typing import Any, Dict, Generator, List
-from sqlalchemy import MetaData
+from typing import Any, Callable, Dict, Generator, List
 import yaml
 import pytest
 from urllib.error import HTTPError
@@ -14,7 +13,9 @@ from followthemoney import Dataset, StatementEntity as Entity
 from nomenklatura import settings
 from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
 from nomenklatura.kv import get_redis
-from nomenklatura.db import close_db, get_engine, get_metadata
+from sqlalchemy import MetaData
+
+from nomenklatura.db import close_db, get_engine, make_session, Session
 from nomenklatura.resolver import Resolver
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
@@ -32,10 +33,10 @@ def wrap_test():
     if settings.DB_URL.startswith("sqlite"):
         settings.DB_URL = "sqlite:///:memory:"
     yield
-    # Dispose of connections to let open transactions for resources not
-    # managed by the setup/teardown abort.
+    # Reflect so per-instance metadata tables are dropped between tests.
     engine = get_engine()
-    meta = get_metadata()
+    meta = MetaData()
+    meta.reflect(bind=engine)
     meta.drop_all(bind=engine)
     close_db()
     get_redis.cache_clear()
@@ -67,26 +68,17 @@ def donations_json(donations_path: Path) -> List[Dict[str, Any]]:
 
 
 @pytest.fixture(scope="function")
-def resolver() -> Generator[Resolver[Entity], None, None]:
-    resolver = Resolver[Entity].make_default()
-    yield resolver
-    resolver.close()
-    resolver._table.drop(resolver._engine, checkfirst=True)
+def resolver(db_session: Session) -> Resolver[Entity]:
+    return Resolver[Entity](db_session, create=True)
 
 
 @pytest.fixture(scope="function")
-def other_table_resolver():
-    engine = get_engine()
-    meta = MetaData()
-    resolver = Resolver(engine, meta, create=True, table_name="another_table")
-    yield resolver
-    resolver.rollback()
-    resolver._table.drop(engine)
+def other_table_resolver(db_session: Session) -> Resolver[Entity]:
+    return Resolver(db_session, create=True, table_name="another_table")
 
 
 @pytest.fixture(scope="function")
 def dstore(donations_path: Path, resolver: Resolver[Entity]) -> SimpleMemoryStore:
-    resolver.begin()
     return load_entity_file_store(donations_path, resolver)
 
 
@@ -96,12 +88,24 @@ def test_dataset() -> Dataset:
 
 
 @pytest.fixture(scope="function")
-def test_cache(test_dataset: Dataset) -> Generator[Cache, None, None]:
-    engine = get_engine(settings.DB_URL)
-    metadata = get_metadata()
-    cache = Cache(engine, metadata, test_dataset, create=True)
-    yield cache
-    cache.close()
+def db_session() -> Generator[Session, None, None]:
+    """Yield one unit-of-work session per test."""
+    session = make_session()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture(scope="function")
+def test_cache(db_session: Session, test_dataset: Dataset) -> Cache:
+    return Cache(db_session, test_dataset, create=True)
+
+
+@pytest.fixture(scope="function")
+def cache_factory(db_session: Session) -> Callable[[Dataset], Cache]:
+    """Build caches for arbitrary datasets on the per-test session."""
+    return lambda dataset: Cache(db_session, dataset, create=True)
 
 
 @pytest.fixture(scope="function")

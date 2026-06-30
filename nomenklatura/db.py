@@ -15,8 +15,11 @@ from sqlalchemy import (
     create_engine,
     delete,
 )
-from sqlalchemy.engine import Connection, Dialect, Engine
+from sqlalchemy.engine import Connection, CursorResult, Dialect, Engine
+from sqlalchemy.sql.expression import Executable
+from sqlalchemy.dialects.postgresql import Insert as PostgreSQLInsert
 from sqlalchemy.dialects.postgresql import insert as psql_insert
+from sqlalchemy.dialects.sqlite import Insert as SQLiteInsert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from nomenklatura import settings
@@ -72,6 +75,105 @@ def get_metadata() -> MetaData:
     return MetaData()
 
 
+def is_postgres(dialect: Dialect) -> bool:
+    """Return whether the dialect is PostgreSQL."""
+    return dialect.name == "postgresql"
+
+
+def is_sqlite(dialect: Dialect) -> bool:
+    """Return whether the dialect is SQLite."""
+    return dialect.name == "sqlite"
+
+
+class Session:
+    """Own a single database connection for one unit of work.
+
+    Use this to give several data-access objects the same commit boundary.
+    """
+
+    def __init__(self, engine: Engine) -> None:
+        self.engine = engine
+        self._conn: Optional[Connection] = None
+
+    @property
+    def connection(self) -> Connection:
+        """Get the connection, checking it out on first use."""
+        if self._conn is None:
+            self._conn = self.engine.connect()
+        return self._conn
+
+    @property
+    def dialect(self) -> Dialect:
+        return self.engine.dialect
+
+    @property
+    def is_postgres(self) -> bool:
+        return is_postgres(self.dialect)
+
+    @property
+    def is_sqlite(self) -> bool:
+        return is_sqlite(self.dialect)
+
+    def execute(self, statement: Executable) -> CursorResult[Any]:
+        return self.connection.execute(statement)
+
+    def insert(self, table: Table) -> PostgreSQLInsert | SQLiteInsert:
+        """Build an insert that supports the active database's upsert API."""
+        if self.is_sqlite:
+            return sqlite_insert(table)
+        if self.is_postgres:
+            return psql_insert(table)
+        raise NotImplementedError(
+            f"Upsert not implemented for dialect {self.dialect.name}"
+        )
+
+    def create(self, *tables: Table) -> None:
+        """Create the given tables on this session's connection."""
+        for table in tables:
+            table.create(bind=self.connection, checkfirst=True)
+
+    def checkpoint(self) -> None:
+        """Commit the current transaction without releasing the connection."""
+        if self._conn is not None:
+            self._conn.commit()
+
+    def commit(self) -> None:
+        """Commit and return the connection to the pool."""
+        if self._conn is not None:
+            self._conn.commit()
+            self._conn.close()
+            self._conn = None
+
+    def rollback(self) -> None:
+        """Roll back the current transaction, leaving the connection open for retry."""
+        if self._conn is not None:
+            self._conn.rollback()
+
+    def close(self) -> None:
+        """Dispose the connection, rolling back any transaction still open."""
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def __enter__(self) -> "Session":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
+            self.close()
+
+    def __repr__(self) -> str:
+        return f"<Session({self.engine.url!r})>"
+
+
+def make_session(url: Optional[str] = None) -> Session:
+    """Build a unit-of-work session from the shared engine pool."""
+    return Session(get_engine(url))
+
+
 @contextmanager
 def ensure_tx(conn: Connish = None) -> Generator[Connection, None, None]:
     if conn is not None:
@@ -110,11 +212,11 @@ def _upsert_statement_batch(
     dialect: Dialect, conn: Connection, table: Table, batch: List[Mapping[str, Any]]
 ) -> None:
     """Create an upsert statement for the given table and engine."""
-    if dialect.name == "sqlite":
+    if is_sqlite(dialect):
         lstmt = sqlite_insert(table).values(batch)
         lstmt = lstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(lstmt)
-    elif dialect.name in ("postgresql", "postgres"):
+    elif is_postgres(dialect):
         pstmt = psql_insert(table).values(batch)
         pstmt = pstmt.on_conflict_do_nothing(index_elements=["id"])
         conn.execute(pstmt)
@@ -130,7 +232,7 @@ def insert_statements(
     batch_size: int = settings.STATEMENT_BATCH,
 ) -> None:
     dataset_count: int = 0
-    is_postgresql = "postgres" in engine.dialect.name
+    is_postgresql = is_postgres(engine.dialect)
     if not is_postgresql:
         sqlite_max_batch = SQLITE_MAX_VARS // len(table.columns)
         batch_size = min(batch_size, sqlite_max_batch)

@@ -7,6 +7,7 @@ from nomenklatura.store import Store
 from nomenklatura.tui.dedupe import DedupeApp, DedupeState
 from nomenklatura.tui.reconcile import ReconcileApp, ReconcileState
 from nomenklatura.matching import ScoringAlgorithm
+from nomenklatura.db import Session
 from nomenklatura.resolver import Resolver
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import prepare_review
@@ -16,15 +17,19 @@ __all__ = ["dedupe_ui", "reconcile_ui"]
 
 
 def dedupe_ui(
-    resolver: Resolver[SE], store: Store[DS, SE], url_base: Optional[str] = None
+    resolver: Resolver[SE],
+    session: Session,
+    store: Store[DS, SE],
+    url_base: Optional[str] = None,
 ) -> None:
     app = DedupeApp[DS, SE]()
-    app.dedupe = DedupeState(resolver, store, url_base=url_base)
+    app.dedupe = DedupeState(session, resolver, store, url_base=url_base)
     app.run()
 
 
 def reconcile_ui(
     resolver: Resolver[SE],
+    session: Session,
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
@@ -35,16 +40,10 @@ def reconcile_ui(
     user: Optional[str] = None,
     url_base: Optional[str] = None,
 ) -> List[QSCommand]:
-    """Run the interactive Wikidata reconciliation UI; return the queued QS commands.
-
-    All candidates are fetched, scored and sorted up front (with logging
-    visible), then each unlinked person is presented against its ranked Wikidata
-    candidates for a human decision (confirm / no-match / unsure / create / skip).
-    Returns the accumulated QuickStatements commands for the caller to serialize.
-    """
-    # Fetch and rank everything before the TUI boots, with logging on screen.
+    """Review pre-ranked Wikidata candidates and return queued commands."""
     items, commands = prepare_review(
         resolver,
+        session,
         store,
         client,
         dataset,
@@ -55,6 +54,7 @@ def reconcile_ui(
     )
     app = ReconcileApp[DS, SE]()
     app.reconcile = ReconcileState(
+        session,
         resolver,
         store,
         dataset,

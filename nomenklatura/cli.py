@@ -12,6 +12,7 @@ from followthemoney.cli.util import path_entities, write_entity
 from followthemoney.cli.aggregate import sorted_aggregate
 
 from nomenklatura.cache import Cache
+from nomenklatura.db import make_session, Session
 from nomenklatura.matching import train_v1_matcher, train_erun_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
@@ -31,11 +32,13 @@ log = logging.getLogger(__name__)
 ResPath = click.Path(dir_okay=False, writable=True, path_type=Path)
 
 
-def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
+def _load_enricher(
+    session: Session, path: Path
+) -> Tuple[Dataset, Enricher[Dataset]]:
     with open(path, "r") as fh:
         data = yaml.safe_load(fh)
         dataset = Dataset.make(data)
-        cache = Cache.make_default(dataset)
+        cache = Cache(session, dataset, create=True)
         enricher = make_enricher(dataset, cache, data)
         if enricher is None:
             raise TypeError("Could not load enricher")
@@ -43,10 +46,8 @@ def _load_enricher(path: Path) -> Tuple[Dataset, Enricher[Dataset]]:
 
 
 def _get_linker() -> Linker[Entity]:
-    resolver = Resolver[Entity].make_default()
-    linker = resolver.get_linker()
-    resolver.close()
-    return linker
+    with make_session() as session:
+        return Resolver[Entity](session, create=True).get_linker()
 
 
 def _get_data_path(data_path: Optional[Path]) -> Path:
@@ -93,32 +94,33 @@ def xref_file(
     focus: tuple[str, ...] = (),
     discount_internal: float = 1.0,
 ) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    data_path = _get_data_path(data_path)
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        data_path = _get_data_path(data_path)
 
-    store = load_entity_file_store(path, resolver=resolver)
-    algorithm_type = get_algorithm(algorithm)
-    if algorithm_type is None:
-        raise click.Abort(f"Unknown algorithm: {algorithm}")
+        store = load_entity_file_store(path, resolver=resolver)
+        algorithm_type = get_algorithm(algorithm)
+        if algorithm_type is None:
+            raise click.Abort(f"Unknown algorithm: {algorithm}")
 
-    index_dir = data_path / INDEX_SEGMENT
-    if clear and index_dir.exists():
-        log.info("Clearing index: %s", index_dir)
-        shutil.rmtree(index_dir, ignore_errors=True)
-    run_xref(
-        resolver,
-        store,
-        index_dir,
-        auto_threshold=auto_threshold,
-        algorithm=algorithm_type,
-        scored=scored,
-        limit=limit,
-        focus_datasets=set(focus),
-        discount_internal=discount_internal,
-    )
-    resolver.commit()
-    log.info("Xref complete in: %r", resolver)
+        index_dir = data_path / INDEX_SEGMENT
+        if clear and index_dir.exists():
+            log.info("Clearing index: %s", index_dir)
+            shutil.rmtree(index_dir, ignore_errors=True)
+        run_xref(
+            resolver,
+            session,
+            store,
+            index_dir,
+            auto_threshold=auto_threshold,
+            algorithm=algorithm_type,
+            scored=scored,
+            limit=limit,
+            focus_datasets=set(focus),
+            discount_internal=discount_internal,
+        )
+        log.info("Xref complete in: %r", resolver)
 
 
 @cli.command(
@@ -154,23 +156,23 @@ def wikidata_reconcile(
     create: bool = False,
 ) -> None:
     if review and create:
-        # In review mode creates come from a keypress, so --create is meaningless;
-        # it only gates the headless speculative-create bulk. Fail loudly rather
-        # than silently ignore it.
+        # Review mode creates items interactively.
         raise click.UsageError("--create cannot be combined with --review")
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    store = load_entity_file_store(path, resolver=resolver)
-    algorithm_type = get_algorithm(algorithm)
-    if algorithm_type is None:
-        raise click.Abort(f"Unknown algorithm: {algorithm}")
-    dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-    cache = Cache.make_default(dataset)
-    client = WikidataClient(cache)
+    session = make_session()
     try:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        store = load_entity_file_store(path, resolver=resolver)
+        algorithm_type = get_algorithm(algorithm)
+        if algorithm_type is None:
+            raise click.Abort(f"Unknown algorithm: {algorithm}")
+        dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
+        cache = Cache(session, dataset, create=True)
+        client = WikidataClient(cache)
         if review:
             commands = reconcile_ui(
                 resolver,
+                session,
                 store,
                 client,
                 dataset,
@@ -182,6 +184,7 @@ def wikidata_reconcile(
         else:
             commands = run_reconcile(
                 resolver,
+                session,
                 store,
                 client,
                 dataset,
@@ -193,12 +196,8 @@ def wikidata_reconcile(
                 source_url=source_url,
             )
     finally:
-        # Persist cached API responses even if the run is cancelled or errors.
-        cache.close()
-    resolver.commit()
-    # One QS batch sits next to the input file: entities.ijson.qs. Each create is
-    # a contiguous CREATE…LAST unit, so it coexists with enrich statements (which
-    # target existing QIDs) in a single batch the operator runs in the QS UI.
+        # Keep completed requests and judgements after an interrupted run.
+        session.commit()
     _write_qs(path.with_name(path.name + ".qs"), commands)
     log.info("Reconcile complete in: %r", resolver)
 
@@ -213,10 +212,10 @@ def _write_qs(path: Path, commands: list[QSCommand]) -> None:
 
 @cli.command("prune", help="Remove dedupe candidates")
 def xref_prune() -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    resolver.prune()
-    resolver.commit()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        resolver.prune()
 
 
 @cli.command("apply", help="Apply resolver to an entity stream")
@@ -251,16 +250,17 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.option("-x", "--xref", is_flag=True, default=False)
 @click.option("-p", "--data-path", type=Path, default=None)
 def dedupe(path: Path, xref: bool = False, data_path: Optional[Path] = None) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    data_path = _get_data_path(data_path)
-    store = load_entity_file_store(path, resolver=resolver)
-    if xref:
-        index_dir = data_path / INDEX_SEGMENT
-        run_xref(resolver, store, index_dir)
-    resolver.commit()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        data_path = _get_data_path(data_path)
+        store = load_entity_file_store(path, resolver=resolver)
+        if xref:
+            index_dir = data_path / INDEX_SEGMENT
+            run_xref(resolver, session, store, index_dir)
+        session.checkpoint()
 
-    dedupe_ui(resolver, store)
+        dedupe_ui(resolver, session, store)
 
 
 @cli.command("train-v1-matcher", help="Train a matching model from judgement pairs")
@@ -284,18 +284,17 @@ def match_command(
     entities: Path,
     outpath: Path,
 ) -> None:
-    resolver = Resolver[Entity].make_default()
-    _, enricher = _load_enricher(config)
-
-    try:
-        resolver.begin()
-        with path_writer(outpath) as fh:
-            stream = path_entities(entities, Entity)
-            for proxy in match(enricher, resolver, stream):
-                write_entity(fh, proxy)
-        resolver.commit()
-    finally:
-        enricher.close()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        _, enricher = _load_enricher(session, config)
+        try:
+            with path_writer(outpath) as fh:
+                stream = path_entities(entities, Entity)
+                for proxy in match(enricher, resolver, stream):
+                    write_entity(fh, proxy)
+        finally:
+            enricher.close()
 
 
 @cli.command("enrich", help="Fetch extra info from an enrichment source")
@@ -307,17 +306,17 @@ def enrich_command(
     entities: Path,
     outpath: Path,
 ) -> None:
-    resolver = Resolver[Entity].make_default()
-    _, enricher = _load_enricher(config)
-    try:
-        resolver.begin()
-        with path_writer(outpath) as fh:
-            stream = path_entities(entities, Entity)
-            for proxy in enrich(enricher, resolver, stream):
-                write_entity(fh, proxy)
-        resolver.commit()
-    finally:
-        enricher.close()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load_into_memory()
+        _, enricher = _load_enricher(session, config)
+        try:
+            with path_writer(outpath) as fh:
+                stream = path_entities(entities, Entity)
+                for proxy in enrich(enricher, resolver, stream):
+                    write_entity(fh, proxy)
+        finally:
+            enricher.close()
 
 
 @cli.command("apply-statements", help="Apply a resolver file to a set of statements")
@@ -338,19 +337,17 @@ def statements_apply(infile: Path, outpath: Path, format: str) -> None:
 @cli.command("load-resolver", help="Load resolver edges from file into database")
 @click.argument("source", type=InPath)
 def load_resolver(source: Path) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    resolver.load(source)
-    resolver.commit()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.load(source)
 
 
 @cli.command("dump-resolver", help="Dump resolver decisions from database to file")
 @click.argument("target", type=OutPath)
 def dump_resolver(target: Path) -> None:
-    resolver = Resolver[Entity].make_default()
-    resolver.begin()
-    resolver.dump(target)
-    resolver.rollback()
+    with make_session() as session:
+        resolver = Resolver[Entity](session, create=True)
+        resolver.dump(target)
 
 
 @cli.command("bench", help="Benchmark a matching algorithm")

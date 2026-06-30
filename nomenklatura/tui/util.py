@@ -1,6 +1,7 @@
 from typing import Generator, Tuple
 from followthemoney import DS, registry, Property, SE
 
+from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store
@@ -22,22 +23,17 @@ ALWAYS_SHOW = {"wikipediaUrl"}
 
 
 def apply_judgement(
+    session: Session,
     resolver: Resolver[SE],
     store: Store[DS, SE],
     left_id: str,
     right_id: str,
     judgement: Judgement,
 ) -> str:
-    """Record a judgement between two entity ids and reflect it in the store.
-
-    The `decide → store.update → commit` triad is easy to get wrong (the store
-    must be re-keyed to the new canonical id, and the order matters), so both the
-    dedupe and reconcile UIs route through here. Returns the canonical id the two
-    entities now share.
-    """
+    """Record a judgement and re-key the store before committing it."""
     canonical = resolver.decide(left_id, right_id, judgement=judgement)
     store.update(canonical.id)
-    resolver.commit()
+    session.checkpoint()
     return canonical.id
 
 

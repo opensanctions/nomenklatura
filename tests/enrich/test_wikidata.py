@@ -1,6 +1,5 @@
 import requests_mock
 from followthemoney import Dataset, StatementEntity
-from nomenklatura.cache import Cache
 from nomenklatura.enrich import make_enricher, Enricher
 
 from ..conftest import wd_read_response
@@ -9,13 +8,13 @@ PATH = "nomenklatura.enrich.wikidata:WikidataEnricher"
 dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
 
 
-def load_enricher() -> Enricher[Dataset]:
-    cache = Cache.make_default(dataset)
+def load_enricher(cache_factory) -> Enricher[Dataset]:
+    cache = cache_factory(dataset)
     return make_enricher(dataset, cache, {"type": PATH})
 
 
-def test_wikidata_match():
-    enricher = load_enricher()
+def test_wikidata_match(cache_factory):
+    enricher = load_enricher(cache_factory)
 
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(
@@ -50,8 +49,8 @@ def test_wikidata_match():
     enricher.close()
 
 
-def test_wikidata_enrich():
-    enricher = load_enricher()
+def test_wikidata_enrich(cache_factory):
+    enricher = load_enricher(cache_factory)
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri(
             "GET",

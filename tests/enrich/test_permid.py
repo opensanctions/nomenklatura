@@ -1,6 +1,5 @@
 import requests_mock
 from followthemoney import Dataset, StatementEntity
-from nomenklatura.cache import Cache
 from nomenklatura.enrich import make_enricher, Enricher
 
 PATH = "nomenklatura.enrich.permid:PermIDEnricher"
@@ -153,13 +152,13 @@ GEONAME = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 </rdf:RDF>"""
 
 
-def load_enricher() -> Enricher[Dataset]:
-    cache = Cache.make_default(dataset)
+def load_enricher(cache_factory) -> Enricher[Dataset]:
+    cache = cache_factory(dataset)
     return make_enricher(dataset, cache, {"type": PATH})
 
 
-def test_permid_match():
-    enricher = load_enricher()
+def test_permid_match(cache_factory):
+    enricher = load_enricher(cache_factory)
     with requests_mock.Mocker(real_http=False) as m:
         m.post("/permid/match", json=MATCH_ROSNEFT)
         m.get("https://permid.org/1-4295887083", json=ROSNEFT)
@@ -190,8 +189,8 @@ def test_permid_match():
     enricher.close()
 
 
-def test_permid_enrich():
-    enricher = load_enricher()
+def test_permid_enrich(cache_factory):
+    enricher = load_enricher(cache_factory)
     with requests_mock.Mocker(real_http=False) as m:
         m.post("/permid/match", json=MATCH_ROSNEFT)
         m.get("https://permid.org/1-4295887083", json=ROSNEFT)

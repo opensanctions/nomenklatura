@@ -21,7 +21,6 @@ PERSON_EXT = {
 
 
 def test_basic_store(test_dataset: Dataset, resolver: Resolver[Entity]):
-    resolver.begin()
     store = MemoryStore(test_dataset, resolver)
     entity = Entity.from_data(test_dataset, PERSON)
     entity_ext = Entity.from_data(test_dataset, PERSON_EXT)
