@@ -15,7 +15,11 @@ from nomenklatura.matching.erun.names import (
     org_name_levenshtein,
 )
 from nomenklatura.matching.erun.dob import dob_match, dob_year_match
-from nomenklatura.matching.erun.misc import address_match, address_numbers
+from nomenklatura.matching.erun.misc import (
+    address_match,
+    address_number_disagreement,
+    address_number_overlap,
+)
 from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
 from nomenklatura.matching.erun.misc import contact_match
 from nomenklatura.matching.erun.misc import security_isin_mismatch
@@ -63,7 +67,8 @@ class EntityResolveRegression(ScoringAlgorithm):
         security_isin_mismatch,
         obj_name_levenshtein,
         address_match,
-        address_numbers,
+        address_number_overlap,
+        address_number_disagreement,
     ]
 
     @classmethod

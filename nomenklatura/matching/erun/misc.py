@@ -52,14 +52,29 @@ def address_match(query: E, result: E) -> float:
     return float(overlap) / float(tokens)
 
 
-def address_numbers(query: E, result: E) -> float:
-    """Find if names contain numbers, score if the numbers are different."""
+def _address_number_sets(query: E, result: E) -> tuple[Set[str], Set[str]]:
     lv, rv = type_pair(query, result, registry.address)
-    lvn = extract_numbers(lv)
-    rvn = extract_numbers(rv)
-    common = len(lvn.intersection(rvn))
-    disjoint = len(lvn.difference(rvn))
-    return common - disjoint
+    return extract_numbers(lv), extract_numbers(rv)
+
+
+def address_number_overlap(query: E, result: E) -> float:
+    """Measure shared address numbers without rewarding repeated addresses."""
+
+    left, right = _address_number_sets(query, result)
+    if not left or not right:
+        return 0.0
+    common = len(left.intersection(right))
+    return common / min(len(left), len(right))
+
+
+def address_number_disagreement(query: E, result: E) -> float:
+    """Bound conflicting address numbers so address history cannot dominate a match."""
+
+    left, right = _address_number_sets(query, result)
+    if not left or not right:
+        return 0.0
+    difference = len(left.symmetric_difference(right))
+    return difference / len(left.union(right))
 
 
 def gender_mismatch(query: E, result: E) -> float:
