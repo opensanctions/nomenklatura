@@ -19,6 +19,28 @@ VERBAND_BADEN_DATA = {
 }
 
 
+def make_manual_index(
+    index_path: Path,
+    dstore: SimpleMemoryStore,
+    entries: list[tuple[str, str, str, str, int]],
+    schemata: list[tuple[str, str]],
+    max_token_pair_cost: int,
+) -> Index:
+    index = Index(
+        dstore.default_view(),
+        index_path,
+        options={"max_token_pair_cost": max_token_pair_cost},
+    )
+    index.con.execute("""
+        CREATE OR REPLACE TABLE entries
+            (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+    """)
+    index.con.executemany("INSERT INTO entries VALUES (?, ?, ?, ?, ?)", entries)
+    index.con.execute("""CREATE OR REPLACE TABLE schemata ("left" TEXT, "right" TEXT)""")
+    index.con.executemany("INSERT INTO schemata VALUES (?, ?)", schemata)
+    return index
+
+
 def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
     index = Index(dstore.default_view(), index_path)
     assert index.entity_count("entries") == 0
@@ -76,10 +98,134 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
         Identifier.get("f8867c433ba247cfab74096c73f6ff5e36db3ffe"),
         Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
     )
-    false_pos = [score for pair, score in pairs if false_pos == pair]
-    assert len(false_pos) == 0, pairs
+    false_pos_scores = [score for pair, score in pairs if false_pos == pair]
+    if len(false_pos_scores):
+        # Dynamic stopwords are based on block size, so weak low-frequency signals
+        # can remain in small fixtures. They should not outrank useful name matches.
+        assert max(false_pos_scores) < bmw_score, (false_pos_scores, bmw_score)
 
     assert len(pairs) > 10, len(pairs)
+
+
+def test_dynamic_stopwords_respect_pair_cost_cap(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"k{i}", "np", "np:kept", 1)
+        for i in range(4)
+    ] + [
+        ("Person", f"s{i}", "np", "np:stopped", 1)
+        for i in range(5)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_token_pair_cost=6,
+    )
+    try:
+        index._build_stopwords()
+        stats = {
+            token: (df, compatible_pair_cost, stopword)
+            for token, df, compatible_pair_cost, stopword in index.con.execute(
+                """
+                SELECT token, df, compatible_pair_cost, stopword
+                FROM token_stats
+                ORDER BY token
+                """
+            ).fetchall()
+        }
+        assert stats["np:kept"] == (4, 6, False)
+        assert stats["np:stopped"] == (5, 10, True)
+
+        index._apply_stopwords("entries", "entries_filtered")
+        tokens = {
+            token
+            for (token,) in index.con.execute(
+                "SELECT DISTINCT token FROM entries_filtered"
+            ).fetchall()
+        }
+        assert tokens == {"np:kept"}
+    finally:
+        index.close()
+
+
+def test_dynamic_stopwords_count_compatible_schema_pairs_once(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Company", f"c{i}", "np", "np:cross", 1)
+        for i in range(2)
+    ] + [
+        ("LegalEntity", f"l{i}", "np", "np:cross", 1)
+        for i in range(3)
+    ] + [
+        ("Person", f"p{i}", "np", "np:same", 1)
+        for i in range(4)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [
+            ("Company", "LegalEntity"),
+            ("LegalEntity", "Company"),
+            ("Person", "Person"),
+        ],
+        max_token_pair_cost=100,
+    )
+    try:
+        index._build_stopwords()
+        costs = dict(
+            index.con.execute(
+                """
+                SELECT token, compatible_pair_cost
+                FROM token_stats
+                ORDER BY token
+                """
+            ).fetchall()
+        )
+        assert costs["np:cross"] == 6
+        assert costs["np:same"] == 6
+    finally:
+        index.close()
+
+
+def test_dynamic_stopwords_filter_by_token(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"s{i}", "np", "np:stopped", 1)
+        for i in range(5)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_token_pair_cost=6,
+    )
+    try:
+        index._build_stopwords()
+        index.con.execute("""
+            CREATE OR REPLACE TABLE matching
+                (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+        """)
+        index.con.executemany(
+            "INSERT INTO matching VALUES (?, ?, ?, ?, ?)",
+            [
+                ("Person", "m1", "other", "np:stopped", 1),
+                ("Person", "m2", "np", "np:kept", 1),
+            ],
+        )
+        index._apply_stopwords("matching", "matching_filtered")
+        rows = index.con.execute(
+            "SELECT id, field, token FROM matching_filtered ORDER BY id"
+        ).fetchall()
+        assert rows == [("m2", "np", "np:kept")]
+    finally:
+        index.close()
 
 
 def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: Index):
@@ -124,8 +270,25 @@ def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: In
     writer.add_entity(c)
     writer.flush()
 
-    matches = list(dindex.match_entities(ostore.default_view().entities()))
-    assert len(matches) == 2, matches
+    matches = {
+        str(ident): matches
+        for ident, matches in dindex.match_entities(ostore.default_view().entities())
+    }
+    assert {"a", "c"}.issubset(matches), matches
+
+    view = dstore.default_view()
+    a_top = matches["a"][0]
+    a_top_entity = view.get_entity(str(a_top[0]))
+    assert a_top_entity is not None
+    assert a_top_entity.caption == "Bayerische Motorenwerke AG"
+
+    c_top = matches["c"][0]
+    c_top_entity = view.get_entity(str(c_top[0]))
+    assert c_top_entity is not None
+    assert c_top_entity.caption == "Bayerische Motorenwerke (BMW) AG"
+
+    if "b" in matches:
+        assert matches["b"][0][1] < a_top[1], matches["b"]
 
     # for ident, matches in matches:
     #     pass

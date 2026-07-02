@@ -29,7 +29,6 @@
 # making memory_limit smaller might help fit what the buffer manager manages,
 # plus all the additional DuckDB and non-DuckDB memory usage.
 import csv
-from banal import as_bool
 import duckdb
 import logging
 from pathlib import Path
@@ -44,7 +43,6 @@ from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
-    SYMBOL_FIELD,
     WORD_FIELD,
     tokenize_entity,
 )
@@ -56,19 +54,6 @@ R = TypeVar("R")
 log = logging.getLogger(__name__)
 
 BATCH_SIZE = 10_000
-# Reducing these increases memory usage
-DEFAULT_STOPWORDS_PCT = 0.8
-DEFAULT_FIELD_STOPWORDS_PCT = {
-    registry.name.name: 0.1,
-    registry.phone.name: 0.0,
-    registry.identifier.name: 0.0,
-    registry.country.name: 90.0,
-    registry.address.name: 10.0,
-    registry.date.name: 30.0,
-    WORD_FIELD: 5.0,
-    NAME_PART_FIELD: 2.0,
-    SYMBOL_FIELD: 10.0,
-}
 
 
 def batched(iterable: Iterable[R], n: int) -> Generator[Tuple[R, ...], None, None]:
@@ -104,10 +89,9 @@ class Index(object):
     ):
         self.view = view
         self.max_candidates = int(options.get("max_candidates", 75))
-        self.stopwords_pct = DEFAULT_FIELD_STOPWORDS_PCT.copy()
-        self.stopwords_pct.update(options.get("stopwords_pct", {}))
-        self.disable_stopwords = as_bool(options.get("disable_stopwords", False))
-        # self.max_stopwords: int = int(options.get("max_stopwords", 100_000))
+        self.max_token_pair_cost = int(options.get("max_token_pair_cost", 2000))
+        if self.max_token_pair_cost < 0:
+            raise ValueError("max_token_pair_cost must be >= 0")
         self.match_batch: int = int(options.get("match_batch", 1_000))
         self.data_dir = data_dir.resolve()
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -217,75 +201,140 @@ class Index(object):
         log.info("Index built.")
 
     def _build_stopwords(self) -> None:
-        token_freq_query = """
-        CREATE OR REPLACE TABLE tokens AS
-            SELECT field, token, sum("count") as freq
-            FROM entries
-            GROUP BY field, token
-        """
-        self.con.execute(token_freq_query)
-        self.con.execute(
-            "CREATE OR REPLACE TABLE stopwords (field TEXT, token TEXT, freq INT)"
-        )
-        if self.disable_stopwords:
-            log.info("Stopwords are disabled, skipping stopword generation.")
-            return
-        field_counts = self.con.execute(
-            "SELECT field, count(*) FROM tokens GROUP BY field"
-        ).fetchall()
-        for field, count in field_counts:
-            self.build_field_stopwords(field, count)
-
-    def build_field_stopwords(self, field: str, num_tokens: int) -> None:
-        field_stopwords_pct = self.stopwords_pct.get(field, DEFAULT_STOPWORDS_PCT)
-        if field_stopwords_pct == 0.0:
-            log.info("Stopwords disabled for field '%s'.", field)
-            return
-        limit = int((num_tokens / 100) * field_stopwords_pct)
-        # limit = min(limit, self.max_stopwords)
         log.info(
-            "Treating %d (%s%%) most common tokens as stopwords for field '%s'...",
-            limit,
-            field_stopwords_pct,
-            field,
+            "Building dynamic stopwords with max token pair cost %d...",
+            self.max_token_pair_cost,
         )
-        self.con.execute(
-            """
-            INSERT INTO stopwords
-            SELECT * FROM tokens WHERE field = ? ORDER BY freq DESC LIMIT ?;
-            """,
-            [field, limit],
-        )
-        least_common_query = """
-            SELECT token, freq
-            FROM stopwords
-            WHERE field = ?
-            ORDER BY freq ASC
-            LIMIT 5;
+        token_schema_counts_query = """
+        CREATE OR REPLACE TABLE token_schema_counts AS
+            SELECT
+                token,
+                any_value(field) AS field,
+                schema,
+                count(*) AS df,
+                sum("count") AS freq
+            FROM entries
+            GROUP BY token, schema
         """
-        least_common = "\n".join(
-            f"{freq} {token}"
-            for token, freq in self.con.execute(least_common_query, [field]).fetchall()
+        self.con.execute(token_schema_counts_query)
+
+        token_stats_query = """
+        CREATE OR REPLACE TABLE token_stats AS
+            WITH schema_pairs AS (
+                SELECT DISTINCT
+                    least("left", "right") AS left_schema,
+                    greatest("left", "right") AS right_schema
+                FROM schemata
+            ),
+            compatible AS (
+                SELECT
+                    l.token,
+                    sum(
+                        CASE
+                            WHEN l.schema = r.schema THEN
+                                cast(l.df * (l.df - 1) / 2 AS HUGEINT)
+                            ELSE
+                                cast(l.df * r.df AS HUGEINT)
+                        END
+                    ) AS compatible_pair_cost
+                FROM token_schema_counts AS l
+                JOIN token_schema_counts AS r
+                    ON l.token = r.token
+                   AND l.schema <= r.schema
+                JOIN schema_pairs AS s
+                    ON s.left_schema = l.schema
+                   AND s.right_schema = r.schema
+                GROUP BY l.token
+            ),
+            totals AS (
+                SELECT
+                    token,
+                    any_value(field) AS field,
+                    sum(freq) AS freq,
+                    sum(df) AS df
+                FROM token_schema_counts
+                GROUP BY token
+            )
+            SELECT
+                totals.token,
+                totals.field,
+                totals.freq,
+                totals.df,
+                ifnull(compatible.compatible_pair_cost, 0) AS compatible_pair_cost,
+                ifnull(compatible.compatible_pair_cost, 0) > ? AS stopword
+            FROM totals
+            LEFT JOIN compatible ON compatible.token = totals.token
+        """
+        self.con.execute(token_stats_query, [self.max_token_pair_cost])
+
+        stopwords_query = """
+        CREATE OR REPLACE TABLE stopwords AS
+            SELECT token, field, freq, df, compatible_pair_cost
+            FROM token_stats
+            WHERE stopword
+        """
+        self.con.execute(stopwords_query)
+        self._log_stopword_stats()
+
+    def _log_stopword_stats(self) -> None:
+        stats_query = """
+            SELECT
+                count(*) AS tokens,
+                ifnull(sum(CASE WHEN stopword THEN 1 ELSE 0 END), 0) AS stopwords,
+                ifnull(sum(CASE WHEN stopword THEN compatible_pair_cost ELSE 0 END), 0)
+                    AS stopped_pair_cost,
+                ifnull(sum(CASE WHEN NOT stopword THEN compatible_pair_cost ELSE 0 END), 0)
+                    AS kept_pair_cost,
+                ifnull(max(CASE WHEN NOT stopword THEN compatible_pair_cost ELSE NULL END), 0)
+                    AS max_kept_pair_cost,
+                ifnull(max(CASE WHEN NOT stopword THEN df ELSE NULL END), 0) AS max_kept_df
+            FROM token_stats
+        """
+        stats = self.con.execute(stats_query).fetchone()
+        if stats is None:
+            return
+        (
+            tokens,
+            stopwords,
+            stopped_pair_cost,
+            kept_pair_cost,
+            max_kept_pair_cost,
+            max_kept_df,
+        ) = stats
+        log.info(
+            "Dynamic stopwords built: %d/%d tokens stopped, "
+            "compatible pair cost kept=%d stopped=%d, "
+            "max kept token cost=%d, max kept df=%d",
+            stopwords,
+            tokens,
+            kept_pair_cost,
+            stopped_pair_cost,
+            max_kept_pair_cost,
+            max_kept_df,
         )
-        log.info("5 Least common stopwords for field '%s':\n%s\n", field, least_common)
+        top_stopwords_query = """
+            SELECT field, token, df, compatible_pair_cost
+            FROM stopwords
+            ORDER BY compatible_pair_cost DESC, token ASC
+            LIMIT 10
+        """
+        top_stopwords = "\n".join(
+            f"{field} {token} df={df} cost={compatible_pair_cost}"
+            for field, token, df, compatible_pair_cost in self.con.execute(
+                top_stopwords_query
+            ).fetchall()
+        )
+        if len(top_stopwords):
+            log.info("Top dynamic stopwords:\n%s\n", top_stopwords)
 
     def _apply_stopwords(self, origin_table: str, target_table: str) -> None:
         log.info("Filtering stopwords from %r, as %r...", origin_table, target_table)
-        # FIXME: this doesn't work for enrichment:
-        # q = f"""
-        # CREATE OR REPLACE TABLE {target_table} as
-        #     SELECT e.*
-        #     FROM {origin_table} AS e
-        #     LEFT JOIN tokens AS t ON t.token = e.token
-        #     LEFT OUTER JOIN stopwords ON stopwords.token = e.token
-        #     WHERE stopwords.token is NULL AND t.freq > 1
-        # """
         q = f"""
         CREATE OR REPLACE TABLE {target_table} as
             SELECT e.*
             FROM {origin_table} AS e
-            LEFT OUTER JOIN stopwords ON stopwords.token = e.token
-            WHERE stopwords.token is NULL
+            LEFT OUTER JOIN stopwords AS sw ON sw.token = e.token
+            WHERE sw.token is NULL
         """
         self.con.execute(q)
 
