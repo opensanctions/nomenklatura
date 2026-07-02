@@ -235,6 +235,39 @@ def test_dynamic_stopwords_filter_by_token(
         index.close()
 
 
+def test_pairs_join_filtered_term_frequencies(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"s{i}", "np", "np:stopped", 1)
+        for i in range(5)
+    ] + [
+        ("Person", "k1", "np", "np:kept", 1),
+        ("Person", "k2", "np", "np:kept", 1),
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_token_pair_cost=6,
+    )
+    try:
+        index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
+        index._build_frequencies()
+
+        pairs = list(index.pairs())
+        assert pairs == [((Identifier.get("k2"), Identifier.get("k1")), 2.0)]
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM term_frequencies_all WHERE token = 'np:stopped'"
+        ).fetchone() == (5,)
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM term_frequencies WHERE token = 'np:stopped'"
+        ).fetchone() == (0,)
+    finally:
+        index.close()
+
+
 def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
     index_path: Path, dstore: SimpleMemoryStore
 ):
@@ -266,6 +299,9 @@ def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
         assert index.con.execute(
             "SELECT COUNT(*) FROM term_frequencies_all WHERE token = 'np:shared'"
         ).fetchone() == (5,)
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM term_frequencies WHERE token = 'np:shared'"
+        ).fetchone() == (0,)
 
         index.con.execute("""
             CREATE OR REPLACE TABLE matching

@@ -444,17 +444,13 @@ class Index(object):
             LEFT OUTER JOIN boosts boo ON f.field = boo.field
         """
         self.con.execute(term_frequencies_query)
-        self.con.execute("""
-            CREATE OR REPLACE TABLE term_frequencies AS
-                SELECT *
-                FROM term_frequencies_all
-        """)
 
     def _ensure_pair_stopwords(self) -> None:
-        if self._has_table("stopwords") and self._has_table("entries_filtered"):
-            return
-        self._build_stopwords()
-        self._apply_stopwords("entries", "entries_filtered")
+        if not self._has_table("stopwords"):
+            self._build_stopwords()
+        if not self._has_table("entries_filtered"):
+            self._apply_stopwords("entries", "entries_filtered")
+        self._apply_stopwords("term_frequencies_all", "term_frequencies")
 
     def pairs(
         self, max_pairs: int = 10_000
@@ -463,12 +459,10 @@ class Index(object):
         log.info("Generating pairs...")
         pairs_query = """
             SELECT "left".id, "right".id, sum(("left".tf + "right".tf)) as score
-            FROM term_frequencies_all as "left"
-            JOIN term_frequencies_all as "right" ON "left".token = "right".token
+            FROM term_frequencies as "left"
+            JOIN term_frequencies as "right" ON "left".token = "right".token
             INNER JOIN schemata ON schemata.left = "left".schema AND schemata.right = "right".schema
-            LEFT OUTER JOIN stopwords AS sw ON sw.token = "left".token
             WHERE "left".id > "right".id
-              AND sw.token is NULL
             GROUP BY "left".id, "right".id
             ORDER BY score DESC
             LIMIT ?
