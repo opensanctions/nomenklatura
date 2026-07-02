@@ -228,6 +228,194 @@ def test_dynamic_stopwords_filter_by_token(
         index.close()
 
 
+def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"idx{i}", "np", "np:shared", 1)
+        for i in range(5)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_token_pair_cost=6,
+    )
+    try:
+        index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
+        index._build_frequencies()
+
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM stopwords WHERE token = 'np:shared'"
+        ).fetchone() == (1,)
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM entries_filtered WHERE token = 'np:shared'"
+        ).fetchone() == (0,)
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM term_frequencies_all WHERE token = 'np:shared'"
+        ).fetchone() == (5,)
+
+        index.con.execute("""
+            CREATE OR REPLACE TABLE matching
+                (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+        """)
+        index.con.execute(
+            "INSERT INTO matching VALUES (?, ?, ?, ?, ?)",
+            ("Person", "query", "np", "np:shared", 1),
+        )
+
+        index._build_matching_stopwords()
+        assert index.con.execute(
+            """
+            SELECT df, compatible_pair_cost, stopword
+            FROM matching_token_stats
+            WHERE token = 'np:shared'
+            """
+        ).fetchone() == (1, 5, False)
+
+        index._apply_stopwords(
+            "matching",
+            "matching_filtered",
+            stopwords_table="matching_stopwords",
+        )
+        assert index.con.execute(
+            "SELECT COUNT(*) FROM matching_filtered WHERE token = 'np:shared'"
+        ).fetchone() == (1,)
+
+        matches = list(index._find_matches())
+        assert len(matches) == 1
+        assert matches[0][0] == Identifier.get("query")
+        assert {str(match_id) for match_id, _ in matches[0][1]} == {
+            f"idx{i}" for i in range(5)
+        }
+    finally:
+        index.close()
+
+
+def test_matching_stopwords_respect_cross_pair_cost(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"c{i}", "np", "np:cross", 1)
+        for i in range(3)
+    ] + [
+        ("Person", f"k{i}", "np", "np:kept", 1)
+        for i in range(2)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_token_pair_cost=6,
+    )
+    try:
+        index._build_stopwords()
+        index.con.execute("""
+            CREATE OR REPLACE TABLE term_frequencies_all AS
+                SELECT schema, field, token, id, 1.0 AS tf
+                FROM entries
+        """)
+        index.con.execute("""
+            CREATE OR REPLACE TABLE matching
+                (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+        """)
+        index.con.executemany(
+            "INSERT INTO matching VALUES (?, ?, ?, ?, ?)",
+            [
+                ("Person", "mc1", "np", "np:cross", 1),
+                ("Person", "mc2", "np", "np:cross", 1),
+                ("Person", "mc3", "np", "np:cross", 1),
+                ("Person", "mk1", "np", "np:kept", 1),
+                ("Person", "mk2", "np", "np:kept", 1),
+                ("Person", "mk3", "np", "np:kept", 1),
+            ],
+        )
+
+        index._build_matching_stopwords()
+        stats = {
+            token: (df, compatible_pair_cost, stopword)
+            for token, df, compatible_pair_cost, stopword in index.con.execute(
+                """
+                SELECT token, df, compatible_pair_cost, stopword
+                FROM matching_token_stats
+                ORDER BY token
+                """
+            ).fetchall()
+        }
+        assert stats["np:cross"] == (3, 9, True)
+        assert stats["np:kept"] == (3, 6, False)
+
+        index._apply_stopwords(
+            "matching",
+            "matching_filtered",
+            stopwords_table="matching_stopwords",
+        )
+        tokens = {
+            token
+            for (token,) in index.con.execute(
+                "SELECT DISTINCT token FROM matching_filtered"
+            ).fetchall()
+        }
+        assert tokens == {"np:kept"}
+    finally:
+        index.close()
+
+
+def test_matching_stopwords_count_oriented_schema_pairs_once(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("LegalEntity", f"l{i}", "np", "np:cross", 1)
+        for i in range(3)
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [
+            ("Company", "LegalEntity"),
+            ("LegalEntity", "Company"),
+        ],
+        max_token_pair_cost=6,
+    )
+    try:
+        index._build_stopwords()
+        index.con.execute("""
+            CREATE OR REPLACE TABLE term_frequencies_all AS
+                SELECT schema, field, token, id, 1.0 AS tf
+                FROM entries
+        """)
+        index.con.execute("""
+            CREATE OR REPLACE TABLE matching
+                (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+        """)
+        index.con.executemany(
+            "INSERT INTO matching VALUES (?, ?, ?, ?, ?)",
+            [
+                ("Company", "m1", "np", "np:cross", 1),
+                ("Company", "m2", "np", "np:cross", 1),
+            ],
+        )
+
+        index._build_matching_stopwords()
+        stats = dict(
+            index.con.execute(
+                """
+                SELECT token, compatible_pair_cost
+                FROM matching_token_stats
+                """
+            ).fetchall()
+        )
+        assert stats["np:cross"] == 6
+        assert index.con.execute("SELECT COUNT(*) FROM matching_stopwords").fetchone()[
+            0
+        ] == 0
+    finally:
+        index.close()
+
+
 def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: Index):
     linker = Linker({})
     ostore = SimpleMemoryStore(test_dataset, linker)

@@ -274,10 +274,86 @@ class Index(object):
             WHERE stopword
         """
         self.con.execute(stopwords_query)
-        self._log_stopword_stats()
+        self._log_stopword_stats("token_stats", "stopwords", "Dynamic stopwords")
 
-    def _log_stopword_stats(self) -> None:
-        stats_query = """
+    def _build_matching_stopwords(self) -> None:
+        log.info(
+            "Building matching stopwords with max token pair cost %d...",
+            self.max_token_pair_cost,
+        )
+        matching_token_schema_counts_query = """
+        CREATE OR REPLACE TABLE matching_token_schema_counts AS
+            SELECT
+                token,
+                any_value(field) AS field,
+                schema,
+                count(*) AS df,
+                sum("count") AS freq
+            FROM matching
+            GROUP BY token, schema
+        """
+        self.con.execute(matching_token_schema_counts_query)
+
+        matching_token_stats_query = """
+        CREATE OR REPLACE TABLE matching_token_stats AS
+            WITH indexed_token_schema_counts AS (
+                SELECT
+                    token,
+                    schema,
+                    count(*) AS df
+                FROM term_frequencies_all
+                GROUP BY token, schema
+            ),
+            compatible AS (
+                SELECT
+                    m.token,
+                    sum(cast(m.df * i.df AS HUGEINT)) AS compatible_pair_cost
+                FROM matching_token_schema_counts AS m
+                JOIN indexed_token_schema_counts AS i
+                    ON i.token = m.token
+                JOIN schemata AS s
+                    ON s.left = m.schema
+                   AND s.right = i.schema
+                GROUP BY m.token
+            ),
+            totals AS (
+                SELECT
+                    token,
+                    any_value(field) AS field,
+                    sum(freq) AS freq,
+                    sum(df) AS df
+                FROM matching_token_schema_counts
+                GROUP BY token
+            )
+            SELECT
+                totals.token,
+                totals.field,
+                totals.freq,
+                totals.df,
+                ifnull(compatible.compatible_pair_cost, 0) AS compatible_pair_cost,
+                ifnull(compatible.compatible_pair_cost, 0) > ? AS stopword
+            FROM totals
+            LEFT JOIN compatible ON compatible.token = totals.token
+        """
+        self.con.execute(matching_token_stats_query, [self.max_token_pair_cost])
+
+        matching_stopwords_query = """
+        CREATE OR REPLACE TABLE matching_stopwords AS
+            SELECT token, field, freq, df, compatible_pair_cost
+            FROM matching_token_stats
+            WHERE stopword
+        """
+        self.con.execute(matching_stopwords_query)
+        self._log_stopword_stats(
+            "matching_token_stats",
+            "matching_stopwords",
+            "Matching stopwords",
+        )
+
+    def _log_stopword_stats(
+        self, stats_table: str, stopwords_table: str, label: str
+    ) -> None:
+        stats_query = f"""
             SELECT
                 count(*) AS tokens,
                 ifnull(sum(CASE WHEN stopword THEN 1 ELSE 0 END), 0) AS stopwords,
@@ -288,7 +364,7 @@ class Index(object):
                 ifnull(max(CASE WHEN NOT stopword THEN compatible_pair_cost ELSE NULL END), 0)
                     AS max_kept_pair_cost,
                 ifnull(max(CASE WHEN NOT stopword THEN df ELSE NULL END), 0) AS max_kept_df
-            FROM token_stats
+            FROM {stats_table}
         """
         stats = self.con.execute(stats_query).fetchone()
         if stats is None:
@@ -302,9 +378,10 @@ class Index(object):
             max_kept_df,
         ) = stats
         log.info(
-            "Dynamic stopwords built: %d/%d tokens stopped, "
+            "%s built: %d/%d tokens stopped, "
             "compatible pair cost kept=%d stopped=%d, "
             "max kept token cost=%d, max kept df=%d",
+            label,
             stopwords,
             tokens,
             kept_pair_cost,
@@ -312,9 +389,9 @@ class Index(object):
             max_kept_pair_cost,
             max_kept_df,
         )
-        top_stopwords_query = """
+        top_stopwords_query = f"""
             SELECT field, token, df, compatible_pair_cost
-            FROM stopwords
+            FROM {stopwords_table}
             ORDER BY compatible_pair_cost DESC, token ASC
             LIMIT 10
         """
@@ -325,17 +402,29 @@ class Index(object):
             ).fetchall()
         )
         if len(top_stopwords):
-            log.info("Top dynamic stopwords:\n%s\n", top_stopwords)
+            log.info("Top %s:\n%s\n", label.lower(), top_stopwords)
 
-    def _apply_stopwords(self, origin_table: str, target_table: str) -> None:
+    def _apply_stopwords(
+        self,
+        origin_table: str,
+        target_table: str,
+        stopwords_table: str | None = "stopwords",
+    ) -> None:
         log.info("Filtering stopwords from %r, as %r...", origin_table, target_table)
-        q = f"""
-        CREATE OR REPLACE TABLE {target_table} as
-            SELECT e.*
-            FROM {origin_table} AS e
-            LEFT OUTER JOIN stopwords AS sw ON sw.token = e.token
-            WHERE sw.token is NULL
-        """
+        if stopwords_table is None:
+            q = f"""
+            CREATE OR REPLACE TABLE {target_table} as
+                SELECT e.*
+                FROM {origin_table} AS e
+            """
+        else:
+            q = f"""
+            CREATE OR REPLACE TABLE {target_table} as
+                SELECT e.*
+                FROM {origin_table} AS e
+                LEFT OUTER JOIN {stopwords_table} AS sw ON sw.token = e.token
+                WHERE sw.token is NULL
+            """
         self.con.execute(q)
 
     def _build_frequencies(self) -> None:
@@ -343,18 +432,23 @@ class Index(object):
         self._apply_stopwords("entries", "entries_filtered")
         log.info("Calculating term frequencies...")
         term_frequencies_query = """
-        CREATE OR REPLACE TABLE term_frequencies AS
+        CREATE OR REPLACE TABLE term_frequencies_all AS
             WITH field_len AS (
                 SELECT e.field, e.id, sum(e.count) as len
-                    FROM entries_filtered e
+                    FROM entries e
                     GROUP BY e.field, e.id
             )
             SELECT e.schema, e.field, e.token, e.id, (e.count/f.len) * ifnull(boo.boost, 1) as tf
-            FROM entries_filtered AS e
+            FROM entries AS e
             JOIN field_len AS f ON f.field = e.field AND f.id = e.id
             LEFT OUTER JOIN boosts boo ON f.field = boo.field
         """
         self.con.execute(term_frequencies_query)
+        self.con.execute("""
+            CREATE OR REPLACE TABLE term_frequencies AS
+                SELECT *
+                FROM term_frequencies_all
+        """)
 
     def pairs(
         self, max_pairs: int = 10_000
@@ -362,10 +456,12 @@ class Index(object):
         log.info("Generating pairs...")
         pairs_query = """
             SELECT "left".id, "right".id, sum(("left".tf + "right".tf)) as score
-            FROM term_frequencies as "left"
-            JOIN term_frequencies as "right" ON "left".token = "right".token
+            FROM term_frequencies_all as "left"
+            JOIN term_frequencies_all as "right" ON "left".token = "right".token
             INNER JOIN schemata ON schemata.left = "left".schema AND schemata.right = "right".schema
+            LEFT OUTER JOIN stopwords AS sw ON sw.token = "left".token
             WHERE "left".id > "right".id
+              AND sw.token is NULL
             GROUP BY "left".id, "right".id
             ORDER BY score DESC
             LIMIT ?
@@ -383,7 +479,12 @@ class Index(object):
         None,
     ]:
         self.load_entities("matching", entities)
-        self._apply_stopwords("matching", "matching_filtered")
+        self._build_matching_stopwords()
+        self._apply_stopwords(
+            "matching",
+            "matching_filtered",
+            stopwords_table="matching_stopwords",
+        )
         yield from self._find_matches()
 
     def _find_matches(
@@ -411,7 +512,7 @@ class Index(object):
             SELECT m.id AS matching_id, tf.id AS matches_id, SUM(tf.tf) AS score
                 FROM matching_chunks c
                 JOIN matching_filtered m ON c.id = m.id
-                JOIN term_frequencies tf
+                JOIN term_frequencies_all tf
                 ON m.token = tf.token
                 INNER JOIN schemata s
                 ON s.left = m.schema AND s.right = tf.schema
