@@ -46,11 +46,18 @@ def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
     assert index.entity_count("entries") == 0
     index.build()
     assert index.entity_count("entries") == 184
+    assert index._has_table("term_frequencies_all")
+    assert not index._has_table("stopwords")
+    assert not index._has_table("entries_filtered")
 
 
 def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     view = dstore.default_view()
+    assert not dindex._has_table("stopwords")
+    assert not dindex._has_table("entries_filtered")
     pairs = list(dindex.pairs())
+    assert dindex._has_table("stopwords")
+    assert dindex._has_table("entries_filtered")
 
     # At least one pair is found
     assert len(pairs) > 0, len(pairs)
@@ -246,6 +253,10 @@ def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
         index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
         index._build_frequencies()
 
+        assert not index._has_table("stopwords")
+        assert not index._has_table("entries_filtered")
+
+        index._ensure_pair_stopwords()
         assert index.con.execute(
             "SELECT COUNT(*) FROM stopwords WHERE token = 'np:shared'"
         ).fetchone() == (1,)
@@ -417,6 +428,7 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
 
 
 def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: Index):
+    assert not dindex._has_table("stopwords")
     linker = Linker({})
     ostore = SimpleMemoryStore(test_dataset, linker)
     a = StatementEntity.from_data(
@@ -462,6 +474,7 @@ def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: In
         str(ident): matches
         for ident, matches in dindex.match_entities(ostore.default_view().entities())
     }
+    assert not dindex._has_table("stopwords")
     assert {"a", "c"}.issubset(matches), matches
 
     view = dstore.default_view()

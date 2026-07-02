@@ -168,14 +168,16 @@ class Index(object):
         self.con.execute("CHECKPOINT")
 
     def entity_count(self, table: str) -> int:
-        # check the table exists:
-        tables_ = self.con.execute("PRAGMA show_tables").fetchall()
-        tables = {t[0] for t in tables_}
-        if table not in tables:
+        if not self._has_table(table):
             return 0
         q = f"SELECT COUNT(DISTINCT id) FROM {table}"
         res = self.con.execute(q).fetchone()
         return res[0] if res is not None else 0
+
+    def _has_table(self, table: str) -> bool:
+        tables_ = self.con.execute("PRAGMA show_tables").fetchall()
+        tables = {t[0] for t in tables_}
+        return table in tables
 
     def build(self) -> None:
         """Index all entities in the dataset."""
@@ -428,8 +430,6 @@ class Index(object):
         self.con.execute(q)
 
     def _build_frequencies(self) -> None:
-        self._build_stopwords()
-        self._apply_stopwords("entries", "entries_filtered")
         log.info("Calculating term frequencies...")
         term_frequencies_query = """
         CREATE OR REPLACE TABLE term_frequencies_all AS
@@ -450,9 +450,16 @@ class Index(object):
                 FROM term_frequencies_all
         """)
 
+    def _ensure_pair_stopwords(self) -> None:
+        if self._has_table("stopwords") and self._has_table("entries_filtered"):
+            return
+        self._build_stopwords()
+        self._apply_stopwords("entries", "entries_filtered")
+
     def pairs(
         self, max_pairs: int = 10_000
     ) -> Iterable[Tuple[Tuple[Identifier, Identifier], float]]:
+        self._ensure_pair_stopwords()
         log.info("Generating pairs...")
         pairs_query = """
             SELECT "left".id, "right".id, sum(("left".tf + "right".tf)) as score
