@@ -1,7 +1,7 @@
 from pathlib import Path
 from followthemoney import Dataset, StatementEntity
 
-from nomenklatura.blocker.index import Index
+from nomenklatura.blocker.index import DEFAULT_MAX_BUCKET_SIZE, Index
 from nomenklatura.blocker.tokenizer import tokenize_entity
 from nomenklatura.resolver.identifier import Identifier
 from nomenklatura.resolver.linker import Linker
@@ -24,12 +24,12 @@ def make_manual_index(
     dstore: SimpleMemoryStore,
     entries: list[tuple[str, str, str, str, int]],
     schemata: list[tuple[str, str]],
-    max_token_pair_cost: int,
+    max_bucket_size: int,
 ) -> Index:
     index = Index(
         dstore.default_view(),
         index_path,
-        options={"max_token_pair_cost": max_token_pair_cost},
+        options={"max_bucket_size": max_bucket_size},
     )
     index.con.execute("""
         CREATE OR REPLACE TABLE entries
@@ -39,6 +39,52 @@ def make_manual_index(
     index.con.execute("""CREATE OR REPLACE TABLE schemata ("left" TEXT, "right" TEXT)""")
     index.con.executemany("INSERT INTO schemata VALUES (?, ?)", schemata)
     return index
+
+
+def test_max_bucket_size_configures_pair_cost_caps(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = Index(
+        dstore.default_view(),
+        index_path,
+        options={"max_bucket_size": 4},
+    )
+    try:
+        assert index.max_bucket_size == 4
+        assert index.max_pair_cost == 6
+        assert index.max_match_pair_cost == 16
+    finally:
+        index.close()
+
+
+def test_default_max_bucket_size_configures_pair_cost_caps(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = Index(dstore.default_view(), index_path)
+    try:
+        assert index.max_bucket_size == DEFAULT_MAX_BUCKET_SIZE
+        assert (
+            index.max_pair_cost
+            == DEFAULT_MAX_BUCKET_SIZE * (DEFAULT_MAX_BUCKET_SIZE - 1) // 2
+        )
+        assert index.max_match_pair_cost == DEFAULT_MAX_BUCKET_SIZE**2
+    finally:
+        index.close()
+
+
+def test_max_bucket_size_rejects_negative_values(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    try:
+        Index(
+            dstore.default_view(),
+            index_path,
+            options={"max_bucket_size": -1},
+        )
+    except ValueError as exc:
+        assert str(exc) == "max_bucket_size must be >= 0"
+    else:
+        raise AssertionError("expected max_bucket_size to reject negative values")
 
 
 def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
@@ -129,7 +175,7 @@ def test_dynamic_stopwords_respect_pair_cost_cap(
         dstore,
         entries,
         [("Person", "Person")],
-        max_token_pair_cost=6,
+        max_bucket_size=4,
     )
     try:
         index._build_stopwords()
@@ -180,7 +226,7 @@ def test_dynamic_stopwords_count_compatible_schema_pairs_once(
             ("LegalEntity", "Company"),
             ("Person", "Person"),
         ],
-        max_token_pair_cost=100,
+        max_bucket_size=4,
     )
     try:
         index._build_stopwords()
@@ -211,7 +257,7 @@ def test_dynamic_stopwords_filter_by_token(
         dstore,
         entries,
         [("Person", "Person")],
-        max_token_pair_cost=6,
+        max_bucket_size=4,
     )
     try:
         index._build_stopwords()
@@ -250,7 +296,7 @@ def test_pairs_join_filtered_term_frequencies(
         dstore,
         entries,
         [("Person", "Person")],
-        max_token_pair_cost=6,
+        max_bucket_size=4,
     )
     try:
         index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
@@ -280,7 +326,7 @@ def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
         dstore,
         entries,
         [("Person", "Person")],
-        max_token_pair_cost=6,
+        max_bucket_size=4,
     )
     try:
         index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
@@ -355,7 +401,7 @@ def test_matching_stopwords_respect_cross_pair_cost(
         dstore,
         entries,
         [("Person", "Person")],
-        max_token_pair_cost=6,
+        max_bucket_size=2,
     )
     try:
         index._build_stopwords()
@@ -373,10 +419,8 @@ def test_matching_stopwords_respect_cross_pair_cost(
             [
                 ("Person", "mc1", "np", "np:cross", 1),
                 ("Person", "mc2", "np", "np:cross", 1),
-                ("Person", "mc3", "np", "np:cross", 1),
                 ("Person", "mk1", "np", "np:kept", 1),
                 ("Person", "mk2", "np", "np:kept", 1),
-                ("Person", "mk3", "np", "np:kept", 1),
             ],
         )
 
@@ -391,8 +435,8 @@ def test_matching_stopwords_respect_cross_pair_cost(
                 """
             ).fetchall()
         }
-        assert stats["np:cross"] == (3, 9, True)
-        assert stats["np:kept"] == (3, 6, False)
+        assert stats["np:cross"] == (2, 6, True)
+        assert stats["np:kept"] == (2, 4, False)
 
         index._apply_stopwords(
             "matching",
@@ -425,7 +469,7 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
             ("Company", "LegalEntity"),
             ("LegalEntity", "Company"),
         ],
-        max_token_pair_cost=6,
+        max_bucket_size=3,
     )
     try:
         index._build_stopwords()
