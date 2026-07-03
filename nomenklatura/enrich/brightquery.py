@@ -4,6 +4,7 @@ import logging
 from banal import hash_data
 from typing import Generator, Optional, Dict, Any
 from requests.adapters import HTTPAdapter
+from requests.exceptions import RequestException
 from urllib3.util.retry import Retry
 from followthemoney import DS, SE, registry
 
@@ -40,6 +41,12 @@ class BrightQueryEnricher(Enricher[DS]):
             ]
             + list(Retry.RETRY_AFTER_STATUS_CODES),
             allowed_methods=frozenset(["POST"]),
+            # Once retries are exhausted, return the last response instead of raising
+            # a RetryError. That lets us inspect the actual status code (e.g. a
+            # persistent 503) structurally in search() rather than string-matching
+            # the "too many 503 error responses" message urllib3 buries in a
+            # ResponseError.
+            raise_on_status=False,
         )
         adapter = HTTPAdapter(max_retries=retries)
         self.session.mount("https://apigw.brightquery.com", adapter)
@@ -118,15 +125,35 @@ class BrightQueryEnricher(Enricher[DS]):
         resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
         if not resp_data:
             log.info("BrightQuery search: %r", payload)
-            response = self.session.post(self.BASE_URL, json=payload, timeout=(10, 300))
-            # When no results are found, the API helpfully doesn't return JSON
-            # but just a 204 with an empty response body.
-            if response.status_code == 204:
-                # Cache the empty result to avoid hitting the API again
-                # for the same query.
-                self.cache.set_json(cache_key, {})
-                return
-            response.raise_for_status()
+            try:
+                response = self.session.post(
+                    self.BASE_URL, json=payload, timeout=(10, 300)
+                )
+                # When no results are found, the API helpfully doesn't return JSON
+                # but just a 204 with an empty response body.
+                if response.status_code == 204:
+                    # Cache the empty result to avoid hitting the API again
+                    # for the same query.
+                    self.cache.set_json(cache_key, {})
+                    return
+                response.raise_for_status()
+            except RequestException as rex:
+                # Because the Retry is configured with raise_on_status=False, an
+                # exhausted retry (e.g. the persistent 503s in
+                # opensanctions/opensanctions#4293) surfaces here as an HTTPError
+                # carrying the real response, so we can log the actual status code
+                # structurally instead of parsing the opaque RetryError. Record the
+                # query that triggered it, then let the error propagate and crash.
+                status_code = (
+                    rex.response.status_code if rex.response is not None else None
+                )
+                log.error(
+                    "BrightQuery search failed [%s] for query %r: %s",
+                    status_code,
+                    payload,
+                    rex,
+                )
+                raise
             resp_data = response.json()
             self.cache.set_json(cache_key, resp_data)
         # Number of records per hit is 10. Records are sorted by revenue and employees headcount.
