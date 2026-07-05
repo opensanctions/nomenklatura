@@ -40,6 +40,15 @@ def timestamp() -> str:
 
 
 class Resolver(Linker[SE]):
+    """Store judgements about which entities are the same and derive a canonical
+    identifier for each cluster of merged entities.
+
+    Positive judgements are transitive: clusters are the connected components of
+    the judgement graph. Decisions persist in a SQL table, so they survive
+    re-runs and can be shared between processes. For read-only bulk application
+    of the decisions, use the leaner `Linker` returned by `get_linker()`.
+    """
+
     UNDECIDED = (Judgement.NO_JUDGEMENT, Judgement.UNSURE)
 
     def __init__(

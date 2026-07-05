@@ -96,6 +96,12 @@ class Writer(Generic[DS, SE]):
 
 
 class View(Generic[DS, SE]):
+    """Read access to the entities in a store, scoped to a dataset.
+
+    Entities come back in their merged, canonical form. Use `get_entity()` for
+    a lookup by ID, `entities()` to stream the whole scope, and `get_adjacent()`
+    to traverse relationships in both directions."""
+
     def __init__(self, store: Store[DS, SE], scope: DS, external: bool = False):
         self.store = store
         self.scope = scope

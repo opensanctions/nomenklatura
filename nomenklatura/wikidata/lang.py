@@ -14,6 +14,13 @@ PREFERRED_WD_LANGS.insert(1, MULTI_LANG)
 
 
 class LangText(object):
+    """A text value together with the language it is expressed in.
+
+    Wikidata labels and descriptions exist in many languages. Keeping the
+    language tag with the string lets `apply()` write the value to an entity
+    property with the language attached, and lets callers pick a preferred
+    display language."""
+
     __slots__ = ["text", "lang", "original"]
 
     def __init__(

@@ -21,6 +21,11 @@ from nomenklatura.store import Store, View, Writer
 
 
 class SQLStore(Store[DS, SE]):
+    """Persist statements to a SQL database (SQLite or PostgreSQL).
+
+    Use this when a dataset is too large to hold in memory, or when several
+    processes need to work with the same store."""
+
     def __init__(
         self,
         dataset: DS,

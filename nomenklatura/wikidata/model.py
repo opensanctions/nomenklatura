@@ -52,6 +52,9 @@ class Reference(object):
 
 
 class Claim(Snak):
+    """One property statement on a Wikidata item — e.g. `P569` (date of birth)
+    on a person — including its qualifiers, references, and rank."""
+
     def __init__(
         self, client: "WikidataClient", data: Dict[str, Any], prop: str
     ) -> None:

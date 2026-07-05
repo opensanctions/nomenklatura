@@ -19,6 +19,13 @@ log = logging.getLogger(__name__)
 
 
 class WikidataClient(object):
+    """Read items and labels from the Wikidata API and SPARQL endpoint.
+
+    Responses are cached in a SQL-backed `Cache` so that crawlers and enrichers
+    can re-run without fetching the same data again, and requests carry a
+    descriptive user agent and retry handling to stay within Wikidata's API
+    etiquette."""
+
     WD_API = "https://www.wikidata.org/w/api.php"
     QUERY_API = "https://query.wikidata.org/sparql"
     QUERY_HEADERS = {

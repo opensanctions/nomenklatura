@@ -6,6 +6,11 @@ from nomenklatura.resolver import Linker
 
 
 class MemoryStore(Store[DS, SE]):
+    """Hold statements in plain dictionaries, with no persistence.
+
+    The right choice for datasets that fit into memory, e.g. when processing
+    an entity file on the command line."""
+
     def __init__(self, dataset: DS, linker: Linker[SE]):
         super().__init__(dataset, linker)
         self.stmts: Dict[str, Set[Statement]] = {}
