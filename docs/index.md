@@ -1,7 +1,7 @@
 # nomenklatura
 
 `nomenklatura` is a data integration and enrichment framework for
-[followthemoney](https://followthemoney.tech) data. It de-duplicates and links
+[followthemoney](https://followthemoney.tech) data. It deduplicates and links
 records that describe the same real-world entity, and enriches them against
 external sources.
 
@@ -18,8 +18,8 @@ lobbying data from several publishers on the command line.
   [matching algorithms](reference/matching.md).
 * **Cross-referencing (`xref`)** — find likely duplicate candidates within and
   across datasets at scale, using a [blocking index](reference/blocker.md).
-* **Enrichment** — look up entities against external data sources (e.g.
-  [Wikidata](reference/wikidata.md), OpenCorporates) and merge in the results.
+* **[Enrichment](enrichment.md)** — look up entities against external data
+  sources (e.g. Wikidata, OpenCorporates) and merge in the results.
 * **Stores** — read and write followthemoney entities and statements to a range
   of [storage backends](reference/store.md).
 

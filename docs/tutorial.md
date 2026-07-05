@@ -146,5 +146,5 @@ Two cleanup commands are useful during iteration. `nk prune` deletes undecided s
 ## Where to go next
 
 - Add more datasets to the pipeline — any source of FtM entities plugs into step 1. [data.ftm.store](https://data.ftm.store/) and [OpenSanctions](https://www.opensanctions.org/datasets/) publish many, including the German federal lobby register (`de_lobbyregister`) and the EU transparency register (`eu_transparency_register`).
-- Match your entities against external databases with `nk match` and `nk enrich`, which query sources like Wikidata, OpenCorporates, or a [yente](https://yente.followthemoney.tech/) instance.
+- Match your entities against external databases like Wikidata and OpenCorporates, and pull in what they know — see the [enrichment guide](enrichment.md).
 - Load the merged dataset into Neo4j with [followthemoney-graph](https://github.com/opensanctions/followthemoney-graph) to explore it as a network.

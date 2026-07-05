@@ -55,12 +55,14 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Tutorial: tutorial.md
+  - Enrichment: enrichment.md
 
   - Reference:
       - Stores: reference/store.md
       - Blocking index: reference/blocker.md
       - Matching: reference/matching.md
       - Resolver: reference/resolver.md
+      - Enrichers: reference/enrich.md
       - Wikidata: reference/wikidata.md
 
   - Toolchain:
