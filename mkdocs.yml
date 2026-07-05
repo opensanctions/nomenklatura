@@ -47,11 +47,21 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
+  - pymdownx.keys
   - pymdownx.snippets
   - pymdownx.superfences
+  - tables
 
 nav:
   - Overview: index.md
+  - Tutorial: tutorial.md
+
+  - Reference:
+      - Stores: reference/store.md
+      - Blocking index: reference/blocker.md
+      - Matching: reference/matching.md
+      - Resolver: reference/resolver.md
+      - Wikidata: reference/wikidata.md
 
   - Toolchain:
       - followthemoney: https://followthemoney.tech/
