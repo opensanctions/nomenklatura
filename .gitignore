@@ -12,6 +12,7 @@ tests/fixtures/donations.rslv.ijson
 htmlcov/
 /build/
 /dist/
+/site/
 /data/
 textual.log
 .nk_cache.db

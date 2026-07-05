@@ -1,0 +1,61 @@
+site_name: nomenklatura
+repo_url: https://github.com/opensanctions/nomenklatura
+
+theme:
+  name: material
+  logo: https://assets.opensanctions.org/images/nura/logo-icon-white.svg
+  favicon: https://assets.opensanctions.org/images/nura/favicon-32.png
+  palette:
+    primary: custom
+    accent: custom
+  custom_dir: docs/overrides
+  features:
+    - navigation.sections
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: material/forum
+      link: https://discuss.opensanctions.org/
+    - icon: material/github
+      link: https://github.com/opensanctions/nomenklatura
+    - icon: material/linkedin
+      link: https://www.linkedin.com/company/opensanctions/
+    - icon: material/web
+      link: https://www.opensanctions.org
+
+plugins:
+  - search
+  - autorefs
+  # - social
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_object_full_path: false
+          inventories:
+            - http://rigour.followthemoney.tech/objects.inv
+            - http://followthemoney.tech/objects.inv
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+nav:
+  - Overview: index.md
+
+  - Toolchain:
+      - followthemoney: https://followthemoney.tech/
+      - rigour: https://rigour.followthemoney.tech/
+      - yente: https://yente.followthemoney.tech/
+      - OpenAleph: https://openaleph.org/docs/
+      - OpenSanctions: https://www.opensanctions.org/docs/

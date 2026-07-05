@@ -8,6 +8,9 @@ typecheck:
 
 check: test typecheck
 
+docs:
+	mkdocs build -c -d site
+
 data/pairs-v1.json:
 	mkdir -p data/
 	curl -o data/pairs-v1.json https://data.opensanctions.org/contrib/training/pairs-v1.json

@@ -67,6 +67,11 @@ dev = [
 ]
 leveldb = ["plyvel < 2.0.0"]
 redis = ["redis > 5.0.0, < 9.0.0"]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["nomenklatura", "LICENSE", "README.md"]
