@@ -14,7 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class BrightQueryEnricher(Enricher[DS]):
-    """Enricher for the BrightQuery Business Identity API."""
+    """Match organizations against the BrightQuery Business Identity API,
+    which covers US legal entities and their state registrations. Requires
+    an API key."""
 
     BASE_URL = "https://apigw.brightquery.com/search/identity/org"
 

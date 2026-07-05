@@ -12,7 +12,11 @@ log = logging.getLogger(__name__)
 
 
 class OpenFIGIEnricher(Enricher[DS]):
-    """Uses the `OpenFIGI` search API to look up FIGIs by company name."""
+    """Look up organizations and securities in OpenFIGI, Bloomberg's open
+    database of financial instrument identifiers.
+
+    Matching an organization yields the securities it has issued; matching a
+    security by ISIN links it to its issuer."""
 
     SEARCH_URL = "https://api.openfigi.com/v3/search"
     MAPPING_URL = "https://api.openfigi.com/v3/mapping"

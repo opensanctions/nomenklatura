@@ -22,11 +22,12 @@ log = logging.getLogger(__name__)
 
 
 class EnrichmentException(Exception):
-    pass
+    """A lookup failed for one entity; processing continues with the next."""
 
 
 class EnrichmentAbort(Exception):
-    pass
+    """The enrichment source cannot be used at all, e.g. because of an
+    authorization failure. Callers should stop the run."""
 
 
 class BaseEnricher(Generic[DS]):
@@ -82,6 +83,13 @@ class BaseEnricher(Generic[DS]):
 
 
 class Enricher(BaseEnricher[DS], ABC):
+    """A connector to an external data source that finds candidate matches
+    for entities and retrieves their related records.
+
+    Subclasses implement `match()` and `expand()`. The base class provides an
+    HTTP session and caching request helpers, so repeated runs against the
+    same source don't re-fetch from the remote API."""
+
     def __init__(
         self,
         dataset: DS,
@@ -220,10 +228,14 @@ class Enricher(BaseEnricher[DS], ABC):
 
     @abstractmethod
     def match(self, entity: SE) -> Generator[SE, None, None]:
+        """Yield candidates from the external source that may describe the
+        same real-world entity as the given query entity."""
         raise NotImplementedError()
 
     @abstractmethod
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
+        """Yield the confirmed match itself, followed by entities related to
+        it in the external source (e.g. officers, owners, family members)."""
         raise NotImplementedError()
 
     def close(self) -> None:

@@ -29,6 +29,8 @@ def make_enricher(
     config: EnricherConfig,
     http_session: Optional[Session] = None,
 ) -> Enricher[DS]:
+    """Instantiate the enricher class named by the `type` import path in the
+    given configuration, e.g. `nomenklatura.enrich.wikidata:WikidataEnricher`."""
     enricher_type = config.pop("type")
     if ":" not in enricher_type:
         raise RuntimeError("Invalid import path: %r" % enricher_type)
@@ -41,15 +43,18 @@ def make_enricher(
     return enr_clazz(dataset, cache, config, session=http_session)
 
 
-# nk match -i entities.json -o entities-with-matches.json -r resolver.json
-# then:
-# nk dedupe -i entities-with-matches.json -r resolver.json
 def match(
     enricher: Enricher[DS],
     resolver: Resolver[SE],
     entities: Iterable[SE],
     config: Optional[ScoringConfig] = None,
 ) -> Generator[SE, None, None]:
+    """Stream entities through the enricher and record candidate matches in
+    the resolver.
+
+    Yields each input entity, followed by the candidates found for it. Each
+    candidate pair is scored and stored in the resolver as a suggestion, to be
+    confirmed or rejected in a later review step (e.g. `nk dedupe`)."""
     if config is None:
         config = ScoringConfig.defaults()
     for entity in entities:
@@ -72,10 +77,14 @@ def match(
             log.exception("Failed to match: %r" % entity)
 
 
-# nk enrich -i entities.json -r resolver.json -o combined.json
 def enrich(
     enricher: Enricher[DS], resolver: Resolver[SE], entities: Iterable[SE]
 ) -> Generator[SE, None, None]:
+    """Fetch data for entities whose matches have been confirmed.
+
+    For each candidate that the resolver holds a positive judgement on, yields
+    the matched entity and its related records from the enrichment source. Run
+    this after judging the suggestions recorded by `match()`."""
     for entity in entities:
         try:
             for match in enricher.match_wrapped(entity):

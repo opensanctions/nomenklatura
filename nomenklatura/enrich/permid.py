@@ -26,6 +26,9 @@ STATUS = {
 
 
 class PermIDEnricher(Enricher[DS]):
+    """Match organizations against PermID, the open entity identifier system
+    published by LSEG (formerly Refinitiv). Requires an API token."""
+
     MATCHING_API = "https://api-eit.refinitiv.com/permid/match"
 
     def __init__(

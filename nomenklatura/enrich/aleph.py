@@ -18,6 +18,9 @@ log = logging.getLogger(__name__)
 
 
 class AlephEnricher(Enricher[DS]):
+    """Match entities against an Aleph instance, optionally scoped to a single
+    collection, and import matched records with their nested relationships."""
+
     def __init__(
         self,
         dataset: DS,

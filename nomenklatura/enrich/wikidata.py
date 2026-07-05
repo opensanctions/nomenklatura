@@ -26,6 +26,12 @@ log = logging.getLogger(__name__)
 
 
 class WikidataEnricher(Enricher[DS]):
+    """Match `Person` entities against Wikidata items and import the matched
+    item's claims as entity properties.
+
+    Family members and close associates of a matched person are followed and
+    imported up to `depth` hops away."""
+
     def __init__(
         self,
         dataset: DS,

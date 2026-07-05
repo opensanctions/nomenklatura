@@ -18,7 +18,11 @@ log = logging.getLogger(__name__)
 
 
 class YenteEnricher(Enricher[DS]):
-    """Uses the `yente` match API to look up entities in a specific dataset."""
+    """Match entities against a yente instance — the OpenSanctions API server
+    or any self-hosted deployment.
+
+    Any matchable schema can be queried. On expansion, related entities are
+    read from the match's nested entity record."""
 
     def __init__(
         self,

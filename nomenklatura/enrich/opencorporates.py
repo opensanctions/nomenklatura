@@ -23,6 +23,9 @@ def parse_date(raw: Any) -> Optional[str]:
 
 
 class OpenCorporatesEnricher(Enricher[DS]):
+    """Match companies and their officers against OpenCorporates, the global
+    aggregator of company registry data. Requires an API token."""
+
     COMPANY_SEARCH_API = "https://api.opencorporates.com/v0.4/companies/search"
     OFFICER_SEARCH_API = "https://api.opencorporates.com/v0.4/officers/search"
     UI_PART = "://opencorporates.com/"
