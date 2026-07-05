@@ -12,15 +12,15 @@ The workflow has three steps, each of which can be run repeatedly:
 
 ## Configuring an enricher
 
-An enricher is configured in a YAML file. The file doubles as [dataset metadata](https://followthemoney.tech/docs/metadata/) — the entities an enricher produces are tagged with its `name`, so their origin stays visible after merging. A configuration for matching against the ICIJ OffshoreLeaks database, served by a yente instance:
+An enricher is configured in a YAML file. The file doubles as [dataset metadata](https://followthemoney.tech/docs/metadata/) — the entities an enricher produces are tagged with its `name`, so their origin stays visible after merging. A configuration for matching against the US OFAC sanctions list, served by the OpenSanctions API:
 
 ```yaml
-name: offshoreleaks
-title: ICIJ OffshoreLeaks
+name: us_ofac_sdn
+title: US OFAC Specially Designated Nationals
 type: nomenklatura.enrich.yente:YenteEnricher
-api: https://api.graph.opensanctions.org/
-dataset: icij_offshoreleaks
-api_key: ${GRAPH_API_KEY}
+api: https://api.opensanctions.org/
+dataset: us_ofac_sdn
+api_key: ${YENTE_API_KEY}
 cache_days: 30
 ```
 
@@ -37,7 +37,7 @@ Values in the configuration can reference environment variables with `${VAR}` sy
 `nk match` streams an entity file through the enricher. The output contains each input entity followed by the candidates found for it, and every candidate pair is recorded in the resolver as a scored suggestion:
 
 ```bash
-nk match offshoreleaks.yml entities.json -o candidates.json
+nk match us_ofac_sdn.yml entities.json -o candidates.json
 ```
 
 ## Step 2: judge the candidates
@@ -55,7 +55,7 @@ Press ++x++ to confirm a match, ++n++ to reject it. Only confirmed pairs are enr
 `nk enrich` runs the same lookup, but now only acts on pairs the resolver holds a positive judgement for. For each confirmed match, it fetches the external record and the entities related to it — officers of a matched company, family members of a matched person:
 
 ```bash
-nk enrich offshoreleaks.yml entities.json -o enriched.json
+nk enrich us_ofac_sdn.yml entities.json -o enriched.json
 ```
 
 The output is a stream of new entities from the external source, not a modified copy of your input. Combine it with your source data the same way any dataset gets merged — through the statements pipeline described in the [deduplication tutorial](tutorial.md). Because the matched external record shares a canonical ID with your entity, aggregation folds them into one.
@@ -66,7 +66,7 @@ The output is a stream of new entities from the external source, not a modified 
 | --- | --- | --- |
 | `WikidataEnricher` | [Wikidata](https://www.wikidata.org/) | People |
 | `YenteEnricher` | A [yente](https://yente.followthemoney.tech/) instance | All matchable schemata |
-| `AlephEnricher` | An [Aleph](https://docs.aleph.occrp.org/) instance | All matchable schemata |
+| `AlephEnricher` | An [Aleph / OpenAleph](https://openaleph.org/docs/) instance | All matchable schemata |
 | `OpenCorporatesEnricher` | [OpenCorporates](https://opencorporates.com/) | Companies, officers |
 | `OpenFIGIEnricher` | [OpenFIGI](https://www.openfigi.com/) | Organizations, securities |
 | `PermIDEnricher` | [PermID](https://permid.org/) (LSEG) | Organizations |
