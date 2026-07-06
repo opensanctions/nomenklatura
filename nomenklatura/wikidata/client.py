@@ -28,10 +28,7 @@ class WikidataClient(object):
 
     WD_API = "https://www.wikidata.org/w/api.php"
     QUERY_API = "https://query.wikidata.org/sparql"
-    QUERY_HEADERS = {
-        "Accept": "application/sparql-results+json",
-        "User-Agent": USER_AGENT,
-    }
+    QUERY_HEADERS = {"Accept": "application/sparql-results+json"}
     CACHE_SHORT = 1
     CACHE_MEDIUM = CACHE_SHORT * 7
     CACHE_LONG = CACHE_SHORT * 30
@@ -69,13 +66,17 @@ class WikidataClient(object):
         cache_days = cache_days or self.cache_days
         raw = self.cache.get(url, max_age=cache_days, randomize=randomize)
         if raw is None:
-            log.debug("Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days)
+            log.debug(
+                "Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days
+            )
             res = self.session.get(url)
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
         else:
-            log.debug("Cache HIT fetching Wikidata item: %s cache_days=%s", qid, cache_days)
+            log.debug(
+                "Cache HIT fetching Wikidata item: %s cache_days=%s", qid, cache_days
+            )
         data = json.loads(raw)
         entity = data.get("entities", {}).get(qid)
         if entity is None:
@@ -129,7 +130,10 @@ class WikidataClient(object):
         effective_cache = cache_days if cache_days is not None else self.cache_days
         raw = self.cache.get(url, max_age=effective_cache)
         if raw is None:
-            res = self.session.get(url, headers=self.QUERY_HEADERS)
+            headers = self.QUERY_HEADERS.copy()
+            if "user-agent" not in self.session.headers:
+                headers["user-agent"] = USER_AGENT
+            res = self.session.get(url, headers=headers)
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
