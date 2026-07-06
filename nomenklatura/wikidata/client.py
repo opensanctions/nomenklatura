@@ -8,7 +8,6 @@ from rigour.urls import build_url
 from rigour.util import MEMO_SMALL
 from rigour.ids.wikidata import is_qid
 from followthemoney import StatementEntity, registry
-from followthemoney.settings import USER_AGENT
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.util import make_session
 from nomenklatura.wikidata.lang import LangText
@@ -28,7 +27,6 @@ class WikidataClient(object):
 
     WD_API = "https://www.wikidata.org/w/api.php"
     QUERY_API = "https://query.wikidata.org/sparql"
-    QUERY_HEADERS = {"Accept": "application/sparql-results+json"}
     CACHE_SHORT = 1
     CACHE_MEDIUM = CACHE_SHORT * 7
     CACHE_LONG = CACHE_SHORT * 30
@@ -130,9 +128,7 @@ class WikidataClient(object):
         effective_cache = cache_days if cache_days is not None else self.cache_days
         raw = self.cache.get(url, max_age=effective_cache)
         if raw is None:
-            headers = self.QUERY_HEADERS.copy()
-            if "user-agent" not in self.session.headers:
-                headers["user-agent"] = USER_AGENT
+            headers = {"Accept": "application/sparql-results+json"}
             res = self.session.get(url, headers=headers)
             res.raise_for_status()
             raw = res.text
