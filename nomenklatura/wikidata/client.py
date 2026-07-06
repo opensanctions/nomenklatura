@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from functools import lru_cache
 from typing import Any, List, Optional, Dict, Set
 from requests import Session
@@ -45,9 +46,19 @@ class WikidataClient(object):
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
     @lru_cache(maxsize=MEMO_SMALL)
-    def fetch_item(self, qid: str, cache_days: Optional[int] = None) -> Optional[Item]:
+    def fetch_item(
+        self,
+        qid: str,
+        cache_days: Optional[int] = None,
+        modified_at: Optional[datetime] = None,
+    ) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
+        #
+        # `modified_at` (typically the item's schema:dateModified) invalidates
+        # cache entries stored before that timestamp. This lets callers pin a
+        # fixed `cache_days` while still refetching items known to have changed
+        # upstream since the cached copy was written.
         params = {
             "format": "json",
             "ids": qid,
@@ -57,7 +68,7 @@ class WikidataClient(object):
         }
         url = build_url(self.WD_API, params=params)
         cache_days = cache_days or self.cache_days
-        raw = self.cache.get(url, max_age=cache_days)
+        raw = self.cache.get(url, max_age=cache_days, min_timestamp=modified_at)
         if raw is None:
             log.debug(
                 "Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days
@@ -77,7 +88,9 @@ class WikidataClient(object):
         item = Item(self, entity)
         if item.id != qid:
             # Redirected/merged item:
-            return self.fetch_item(item.id, cache_days=cache_days)
+            return self.fetch_item(
+                item.id, cache_days=cache_days, modified_at=modified_at
+            )
         return item
 
     @lru_cache(maxsize=100000)

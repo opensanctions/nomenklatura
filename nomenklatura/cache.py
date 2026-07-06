@@ -4,7 +4,7 @@ import logging
 from random import randint
 from dataclasses import dataclass
 from typing import Any, cast, Dict, Optional, Union, Generator
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, DateTime, Unicode
 from sqlalchemy.future import select
@@ -14,7 +14,6 @@ from rigour.time import naive_now
 from followthemoney import Dataset
 
 from nomenklatura.db import Session
-
 
 log = logging.getLogger(__name__)
 Value = Union[str, None]
@@ -73,13 +72,31 @@ class Cache(object):
     def set_json(self, key: str, value: Any) -> None:
         return self.set(key, json.dumps(value))
 
-    def get(self, key: str, max_age: Optional[int] = None) -> Optional[Value]:
+    def get(
+        self,
+        key: str,
+        max_age: Optional[int] = None,
+        min_timestamp: Optional[datetime] = None,
+    ) -> Optional[Value]:
+        """Return the cached value for `key`, or None if there is no fresh entry.
+
+        `max_age` bounds staleness in days (with jitter via `randomize_cache`).
+        `min_timestamp` invalidates entries stored before that point in time —
+        use it when the caller knows the upstream resource has changed since.
+        When both are given, the stricter (later) cutoff wins.
+        """
         if max_age is not None and max_age < 1:
             return None
 
-        cache_cutoff = None
+        cache_cutoff: Optional[datetime] = None
         if max_age is not None:
             cache_cutoff = naive_now() - randomize_cache(max_age)
+        if min_timestamp is not None:
+            if min_timestamp.tzinfo is not None:
+                min_timestamp = min_timestamp.astimezone(timezone.utc)
+                min_timestamp = min_timestamp.replace(tzinfo=None)
+            if cache_cutoff is None or min_timestamp > cache_cutoff:
+                cache_cutoff = min_timestamp
 
         cache = self._preload.get(key)
         if cache is not None:
