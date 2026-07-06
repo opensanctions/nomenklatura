@@ -39,6 +39,7 @@ class BrightQueryEnricher(Enricher[DS]):
             status_forcelist=[
                 504,  # 504 Gateway Timeout
                 502,  # 502 Bad Gateway
+                401,  # 401 Unauthorized - intermittent error with no known reason. They've ok'd retrynig this.
             ]
             + list(Retry.RETRY_AFTER_STATUS_CODES),
             allowed_methods=frozenset(["POST"]),
