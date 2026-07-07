@@ -71,7 +71,10 @@ class WikidataClient(object):
         raw = self.cache.get(url, max_age=cache_days, min_timestamp=modified_at)
         if raw is None:
             log.debug(
-                "Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days
+                "Cache MISS fetching Wikidata item: %s cache_days=%s modified_at=%s",
+                qid,
+                cache_days,
+                modified_at,
             )
             res = self.session.get(url)
             res.raise_for_status()
@@ -79,7 +82,10 @@ class WikidataClient(object):
             self.cache.set(url, raw)
         else:
             log.debug(
-                "Cache HIT fetching Wikidata item: %s cache_days=%s", qid, cache_days
+                "Cache HIT fetching Wikidata item: %s cache_days=%s modified_at=%s",
+                qid,
+                cache_days,
+                modified_at,
             )
         data = json.loads(raw)
         entity = data.get("entities", {}).get(qid)
@@ -120,20 +126,38 @@ class WikidataClient(object):
         self.cache.set_json(cache_key, label.pack())
         return label
 
-    def query(self, query_text: str) -> SparqlResponse:
-        """Query the Wikidata SPARQL endpoint."""
+    def query(
+        self, query_text: str, cache_days: Optional[int] = None
+    ) -> SparqlResponse:
+        """Query the Wikidata SPARQL endpoint.
+
+        Args:
+          cache_days: overrides the client-level default for this call.
+        """
         clean_text = squash_spaces(query_text)
         if len(clean_text) == 0:
             raise RuntimeError("Invalid query: %r" % query_text)
         params = {"query": clean_text}
         url = build_url(self.QUERY_API, params=params)
-        raw = self.cache.get(url, max_age=self.cache_days)
+        effective_cache = cache_days if cache_days is not None else self.cache_days
+        raw = self.cache.get(url, max_age=effective_cache)
         if raw is None:
+            log.debug(
+                "Cache MISS fetching Wikidata SPARQL query: %s cache_days=%s",
+                clean_text,
+                effective_cache,
+            )
             headers = {"Accept": "application/sparql-results+json"}
             res = self.session.get(url, headers=headers)
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
+        else:
+            log.debug(
+                "Cache HIT fetching Wikidata SPARQL query: %s cache_days=%s",
+                clean_text,
+                effective_cache,
+            )
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as err:
