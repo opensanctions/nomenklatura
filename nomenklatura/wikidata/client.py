@@ -94,6 +94,10 @@ class WikidataClient(object):
         item = Item(self, entity)
         if item.id != qid:
             # Redirected/merged item:
+            #
+            # The modification date doesn't relate to the new QID, but let's
+            # use it as its minimum age nonetheless since there's a good chance
+            # the replacement item was edited around the time the original was merged.
             return self.fetch_item(
                 item.id, cache_days=cache_days, modified_at=modified_at
             )
@@ -229,21 +233,6 @@ class WikidataClient(object):
             if qid is not None and is_qid(qid):
                 qids.append(qid)
         return qids
-
-    @lru_cache(maxsize=30000)
-    def _type_props(self, qid: str) -> List[str]:
-        item = self.fetch_item(qid)
-        if item is None:
-            return []
-        types: List[str] = []
-        for claim in item.claims:
-            # historical countries are always historical:
-            ended = claim.is_ended and claim.qid != "Q3024240"
-            if ended or claim.qid is None or claim.deprecated:
-                continue
-            if claim.property in ("P31", "P279"):
-                types.append(claim.qid)
-        return types
 
     def __repr__(self) -> str:
         return "<WikidataClient()>"

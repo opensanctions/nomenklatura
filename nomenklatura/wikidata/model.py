@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from rigour.langs import iso_639_alpha3
@@ -169,7 +171,10 @@ class Item(object):
         types = set([qid])
         if len(path) > 6:
             return types
-        for type_ in self.client._type_props(qid):
+
+        item = self if qid == self.id else self.client.fetch_item(qid)
+        assert item is not None, path
+        for type_ in _type_props(item):
             if type_ not in path:
                 types.update(self._types(path + [type_]))
         return types
@@ -184,3 +189,16 @@ class Item(object):
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+
+@lru_cache(maxsize=30000)
+def _type_props(item: Item) -> List[str]:
+    types: List[str] = []
+    for claim in item.claims:
+        # historical countries are always historical:
+        ended = claim.is_ended and claim.qid != "Q3024240"
+        if ended or claim.qid is None or claim.deprecated:
+            continue
+        if claim.property in ("P31", "P279"):
+            types.append(claim.qid)
+    return types
