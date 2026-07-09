@@ -1,5 +1,7 @@
 TS=$(shell date +%Y%m%d%H%M)
 PYTHON?=python
+# Produced by contrib/matcher_training/generate.py in the opensanctions repo.
+ERUN_PAIRS?=data/pairs-erun.json
 ERUN_PREPARED=data/erun-prepared
 ERUN_MODEL=$(ERUN_PREPARED)/full-grouped.pkl
 
@@ -18,8 +20,8 @@ data/pairs-v1.json:
 train-v1: data/pairs-v1.json
 	nomenklatura train-v1-matcher data/pairs-v1.json
 
-prepare-erun: data/pairs-erun.json
-	$(PYTHON) -m nomenklatura.matching.erun.build data/pairs-erun.json $(ERUN_PREPARED) --force
+prepare-erun:
+	$(PYTHON) -m nomenklatura.matching.erun.build $(ERUN_PAIRS) $(ERUN_PREPARED) --force
 
 train-erun: prepare-erun
 	$(PYTHON) -m nomenklatura.matching.erun.train $(ERUN_PREPARED) $(ERUN_MODEL) --weight-mode grouped

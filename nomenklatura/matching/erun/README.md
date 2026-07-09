@@ -11,12 +11,22 @@ canonical IDs, and a small number of irreconcilable labels. The training code
 therefore treats the model-observable pair content as the unit of training and
 evaluation, not the raw row and not the entity IDs.
 
+## Input data
+
+The raw pair file is produced by the `matcher_training` generator in the
+OpenSanctions repository (`contrib/matcher_training/`). Its `DATA.md` — copied
+next to every generated `pairs.jsonl` — documents the data semantics and must
+be read before changing this pipeline. Each row carries, beyond the entity
+pair and judgement: `left_cluster`/`right_cluster` (the sides' final
+positive-only resolver clusters, the split unit), a hashed decider identity
+(`user`), and provenance metadata. `unsure` judgements are dropped here.
+
 ## Training data identity
 
 Canonical entity IDs are not source-record identities. Equal IDs often mean two
 records from different sources have already been resolved into the same entity.
 They are useful data, but they must not be used to decide whether two training
-rows are duplicates or whether a pair is allowed to cross a train/test split.
+rows are duplicates.
 
 The pipeline defines a snapshot as the ordered pair of:
 
@@ -31,6 +41,13 @@ model. They are grouped before splitting. A group with one label becomes one
 training/evaluation example with a frequency count. A group with conflicting
 positive and negative labels is quarantined, because no model using the current
 inputs can learn both labels for the same observable pair.
+
+Two further row-level filters apply before grouping:
+
+- a non-positive pair whose sides share one positive cluster is a resolver
+  self-contradiction and is skipped;
+- a pair whose two clusters fall in different split partitions is discarded —
+  the price of a leakage-free split (see below).
 
 ## Prepared dataset layout
 
@@ -50,12 +67,16 @@ make prepare-erun
 The output directory is one dataset bundle:
 
 - `manifest.jsonl`: one clean snapshot group per row, with schema, label,
-  source frequency, representative raw row, partition, and development flag;
-- `quarantine.jsonl`: identical snapshots seen with conflicting labels;
+  source frequency, logic-judgement count, representative raw row, partition,
+  and development flag;
+- `quarantine.jsonl`: snapshots excluded for conflicting labels
+  (`reason: labels`) or for straddling the split (`reason: partitions`);
 - `summary.json`: raw scan, grouping, quarantine, split, and development counts;
 - `features.npy`: memory-mapped feature matrix;
 - `labels.npy`: binary labels aligned to `features.npy`;
 - `weights.npy`: source-row frequency for each snapshot group;
+- `logic_counts.npy`: how many of each group's rows were judged by the
+  rule-based `zavod/logic` decider — provenance for weighting experiments;
 - `schemata.npy`: schema code for each row;
 - `partitions.npy`: grouped train/test assignment;
 - `development.npy`: deterministic development-subset membership;
@@ -71,9 +92,14 @@ changes. Loading checks the feature names and a source signature covering the
 
 ## Splitting and evaluation
 
-Train/test assignment happens at snapshot-group level. Identical model inputs
-cannot appear in both train and test. The split is stratified by schema and
-label when possible; singleton strata stay in train.
+Train/test assignment happens at resolver-cluster level. Each cluster label is
+assigned to a partition by a stateless seeded hash; a pair is kept only when
+both of its sides fall in the same partition, so no cluster's evidence ever
+appears on both sides of the split. Correlated near-duplicate pairs about the
+same entity — which snapshot-level splitting cannot keep apart — land together
+by construction. Cross-partition pairs are discarded and counted
+(`skipped_cross_partition`); identical snapshots observed in both partitions
+are quarantined (`reason: partitions`).
 
 The development subset is also deterministic and stratified by schema and
 label. It exists for quick iteration and should predict the direction of a
@@ -87,8 +113,16 @@ Evaluation reports two views:
 
 Grouped metrics are the primary model-quality signal because they avoid letting
 repeated identical evidence dominate the estimate. Frequency-weighted metrics
-remain useful as a secondary view of how often a pattern occurred in the source
-data.
+remain useful as a secondary view — the frequency measures how often a pattern
+was judged (replay multiplicity), not how often it occurs in source data.
+
+One artifact of the cluster split to keep in mind when reading metrics: the
+test partition is positives-enriched relative to train. A positive pair
+survives with the cluster's partition probability, but a cross-cluster
+negative needs both clusters on the same side, which suppresses negatives
+quadratically. Comparing two models on the same test partition is fair;
+absolute calibration numbers reflect the shifted prior, not production
+traffic.
 
 Evaluate a trained artifact or the packaged model with:
 

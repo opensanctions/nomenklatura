@@ -13,11 +13,12 @@ from numpy.typing import NDArray
 from nomenklatura.matching.erun.model import EntityResolveRegression
 
 
-CACHE_FORMAT_VERSION = 1
+CACHE_FORMAT_VERSION = 2
 ARRAY_FILES = {
     "features": "features.npy",
     "labels": "labels.npy",
     "weights": "weights.npy",
+    "logic_counts": "logic_counts.npy",
     "schemata": "schemata.npy",
     "partitions": "partitions.npy",
     "development": "development.npy",
@@ -48,7 +49,8 @@ def feature_signature() -> str:
 
 
 def read_metadata(cache_dir: Path) -> dict[str, Any]:
-    return json.loads((cache_dir / "cache.json").read_text())
+    metadata: dict[str, Any] = json.loads((cache_dir / "cache.json").read_text())
+    return metadata
 
 
 def load_cache(
