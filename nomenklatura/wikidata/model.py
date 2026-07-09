@@ -191,7 +191,6 @@ class Item(object):
         return hash(self.id)
 
 
-@lru_cache(maxsize=30000)
 def _type_props(item: Item) -> List[str]:
     types: List[str] = []
     for claim in item.claims:
