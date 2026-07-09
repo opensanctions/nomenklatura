@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from functools import lru_cache
 from typing import Any, List, Optional, Dict, Set
 from requests import Session
@@ -49,10 +50,15 @@ class WikidataClient(object):
         self,
         qid: str,
         cache_days: Optional[int] = None,
-        randomize: bool = True,
+        modified_at: Optional[datetime] = None,
     ) -> Optional[Item]:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
+        #
+        # `modified_at` (typically the item's schema:dateModified) invalidates
+        # cache entries stored before that timestamp. This lets callers pin a
+        # fixed `cache_days` while still refetching items known to have changed
+        # upstream since the cached copy was written.
         params = {
             "format": "json",
             "ids": qid,
@@ -62,10 +68,13 @@ class WikidataClient(object):
         }
         url = build_url(self.WD_API, params=params)
         cache_days = cache_days or self.cache_days
-        raw = self.cache.get(url, max_age=cache_days, randomize=randomize)
+        raw = self.cache.get(url, max_age=cache_days, min_timestamp=modified_at)
         if raw is None:
             log.debug(
-                "Cache MISS fetching Wikidata item: %s cache_days=%s", qid, cache_days
+                "Cache MISS fetching Wikidata item: %s cache_days=%s modified_at=%s",
+                qid,
+                cache_days,
+                modified_at,
             )
             res = self.session.get(url)
             res.raise_for_status()
@@ -73,7 +82,10 @@ class WikidataClient(object):
             self.cache.set(url, raw)
         else:
             log.debug(
-                "Cache HIT fetching Wikidata item: %s cache_days=%s", qid, cache_days
+                "Cache HIT fetching Wikidata item: %s cache_days=%s modified_at=%s",
+                qid,
+                cache_days,
+                modified_at,
             )
         data = json.loads(raw)
         entity = data.get("entities", {}).get(qid)
@@ -82,7 +94,13 @@ class WikidataClient(object):
         item = Item(self, entity)
         if item.id != qid:
             # Redirected/merged item:
-            return self.fetch_item(item.id, cache_days=cache_days, randomize=randomize)
+            #
+            # The modification date doesn't relate to the new QID, but let's
+            # use it as its minimum age nonetheless since there's a good chance
+            # the replacement item was edited around the time the original was merged.
+            return self.fetch_item(
+                item.id, cache_days=cache_days, modified_at=modified_at
+            )
         return item
 
     @lru_cache(maxsize=100000)
@@ -128,19 +146,28 @@ class WikidataClient(object):
         effective_cache = cache_days if cache_days is not None else self.cache_days
         raw = self.cache.get(url, max_age=effective_cache)
         if raw is None:
+            log.debug(
+                "Cache MISS fetching Wikidata SPARQL query: %s cache_days=%s",
+                clean_text,
+                effective_cache,
+            )
             headers = {"Accept": "application/sparql-results+json"}
             res = self.session.get(url, headers=headers)
             res.raise_for_status()
             raw = res.text
             self.cache.set(url, raw)
+        else:
+            log.debug(
+                "Cache HIT fetching Wikidata SPARQL query: %s cache_days=%s",
+                clean_text,
+                effective_cache,
+            )
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as err:
             self.cache.delete(url)
             log.exception("Failed to parse JSON: %s", err)
-            return SparqlResponse(
-                clean_text, {"head": {"vars": []}, "results": {"bindings": []}}
-            )
+            return SparqlResponse(clean_text, {})
         return SparqlResponse(clean_text, data)
 
     def search_items(
@@ -206,21 +233,6 @@ class WikidataClient(object):
             if qid is not None and is_qid(qid):
                 qids.append(qid)
         return qids
-
-    @lru_cache(maxsize=30000)
-    def _type_props(self, qid: str) -> List[str]:
-        item = self.fetch_item(qid)
-        if item is None:
-            return []
-        types: List[str] = []
-        for claim in item.claims:
-            # historical countries are always historical:
-            ended = claim.is_ended and claim.qid != "Q3024240"
-            if ended or claim.qid is None or claim.deprecated:
-                continue
-            if claim.property in ("P31", "P279"):
-                types.append(claim.qid)
-        return types
 
     def __repr__(self) -> str:
         return "<WikidataClient()>"
