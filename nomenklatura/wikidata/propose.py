@@ -59,8 +59,6 @@ class _Known:
 def _known_from_item(item: Item) -> _Known:
     known = _Known()
     for claim in item.claims:
-        if claim.deprecated:
-            continue
         if claim.property == "P31" and claim.qid == "Q5":
             known.is_human = True
         elif claim.property == "P569":

@@ -127,10 +127,15 @@ class Item(object):
         self.description = LangText.pick(descriptions)
 
         self.claims: List[Claim] = []
+        self.deprecated: List[Claim] = []
         claims: Dict[str, List[Dict[str, Any]]] = data.pop("claims", {})
         for prop, values in claims.items():
             for value in values:
-                self.claims.append(Claim(client, value, prop))
+                claim = Claim(client, value, prop)
+                if claim.deprecated:
+                    self.deprecated.append(claim)
+                else:
+                    self.claims.append(claim)
 
         # Merged pages handling:
         redirects = data.pop("redirects", {})
@@ -202,7 +207,7 @@ def _type_props(item: Item) -> List[str]:
     for claim in item.claims:
         # historical countries are always historical:
         ended = claim.is_ended and claim.qid != "Q3024240"
-        if ended or claim.qid is None or claim.deprecated:
+        if ended or claim.qid is None:
             continue
         if claim.property in ("P31", "P279"):
             types.append(claim.qid)
