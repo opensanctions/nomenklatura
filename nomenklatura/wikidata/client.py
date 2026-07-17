@@ -67,7 +67,7 @@ class WikidataClient(object):
             "props": "info|sitelinks/urls|aliases|labels|descriptions|claims|datatype",
         }
         url = build_url(self.WD_API, params=params)
-        cache_days = cache_days or self.cache_days
+        cache_days = cache_days if cache_days is not None else self.cache_days
         raw = self.cache.get(url, max_age=cache_days, min_timestamp=modified_at)
         if raw is None:
             log.debug(
