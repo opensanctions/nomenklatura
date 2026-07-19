@@ -1,8 +1,9 @@
 import json
+import time
 import logging
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, List, Optional, Dict, Set
+from typing import Any, List, Optional, Set
 from requests import Session
 from normality import squash_spaces
 from rigour.time import utc_now
@@ -19,15 +20,6 @@ from nomenklatura.wikidata.query import SparqlResponse
 log = logging.getLogger(__name__)
 
 
-class WikidataAPIError(RuntimeError):
-    """The Wikidata API reported an in-band error (HTTP 200 with an `error` body).
-
-    Raised for transient failures — rate limiting, lag, internal errors — so
-    that callers fail loudly instead of mistaking an outage for a missing item.
-    A permanent `no-such-entity` response is not an error: it reads as a `None`
-    item and stays cached."""
-
-
 class WikidataClient(object):
     """Read items and labels from the Wikidata API and SPARQL endpoint.
 
@@ -41,6 +33,11 @@ class WikidataClient(object):
     CACHE_SHORT = 1
     CACHE_MEDIUM = CACHE_SHORT * 7
     CACHE_LONG = CACHE_SHORT * 30
+    # Retry budget for the transient in-band API errors Wikidata returns as
+    # HTTP 200 (see `_fetch_entities`). Class attributes so they stay tunable
+    # and test-overridable (set the backoff to 0 to skip real sleeps in tests).
+    API_MAX_ATTEMPTS = 3
+    API_RETRY_BACKOFF = 2.0  # seconds, exponential base: 2s, 4s between attempts
 
     LABEL_PREFIX = "wd:lb:"
     LABEL_CACHE_DAYS = 100
@@ -96,9 +93,12 @@ class WikidataClient(object):
                 cache_days,
                 modified_at,
             )
-            res = self.session.get(url)
-            res.raise_for_status()
-            raw = res.text
+            # `_fetch_entities` retries transient in-band errors; it returns
+            # None once they're exhausted (item skipped for this run) and
+            # otherwise a cacheable body, so nothing bad reaches the cache.
+            raw = self._fetch_entities(url)
+            if raw is None:
+                return None
             self.cache.set(url, raw)
         else:
             log.debug(
@@ -110,17 +110,9 @@ class WikidataClient(object):
         data = json.loads(raw)
         entities = data.get("entities")
         if entities is None:
-            # The API reports failures in-band with HTTP 200. A deleted or
-            # never-created QID is a permanent fact: keep the response cached
-            # and read it as "no such item". Anything else is transient, so
-            # drop it from the cache to make the next attempt refetch.
-            code = data.get("error", {}).get("code")
-            if code == "no-such-entity":
-                return None
-            self.cache.delete(url)
-            raise WikidataAPIError(
-                "Wikidata API error fetching %s: %r" % (qid, data.get("error"))
-            )
+            # Only a cached `no-such-entity` reaches here: a deleted or
+            # never-created QID is a permanent fact, read as "no such item".
+            return None
         entity = entities.get(qid)
         if entity is None or "missing" in entity:
             return None
@@ -136,6 +128,40 @@ class WikidataClient(object):
             )
         return item
 
+    def _fetch_entities(self, url: str) -> Optional[str]:
+        """GET a wbgetentities URL, retrying the transient errors Wikidata hides
+        in HTTP 200 bodies (DB lag, rate limits, internal errors).
+
+        Reach for this instead of a bare `session.get` for any wbgetentities
+        call: the session's status-code retries can't see an in-band 200 error,
+        so a single upstream blip would otherwise abort a whole crawl. Returns
+        the raw response text once it is cacheable — a populated `entities` map,
+        or a permanent `no-such-entity`. Returns None if a transient error
+        outlasts every retry: the caller then reads the item as absent for this
+        run, and, because nothing is cached, a later run refetches it.
+        """
+        error: Any = None
+        for attempt in range(self.API_MAX_ATTEMPTS):
+            res = self.session.get(url)
+            res.raise_for_status()
+            raw = res.text
+            data = json.loads(raw)
+            if data.get("entities") is not None:
+                return raw
+            error = data.get("error", {})
+            if error.get("code") == "no-such-entity":
+                return raw
+            log.warning(
+                "Transient Wikidata API error (attempt %d/%d): %r",
+                attempt + 1,
+                self.API_MAX_ATTEMPTS,
+                error,
+            )
+            if attempt + 1 < self.API_MAX_ATTEMPTS:
+                time.sleep(self.API_RETRY_BACKOFF * (2**attempt))
+        log.warning("Skipping %s after %d failed attempts: %r", url, attempt + 1, error)
+        return None
+
     @lru_cache(maxsize=100000)
     def get_label(self, qid: str) -> LangText:
         cache_key = f"{self.LABEL_PREFIX}{qid}"
@@ -149,17 +175,14 @@ class WikidataClient(object):
             "props": "labels",
         }
         url = build_url(self.WD_API, params=params)
-        res = self.session.get(url)
-        res.raise_for_status()
-        data: Dict[str, Any] = res.json()
-        entities = data.get("entities")
+        raw = self._fetch_entities(url)
+        if raw is None:
+            # Transient error outlasted the retries: treat the label as absent.
+            return LangText(None)
+        entities = json.loads(raw).get("entities")
         if entities is None:
-            code = data.get("error", {}).get("code")
-            if code == "no-such-entity":
-                return LangText(None)
-            raise WikidataAPIError(
-                "Wikidata API error fetching label %s: %r" % (qid, data.get("error"))
-            )
+            # Only a `no-such-entity` body reaches here (see `_fetch_entities`).
+            return LangText(None)
         entity = entities.get(qid)
         if entity is None or "missing" in entity:
             return LangText(None)

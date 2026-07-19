@@ -8,7 +8,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.matching import EntityResolveRegression
-from nomenklatura.wikidata import Claim, LangText, WikidataAPIError, WikidataClient
+from nomenklatura.wikidata import Claim, LangText, WikidataClient
 from nomenklatura.wikidata.reconcile import candidate_proxy, reconcile
 from nomenklatura.enrich.wikidata import clean_wikidata_name
 
@@ -435,21 +435,47 @@ def test_fetch_item_no_such_entity(test_cache: Cache):
 
 
 def test_fetch_item_transient_error(test_cache: Cache):
-    # Any other in-band API error raises and is evicted from the cache, so a
-    # transient failure can't masquerade as a missing item for cache_days.
+    # A persistent in-band API error is retried, then skipped (None) and never
+    # cached, so a transient failure can't masquerade as a missing item for
+    # cache_days: a later run refetches it.
     error = {"error": {"code": "maxlag", "info": "database is lagged"}}
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=error)
         client = WikidataClient(test_cache)
-        with pytest.raises(WikidataAPIError):
-            client.fetch_item("Q7747")
-    # The next attempt refetches and succeeds:
+        client.API_RETRY_BACKOFF = 0  # don't sleep between retries in tests
+        assert client.fetch_item("Q7747") is None
+        assert m.call_count == WikidataClient.API_MAX_ATTEMPTS
+    # A fresh client (empty lru) refetches from source and succeeds, proving the
+    # transient failure was not written to the SQL cache:
     with requests_mock.Mocker(real_http=False) as m:
         m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
-        item = client.fetch_item("Q7747")
+        client2 = WikidataClient(test_cache)
+        item = client2.fetch_item("Q7747")
         assert m.call_count == 1
         assert item is not None
         assert item.id == "Q7747"
+
+
+def test_fetch_item_transient_recovers(test_cache: Cache):
+    # A transient error that clears within the retry budget resolves to the
+    # item in a single fetch_item call, without surfacing an exception.
+    error = {"error": {"code": "maxlag", "info": "database is lagged"}}
+    calls = {"n": 0}
+
+    def handler(request, context):
+        calls["n"] += 1
+        if calls["n"] < 2:
+            return error
+        return wd_read_response(request, context)
+
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=handler)
+        client = WikidataClient(test_cache)
+        client.API_RETRY_BACKOFF = 0  # don't sleep between retries in tests
+        item = client.fetch_item("Q7747")
+        assert item is not None
+        assert item.id == "Q7747"
+        assert m.call_count > 1
 
 
 def test_types_missing_ancestor(test_cache: Cache):
