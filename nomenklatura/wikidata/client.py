@@ -18,6 +18,15 @@ from nomenklatura.wikidata.query import SparqlResponse
 log = logging.getLogger(__name__)
 
 
+class WikidataAPIError(RuntimeError):
+    """The Wikidata API reported an in-band error (HTTP 200 with an `error` body).
+
+    Raised for transient failures — rate limiting, lag, internal errors — so
+    that callers fail loudly instead of mistaking an outage for a missing item.
+    A permanent `no-such-entity` response is not an error: it reads as a `None`
+    item and stays cached."""
+
+
 class WikidataClient(object):
     """Read items and labels from the Wikidata API and SPARQL endpoint.
 
@@ -88,8 +97,21 @@ class WikidataClient(object):
                 modified_at,
             )
         data = json.loads(raw)
-        entity = data.get("entities", {}).get(qid)
-        if entity is None:
+        entities = data.get("entities")
+        if entities is None:
+            # The API reports failures in-band with HTTP 200. A deleted or
+            # never-created QID is a permanent fact: keep the response cached
+            # and read it as "no such item". Anything else is transient, so
+            # drop it from the cache to make the next attempt refetch.
+            code = data.get("error", {}).get("code")
+            if code == "no-such-entity":
+                return None
+            self.cache.delete(url)
+            raise WikidataAPIError(
+                "Wikidata API error fetching %s: %r" % (qid, data.get("error"))
+            )
+        entity = entities.get(qid)
+        if entity is None or "missing" in entity:
             return None
         item = Item(self, entity)
         if item.id != qid:
@@ -119,8 +141,16 @@ class WikidataClient(object):
         res = self.session.get(url)
         res.raise_for_status()
         data: Dict[str, Any] = res.json()
-        entity = data.get("entities", {}).get(qid)
-        if entity is None:
+        entities = data.get("entities")
+        if entities is None:
+            code = data.get("error", {}).get("code")
+            if code == "no-such-entity":
+                return LangText(None)
+            raise WikidataAPIError(
+                "Wikidata API error fetching label %s: %r" % (qid, data.get("error"))
+            )
+        entity = entities.get(qid)
+        if entity is None or "missing" in entity:
             return LangText(None)
         labels = LangText.from_dict(entity.get("labels", {}))
         label = LangText.pick(labels)

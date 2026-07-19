@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 
 from normality import stringify
@@ -9,6 +10,8 @@ from nomenklatura.wikidata.lang import LangText
 
 if TYPE_CHECKING:
     from nomenklatura.wikidata.client import WikidataClient
+
+log = logging.getLogger(__name__)
 
 
 class Snak(object):
@@ -173,7 +176,10 @@ class Item(object):
             return types
 
         item = self if qid == self.id else self.client.fetch_item(qid)
-        assert item is not None, path
+        if item is None:
+            # A deleted P31/P279 ancestor shouldn't break type expansion:
+            log.warning("Missing type ancestor item: %s (path: %r)", qid, path)
+            return types
         for type_ in _type_props(item):
             if type_ not in path:
                 types.update(self._types(path + [type_]))

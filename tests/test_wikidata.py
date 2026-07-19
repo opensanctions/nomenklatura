@@ -8,7 +8,7 @@ from nomenklatura.cache import Cache
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.matching import EntityResolveRegression
-from nomenklatura.wikidata import LangText, WikidataClient
+from nomenklatura.wikidata import LangText, WikidataAPIError, WikidataClient
 from nomenklatura.wikidata.reconcile import candidate_proxy, reconcile
 from nomenklatura.enrich.wikidata import clean_wikidata_name
 
@@ -418,6 +418,69 @@ def test_reconcile_state_linked_skipped(tmp_path, resolver: Resolver[Entity], ca
         # No reviewable person; the linked one was enriched during load.
         assert state.start() is False
         assert state.person is None
+
+def test_fetch_item_no_such_entity(test_cache: Cache):
+    # A deleted/never-created QID is a permanent miss: None, and the error
+    # response stays cached so later runs don't refetch it.
+    error = {"error": {"code": "no-such-entity", "id": "Q404"}}
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=error)
+        client = WikidataClient(test_cache)
+        assert client.fetch_item("Q404") is None
+        assert m.call_count == 1
+        # A fresh client (empty lru) is served from the SQL cache:
+        client2 = WikidataClient(test_cache)
+        assert client2.fetch_item("Q404") is None
+        assert m.call_count == 1
+
+
+def test_fetch_item_transient_error(test_cache: Cache):
+    # Any other in-band API error raises and is evicted from the cache, so a
+    # transient failure can't masquerade as a missing item for cache_days.
+    error = {"error": {"code": "maxlag", "info": "database is lagged"}}
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=error)
+        client = WikidataClient(test_cache)
+        with pytest.raises(WikidataAPIError):
+            client.fetch_item("Q7747")
+    # The next attempt refetches and succeeds:
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
+        item = client.fetch_item("Q7747")
+        assert m.call_count == 1
+        assert item is not None
+        assert item.id == "Q7747"
+
+
+def test_types_missing_ancestor(test_cache: Cache):
+    # A deleted P31/P279 ancestor is skipped, not an AssertionError.
+    def handler(request, context):
+        # requests_mock lower-cases query string values:
+        qid = request.qs["ids"][0].upper()
+        if qid == "Q1000":
+            claim = {
+                "id": "Q1000$1",
+                "rank": "normal",
+                "mainsnak": {
+                    "snaktype": "value",
+                    "property": "P31",
+                    "datatype": "wikibase-item",
+                    "datavalue": {
+                        "type": "wikibase-entityid",
+                        "value": {"id": "Q2000"},
+                    },
+                },
+            }
+            return {"entities": {"Q1000": {"id": "Q1000", "claims": {"P31": [claim]}}}}
+        return {"error": {"code": "no-such-entity", "id": qid}}
+
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.WD_API, json=handler)
+        client = WikidataClient(test_cache)
+        item = client.fetch_item("Q1000")
+        assert item is not None
+        assert item.types == {"Q1000", "Q2000"}
+
 
 def test_model(test_cache: Cache):
     with requests_mock.Mocker(real_http=False) as m:
