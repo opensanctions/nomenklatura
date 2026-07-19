@@ -1,11 +1,11 @@
 from followthemoney import ValueEntity as Entity
-from nomenklatura.matching import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.name_based.model import NameMatcher, NameQualifiedMatcher
+from nomenklatura.matching.name_based.model import OFACMatcher
 from nomenklatura.matching.name_based.names import jaro_name_parts
 from nomenklatura.matching.name_based.names import soundex_name_parts
-from nomenklatura.matching.name_based.misc import orgid_disjoint
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 
@@ -78,40 +78,53 @@ def test_heuristic_overrides():
     assert len(result.explanations) == 4
 
 
-def test_soundex_name_comparison():
-    query = e("Person", name="Michelle Michaela")
-    result = e("Person", name="Michaela Michelle Micheli")
-    assert soundex_name_parts(query, result, config).score == 1.0
+def test_ofac_matcher_compare():
+    a = e("Person", name="VLADIMIR PUTIN")
+    b = e("Person", name="PUTIN, Vladimir")
+    result = OFACMatcher.compare(a, b, config)
+    assert result.score == 1.0
+    assert (
+        result.explanations["ofac_name_score"].detail
+        == "whole-string=0.00, per-token=1.00"
+    )
 
-    result = e("Person", name="Michelle Michi")
-    assert soundex_name_parts(query, result, config).score == 1.0
-
-    result = e("Person", name="Donald Duck")
-    assert soundex_name_parts(query, result, config).score == 0.0
-
-
-def test_single_name():
-    name = e("Person", name="Hannibal")
-    other = e("Person", name="Hannibal")
-    assert soundex_name_parts(name, other, config).score == 1.0
-
-    other = e("Person", name="Hanniball")
-    assert soundex_name_parts(name, other, config).score == 1.0
-
-    other = e("Person", name="Hannibol")
-    assert soundex_name_parts(name, other, config).score == 1.0
+    b = e("Person", name="HASWANI, George")
+    result = OFACMatcher.compare(a, b, config)
+    assert result.score < 0.8
+    # First-letter gate rejects V vs H; per-token mean is low because no
+    # query token has a strong candidate match.
+    assert (
+        result.explanations["ofac_name_score"].detail
+        == "whole-string=0.00, per-token=0.26"
+    )
 
 
-def test_orgid_disjoint():
-    query = e("Company", registrationNumber="77401103")
-    result = e("Company", registrationNumber="77401103")
-    assert orgid_disjoint(query, result, config).score == 0.0
-    result = e("Company", idNumber="77401103")
-    assert orgid_disjoint(query, result, config).score == 0.0
-    result = e("Company", name="BLA CORP")
-    assert orgid_disjoint(query, result, config).score == 0.0
-    result = e("Company", registrationNumber="E77401103")
-    assert orgid_disjoint(query, result, config).score > 0.0
-    assert orgid_disjoint(query, result, config).score < 1.0
-    result = e("Company", registrationNumber="83743878")
-    assert orgid_disjoint(query, result, config).score == 1.0
+def test_ofac_matcher_qualifier_penalties():
+    """Country / DOB mismatches reduce the name score (departs from
+    FAQ 251). The reduction is surfaced as a separate entry in
+    `result.explanations` (the firing qualifier feature) rather than
+    folded into the name-feature detail."""
+    a = e("Person", name="VLADIMIR PUTIN")
+    b = e("Person", name="PUTIN, Vladimir")
+    result = OFACMatcher.compare(a, b, config)
+    assert result.score == 1.0
+    # No qualifier fires; name-feature detail is unchanged.
+    assert "country_mismatch" not in result.explanations
+    assert (
+        result.explanations["ofac_name_score"].detail
+        == "whole-string=0.00, per-token=1.00"
+    )
+    a.add("country", "ru")
+    b.add("country", "us")
+    result = OFACMatcher.compare(a, b, config)
+    # Score drops by the country_mismatch weight (-0.1); the qualifier
+    # is what explains the reduction.
+    assert result.score == 0.9
+    assert (
+        result.explanations["ofac_name_score"].detail
+        == "whole-string=0.00, per-token=1.00"
+    )
+    assert (
+        result.explanations["country_mismatch"].detail
+        == "Different countries: ['ru'] / ['us']"
+    )

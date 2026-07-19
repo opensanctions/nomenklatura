@@ -1,7 +1,7 @@
 from nomenklatura.matching.compare.identifiers import crypto_wallet_address
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 

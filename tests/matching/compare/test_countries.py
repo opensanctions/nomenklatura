@@ -1,7 +1,7 @@
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 

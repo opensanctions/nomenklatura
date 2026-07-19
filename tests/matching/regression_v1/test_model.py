@@ -1,6 +1,6 @@
 from followthemoney import StatementEntity as Entity
 
-from nomenklatura.matching import RegressionV1
+from nomenklatura.matching.regression_v1.model import RegressionV1
 from nomenklatura.matching.types import ScoringConfig
 
 config = ScoringConfig.defaults()

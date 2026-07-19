@@ -4,7 +4,7 @@ from nomenklatura.matching.logic_v2.identifiers import isin_security_match
 from nomenklatura.matching.logic_v2.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 

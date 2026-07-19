@@ -5,7 +5,7 @@ from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
 from nomenklatura.matching.logic_v1.identifiers import orgid_disjoint
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 

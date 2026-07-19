@@ -1,13 +1,15 @@
 from pathlib import Path
 from typing import List
 
-from rigour.names import Name, NameTypeTag, analyze_names
+from rigour.names import Name, NamePartTag, NameTypeTag, Symbol, analyze_names
 from rigour.text.scripts import common_scripts
 
-from nomenklatura.matching.logic_v2.names.analysis import names_product
+from nomenklatura.matching.logic_v2.names.analysis import entity_names, names_product
+
+from ...factory import e
 
 
-FIXTURE = Path(__file__).parent.parent / "fixtures" / "putin_names.txt"
+FIXTURE = Path(__file__).parents[3] / "fixtures" / "putin_names.txt"
 
 
 def _load_fixture_names() -> List[Name]:
@@ -19,6 +21,53 @@ def _pair_is_justified(q: Name, r: Name) -> bool:
     if common_scripts(q.comparable, r.comparable):
         return True
     return bool(set(q.symbols) & set(r.symbols))
+
+
+def test_entity_names_person():
+    entity = e("Person", name="Smith, John", firstName="John", lastName="Smith")
+    names = entity_names(entity)
+    assert len(names) == 1
+    name = names.pop()
+    assert name.form == "smith, john"
+    assert name.parts[0].form == "smith"
+    assert name.parts[0].tag == NamePartTag.FAMILY
+    assert name.parts[1].tag == NamePartTag.GIVEN
+    assert len(name.spans) > 0
+    for span in name.spans:
+        if span.symbol.category == Symbol.Category.INITIAL:
+            assert span.symbol.id == "j"
+
+    names = {sym.id for sym in name.symbols if sym.category == Symbol.Category.NAME}
+    assert "Q1158446" in names
+
+
+def test_entity_names_company():
+    entity = e("Company", name="Westminster Holdings, Ltd.")
+    names = entity_names(entity)
+    assert len(names) == 1
+    name = names.pop()
+    assert name.form == "westminster holdings, ltd"
+    assert len(name.spans) > 0
+    symbols = set()
+    for span in name.spans:
+        symbols.add(span.symbol)
+        if span.symbol.category == Symbol.Category.ORG_CLASS:
+            assert span.symbol.id == "LLC"
+        if span.symbol.category == Symbol.Category.SYMBOL:
+            assert span.symbol.id == "HOLDING"
+
+    entity = e("Company", name="ABC Gesellschaft mit beschränkter Haftung")
+    names = entity_names(entity)
+    assert len(names) == 1
+    name = names.pop()
+    for span in name.spans:
+        if span.symbol.category == Symbol.Category.ORG_CLASS:
+            assert span.symbol.id == "LLC"
+            assert len(span.parts) == 1
+    other = e("Company", name="ABC Ltd.")
+    other_name = entity_names(other).pop()
+    common = name.symbols.intersection(other_name.symbols)
+    assert len(common) == 1
 
 
 def test_names_product_empty_inputs():
