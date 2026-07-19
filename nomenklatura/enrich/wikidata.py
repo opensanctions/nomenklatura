@@ -169,10 +169,6 @@ class WikidataEnricher(Enricher[DS]):
         if depth is None:
             depth = self.depth
         for claim in item.claims:
-            # Ignore all deprecated claims:
-            if claim.deprecated:
-                continue
-
             # TODO: memberships, employers?
             if claim.property in PROPS_FAMILY:
                 yield from self.make_link(

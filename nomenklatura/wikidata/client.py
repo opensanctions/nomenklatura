@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Any, List, Optional, Dict, Set
 from requests import Session
 from normality import squash_spaces
+from rigour.time import utc_now
 from rigour.urls import build_url
 from rigour.util import MEMO_SMALL
 from rigour.ids.wikidata import is_qid
@@ -45,13 +46,23 @@ class WikidataClient(object):
     LABEL_CACHE_DAYS = 100
 
     def __init__(
-        self, cache: Cache, session: Optional[Session] = None, cache_days: int = 14
+        self,
+        cache: Cache,
+        session: Optional[Session] = None,
+        cache_days: int = 14,
+        reference_time: Optional[datetime] = None,
     ) -> None:
         self.cache = cache
         # A bare session gets 403'd (default UA) and throttled by Wikidata, so
         # default to a configured session with a descriptive UA and retries.
         self.session = session or make_session()
         self.cache_days = cache_days
+        # The point in time against which claim validity is evaluated (see
+        # `Claim.is_ended`). Crawlers pass their pinned run time so a whole
+        # run resolves "ended" against one deterministic instant.
+        self.reference_time = (
+            reference_time if reference_time is not None else utc_now()
+        )
         # self.cache.preload(f"{self.LABEL_PREFIX}%")
 
     @lru_cache(maxsize=MEMO_SMALL)
