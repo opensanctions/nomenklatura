@@ -1,8 +1,10 @@
 import logging
+from datetime import datetime
 from functools import lru_cache
 
 from normality import stringify
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from rigour.dates import ended_before
 from rigour.langs import iso_639_alpha3
 
 from nomenklatura.wikidata.value import snak_value_to_string
@@ -77,11 +79,31 @@ class Claim(Snak):
     def get_qualifier(self, prop: str) -> List[Snak]:
         return self.qualifiers.get(prop, [])
 
-    @property
-    def is_ended(self) -> bool:
-        snak = self.qualifiers.get("P582")
-        if snak is not None and len(snak) > 0:
-            return True
+    def is_ended(self, reference_time: Optional[datetime] = None) -> bool:
+        """Whether the claim's validity period (P582) ended before
+        `reference_time`, defaulting to the client's run reference time.
+
+        A "no value" end time is Wikidata's way of asserting a claim is
+        current, and an imprecise end date only counts once its whole span
+        has elapsed — so a year-precision end in the current year is not
+        yet ended."""
+        if reference_time is None:
+            reference_time = self.client.reference_time
+        for snak in self.qualifiers.get("P582", []):
+            if snak.snaktype == "novalue":
+                continue
+            if snak.snaktype == "somevalue":
+                # Ended at an unknown date:
+                return True
+            text = snak.text.text
+            if text is None:
+                # An end is asserted, but the date didn't convert:
+                return True
+            try:
+                if ended_before(text, reference_time):
+                    return True
+            except ValueError:
+                return True
         return False
 
     def __repr__(self) -> str:
@@ -206,7 +228,7 @@ def _type_props(item: Item) -> List[str]:
     types: List[str] = []
     for claim in item.claims:
         # historical countries are always historical:
-        ended = claim.is_ended and claim.qid != "Q3024240"
+        ended = claim.is_ended() and claim.qid != "Q3024240"
         if ended or claim.qid is None:
             continue
         if claim.property in ("P31", "P279"):
