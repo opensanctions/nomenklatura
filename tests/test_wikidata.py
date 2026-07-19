@@ -519,6 +519,48 @@ def test_item_deprecated_claims(test_cache: Cache):
         assert item.deprecated[0].text.text == "1852-10-07"
 
 
+def test_claim_is_ended(test_cache: Cache):
+    from datetime import datetime, timezone
+
+    reference = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    client = WikidataClient(test_cache, reference_time=reference)
+    assert client.reference_time == reference
+
+    def claim_with_end(qualifier) -> Claim:
+        data = {
+            "id": "Q1$1",
+            "rank": "normal",
+            "mainsnak": {
+                "snaktype": "value",
+                "property": "P39",
+                "datatype": "wikibase-item",
+                "datavalue": {"type": "wikibase-entityid", "value": {"id": "Q2"}},
+            },
+            "qualifiers": {"P582": [qualifier]} if qualifier else {},
+        }
+        return Claim(client, data, "P39")
+
+    # No end qualifier at all:
+    assert claim_with_end(None).is_ended() is False
+    # An elapsed end date:
+    assert claim_with_end(_time_snak("P582", "+2015-06-01T00:00:00Z")).is_ended() is True
+    # "No value" asserts the claim is current:
+    novalue = {"snaktype": "novalue", "property": "P582", "datatype": "time"}
+    assert claim_with_end(novalue).is_ended() is False
+    # "Unknown value" means ended at an unknown date:
+    somevalue = {"snaktype": "somevalue", "property": "P582", "datatype": "time"}
+    assert claim_with_end(somevalue).is_ended() is True
+    # A scheduled future end is not yet ended:
+    assert claim_with_end(_time_snak("P582", "+2030-01-01T00:00:00Z")).is_ended() is False
+    # A year-precision end only counts once the year has elapsed:
+    current_year = _time_snak("P582", "+2026-00-00T00:00:00Z", precision=9)
+    assert claim_with_end(current_year).is_ended() is False
+    # An explicit reference overrides the client's:
+    later = datetime(2031, 1, 1, tzinfo=timezone.utc)
+    future = claim_with_end(_time_snak("P582", "+2030-01-01T00:00:00Z"))
+    assert future.is_ended(reference_time=later) is True
+
+
 def test_qualify_value(test_cache: Cache):
     from nomenklatura.wikidata.qualified import qualify_value
 
