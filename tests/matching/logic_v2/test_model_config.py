@@ -1,5 +1,5 @@
 from nomenklatura.matching.logic_v2.model import LogicV2
-from .util import e
+from ..factory import e
 
 CONFIG = LogicV2.default_config()
 

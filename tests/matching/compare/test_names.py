@@ -6,7 +6,7 @@ from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.types import ScoringConfig
 
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 
@@ -270,3 +270,24 @@ def test_org_name_example_3():
     query = e("Company", name="Iskustvo Krasoty")
     assert name_fingerprint_levenshtein(query, result, config).score > 0.9
     assert name_fingerprint_levenshtein(query, result, config).score < 1.0
+
+
+def test_single_name():
+    name = e("Person", name="Hannibal")
+    other = e("Person", name="Hannibal")
+    assert person_name_jaro_winkler(name, other, config).score == 1.0
+
+    other = e("Person", name="Hannibol")
+    assert person_name_jaro_winkler(name, other, config).score > 0.8
+    assert person_name_jaro_winkler(name, other, config).score < 1.0
+
+
+def test_name_alphabets():
+    query = e("Person", name="Ротенберг Аркадий")
+    result = e("Person", name="Arkadij Romanovich Rotenberg")
+    assert person_name_jaro_winkler(query, result, config).score > 0.7
+
+    query = e("Person", name="Osama bin Laden")
+    result = e("Person", name="Usāma bin Muhammad ibn Awad ibn Lādin")
+    assert person_name_jaro_winkler(query, result, config).score > 0.5
+    assert person_name_jaro_winkler(query, result, config).score < 0.9

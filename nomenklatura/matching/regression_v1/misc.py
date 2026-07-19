@@ -24,10 +24,12 @@ def address_match(query: E, result: E) -> float:
 
 
 def address_numbers(query: E, result: E) -> float:
-    """Find if names contain numbers, score if the numbers are different."""
+    """Compare address numbers while treating missing evidence as neutral."""
     lv, rv = type_pair(query, result, registry.address)
     lvn = extract_numbers(lv)
     rvn = extract_numbers(rv)
+    if not lvn or not rvn:
+        return 0.0
     common = len(lvn.intersection(rvn))
     disjoint = len(lvn.difference(rvn))
     return common - disjoint

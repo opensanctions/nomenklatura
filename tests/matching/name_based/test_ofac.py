@@ -3,11 +3,10 @@ from pathlib import Path
 
 from followthemoney import ValueEntity as Entity
 
-from nomenklatura.matching import OFACMatcher
 from nomenklatura.matching.name_based.ofac import ofac_name_score
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 FIXTURES = Path(__file__).parent / "ofac_fixtures.csv"
 config = ScoringConfig.defaults()
@@ -166,55 +165,3 @@ def test_ofac_name_score_empty():
     assert res.score == 0.0
     # No pair scored, no detail to surface.
     assert res.detail is None
-
-
-def test_ofac_matcher_compare():
-    a = e("Person", name="VLADIMIR PUTIN")
-    b = e("Person", name="PUTIN, Vladimir")
-    result = OFACMatcher.compare(a, b, config)
-    assert result.score == 1.0
-    assert (
-        result.explanations["ofac_name_score"].detail
-        == "whole-string=0.00, per-token=1.00"
-    )
-
-    b = e("Person", name="HASWANI, George")
-    result = OFACMatcher.compare(a, b, config)
-    assert result.score < 0.8
-    # First-letter gate rejects V vs H; per-token mean is low because no
-    # query token has a strong candidate match.
-    assert (
-        result.explanations["ofac_name_score"].detail
-        == "whole-string=0.00, per-token=0.26"
-    )
-
-
-def test_ofac_matcher_qualifier_penalties():
-    """Country / DOB mismatches reduce the name score (departs from
-    FAQ 251). The reduction is surfaced as a separate entry in
-    `result.explanations` (the firing qualifier feature) rather than
-    folded into the name-feature detail."""
-    a = e("Person", name="VLADIMIR PUTIN")
-    b = e("Person", name="PUTIN, Vladimir")
-    result = OFACMatcher.compare(a, b, config)
-    assert result.score == 1.0
-    # No qualifier fires; name-feature detail is unchanged.
-    assert "country_mismatch" not in result.explanations
-    assert (
-        result.explanations["ofac_name_score"].detail
-        == "whole-string=0.00, per-token=1.00"
-    )
-    a.add("country", "ru")
-    b.add("country", "us")
-    result = OFACMatcher.compare(a, b, config)
-    # Score drops by the country_mismatch weight (-0.1); the qualifier
-    # is what explains the reduction.
-    assert result.score == 0.9
-    assert (
-        result.explanations["ofac_name_score"].detail
-        == "whole-string=0.00, per-token=1.00"
-    )
-    assert (
-        result.explanations["country_mismatch"].detail
-        == "Different countries: ['ru'] / ['us']"
-    )

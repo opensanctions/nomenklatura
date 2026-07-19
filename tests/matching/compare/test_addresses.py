@@ -1,7 +1,7 @@
 from nomenklatura.matching.compare.addresses import address_entity_match
 from nomenklatura.matching.types import ScoringConfig
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 

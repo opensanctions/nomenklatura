@@ -1,7 +1,7 @@
 from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.matching.logic_v1.multi import numbers_mismatch
 
-from .util import e
+from ..factory import e
 
 config = ScoringConfig.defaults()
 
