@@ -214,3 +214,22 @@ code.
 - The complete matcher suite passes with the same production code and test data.
 - `git diff --check` is clean, and the final diff contains only test-tree changes
   unless a scope expansion is separately approved.
+
+## Coverage expansion
+
+Add independent behavioral coverage for the two regression matchers without
+pinning serialized model probabilities or loading fixtures from `contrib/` at
+test time.
+
+1. Cover the public feature and training-helper modules in `regression_v1`.
+2. Cover the country, date, identifier, name, and remaining miscellaneous
+   features in `erun`.
+3. Give both model suites copied contract cases inspired by the entity and name
+   benchmarks: exact versus typo versus unrelated names, company legal-form
+   variants, qualifier conflicts, and identifier rescue. Use relative scores;
+   additionally require symmetry from the erun dedupe matcher.
+
+Run each matcher directory after its feature tests are added. Add the model
+contracts only after both feature suites pass, then run all matcher tests. Any
+failed intended contract is a stop-and-report point: do not tune or retrain a
+matcher as part of the coverage change.

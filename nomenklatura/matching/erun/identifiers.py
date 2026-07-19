@@ -38,7 +38,7 @@ def strong_identifier_match(left: EntityProxy, right: EntityProxy) -> float:
     """Check if two entities share any strong identifiers."""
     left_strong = _get_strong_identifiers(left)
     right_strong = _get_strong_identifiers(right)
-    if len(left_strong) == 0 or len(right_strong) == 0:
+    if len(left_strong) == 0 and len(right_strong) == 0:
         return 0.0
     if left_strong.intersection(right_strong):
         return 1.0
