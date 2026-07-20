@@ -90,8 +90,8 @@ class Resolver(Linker[SE]):
             Column("judgement", Unicode(14), nullable=False),
             Column("score", Float, nullable=True),
             Column("user", Unicode(512), nullable=False),
-            Column("created_at", Unicode(28)),
-            Column("deleted_at", Unicode(28), nullable=True),
+            Column("created_at", Unicode(28), index=True),
+            Column("deleted_at", Unicode(28), nullable=True, index=True),
             unique_pair,
             suggested,
         )
