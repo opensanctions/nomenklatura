@@ -4,7 +4,7 @@ import logging
 import traceback
 from banal import as_bool
 from normality import stringify
-from typing import List, Union, Any, Dict, Optional, Generator, Generic
+from typing import List, Set, Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
 from requests import Session
 from requests.exceptions import RequestException, ChunkedEncodingError
@@ -37,7 +37,14 @@ class BaseEnricher(Generic[DS]):
         self.config = config
         self.cache_days = int(config.pop("cache_days", 90))
         self._filter_schemata = config.pop("schemata", [])
-        self._filter_topics = config.pop("topics", [])
+        filter_topics = set(config.pop("topics", []))
+        if "all" in filter_topics:
+            assert isinstance(registry.topic, TopicType)
+            filter_topics.discard("all")
+            filter_topics.update(registry.topic.names.keys())
+        # The resolved `topics` config option. Exposed so that callers gating
+        # further processing on the same topics use an identical set.
+        self.filter_topics: Set[str] = filter_topics
 
     def get_config_expand(
         self, name: str, default: Optional[str] = None
@@ -71,13 +78,9 @@ class BaseEnricher(Generic[DS]):
         if len(self._filter_schemata):
             if entity.schema.name not in self._filter_schemata:
                 return False
-        _filter_topics = set(self._filter_topics)
-        if "all" in _filter_topics:
-            assert isinstance(registry.topic, TopicType)
-            _filter_topics.update(registry.topic.names.keys())
-        if len(_filter_topics):
+        if len(self.filter_topics):
             topics = set(entity.get_type_values(registry.topic))
-            if not len(topics.intersection(_filter_topics)):
+            if not topics.intersection(self.filter_topics):
                 return False
         return True
 
@@ -222,6 +225,10 @@ class Enricher(BaseEnricher[DS], ABC):
         yield from self.match(entity)
 
     def expand_wrapped(self, entity: SE, match: SE) -> Generator[SE, None, None]:
+        """Yield the confirmed match itself, followed by entities related to
+        it in the external source (e.g. officers, owners, family members).
+
+        Only yields if ``entity`` passes the filter."""
         if not self._filter_entity(entity):
             return
         yield from self.expand(entity, match)
