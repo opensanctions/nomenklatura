@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List, Optional, Set
 from urllib.parse import quote
 from requests import Session
+from requests.exceptions import RequestException
 from rigour.langs import PREFERRED_LANGS
 from rigour.territories import get_territory
 from followthemoney import StatementEntity
@@ -31,9 +32,11 @@ def fetch_summary(
 
     Reach for this to give a reconciliation reviewer a one-glance "who is this"
     for a candidate Wikidata item. `lang` is the Wikipedia subdomain code (the
-    `en` of `enwiki`), `title` the page title. Returns None for a missing page
-    or one without an extract (e.g. a disambiguation page); both outcomes are
-    cached as an empty string so repeated runs don't re-request them.
+    `en` of `enwiki`), `title` the page title. Returns None for a missing page,
+    one without an extract (e.g. a disambiguation page), or any request failure
+    — callers never see an exception. Missing pages and empty extracts are
+    cached as an empty string so repeated runs don't re-request them; request
+    failures are not cached.
     """
     api_url = SUMMARY_API.format(
         lang=lang, title=quote(title.replace(" ", "_"), safe="")
@@ -41,12 +44,17 @@ def fetch_summary(
     cached = cache.get(api_url, max_age=SUMMARY_CACHE_DAYS)
     if cached is not None:
         return cached or None  # "" is the cached "no summary" sentinel
-    res = session.get(api_url)
-    if res.status_code == 404:
-        cache.set(api_url, "")
+    try:
+        res = session.get(api_url)
+        if res.status_code == 404:
+            cache.set(api_url, "")
+            return None
+        res.raise_for_status()
+        extract = res.json().get("extract") or ""
+    except RequestException as exc:
+        # Transient failures are not cached, so the next run retries them.
+        log.warning("Failed to fetch summary %s: %s", api_url, exc)
         return None
-    res.raise_for_status()
-    extract = res.json().get("extract") or ""
     cache.set(api_url, extract)
     return extract or None
 
@@ -96,7 +104,13 @@ def item_wikipedia_summaries(
     by_lang: Dict[str, str] = {}
     titles: Dict[str, str] = {}
     for link in item.wikilinks:
-        if link.lang is None or link.wiki_site is None or link.lang in by_lang:
+        if link.lang is None or link.wiki_site is None:
+            continue
+        # Variant wikis (zh-yue, zh-classical, be-x-old) resolve to the same
+        # language code as the plain wiki; prefer the plain one (zh, be)
+        # regardless of sitelink order.
+        current = by_lang.get(link.lang)
+        if current is not None and ("-" not in current or "-" in link.wiki_site):
             continue
         by_lang[link.lang] = link.wiki_site
         titles[link.lang] = link.title

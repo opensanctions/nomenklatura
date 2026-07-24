@@ -1,4 +1,5 @@
 import re
+import requests
 import requests_mock
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
@@ -52,6 +53,43 @@ def test_fetch_summary_negative_cache(cache_factory) -> None:
         assert fetch_summary(cache, session, "en", "Nobody") is None
     # A second call is served from the empty-string sentinel, no HTTP needed.
     assert fetch_summary(cache, session, "en", "Nobody") is None
+
+
+def test_fetch_summary_errors_swallowed_not_cached(cache_factory) -> None:
+    cache = cache_factory(Dataset.make({"name": "wikidata"}))
+    session = make_session()
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", SUMMARY_URL, exc=requests.exceptions.ConnectionError)
+        assert fetch_summary(cache, session, "en", "Flaky") is None
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", SUMMARY_URL, status_code=503)
+        assert fetch_summary(cache, session, "en", "Flaky") is None
+    # The failures left no cache entry: a working endpoint is queried again.
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", SUMMARY_URL, json={"extract": "A person."})
+        assert fetch_summary(cache, session, "en", "Flaky") == "A person."
+
+
+def test_sitelink_underscore_site_builds_hyphen_host() -> None:
+    item = _item("zh_yuewiki")
+    (link,) = item.wikilinks
+    assert link.wiki_site == "zh-yue"
+    assert link.lang == "zho"
+
+
+def test_item_summaries_variant_wiki_host_and_shadowing(cache_factory) -> None:
+    cache = cache_factory(Dataset.make({"name": "wikidata"}))
+    session = make_session()
+    # The variant wikis sort before the plain one in the API response, but the
+    # plain-language wiki must win for the shared language code.
+    item = _item("zh_classicalwiki", "zh_yuewiki", "zhwiki", "be_x_oldwiki")
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", SUMMARY_URL, json={"extract": "A person."})
+        summaries = item_wikipedia_summaries(cache, session, item, ["zho", "bel"])
+        assert {s.lang for s in summaries} == {"zho", "bel"}
+        hosts = {r.hostname for r in m.request_history}
+        # zhwiki beats the variants; be-x-old (no plain bewiki) gets a valid host.
+        assert hosts == {"zh.wikipedia.org", "be-x-old.wikipedia.org"}
 
 
 def test_item_summaries_preferred_only_and_capped(cache_factory) -> None:

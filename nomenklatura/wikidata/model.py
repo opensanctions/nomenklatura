@@ -118,7 +118,9 @@ class SiteLink(object):
         self.qid = qid
         self.site = data.pop("site")
         self.is_wiki = self.site.endswith("wiki")
-        self.wiki_site = self.site[:-4] if self.is_wiki else None
+        # Site codes use underscores where the wiki subdomain uses hyphens
+        # (zh_yuewiki -> zh-yue.wikipedia.org), so translate to the hostname form.
+        self.wiki_site = self.site[:-4].replace("_", "-") if self.is_wiki else None
         self.title = data.pop("title")
         self.badges = data.pop("badges", [])
         self.url = str(data.pop("url")) if "url" in data else None
