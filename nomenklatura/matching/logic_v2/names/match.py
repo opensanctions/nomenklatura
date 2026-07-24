@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from rigour.names import Alignment, CompareConfig, NameTypeTag, Name, NamePart
 from rigour.names import align_person_name_order, compare_parts, normalize_name
 from rigour.names import remove_obj_prefixes
@@ -20,6 +20,7 @@ from nomenklatura.matching.logic_v2.names.util import (
     explain_alignment,
     is_family_name,
     numbers_mismatch,
+    part_tags_compatible,
 )
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL
@@ -182,21 +183,28 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
 
     # For literal matches, return early instead of performing all the magic. This addresses
     # a user surprise where literal matches can score below 1.0 after name de-duplication has
-    # only left a superset name on one side.
-    query_comparable = {name.comparable: name for name in query_names}
-    result_comparable = {name.comparable: name for name in result_names}
+    # only left a superset name on one side. Names whose part tags contradict each other
+    # (e.g. a reversed firstName/lastName query against a "Family, Given"-form alias) don't
+    # qualify — they fall through to the full machinery, which penalises the role swap.
+    query_comparable: Dict[str, List[Name]] = {}
+    for name in query_names:
+        query_comparable.setdefault(name.comparable, []).append(name)
+    result_comparable: Dict[str, List[Name]] = {}
+    for name in result_names:
+        result_comparable.setdefault(name.comparable, []).append(name)
     common = set(query_comparable).intersection(result_comparable)
-    if len(common) > 0:
-        longest = max(common, key=len)
-        q_name = query_comparable[longest]
-        r_name = result_comparable[longest]
-        align = Alignment(qps=q_name.parts, rps=r_name.parts, score=1.0)
-        return FtResult(
-            score=1.0,
-            detail=explain_alignment(align),
-            query=q_name.original,
-            candidate=r_name.original,
-        )
+    for comparable in sorted(common, key=len, reverse=True):
+        for q_name in query_comparable[comparable]:
+            for r_name in result_comparable[comparable]:
+                if not part_tags_compatible(q_name, r_name):
+                    continue
+                align = Alignment(qps=q_name.parts, rps=r_name.parts, score=1.0)
+                return FtResult(
+                    score=1.0,
+                    detail=explain_alignment(align),
+                    query=q_name.original,
+                    candidate=r_name.original,
+                )
 
     # Remove short names that are contained in longer names.
     # This prevents a scenario where a short version of a name ("John
