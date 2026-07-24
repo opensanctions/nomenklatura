@@ -1,6 +1,21 @@
 import re
 
-from rigour.names import Alignment, NamePartTag
+from rigour.names import Alignment, Name, NamePartTag
+
+
+def part_tags_compatible(query: Name, result: Name) -> bool:
+    """Check two comparable-equal names for contradicting part roles.
+
+    Guards the literal-match early exit: a query with firstName=Putin,
+    lastName=Vladimir produces the same comparable string as a
+    "PUTIN, Vladimir"-style alias on the result, but matches the family
+    name against the given name. Such pairs must fall through to the
+    full alignment machinery, which penalises the role swap, instead of
+    short-circuiting to a 1.0 literal match."""
+    for qp, rp in zip(query.parts, result.parts):
+        if not qp.tag.can_match(rp.tag):
+            return False
+    return True
 
 
 def is_family_name(alignment: Alignment) -> bool:
