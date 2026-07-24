@@ -1,4 +1,3 @@
-import re
 from normality import WS
 from rigour.ids import StrictFormat
 from rigour.addresses import normalize_address
@@ -9,10 +8,8 @@ from typing import Generator, Set, Tuple
 from followthemoney import registry, StatementEntity
 from followthemoney.names import entity_names
 
-NON_LETTER = re.compile(r"[^a-z0-9]+")
 WORD_FIELD = "wd"
 NAME_PART_FIELD = "np"
-PHONETIC_FIELD = "ph"
 SYMBOL_FIELD = "sy"
 SKIP = (
     # done via entity_names:
@@ -51,6 +48,7 @@ PREFIXES = {
 EMIT_FULL = (
     registry.country,
     registry.phone,
+    registry.email,
 )
 TEXT_TYPES = (
     registry.text,
@@ -82,7 +80,7 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
         for part in name.parts:
             if part.tag in (NamePartTag.STOP, NamePartTag.LEGAL):
                 continue
-            if len(part.form) < 3 or len(part.form) > 30:
+            if len(part.comparable) < 3 or len(part.comparable) > 30:
                 continue
             unique.add((NAME_PART_FIELD, f"{NAME_PART_FIELD}:{part.comparable}"))
 
@@ -113,8 +111,6 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
             #     unique.add((type.name, value[:4]))
             unique.add((type.name, f"{prefix}:{value[:10]}"))
             continue
-        if type == registry.name:
-            continue
         if type == registry.identifier:
             clean_id = StrictFormat.normalize(value)
             if clean_id is not None:
@@ -129,8 +125,8 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
                     if is_stopword(word):
                         continue
                     if len(word) > 3:
-                        unique.add((type.name, f"{prefix}:{word}"))
+                        yield type.name, f"{prefix}:{word}"
                     if len(word) > 6:
-                        unique.add((WORD_FIELD, f"{WORD_FIELD}:{word}"))
+                        yield WORD_FIELD, f"{WORD_FIELD}:{word}"
 
     yield from unique
