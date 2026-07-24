@@ -87,6 +87,35 @@ def test_max_bucket_size_rejects_negative_values(
         raise AssertionError("expected max_bucket_size to reject negative values")
 
 
+def test_tokenize_part_pairs(test_dataset: Dataset):
+    def name_entity(schema: str, name: str) -> StatementEntity:
+        data = {"id": name, "schema": schema, "properties": {"name": [name]}}
+        return StatementEntity.from_data(test_dataset, data)
+
+    def pp_tokens(schema: str, name: str) -> set[str]:
+        tokens = set(tokenize_entity(name_entity(schema, name)))
+        return {token for field, token in tokens if field == "pp"}
+
+    # a shared pair survives a divergent middle name
+    assert "pp:john smith" in pp_tokens("Person", "John Smith")
+    assert "pp:john smith" in pp_tokens("Person", "John Quincy Smith")
+
+    # short parts under the np length floor still pair up
+    assert pp_tokens("Person", "Li Yu") == {"pp:li yu"}
+
+    # legal-form parts are excluded, so org-type variants share pairs
+    assert pp_tokens("Company", "Acme Holdings LLC") == pp_tokens(
+        "Company", "Acme Holdings GmbH"
+    )
+
+    # mononyms emit no pairs
+    assert pp_tokens("Person", "Prince") == set()
+
+    # many-part names are capped at MAX_PAIR_PARTS parts
+    long_name = "Alpha Bravo Charlie Delta Echo Foxtrot Golf Hotel"
+    assert len(pp_tokens("Company", long_name)) == 15
+
+
 def test_index_build(index_path: Path, dstore: SimpleMemoryStore):
     index = Index(dstore.default_view(), index_path)
     assert index.entity_count("entries") == 0

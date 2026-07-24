@@ -1,3 +1,4 @@
+from itertools import combinations
 from normality import WS
 from rigour.ids import StrictFormat
 from rigour.addresses import normalize_address
@@ -10,7 +11,10 @@ from followthemoney.names import entity_names
 
 WORD_FIELD = "wd"
 NAME_PART_FIELD = "np"
+PART_PAIR_FIELD = "pp"
 SYMBOL_FIELD = "sy"
+# Cap the O(k²) growth of part-pair tokens for many-part (mostly org) names:
+MAX_PAIR_PARTS = 6
 SKIP = (
     # done via entity_names:
     registry.name,
@@ -83,6 +87,23 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
             if len(part.comparable) < 3 or len(part.comparable) > 30:
                 continue
             unique.add((NAME_PART_FIELD, f"{NAME_PART_FIELD}:{part.comparable}"))
+
+        # Part pairs: within-name co-occurrence of two parts. Buckets are far
+        # smaller than single-part buckets, so these survive stopwording for
+        # common names ("John Smith" ~ "John Q. Smith" share pp:john smith).
+        pairable = sorted(
+            {
+                part.comparable
+                for part in name.parts
+                if part.tag not in (NamePartTag.STOP, NamePartTag.LEGAL)
+                and 2 <= len(part.comparable) <= 30
+            }
+        )
+        if len(pairable) > MAX_PAIR_PARTS:
+            # keep the longest parts as the most distinctive ones
+            pairable = sorted(sorted(pairable, key=len, reverse=True)[:MAX_PAIR_PARTS])
+        for lpart, rpart in combinations(pairable, 2):
+            unique.add((PART_PAIR_FIELD, f"{PART_PAIR_FIELD}:{lpart}{WS}{rpart}"))
 
         if name.comparable:
             name_fp = "".join(sorted({part.comparable for part in name.parts}))
