@@ -125,8 +125,8 @@ def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None,
                     if is_stopword(word):
                         continue
                     if len(word) > 3:
-                        unique.add((type.name, f"{prefix}:{word}"))
+                        yield type.name, f"{prefix}:{word}"
                     if len(word) > 6:
-                        unique.add((WORD_FIELD, f"{WORD_FIELD}:{word}"))
+                        yield WORD_FIELD, f"{WORD_FIELD}:{word}"
 
     yield from unique
