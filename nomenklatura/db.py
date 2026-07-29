@@ -4,7 +4,6 @@ from typing import Any, Dict, Generator, Iterable, List, Mapping, Optional, cast
 import logging
 
 from followthemoney import Statement
-from followthemoney.statement.util import get_prop_type
 from sqlalchemy import (
     Boolean,
     Column,
@@ -85,6 +84,19 @@ def is_sqlite(dialect: Dialect) -> bool:
     return dialect.name == "sqlite"
 
 
+def dialect_insert(dialect: Dialect, table: Table) -> PostgreSQLInsert | SQLiteInsert:
+    """Build an insert that supports the given database's upsert API.
+
+    Use this instead of `sqlalchemy.insert` wherever an `on_conflict_*` clause is
+    needed, since those are dialect extensions rather than part of core SQL.
+    """
+    if is_sqlite(dialect):
+        return sqlite_insert(table)
+    if is_postgres(dialect):
+        return psql_insert(table)
+    raise NotImplementedError(f"Upsert not implemented for dialect {dialect.name}")
+
+
 class Session:
     """Own a single database connection for one unit of work.
 
@@ -119,13 +131,7 @@ class Session:
 
     def insert(self, table: Table) -> PostgreSQLInsert | SQLiteInsert:
         """Build an insert that supports the active database's upsert API."""
-        if self.is_sqlite:
-            return sqlite_insert(table)
-        if self.is_postgres:
-            return psql_insert(table)
-        raise NotImplementedError(
-            f"Upsert not implemented for dialect {self.dialect.name}"
-        )
+        return dialect_insert(self.dialect, table)
 
     def create(self, *tables: Table) -> None:
         """Create the given tables on this session's connection."""
@@ -208,22 +214,6 @@ def make_statement_table(
     )
 
 
-def _upsert_statement_batch(
-    dialect: Dialect, conn: Connection, table: Table, batch: List[Mapping[str, Any]]
-) -> None:
-    """Create an upsert statement for the given table and engine."""
-    if is_sqlite(dialect):
-        lstmt = sqlite_insert(table).values(batch)
-        lstmt = lstmt.on_conflict_do_nothing(index_elements=["id"])
-        conn.execute(lstmt)
-    elif is_postgres(dialect):
-        pstmt = psql_insert(table).values(batch)
-        pstmt = pstmt.on_conflict_do_nothing(index_elements=["id"])
-        conn.execute(pstmt)
-    else:
-        raise NotImplementedError(f"Upsert not implemented for dialect {dialect.name}")
-
-
 def insert_statements(
     engine: Engine,
     table: Table,
@@ -233,7 +223,17 @@ def insert_statements(
 ) -> None:
     dataset_count: int = 0
     is_postgresql = is_postgres(engine.dialect)
+    # Built once and re-used for every batch: rows are passed as executemany
+    # parameters, so SQLAlchemy compiles the statement only on the first batch.
+    # An inline `.values(batch)` clause instead makes each batch a distinct
+    # statement, and compiling one costs more than parsing the statements did.
+    upsert = dialect_insert(engine.dialect, table).on_conflict_do_nothing(
+        index_elements=["id"]
+    )
     if not is_postgresql:
+        # Bound the parameters per statement, in case the dialect rewrites the
+        # executemany into a single multi-row INSERT (as psycopg2 does), which
+        # would otherwise exceed SQLITE_MAX_VARIABLE_NUMBER.
         sqlite_max_batch = SQLITE_MAX_VARS // len(table.columns)
         batch_size = min(batch_size, sqlite_max_batch)
     with engine.begin() as conn:
@@ -243,8 +243,12 @@ def insert_statements(
 
         for stmt in statements:
             if is_postgresql:
+                # Not to_db_row(): that yields UTC-aware datetimes, which psycopg2
+                # sends as timestamptz, and casting those into the naive timestamp
+                # columns shifts them by the session TimeZone. The ISO strings are
+                # cast literally instead, so a load does not depend on the setting.
                 row = cast(Dict[str, Any], stmt.to_dict())
-                row["prop_type"] = get_prop_type(row["schema"], row["prop"])
+                row["prop_type"] = stmt.prop_type
             else:
                 row = stmt.to_db_row()
             batch.append(row)
@@ -252,10 +256,10 @@ def insert_statements(
             if len(batch) >= batch_size:
                 args = (len(batch), dataset_count, dataset_name)
                 log.info("Inserting batch %s statements (total: %s) into %r" % args)
-                _upsert_statement_batch(engine.dialect, conn, table, batch)
+                conn.execute(upsert, batch)
                 batch = []
         if len(batch):
-            _upsert_statement_batch(engine.dialect, conn, table, batch)
+            conn.execute(upsert, batch)
         log.info("Load complete: %r (%d total)" % (dataset_name, dataset_count))
 
 
