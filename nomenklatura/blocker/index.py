@@ -44,6 +44,7 @@ from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
+    PART_PAIR_FIELD,
     WORD_FIELD,
     tokenize_entity,
 )
@@ -83,6 +84,7 @@ class Index(object):
 
     BOOSTS = {
         NAME_PART_FIELD: 5.0,
+        PART_PAIR_FIELD: 7.0,
         WORD_FIELD: 0.5,
         registry.name.name: 15.0,
         registry.phone.name: 10.0,
