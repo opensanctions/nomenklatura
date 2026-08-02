@@ -7,6 +7,7 @@ from followthemoney import Dataset, StatementEntity
 from followthemoney.dataset import DataCatalog
 from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer
+from nomenklatura.store.duckdb_ import DuckDBStore
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.sql import SQLStore
 
@@ -16,6 +17,7 @@ __all__ = [
     "Store",
     "Writer",
     "View",
+    "DuckDBStore",
     "MemoryStore",
     "SimpleMemoryStore",
     "SQLStore",

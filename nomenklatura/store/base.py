@@ -1,5 +1,5 @@
 from types import TracebackType
-from typing import Optional, Generator, List, Tuple, Generic, Type, cast
+from typing import Iterable, Optional, Generator, List, Tuple, Generic, Type, cast
 from followthemoney import Schema, registry, Property, DS, Statement
 from followthemoney import StatementEntity, SE
 from followthemoney.statement.util import get_prop_type
@@ -113,6 +113,17 @@ class View(Generic[DS, SE]):
 
     def get_entity(self, id: str) -> Optional[SE]:
         raise NotImplementedError()
+
+    def get_entities(self, ids: Iterable[str]) -> Generator[SE, None, None]:
+        """Fetch several entities in one go.
+
+        Bulk readers (e.g. the xref scoring loop) should prefer this over
+        repeated `get_entity()` calls so that stores backed by query engines
+        can serve the batch from a single query."""
+        for id in ids:
+            entity = self.get_entity(id)
+            if entity is not None:
+                yield entity
 
     def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
         raise NotImplementedError()
