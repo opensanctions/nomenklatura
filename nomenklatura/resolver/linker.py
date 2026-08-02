@@ -76,6 +76,17 @@ class Linker(Generic[SE]):
                 if ident.canonical:
                     yield ident
 
+    def iter_pairs(self) -> Generator[tuple[str, str], None, None]:
+        """Stream every (entity_id, canonical_id) pair in the mapping, skipping
+        identity pairs.
+
+        Lets a consumer load the canonicalisation table into an external engine
+        (e.g. a database join relation) without materialising an intermediate
+        collection."""
+        for entity_id, canonical_id in self.mappings():
+            if entity_id != canonical_id:
+                yield entity_id, canonical_id
+
     def get_referents(self, canonical_id: str, canonicals: bool = True) -> set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""

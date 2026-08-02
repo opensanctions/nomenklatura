@@ -6,12 +6,14 @@ from normality import slugify
 
 from nomenklatura.resolver import Resolver
 from nomenklatura.store.base import Store, View, Writer
+from nomenklatura.store.duckdb_ import DuckDBStore
 from nomenklatura.store.memory import MemoryStore
 from nomenklatura.store.sql import SQLStore
 
 SimpleMemoryStore = MemoryStore[Dataset, StatementEntity]
 
 __all__ = [
+    "DuckDBStore",
     "MemoryStore",
     "SQLStore",
     "SimpleMemoryStore",

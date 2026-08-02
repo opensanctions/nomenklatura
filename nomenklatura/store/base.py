@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from types import TracebackType
 from typing import Generic, cast
 
@@ -122,6 +122,17 @@ class View(Generic[DS, SE]):
 
     def get_entity(self, id: str) -> SE | None:
         raise NotImplementedError
+
+    def get_entities(self, ids: Iterable[str]) -> Generator[SE, None, None]:
+        """Fetch several entities in one go.
+
+        Bulk readers (e.g. the xref scoring loop) should prefer this over
+        repeated `get_entity()` calls so that stores backed by query engines
+        can serve the batch from a single query."""
+        for id in ids:
+            entity = self.get_entity(id)
+            if entity is not None:
+                yield entity
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         raise NotImplementedError
