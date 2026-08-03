@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 import duckdb
 import pytest
@@ -34,7 +34,7 @@ CREATE_SQL = """
 
 
 def _load_statements(
-    conn: duckdb.DuckDBPyConnection, dataset: Dataset, entities: List[Dict[str, Any]]
+    conn: duckdb.DuckDBPyConnection, dataset: Dataset, entities: list[dict[str, Any]]
 ) -> None:
     conn.execute(CREATE_SQL)
     rows = []
@@ -64,14 +64,18 @@ def _load_statements(
     )
 
 
+@pytest.mark.parametrize("materialize", [False, True])
 def test_duckdb_store_donations(
     test_dataset: Dataset,
-    donations_json: List[Dict[str, Any]],
+    donations_json: list[dict[str, Any]],
     resolver: Resolver[Entity],
+    materialize: bool,
 ) -> None:
     conn = duckdb.connect()
     _load_statements(conn, test_dataset, donations_json)
-    store = DuckDBStore(test_dataset, resolver, conn, "statements")
+    store = DuckDBStore(
+        test_dataset, resolver, conn, "statements", materialize=materialize
+    )
     view = store.default_view()
 
     proxies = list(view.entities())
@@ -112,12 +116,15 @@ def test_duckdb_store_donations(
     store.update(TCHIBO)
 
 
+@pytest.mark.parametrize("materialize", [False, True])
 def test_duckdb_store_merge(
-    test_dataset: Dataset, resolver: Resolver[Entity]
+    test_dataset: Dataset, resolver: Resolver[Entity], materialize: bool
 ) -> None:
     conn = duckdb.connect()
     _load_statements(conn, test_dataset, [PERSON, PERSON_EXT])
-    store = DuckDBStore(test_dataset, resolver, conn, "statements")
+    store = DuckDBStore(
+        test_dataset, resolver, conn, "statements", materialize=materialize
+    )
     assert len(list(store.default_view().entities())) == 2
 
     merged_id = resolver.decide(
@@ -125,7 +132,9 @@ def test_duckdb_store_merge(
     )
     # No store.update() rewrite needed: a fresh store over the same relation
     # picks the merge up purely from the linker.
-    store = DuckDBStore(test_dataset, resolver, conn, "statements")
+    store = DuckDBStore(
+        test_dataset, resolver, conn, "statements", materialize=materialize
+    )
     view = store.default_view()
     proxies = list(view.entities())
     assert len(proxies) == 1
