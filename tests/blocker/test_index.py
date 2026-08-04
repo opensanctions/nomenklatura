@@ -838,7 +838,7 @@ def test_matching_orders_equal_scores_by_candidate_id(
         index.close()
 
 
-def test_matching_chunked_matches_single_chunk(
+def test_matching_yields_all_subjects_with_candidates(
     index_path: Path, dstore: SimpleMemoryStore
 ):
     entries = [
@@ -855,16 +855,9 @@ def test_matching_chunked_matches_single_chunk(
     )
     try:
         matching = [("Person", f"q{i}", "np", f"np:t{i}", 1) for i in range(7)]
-        single = run_matching(index, matching)
-        assert len(single) == 7
-        assert [mid for mid, _ in single["q0"]] == ["a0", "b0"]
-
-        # 7 subjects with match_batch=2 -> 3 uneven ntile chunks
-        index.match_batch = 2
-        chunked = {
-            str(subject): [(str(match_id), score) for match_id, score in candidates]
-            for subject, candidates in index._find_matches()
-        }
-        assert chunked == single
+        matches = run_matching(index, matching)
+        assert len(matches) == 7
+        for i in range(7):
+            assert [mid for mid, _ in matches[f"q{i}"]] == [f"a{i}", f"b{i}"]
     finally:
         index.close()

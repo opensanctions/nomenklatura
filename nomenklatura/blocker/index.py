@@ -110,8 +110,6 @@ class Index(object):
         )
         self.max_pair_cost = _bucket_pair_cost(self.max_bucket_size)
         self.max_match_pair_cost = _bucket_pair_cost(self.max_bucket_size, cross=True)
-        # 0 disables chunking; set to bound per-query memory on constrained hosts.
-        self.match_batch: int = int(options.get("match_batch", 0))
         self.data_dir = data_dir.resolve()
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.duckdb_config: DuckDBConfig = {
@@ -137,13 +135,12 @@ class Index(object):
         log.info(
             "Blocker index configured: max_bucket_size=%d, "
             "pair cost cap=%d, matching pair cost cap=%d, "
-            "max_candidates=%d, min_score_ratio=%.2f, match_batch=%d",
+            "max_candidates=%d, min_score_ratio=%.2f",
             self.max_bucket_size,
             self.max_pair_cost,
             self.max_match_pair_cost,
             self.max_candidates,
             self.min_score_ratio,
-            self.match_batch,
         )
         self.duckdb_path = self.data_dir / "index.duckdb"
         self.con = duckdb.connect(self.duckdb_path, config=self.duckdb_config)
@@ -663,130 +660,67 @@ class Index(object):
         q = "SELECT COUNT(DISTINCT id) FROM matching_filtered"
         res = self.con.execute(q).fetchone()
         num_matching = res[0] if res is not None else 0
-        chunks = 1
-        if self.match_batch > 0:
-            chunks = max(1, num_matching // self.match_batch)
         self._log_matching_query_stats(num_matching)
 
-        chunk_table_query = """
-        CREATE OR REPLACE TABLE matching_chunks AS
-            WITH ids AS (SELECT DISTINCT id FROM matching_filtered)
-            SELECT id, ntile(?) OVER (ORDER BY id) as chunk FROM ids
+        log.info("Matching %d entities...", num_matching)
+        # Same per-field aggregation as pairs(), then per-subject top-K and a
+        # relative score floor inside the query, so DuckDB never sorts or
+        # ships candidate rows that would be discarded here (issue #351).
+        matches_query = """
+        WITH field_scores AS (
+            SELECT m.id AS matching_id, tf.id AS matches_id, tf.field AS field,
+                max(tf.weight) AS maxw, count(*) AS n
+            FROM matching_filtered m
+            JOIN term_frequencies_all tf
+            ON m.token = tf.token AND m.field = tf.field AND tf.id != m.id
+            INNER JOIN schemata s
+            ON s.left = m.schema AND s.right = tf.schema
+            GROUP BY m.id, tf.id, tf.field
+        ),
+        pair_scores AS (
+            SELECT matching_id, matches_id, sum(maxw * (1.0 + ln(n))) AS score
+            FROM field_scores
+            GROUP BY matching_id, matches_id
+        )
+        SELECT matching_id, matches_id, score
+        FROM (
+            SELECT matching_id, matches_id, score,
+                row_number() OVER w AS rn,
+                first_value(score) OVER w AS best
+            FROM pair_scores
+            WINDOW w AS (PARTITION BY matching_id ORDER BY score DESC, matches_id)
+        )
+        WHERE rn <= ? AND score >= best * ?
+        ORDER BY matching_id, rn
         """
-        self.con.execute(chunk_table_query, [chunks])
-        chunk_stats_query = """
-            SELECT
-                min(entities) AS min_entities,
-                avg(entities) AS avg_entities,
-                max(entities) AS max_entities
-            FROM (
-                SELECT chunk, count(*) AS entities
-                FROM matching_chunks
-                GROUP BY chunk
-            )
-        """
-        chunk_stats = self.con.execute(chunk_stats_query).fetchone()
-        if chunk_stats is not None and chunk_stats[0] is not None:
-            min_entities, avg_entities, max_entities = chunk_stats
-            log.info(
-                "Matching chunks built: min=%d avg=%.1f max=%d entities",
-                min_entities,
-                avg_entities,
-                max_entities,
-            )
-
-        log.info("Matching %d entities in %d chunks...", num_matching, chunks)
-        for chunk in range(1, chunks + 1):
-            # Same per-field aggregation as pairs(), then per-subject top-K and
-            # a relative score floor inside the query, so DuckDB never sorts or
-            # ships candidate rows that would be discarded here (issue #351).
-            chunk_query = """
-            WITH field_scores AS (
-                SELECT m.id AS matching_id, tf.id AS matches_id, tf.field AS field,
-                    max(tf.weight) AS maxw, count(*) AS n
-                FROM matching_chunks c
-                JOIN matching_filtered m ON c.id = m.id
-                JOIN term_frequencies_all tf
-                ON m.token = tf.token AND m.field = tf.field AND tf.id != m.id
-                INNER JOIN schemata s
-                ON s.left = m.schema AND s.right = tf.schema
-                WHERE c.chunk = ?
-                GROUP BY m.id, tf.id, tf.field
-            ),
-            pair_scores AS (
-                SELECT matching_id, matches_id, sum(maxw * (1.0 + ln(n))) AS score
-                FROM field_scores
-                GROUP BY matching_id, matches_id
-            )
-            SELECT matching_id, matches_id, score
-            FROM (
-                SELECT matching_id, matches_id, score,
-                    row_number() OVER w AS rn,
-                    first_value(score) OVER w AS best
-                FROM pair_scores
-                WINDOW w AS (PARTITION BY matching_id ORDER BY score DESC, matches_id)
-            )
-            WHERE rn <= ? AND score >= best * ?
-            ORDER BY matching_id, rn
-            """
-            started = perf_counter()
-            chunk_input_query = """
-                SELECT
-                    count(DISTINCT m.id) AS entities,
-                    count(*) AS rows,
-                    count(DISTINCT m.token) AS tokens
-                FROM matching_chunks c
-                JOIN matching_filtered m ON c.id = m.id
-                WHERE c.chunk = ?
-            """
-            chunk_input = self.con.execute(chunk_input_query, [chunk]).fetchone()
-            if chunk_input is not None:
-                chunk_entities, chunk_rows, chunk_tokens = chunk_input
-                log.info(
-                    "Matching chunk %d/%d input: %d entities, %d token rows, "
-                    "%d distinct tokens",
-                    chunk,
-                    chunks,
-                    chunk_entities,
-                    chunk_rows,
-                    chunk_tokens,
-                )
-            log.info("Matching chunk %d/%d...", chunk, chunks)
-            results = self.con.execute(
-                chunk_query, [chunk, self.max_candidates, self.min_score_ratio]
-            )
-            log.info(
-                "Matching chunk %d/%d query ready in %.2fs",
-                chunk,
-                chunks,
-                perf_counter() - started,
-            )
-            previous_id = None
-            matches: BlockingMatches = []
-            rows = 0
-            subjects = 0
-            while batch := results.fetchmany(BATCH_SIZE):
-                rows += len(batch)
-                for matching_id, match_id, score in batch:
-                    if matching_id != previous_id:
-                        if previous_id is not None:
-                            subjects += 1
-                            yield Identifier.get(previous_id), matches
-                        matches = []
-                        previous_id = matching_id
-                    matches.append((Identifier.get(match_id), score))
-            if previous_id is not None:
-                subjects += 1
-                yield Identifier.get(previous_id), matches
-            log.info(
-                "Matching chunk %d/%d complete: read %d candidate rows for "
-                "%d subjects in %.2fs",
-                chunk,
-                chunks,
-                rows,
-                subjects,
-                perf_counter() - started,
-            )
+        started = perf_counter()
+        results = self.con.execute(
+            matches_query, [self.max_candidates, self.min_score_ratio]
+        )
+        log.info("Matching query ready in %.2fs", perf_counter() - started)
+        previous_id = None
+        matches: BlockingMatches = []
+        rows = 0
+        subjects = 0
+        while batch := results.fetchmany(BATCH_SIZE):
+            rows += len(batch)
+            for matching_id, match_id, score in batch:
+                if matching_id != previous_id:
+                    if previous_id is not None:
+                        subjects += 1
+                        yield Identifier.get(previous_id), matches
+                    matches = []
+                    previous_id = matching_id
+                matches.append((Identifier.get(match_id), score))
+        if previous_id is not None:
+            subjects += 1
+            yield Identifier.get(previous_id), matches
+        log.info(
+            "Matching complete: read %d candidate rows for %d subjects in %.2fs",
+            rows,
+            subjects,
+            perf_counter() - started,
+        )
 
     def _log_matching_query_stats(self, num_matching: int) -> None:
         matching_stats_query = """
