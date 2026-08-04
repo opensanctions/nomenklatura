@@ -504,7 +504,9 @@ class Index(object):
         # common-token noise. Name-part and symbol tokens multiply with an
         # entity's alias count without adding independent evidence, so they
         # are dampened by the square root of the entity's name count — a no-op
-        # for single-name entities.
+        # for single-name entities. This assumes aliases contribute distinct
+        # parts; near-duplicate aliases (transliterations sharing most parts)
+        # are over-dampened by up to that same square root.
         term_frequencies_query = f"""
         CREATE OR REPLACE TABLE term_frequencies_all AS
             WITH entity_count AS (

@@ -524,9 +524,18 @@ def test_pairs_rank_distinctive_match_above_common_token_noise(
     linker = Linker({})
     store = SimpleMemoryStore(test_dataset, linker)
     writer = store.writer()
-    names = ["Journal Atlas Publishing House"] + [
-        f"Journal Atlas Publishing House ({i})" for i in range(num_names - 1)
-    ]
+    # transliterations and different-script variants: distinct fingerprints
+    # AND distinct name parts, so both name-field and np-field dilution under
+    # a length-normalising formula are exercised
+    names = [
+        "Journal Atlas Publishing House",
+        "Journal Atlas Publishing House Ltd",
+        "Zhurnal Atlas Pablishing Khaus",
+        "Журнал Атлас Паблишинг Хаус",
+        "Izdatelstvo Atlas",
+        "Издательство Атлас",
+        "Atlas Journal Verlag",
+    ][:num_names]
     writer.add_entity(
         StatementEntity.from_data(
             test_dataset,
@@ -564,6 +573,9 @@ def test_pairs_rank_distinctive_match_above_common_token_noise(
     try:
         index.build()
         pairs = list(index.pairs(max_pairs=2000))
+        # vacuity guard: the decoy pairs must actually be present -- above the
+        # stopword crossover they vanish and rank 0 would win by default
+        assert len(pairs) == 50 * 49 // 2 + 1, len(pairs)
         genuine = (Identifier.get("journal-atlas"), Identifier.get("fsf-atlas"))
         assert pairs[0][0] in (genuine, tuple(reversed(genuine))), pairs[0]
         # a strict win, not a tie broken by luck
