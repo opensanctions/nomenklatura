@@ -1,3 +1,5 @@
+import math
+import pytest
 from pathlib import Path
 from followthemoney import Dataset, StatementEntity
 
@@ -141,10 +143,11 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
     )
     bmw_score = [score for pair, score in pairs if bmw == pair][0]
 
-    # More tokens in BMW means lower TF, reducing the score
+    # The Quandt pair shares its full name fingerprint; the BMW pair differs
+    # by one name part and only connects via individual parts.
     assert jq_score > bmw_score, (jq_score, bmw_score)
-    assert jq_score > 10.0, jq_score
-    assert 3.0 < bmw_score < 100.0, bmw_score
+    assert jq_score > 100.0, jq_score
+    assert 50.0 < bmw_score < 200.0, bmw_score
 
     # FERRING Arzneimittel GmbH <> Clou Container Leasing GmbH
     false_pos = (
@@ -303,7 +306,11 @@ def test_pairs_join_filtered_term_frequencies(
         index._build_frequencies()
 
         pairs = list(index.pairs())
-        assert pairs == [((Identifier.get("k2"), Identifier.get("k1")), 2.0)]
+        assert len(pairs) == 1
+        pair, score = pairs[0]
+        assert pair == (Identifier.get("k2"), Identifier.get("k1"))
+        # each side weighs 1.0 * idf, idf = 1 + ln(7 entities / df 2)
+        assert score == pytest.approx(2 * (1 + math.log(7 / 2)))
         assert index.con.execute(
             "SELECT COUNT(*) FROM term_frequencies_all WHERE token = 'np:stopped'"
         ).fetchone() == (5,)
@@ -407,7 +414,7 @@ def test_matching_stopwords_respect_cross_pair_cost(
         index._build_stopwords()
         index.con.execute("""
             CREATE OR REPLACE TABLE term_frequencies_all AS
-                SELECT schema, field, token, id, 1.0 AS tf
+                SELECT schema, field, token, id, 1.0 AS weight
                 FROM entries
         """)
         index.con.execute("""
@@ -475,7 +482,7 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
         index._build_stopwords()
         index.con.execute("""
             CREATE OR REPLACE TABLE term_frequencies_all AS
-                SELECT schema, field, token, id, 1.0 AS tf
+                SELECT schema, field, token, id, 1.0 AS weight
                 FROM entries
         """)
         index.con.execute("""
@@ -503,6 +510,64 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
         assert index.con.execute("SELECT COUNT(*) FROM matching_stopwords").fetchone()[
             0
         ] == 0
+    finally:
+        index.close()
+
+
+@pytest.mark.parametrize("num_names", [1, 7])
+def test_pairs_rank_distinctive_match_above_common_token_noise(
+    index_path: Path, test_dataset: Dataset, num_names: int
+):
+    """A genuine duplicate sharing a distinctive name must outrank the flood of
+    pairs that only share a common forename and country (issue #349). Extra
+    aliases on the duplicate must not dilute its rank."""
+    linker = Linker({})
+    store = SimpleMemoryStore(test_dataset, linker)
+    writer = store.writer()
+    names = ["Journal Atlas Publishing House"] + [
+        f"Journal Atlas Publishing House ({i})" for i in range(num_names - 1)
+    ]
+    writer.add_entity(
+        StatementEntity.from_data(
+            test_dataset,
+            {
+                "id": "journal-atlas",
+                "schema": "Company",
+                "properties": {"name": names},
+            },
+        )
+    )
+    writer.add_entity(
+        StatementEntity.from_data(
+            test_dataset,
+            {
+                "id": "fsf-atlas",
+                "schema": "Company",
+                "properties": {"name": ["Journal Atlas Publishing House"]},
+            },
+        )
+    )
+    for i in range(50):
+        writer.add_entity(
+            StatementEntity.from_data(
+                test_dataset,
+                {
+                    "id": f"decoy-{i}",
+                    "schema": "Person",
+                    "properties": {"name": ["Ahmad"], "country": ["iq"]},
+                },
+            )
+        )
+    writer.flush()
+
+    index = Index(store.default_view(), index_path)
+    try:
+        index.build()
+        pairs = list(index.pairs(max_pairs=2000))
+        genuine = (Identifier.get("journal-atlas"), Identifier.get("fsf-atlas"))
+        assert pairs[0][0] in (genuine, tuple(reversed(genuine))), pairs[0]
+        # a strict win, not a tie broken by luck
+        assert pairs[0][1] > pairs[1][1], (pairs[0], pairs[1])
     finally:
         index.close()
 
