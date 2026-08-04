@@ -74,15 +74,10 @@ def batched(iterable: Iterable[R], n: int) -> Generator[Tuple[R, ...], None, Non
 
 
 class Index(object):
-    """
-    An index using DuckDB for token matching and scoring, keeping data in memory
-    until it needs to spill to disk as it approaches the configured memory limit.
+    """Rank token-overlapping entity candidates with a DuckDB index.
 
-    Pairs match if they share one or more tokens. The similarity score weighs each
-    shared token by its rarity across the indexed entities (IDF) and its field's
-    boost, dampens tokens that merely multiply with an entity's alias count, and
-    grants extra same-field tokens only logarithmic credit — so that distinctive
-    shared evidence outranks pairs that share many correlated or common tokens.
+    Use this to generate dedupe pairs or match incoming entities when exhaustive
+    comparison is impractical.
     """
 
     BOOSTS = {
@@ -497,16 +492,9 @@ class Index(object):
 
     def _build_frequencies(self) -> None:
         log.info("Calculating term weights...")
-        # A token's weight is presence-based: matching one of an entity's names
-        # must not be discounted because the entity has other aliases, so there
-        # is no normalisation by field length. Rarity across the indexed
-        # entities (IDF) is what separates distinctive evidence from
-        # common-token noise. Name-part and symbol tokens multiply with an
-        # entity's alias count without adding independent evidence, so they
-        # are dampened by the square root of the entity's name count — a no-op
-        # for single-name entities. This assumes aliases contribute distinct
-        # parts; near-duplicate aliases (transliterations sharing most parts)
-        # are over-dampened by up to that same square root.
+        # IDF separates distinctive evidence from common-token noise without
+        # letting aliases dilute full-name matches. Dampen alias-derived parts
+        # and symbols because they multiply with the number of names.
         term_frequencies_query = f"""
         CREATE OR REPLACE TABLE term_frequencies_all AS
             WITH entity_count AS (
@@ -597,10 +585,7 @@ class Index(object):
         self._ensure_pair_stopwords()
         self._log_pair_query_stats(max_pairs)
         log.info("Generating pairs...")
-        # Within one field, extra shared tokens are mostly correlated evidence
-        # (translations and variants of the same name), so per field the best
-        # shared token counts in full and each additional one earns only
-        # logarithmic credit. Distinct fields are independent evidence and sum.
+        # Limit correlated evidence with logarithmic credit per field.
         pairs_query = """
             SELECT lid, rid, sum(maxw * (1.0 + ln(n))) AS score
             FROM (
@@ -701,8 +686,7 @@ class Index(object):
 
         log.info("Matching %d entities in %d chunks...", num_matching, chunks)
         for chunk in range(1, chunks + 1):
-            # Same per-field correlated-evidence damper as in pairs(): best
-            # shared token in full, log credit for the rest, fields sum.
+            # Apply the same per-field aggregation used by pairs().
             chunk_query = """
             SELECT matching_id, matches_id, sum(maxw * (1.0 + ln(n))) AS score
                 FROM (

@@ -518,15 +518,11 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
 def test_pairs_rank_distinctive_match_above_common_token_noise(
     index_path: Path, test_dataset: Dataset, num_names: int
 ):
-    """A genuine duplicate sharing a distinctive name must outrank the flood of
-    pairs that only share a common forename and country (issue #349). Extra
-    aliases on the duplicate must not dilute its rank."""
+    """Ensure distinctive names outrank common-token noise despite aliases."""
     linker = Linker({})
     store = SimpleMemoryStore(test_dataset, linker)
     writer = store.writer()
-    # transliterations and different-script variants: distinct fingerprints
-    # AND distinct name parts, so both name-field and np-field dilution under
-    # a length-normalising formula are exercised
+    # Vary full-name fingerprints and name parts to exercise both token classes.
     names = [
         "Journal Atlas Publishing House",
         "Journal Atlas Publishing House Ltd",
