@@ -27,11 +27,12 @@ def make_manual_index(
     entries: list[tuple[str, str, str, str, int]],
     schemata: list[tuple[str, str]],
     max_bucket_size: int,
+    options: dict[str, object] | None = None,
 ) -> Index:
     index = Index(
         dstore.default_view(),
         index_path,
-        options={"max_bucket_size": max_bucket_size},
+        options={"max_bucket_size": max_bucket_size, **(options or {})},
     )
     index.con.execute("""
         CREATE OR REPLACE TABLE entries
@@ -41,6 +42,33 @@ def make_manual_index(
     index.con.execute("""CREATE OR REPLACE TABLE schemata ("left" TEXT, "right" TEXT)""")
     index.con.executemany("INSERT INTO schemata VALUES (?, ?)", schemata)
     return index
+
+
+def run_matching(
+    index: Index,
+    matching_rows: list[tuple[str, str, str, str, int]],
+    boosts: dict[str, float] | None = None,
+) -> dict[str, list[tuple[str, float]]]:
+    """Run the matching query path over manually inserted subject rows."""
+    index.con.execute("CREATE OR REPLACE TABLE boosts (field TEXT, boost FLOAT)")
+    for field, boost in (boosts or {}).items():
+        index.con.execute("INSERT INTO boosts VALUES (?, ?)", [field, boost])
+    index._build_frequencies()
+    index.con.execute("""
+        CREATE OR REPLACE TABLE matching
+            (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
+    """)
+    index.con.executemany("INSERT INTO matching VALUES (?, ?, ?, ?, ?)", matching_rows)
+    index._build_matching_stopwords()
+    index._apply_stopwords(
+        "matching",
+        "matching_filtered",
+        stopwords_table="matching_stopwords",
+    )
+    return {
+        str(subject): [(str(match_id), score) for match_id, score in candidates]
+        for subject, candidates in index._find_matches()
+    }
 
 
 def test_max_bucket_size_configures_pair_cost_caps(
@@ -644,5 +672,192 @@ def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: In
     if "b" in matches:
         assert matches["b"][0][1] < a_top[1], matches["b"]
 
-    # for ident, matches in matches:
-    #     pass
+
+# Candidate ladder: entity e{i} shares i+1 distinct np tokens with subject q,
+# so scores strictly increase with i (same token weight, log token credit).
+LADDER_ENTRIES = [
+    ("Person", f"e{i}", "np", f"np:t{i}_{j}", 1)
+    for i in range(5)
+    for j in range(i + 1)
+]
+LADDER_MATCHING = [
+    ("Person", "q", "np", f"np:t{i}_{j}", 1) for i in range(5) for j in range(i + 1)
+]
+
+
+def test_matching_truncates_to_max_candidates_in_query(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = make_manual_index(
+        index_path,
+        dstore,
+        LADDER_ENTRIES,
+        [("Person", "Person")],
+        max_bucket_size=10,
+        options={"max_candidates": 3},
+    )
+    try:
+        matches = run_matching(index, LADDER_MATCHING)
+        assert [mid for mid, _ in matches["q"]] == ["e4", "e3", "e2"]
+        scores = [score for _, score in matches["q"]]
+        assert scores == sorted(scores, reverse=True)
+    finally:
+        index.close()
+
+
+def test_matching_keeps_all_candidates_at_exact_max_candidates(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = make_manual_index(
+        index_path,
+        dstore,
+        LADDER_ENTRIES,
+        [("Person", "Person")],
+        max_bucket_size=10,
+        options={"max_candidates": 5},
+    )
+    try:
+        matches = run_matching(index, LADDER_MATCHING)
+        assert [mid for mid, _ in matches["q"]] == ["e4", "e3", "e2", "e1", "e0"]
+    finally:
+        index.close()
+
+
+# Three candidates with boost-separated scores: eA (name, boost 15) is the
+# best, eC (np, boost 5) sits at 1/3 of it, eB (word, boost 0.5) at 1/30 —
+# below the default 0.1 relative score floor.
+FLOOR_BOOSTS = {"name": 15.0, "np": 5.0, "word": 0.5}
+FLOOR_ENTRIES = [
+    ("Person", "eA", "name", "fp:acmeholdings", 1),
+    ("Person", "eC", "np", "np:acme", 1),
+    ("Person", "eB", "word", "w:junk", 1),
+]
+FLOOR_MATCHING = [
+    ("Person", "q", "name", "fp:acmeholdings", 1),
+    ("Person", "q", "np", "np:acme", 1),
+    ("Person", "q", "word", "w:junk", 1),
+]
+
+
+def test_matching_applies_relative_score_floor(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = make_manual_index(
+        index_path,
+        dstore,
+        FLOOR_ENTRIES,
+        [("Person", "Person")],
+        max_bucket_size=10,
+    )
+    try:
+        matches = run_matching(index, FLOOR_MATCHING, boosts=FLOOR_BOOSTS)
+        assert [mid for mid, _ in matches["q"]] == ["eA", "eC"]
+    finally:
+        index.close()
+
+
+def test_matching_score_floor_disabled_at_zero(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    index = make_manual_index(
+        index_path,
+        dstore,
+        FLOOR_ENTRIES,
+        [("Person", "Person")],
+        max_bucket_size=10,
+        options={"min_score_ratio": 0.0},
+    )
+    try:
+        matches = run_matching(index, FLOOR_MATCHING, boosts=FLOOR_BOOSTS)
+        assert [mid for mid, _ in matches["q"]] == ["eA", "eC", "eB"]
+    finally:
+        index.close()
+
+
+def test_matching_score_floor_is_per_subject(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    """A weak-evidence subject keeps its best candidate even when another
+    subject in the batch has a much stronger best (the floor must not leak
+    across window partitions)."""
+    entries = FLOOR_ENTRIES + [("Person", "eD", "word", "w:other", 1)]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_bucket_size=10,
+    )
+    try:
+        matching = FLOOR_MATCHING + [("Person", "q2", "word", "w:other", 1)]
+        matches = run_matching(index, matching, boosts=FLOOR_BOOSTS)
+        assert [mid for mid, _ in matches["q"]] == ["eA", "eC"]
+        assert [mid for mid, _ in matches["q2"]] == ["eD"]
+    finally:
+        index.close()
+
+
+def test_matching_excludes_subject_from_own_candidates(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", "e1", "np", "np:tok", 1),
+        ("Person", "e2", "np", "np:tok", 1),
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_bucket_size=10,
+    )
+    try:
+        matches = run_matching(index, [("Person", "e1", "np", "np:tok", 1)])
+        assert [mid for mid, _ in matches["e1"]] == ["e2"]
+    finally:
+        index.close()
+
+
+def test_matching_orders_equal_scores_by_candidate_id(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", cid, "np", "np:shared", 1) for cid in ("idxc", "idxa", "idxb")
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_bucket_size=10,
+    )
+    try:
+        matches = run_matching(index, [("Person", "q", "np", "np:shared", 1)])
+        assert [mid for mid, _ in matches["q"]] == ["idxa", "idxb", "idxc"]
+    finally:
+        index.close()
+
+
+def test_matching_yields_all_subjects_with_candidates(
+    index_path: Path, dstore: SimpleMemoryStore
+):
+    entries = [
+        ("Person", f"{prefix}{i}", "np", f"np:t{i}", 1)
+        for i in range(7)
+        for prefix in ("a", "b")
+    ]
+    index = make_manual_index(
+        index_path,
+        dstore,
+        entries,
+        [("Person", "Person")],
+        max_bucket_size=10,
+    )
+    try:
+        matching = [("Person", f"q{i}", "np", f"np:t{i}", 1) for i in range(7)]
+        matches = run_matching(index, matching)
+        assert len(matches) == 7
+        for i in range(7):
+            assert [mid for mid, _ in matches[f"q{i}"]] == [f"a{i}", f"b{i}"]
+    finally:
+        index.close()
