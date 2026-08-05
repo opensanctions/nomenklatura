@@ -620,10 +620,14 @@ class Resolver(Linker[SE]):
         return stmt
 
     def dump(self, path: PathLike) -> None:
-        """Store the resolver adjacency list to a plain text JSON list."""
+        """Store the resolver adjacency list to a plain text JSON list.
+
+        Only live edges are exported: the line format has no deletion field,
+        so including soft-deleted edges would resurrect them on load."""
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
-        stmt.order_by(self._table.c.created_at.asc())
+        stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        stmt = stmt.order_by(self._table.c.created_at.asc())
         with open(path, "w") as fh:
             cursor = self._session.execute(stmt)
             for row in cursor.yield_per(20000):

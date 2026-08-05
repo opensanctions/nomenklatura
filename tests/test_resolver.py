@@ -291,12 +291,13 @@ def test_resolver_store_load(
         resolver.suggest("a1", "c1", 7.0)
         resolver.dump(path)
 
+        # The removed a3 edge is not exported: the line format carries no
+        # deletion field, so a dump/load roundtrip must not resurrect it.
         with open(path, "r") as fh:
-            assert len(fh.readlines()) == 4
+            assert len(fh.readlines()) == 3
 
         other_table_resolver.load(path)
-        # Dumps do not preserve deletion metadata.
-        assert len(list(other_table_resolver.get_judgements())) == 4
+        assert len(list(other_table_resolver.get_judgements())) == 3
 
         edge = other_table_resolver.get_edge("a2", "b2")
         assert edge is not None, edge
