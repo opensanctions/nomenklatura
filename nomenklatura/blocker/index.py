@@ -44,6 +44,7 @@ from nomenklatura.resolver import Identifier
 from nomenklatura.store import View
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
+    SYMBOL_FIELD,
     WORD_FIELD,
     tokenize_entity,
 )
@@ -73,12 +74,10 @@ def batched(iterable: Iterable[R], n: int) -> Generator[Tuple[R, ...], None, Non
 
 
 class Index(object):
-    """
-    An index using DuckDB for token matching and scoring, keeping data in memory
-    until it needs to spill to disk as it approaches the configured memory limit.
+    """Rank token-overlapping entity candidates with a DuckDB index.
 
-    Pairs match if they share one or more tokens. A basic similarity score is calculated
-    cumulatively based on each token's Term Frequency (TF) and the field's boost factor.
+    Use this to generate dedupe pairs or match incoming entities when exhaustive
+    comparison is impractical.
     """
 
     BOOSTS = {
@@ -492,18 +491,36 @@ class Index(object):
         )
 
     def _build_frequencies(self) -> None:
-        log.info("Calculating term frequencies...")
-        term_frequencies_query = """
+        log.info("Calculating term weights...")
+        # IDF separates distinctive evidence from common-token noise without
+        # letting aliases dilute full-name matches. Dampen alias-derived parts
+        # and symbols because they multiply with the number of names.
+        term_frequencies_query = f"""
         CREATE OR REPLACE TABLE term_frequencies_all AS
-            WITH field_len AS (
-                SELECT e.field, e.id, sum(e.count) as len
-                    FROM entries e
-                    GROUP BY e.field, e.id
+            WITH entity_count AS (
+                SELECT count(DISTINCT id) AS n FROM entries
+            ),
+            token_idf AS (
+                SELECT e.token, 1.0 + ln(c.n / count(DISTINCT e.id)) AS idf
+                FROM entries AS e, entity_count AS c
+                GROUP BY e.token, c.n
+            ),
+            name_counts AS (
+                SELECT id, greatest(1, sum(count)) AS n_names
+                FROM entries
+                WHERE field = '{registry.name.name}'
+                GROUP BY id
             )
-            SELECT e.schema, e.field, e.token, e.id, (e.count/f.len) * ifnull(boo.boost, 1) as tf
+            SELECT e.schema, e.field, e.token, e.id,
+                CASE WHEN e.field IN ('{NAME_PART_FIELD}', '{SYMBOL_FIELD}')
+                    THEN ifnull(boo.boost, 1) * i.idf
+                        / sqrt(ifnull(nc.n_names, 1))
+                    ELSE ifnull(boo.boost, 1) * i.idf
+                END AS weight
             FROM entries AS e
-            JOIN field_len AS f ON f.field = e.field AND f.id = e.id
-            LEFT OUTER JOIN boosts boo ON f.field = boo.field
+            JOIN token_idf AS i ON i.token = e.token
+            LEFT OUTER JOIN name_counts AS nc ON nc.id = e.id
+            LEFT OUTER JOIN boosts boo ON e.field = boo.field
         """
         self.con.execute(term_frequencies_query)
 
@@ -568,14 +585,21 @@ class Index(object):
         self._ensure_pair_stopwords()
         self._log_pair_query_stats(max_pairs)
         log.info("Generating pairs...")
+        # Limit correlated evidence with logarithmic credit per field.
         pairs_query = """
-            SELECT "left".id, "right".id, sum(("left".tf + "right".tf)) as score
-            FROM term_frequencies as "left"
-            JOIN term_frequencies as "right" ON "left".token = "right".token
-            INNER JOIN schemata ON schemata.left = "left".schema AND schemata.right = "right".schema
-            WHERE "left".id > "right".id
-            GROUP BY "left".id, "right".id
-            ORDER BY score DESC
+            SELECT lid, rid, sum(maxw * (1.0 + ln(n))) AS score
+            FROM (
+                SELECT "left".id AS lid, "right".id AS rid, "left".field AS field,
+                    max("left".weight + "right".weight) AS maxw, count(*) AS n
+                FROM term_frequencies as "left"
+                JOIN term_frequencies as "right"
+                    ON "left".token = "right".token AND "left".field = "right".field
+                INNER JOIN schemata ON schemata.left = "left".schema AND schemata.right = "right".schema
+                WHERE "left".id > "right".id
+                GROUP BY "left".id, "right".id, "left".field
+            )
+            GROUP BY lid, rid
+            ORDER BY score DESC, lid, rid
             LIMIT ?
         """
         started = perf_counter()
@@ -662,17 +686,23 @@ class Index(object):
 
         log.info("Matching %d entities in %d chunks...", num_matching, chunks)
         for chunk in range(1, chunks + 1):
+            # Apply the same per-field aggregation used by pairs().
             chunk_query = """
-            SELECT m.id AS matching_id, tf.id AS matches_id, SUM(tf.tf) AS score
-                FROM matching_chunks c
-                JOIN matching_filtered m ON c.id = m.id
-                JOIN term_frequencies_all tf
-                ON m.token = tf.token
-                INNER JOIN schemata s
-                ON s.left = m.schema AND s.right = tf.schema
-                WHERE c.chunk = ?
-                GROUP BY m.id, tf.id
-                ORDER BY m.id, score DESC
+            SELECT matching_id, matches_id, sum(maxw * (1.0 + ln(n))) AS score
+                FROM (
+                    SELECT m.id AS matching_id, tf.id AS matches_id, tf.field AS field,
+                        max(tf.weight) AS maxw, count(*) AS n
+                    FROM matching_chunks c
+                    JOIN matching_filtered m ON c.id = m.id
+                    JOIN term_frequencies_all tf
+                    ON m.token = tf.token AND m.field = tf.field
+                    INNER JOIN schemata s
+                    ON s.left = m.schema AND s.right = tf.schema
+                    WHERE c.chunk = ?
+                    GROUP BY m.id, tf.id, tf.field
+                )
+                GROUP BY matching_id, matches_id
+                ORDER BY matching_id, score DESC, matches_id
             """
             started = perf_counter()
             chunk_input_query = """
