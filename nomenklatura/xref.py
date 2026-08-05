@@ -16,8 +16,9 @@ log = logging.getLogger(__name__)
 def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
     matches = len(scores)
     log.info(
-        "Xref: %d pairs, %d suggested, avg: %.2f, min: %.2f, max: %.2f",
+        "Xref: %d pairs, %d scored, %d suggested, avg: %.2f, min: %.2f, max: %.2f",
         pairs,
+        matches,
         suggested,
         sum(scores) / max(1, matches),
         min(scores, default=0.0),
@@ -61,7 +62,10 @@ def xref(
     index = Index(view, index_dir, options=blocker_options or {})
     index.build()
     max_pairs = limit * limit_factor
-    last_suggested_idx = 0
+    # Patience is measured over scored pairs, not raw blocker ranks: pairs
+    # skipped as already-decided are nearly free to pass over, and in mature
+    # scopes hundreds of thousands of them can sit at the top of the ranking.
+    last_suggested = 0
 
     try:
         scores: List[float] = []
@@ -75,16 +79,14 @@ def xref(
             if idx % 1000 == 0 and idx > 0:
                 _print_stats(idx, suggested, scores)
 
-                if idx > (limit * 10):
-                    log.info("Reached maximum number of pairs to process.")
-                    break
-
             if idx > max_pairs:
                 log.info("Reached maximum number of pairs to consider.")
                 break
 
-            if idx > limit and (idx - last_suggested_idx) > patience:
-                log.info("No suggestions since pair %d, stopping.", last_suggested_idx)
+            if (len(scores) - last_suggested) > patience:
+                log.info(
+                    "No suggestions in the last %d scored pairs, stopping.", patience
+                )
                 break
 
             if suggested % 10000 == 0 and suggested > 0:
@@ -131,7 +133,7 @@ def xref(
                 continue
 
             # Record this as a successful candidate:
-            last_suggested_idx = idx
+            last_suggested = len(scores)
 
             if auto_threshold is not None and score > auto_threshold:
                 log.info("Auto-merge [%.2f]: %s <> %s", score, left, right)
