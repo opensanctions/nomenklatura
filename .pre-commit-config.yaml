@@ -6,10 +6,11 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.13.0
+  rev: v0.16.0
   hooks:
     - id: ruff-check
-      args: ['--select', 'I', '--fix']
+      # Rule selection lives in pyproject.toml, not here.
+      args: ['--fix']
     - id: ruff-format
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.15.0

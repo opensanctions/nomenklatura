@@ -5,7 +5,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from random import randint
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from followthemoney import Dataset
 from rigour.time import naive_now
@@ -17,7 +17,7 @@ from sqlalchemy.sql.expression import delete
 from nomenklatura.db import Session
 
 log = logging.getLogger(__name__)
-Value = Union[str, None]
+Value = str | None
 
 
 @dataclass

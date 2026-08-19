@@ -5,8 +5,8 @@ from nomenklatura.enrich.common import BaseEnricher
 dataset = Dataset.make({"name": "test", "title": "Test"})
 
 
-def make_entity(schema: str, topics: list = []) -> StatementEntity:
-    properties = {"name": ["Thing"], "topics": topics}
+def make_entity(schema: str, topics: list[str] | None = None) -> StatementEntity:
+    properties = {"name": ["Thing"], "topics": topics or []}
     data = {"schema": schema, "id": "xxx", "properties": properties}
     return StatementEntity.from_data(dataset, data)
 

@@ -1,9 +1,7 @@
 from pathlib import Path
-from typing import Optional
 
 import orjson
 from followthemoney import Dataset, StatementEntity
-from followthemoney.dataset import DataCatalog
 from normality import slugify
 
 from nomenklatura.resolver import Resolver

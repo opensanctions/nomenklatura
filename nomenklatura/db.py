@@ -2,7 +2,7 @@ import logging
 from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from functools import cache
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from followthemoney import Statement
 from sqlalchemy import (
@@ -25,7 +25,7 @@ from sqlalchemy.sql.expression import Executable
 from nomenklatura import settings
 
 Conn = Connection
-Connish = Optional[Connection]
+Connish = Connection | None
 KEY_LEN = 255
 VALUE_LEN = 65535
 # Max rows per INSERT for SQLite to stay under SQLITE_MAX_VARIABLE_NUMBER (32,766).
