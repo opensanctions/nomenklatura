@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
 from nomenklatura.matching.name_based.misc import (
@@ -22,7 +24,7 @@ class OFACMatcher(HeuristicAlgorithm):
     actually triage matches via FAQ 5."""
 
     NAME = "ofac"
-    features = [
+    features: ClassVar[list[Feature]] = [
         Feature(func=ofac_name_score, weight=1.0),
         Feature(func=country_mismatch, weight=-0.1, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.1, qualifier=True),
@@ -48,7 +50,7 @@ class NameMatcher(HeuristicAlgorithm):
     based on FAQ #249, but does not reach OFAC parity."""
 
     NAME = "name-based"
-    features = [
+    features: ClassVar[list[Feature]] = [
         Feature(func=jaro_name_parts, weight=0.5),
         Feature(func=soundex_name_parts, weight=0.5),
     ]
@@ -71,7 +73,7 @@ class NameQualifiedMatcher(HeuristicAlgorithm):
     tax/registration identifiers are included for organizations and companies."""
 
     NAME = "name-qualified"
-    features = [
+    features: ClassVar[list[Feature]] = [
         Feature(func=jaro_name_parts, weight=0.5),
         Feature(func=soundex_name_parts, weight=0.5),
         Feature(func=country_mismatch, weight=-0.1, qualifier=True),

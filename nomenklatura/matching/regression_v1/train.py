@@ -7,11 +7,11 @@ from pprint import pprint
 import numpy as np
 from followthemoney.util import PathLike
 from numpy.typing import NDArray
-from sklearn import metrics  # type: ignore
-from sklearn.linear_model import LogisticRegression  # type: ignore
-from sklearn.model_selection import train_test_split  # type: ignore
-from sklearn.pipeline import make_pipeline  # type: ignore
-from sklearn.preprocessing import StandardScaler  # type: ignore
+from sklearn import metrics  # type: ignore[import-untyped]
+from sklearn.linear_model import LogisticRegression  # type: ignore[import-untyped]
+from sklearn.model_selection import train_test_split  # type: ignore[import-untyped]
+from sklearn.pipeline import make_pipeline  # type: ignore[import-untyped]
+from sklearn.preprocessing import StandardScaler  # type: ignore[import-untyped]
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.pairs import JudgedPair, read_pairs
@@ -71,7 +71,9 @@ def train_matcher(pairs_file: PathLike) -> None:
     pipe = make_pipeline(StandardScaler(), logreg)
     pipe.fit(X_train, y_train)
     coef = logreg.coef_[0]
-    coefficients = {n.__name__: c for n, c in zip(RegressionV1.FEATURES, coef)}
+    coefficients = {
+        n.__name__: c for n, c in zip(RegressionV1.FEATURES, coef, strict=True)
+    }
     RegressionV1.save(pipe, coefficients)
     print("Written to: %s" % RegressionV1.MODEL_PATH.as_posix())
     print("Coefficients:")

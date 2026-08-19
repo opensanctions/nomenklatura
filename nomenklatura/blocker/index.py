@@ -35,7 +35,7 @@ from collections.abc import Generator, Iterable
 from itertools import islice
 from pathlib import Path
 from time import perf_counter
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 import duckdb
 from followthemoney import DS, SE, StatementEntity, model, registry
@@ -86,7 +86,7 @@ class Index:
     comparison is impractical.
     """
 
-    BOOSTS = {
+    BOOSTS: ClassVar[dict[str, float]] = {
         NAME_PART_FIELD: 5.0,
         WORD_FIELD: 0.5,
         registry.name.name: 15.0,
@@ -100,9 +100,10 @@ class Index:
         self,
         view: View[DS, SE],
         data_dir: Path,
-        options: dict[str, Any] = {},
+        options: dict[str, Any] | None = None,
     ):
         self.view = view
+        options = options or {}
         self.max_candidates = int(options.get("max_candidates", 75))
         self.min_score_ratio = float(
             options.get("min_score_ratio", DEFAULT_MIN_SCORE_RATIO)

@@ -78,7 +78,7 @@ def _simmetrics_jw(left: str, right: str) -> float:
         return 0.0
     prefix_matches = 0
     for left_char, right_char in zip(
-        left[:WINKLER_PREFIX_MAX], right[:WINKLER_PREFIX_MAX]
+        left[:WINKLER_PREFIX_MAX], right[:WINKLER_PREFIX_MAX], strict=False
     ):
         if left_char == right_char:
             prefix_matches += 1

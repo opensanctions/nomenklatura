@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from nomenklatura.matching.compare.addresses import address_entity_match
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
@@ -41,7 +43,7 @@ class LogicV1(HeuristicAlgorithm):
     recommended for new integrations."""
 
     NAME = "logic-v1"
-    features = [
+    features: ClassVar[list[Feature]] = [
         Feature(func=name_literal_match, weight=1.0),
         Feature(func=person_name_jaro_winkler, weight=0.8),
         Feature(func=person_name_phonetic_match, weight=0.9),

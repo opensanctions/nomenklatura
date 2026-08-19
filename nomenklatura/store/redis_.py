@@ -74,7 +74,7 @@ class RedisWriter(Writer[DS, SE]):
         datasets: set[str] = set()
         keys = (f"s:{entity_id}", f"x:{entity_id}")
         for v in self.store.db.sunion(keys):
-            stmt = unpack_statement(v, entity_id, False)  # type: ignore
+            stmt = unpack_statement(v, entity_id, False)  # type: ignore[arg-type]
             statements.append(stmt)
             datasets.add(stmt.dataset)
 
@@ -107,7 +107,7 @@ class RedisView(View[DS, SE]):
         if self.external:
             keys.append(b(f"x:{id}"))
         for v in self.store.db.sunion(keys):
-            statements.append(unpack_statement(v, id, False))  # type: ignore
+            statements.append(unpack_statement(v, id, False))  # type: ignore[arg-type]
         return self.store.assemble(statements)
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:

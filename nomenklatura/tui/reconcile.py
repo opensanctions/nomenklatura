@@ -1,9 +1,10 @@
-from typing import Generic, cast
+from typing import ClassVar, Generic, cast
 
 from followthemoney import DS, SE, Dataset, StatementEntity, registry
 from rich.console import RenderableType
 from rich.text import Text
 from textual.app import App, ComposeResult
+from textual.binding import BindingType
 from textual.containers import VerticalScroll
 from textual.widget import Widget
 from textual.widgets import DataTable, Footer
@@ -211,9 +212,9 @@ class ReconcileApp(App[int], Generic[DS, SE]):
     CSS_PATH = "reconcile.tcss"
     reconcile: ReconcileState[DS, SE]
     # Maps table rows to candidate indexes; informational rows map to None.
-    _row_highlights: list[int | None] = []
+    _row_highlights: list[int | None]
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         ("x", "confirm", "Confirm"),
         ("n", "negative", "No match"),
         ("u", "unsure", "Unsure"),

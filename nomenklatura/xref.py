@@ -42,7 +42,7 @@ def xref(
     range: Schema | None = None,
     auto_threshold: float | None = None,
     min_threshold: float = 0.01,
-    focus_datasets: set[str] = set(),
+    focus_datasets: set[str] | None = None,
     algorithm: type[ScoringAlgorithm] = DedupeAlgorithm,
     heuristic: Callable[[Resolver[SE], SE, SE, float], float | None] | None = None,
     config: ScoringConfig | None = None,
@@ -105,7 +105,7 @@ def xref(
             if not left.schema.can_match(right.schema):
                 continue
 
-            if len(focus_datasets) > 0:
+            if focus_datasets:
                 if left.datasets.isdisjoint(
                     focus_datasets
                 ) and right.datasets.isdisjoint(focus_datasets):

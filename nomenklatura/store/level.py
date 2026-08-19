@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import orjson
-import plyvel  # type: ignore
+import plyvel  # type: ignore[import-untyped]
 from followthemoney import DS, SE, Property, Schema, Statement, model, registry
 from followthemoney.exc import InvalidData
 from followthemoney.statement.util import get_prop_type

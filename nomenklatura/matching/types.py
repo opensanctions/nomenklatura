@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from enum import Enum
-from typing import cast
+from typing import ClassVar, cast
 
 from followthemoney import E, EntityProxy
 from pydantic import BaseModel
@@ -180,7 +180,7 @@ class ScoringAlgorithm:
     """An implementation of a scoring system that compares two entities."""
 
     NAME = "algorithm_name"
-    CONFIG: dict[str, ConfigVar] = {}
+    CONFIG: ClassVar[dict[str, ConfigVar]] = {}
 
     @classmethod
     def compare(cls, query: E, result: E, config: ScoringConfig) -> MatchingResult:
@@ -236,12 +236,12 @@ class Feature:
         if self.func.__code__.co_argcount == 3:
             func = cast("FeatureCompareConfigured", self.func)
             return func(query, result, config)
-        func = cast("FeatureCompareFunction", self.func)  # type: ignore
-        return func(query, result)  # type: ignore
+        func = cast("FeatureCompareFunction", self.func)  # type: ignore[assignment]
+        return func(query, result)  # type: ignore[call-arg]
 
 
 class HeuristicAlgorithm(ScoringAlgorithm):
-    features: list[Feature]
+    features: ClassVar[list[Feature]]
 
     @classmethod
     def compute_score(

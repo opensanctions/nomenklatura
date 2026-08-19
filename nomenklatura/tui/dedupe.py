@@ -1,10 +1,11 @@
 import asyncio
-from typing import Generic, cast
+from typing import ClassVar, Generic, cast
 
 from followthemoney import DS, SE, Dataset, StatementEntity
 from rich.console import RenderableType
 from rich.text import Text
 from textual.app import App, ComposeResult
+from textual.binding import BindingType
 from textual.containers import Grid, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widget import Widget
@@ -142,7 +143,7 @@ class ConfirmEditModal(ModalScreen[bool]):
 
 
 class HistoryListView(ListView):
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         ("x", "positive", "Match"),
         ("n", "negative", "No match"),
         ("u", "unsure", "Unsure"),
@@ -237,7 +238,7 @@ class DedupeApp(App[int], Generic[DS, SE]):
     CSS_PATH = "dedupe.tcss"
     dedupe: DedupeState[DS, SE]
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         ("x", "positive", "Match"),
         ("n", "negative", "No match"),
         ("u", "unsure", "Unsure"),

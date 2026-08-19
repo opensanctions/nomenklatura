@@ -19,10 +19,10 @@ from followthemoney import EntityProxy
 from followthemoney.exc import InvalidData
 from followthemoney.util import PathLike
 from numpy.typing import NDArray
-from sklearn import metrics  # type: ignore
-from sklearn.linear_model import LogisticRegressionCV  # type: ignore
-from sklearn.pipeline import Pipeline  # type: ignore
-from sklearn.preprocessing import StandardScaler  # type: ignore
+from sklearn import metrics  # type: ignore[import-untyped]
+from sklearn.linear_model import LogisticRegressionCV  # type: ignore[import-untyped]
+from sklearn.pipeline import Pipeline  # type: ignore[import-untyped]
+from sklearn.preprocessing import StandardScaler  # type: ignore[import-untyped]
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching.erun.model import EntityResolveRegression
@@ -386,7 +386,7 @@ def fit_model(
     coefficients = {
         feature.__name__: float(coefficient)
         for feature, coefficient in zip(
-            EntityResolveRegression.FEATURES, classifier.coef_[0]
+            EntityResolveRegression.FEATURES, classifier.coef_[0], strict=True
         )
     }
     report = {

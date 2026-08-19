@@ -90,7 +90,7 @@ class VersionedRedisStore(Store[DS, SE]):
         )
 
     def view(
-        self, scope: DS, external: bool = False, versions: dict[str, str] = {}
+        self, scope: DS, external: bool = False, versions: dict[str, str] | None = None
     ) -> "VersionedRedisView[DS, SE]":
         return VersionedRedisView(self, scope, external=external, versions=versions)
 
@@ -238,9 +238,10 @@ class VersionedRedisView(View[DS, SE]):
         store: VersionedRedisStore[DS, SE],
         scope: DS,
         external: bool = False,
-        versions: dict[str, str] = {},
+        versions: dict[str, str] | None = None,
     ) -> None:
         super().__init__(store, scope, external=external)
+        versions = versions or {}
         self.store: VersionedRedisStore[DS, SE] = store
 
         # Get the latest version for each dataset in the scope
