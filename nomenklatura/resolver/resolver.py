@@ -6,7 +6,7 @@
 from datetime import timedelta
 import getpass
 import logging
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from sqlalchemy import (
@@ -619,36 +619,60 @@ class Resolver(Linker[SE]):
                 stmt = stmt.clone(value=canon_value)
         return stmt
 
+    def all_edges(
+        self,
+        include_deleted: bool = False,
+        include_suggestions: bool = False,
+    ) -> Generator[Edge, None, None]:
+        """Iterate the resolver's edges in chronological order.
+
+        Use this to export decisions in a format of your choosing (cf.
+        `dump()` for the JSON lines version). The chronological order makes
+        the stream safe to feed back via `load_edges()`: later edges supersede
+        earlier ones for the same pair.
+
+        By default only live, judged edges are returned; soft-deleted edges
+        and NO_JUDGEMENT suggestions can be opted in via the flags."""
+        stmt = self._table.select()
+        if not include_deleted:
+            stmt = stmt.where(self._table.c.deleted_at.is_(None))
+        if not include_suggestions:
+            stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
+        stmt = stmt.order_by(self._table.c.created_at.asc())
+        cursor = self._session.execute(stmt)
+        for row in cursor.yield_per(20000):
+            yield Edge.from_dict(row._mapping)
+
+    def load_edges(self, edges: Iterable[Edge]) -> None:
+        """Write a stream of edges into the database, superseding any live
+        edge for the same pair. Counterpart to `all_edges()`."""
+        edge_count = 0
+        for edge in edges:
+            self._register(edge)
+            edge_count += 1
+            if edge_count % 10000 == 0:
+                log.info("Loaded %s edges." % edge_count)
+        log.info("Done. Loaded %s edges." % edge_count)
+        self._update_from_db()
+
     def dump(self, path: PathLike) -> None:
         """Store the resolver adjacency list to a plain text JSON list.
 
         Only live edges are exported: the line format has no deletion field,
         so including soft-deleted edges would resurrect them on load."""
-        stmt = self._table.select()
-        stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
-        stmt = stmt.where(self._table.c.deleted_at.is_(None))
-        stmt = stmt.order_by(self._table.c.created_at.asc())
         with open(path, "w") as fh:
-            cursor = self._session.execute(stmt)
-            for row in cursor.yield_per(20000):
-                edge = Edge.from_dict(row._mapping)
+            for edge in self.all_edges():
                 fh.write(edge.to_line())
 
     def load(self, path: PathLike) -> None:
         """Load edges directly into the database"""
-        edge_count = 0
-        with open(path, "r") as fh:
-            while True:
-                line = fh.readline()
-                if not line:
-                    break
-                edge = Edge.from_line(line)
-                self._register(edge)
-                edge_count += 1
-                if edge_count % 10000 == 0:
-                    log.info("Loaded %s edges." % edge_count)
-        log.info("Done. Loaded %s edges." % edge_count)
-        self._update_from_db()
+
+        def _read_edges() -> Generator[Edge, None, None]:
+            with open(path, "r") as fh:
+                for line in fh:
+                    yield Edge.from_line(line)
+
+        self.load_edges(_read_edges())
 
     def __repr__(self) -> str:
         parts = self._session.engine.url

@@ -1,3 +1,4 @@
+import csv
 import shutil
 import yaml
 import click
@@ -16,6 +17,7 @@ from nomenklatura.db import make_session, Session
 from nomenklatura.matching import train_v1_matcher, train_erun_matcher
 from nomenklatura.store import load_entity_file_store
 from nomenklatura.resolver import Resolver, Linker
+from nomenklatura.resolver.edge import Edge
 from nomenklatura.enrich import Enricher, make_enricher, match, enrich
 from nomenklatura.matching import get_algorithm, DedupeAlgorithm
 from nomenklatura.xref import xref as run_xref
@@ -334,20 +336,53 @@ def statements_apply(infile: Path, outpath: Path, format: str) -> None:
         write_statements(outfh, format, _generate())
 
 
+EDGE_FIELDS = ["target", "source", "judgement", "score", "user", "created_at", "deleted_at"]
+EDGE_FORMATS = ["jsonl", "csv"]
+
+
 @cli.command("load-resolver", help="Load resolver edges from file into database")
 @click.argument("source", type=InPath)
-def load_resolver(source: Path) -> None:
+@click.option("-f", "--format", type=click.Choice(EDGE_FORMATS), default="jsonl")
+def load_resolver(source: Path, format: str) -> None:
     with make_session() as session:
         resolver = Resolver[Entity](session, create=True)
-        resolver.load(source)
+        if format == "csv":
+
+            def _read_edges() -> Generator[Edge, None, None]:
+                with open(source, "r") as fh:
+                    for row in csv.DictReader(fh):
+                        yield Edge.from_dict(row)
+
+            resolver.load_edges(_read_edges())
+        else:
+            resolver.load(source)
 
 
 @cli.command("dump-resolver", help="Dump resolver decisions from database to file")
 @click.argument("target", type=OutPath)
-def dump_resolver(target: Path) -> None:
+@click.option("-f", "--format", type=click.Choice(EDGE_FORMATS), default="jsonl")
+@click.option(
+    "--include-deleted",
+    is_flag=True,
+    default=False,
+    help="Export soft-deleted edges as well (CSV only)",
+)
+def dump_resolver(target: Path, format: str, include_deleted: bool) -> None:
+    if include_deleted and format != "csv":
+        raise click.BadOptionUsage(
+            "--include-deleted",
+            "The jsonl line format cannot represent deleted edges; use -f csv.",
+        )
     with make_session() as session:
         resolver = Resolver[Entity](session, create=True)
-        resolver.dump(target)
+        if format == "csv":
+            with open(target, "w") as fh:
+                writer = csv.DictWriter(fh, fieldnames=EDGE_FIELDS)
+                writer.writeheader()
+                for edge in resolver.all_edges(include_deleted=include_deleted):
+                    writer.writerow(edge.to_dict())
+        else:
+            resolver.dump(target)
 
 
 @cli.command("bench", help="Benchmark a matching algorithm")
