@@ -79,6 +79,45 @@ only-include = ["nomenklatura", "LICENSE", "README.md"]
 [tool.distutils.bdist_wheel]
 universal = true
 
+[tool.ruff.lint]
+# Rule families below are clean across nomenklatura/, tests/ and contrib/, so
+# the hook fails on a regression rather than on pre-existing debt. Individual
+# codes are pinned where the wider family still has open findings; run
+# `ruff check --select ALL --statistics` to see what is left on the table.
+select = [
+    "ASYNC", # flake8-async
+    "E4",    # pycodestyle: imports (E501 line length is left to the formatter)
+    "E7",
+    "E9",
+    "F",     # pyflakes
+    "FURB",  # refurb
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "INT",   # flake8-gettext
+    "LOG",   # flake8-logging
+    "PIE",   # flake8-pie
+    "Q",     # flake8-quotes
+    "RSE",   # flake8-raise
+    "SLOT",  # flake8-slots
+    "W",     # pycodestyle warnings
+    "YTT",   # flake8-2020
+    "B006",  # mutable argument default
+    "B905",  # zip() without explicit strict=
+    "PGH003", # blanket type: ignore
+    "RUF012", # mutable class default without ClassVar
+    "RUF022", # unsorted __all__
+    "RUF023", # unsorted __slots__
+    "TC006",  # unquoted cast() type
+    "UP004",  # useless object inheritance
+    "UP006",  # PEP 585 generics
+    "UP007",  # PEP 604 unions
+    "UP012",  # unnecessary encode("utf-8")
+    "UP015",  # redundant open() mode
+    "UP017",  # datetime.UTC
+    "UP035",  # deprecated typing imports
+    "UP045",  # PEP 604 optionals
+]
+
 [tool.coverage.run]
 branch = true
 

@@ -1,8 +1,7 @@
 import re
 from collections.abc import Callable, Iterable
-from typing import Optional
 
-CleanFunc = Optional[Callable[[str], str | None]]
+CleanFunc = Callable[[str], str | None] | None
 FIND_NUM = re.compile(r"\d{1,}")
 
 
