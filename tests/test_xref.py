@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
 
-from followthemoney import StatementEntity
+from followthemoney import Dataset, StatementEntity
 
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
-from nomenklatura.store import SimpleMemoryStore, load_entity_file_store
+from nomenklatura.store import MemoryStore, SimpleMemoryStore, load_entity_file_store
 from nomenklatura.xref import xref
 
 
@@ -96,3 +96,28 @@ def test_xref_patience_ignores_decided_pairs(
         candidate_ids.update((left_id, right_id))
     assert "dupe-1" in candidate_ids
     assert "dupe-2" in candidate_ids
+
+
+def test_xref_skips_external_pairs(
+    index_path: Path,
+    resolver: Resolver[StatementEntity],
+    db_session,
+):
+    """Two entities that are made up entirely of external statements must not be
+    suggested against each other, but each must still be compared to real data."""
+    dataset = Dataset.make({"name": "external_pairs"})
+    store = MemoryStore(dataset, resolver)
+    with store.writer() as writer:
+        entities = (("ext-1", True), ("ext-2", True), ("int-1", False))
+        for entity_id, external in entities:
+            entity = StatementEntity(dataset, {"id": entity_id, "schema": "Company"})
+            entity.add("name", "Zeta Petrochemical Holding", external=external)
+            entity.add("country", "de", external=external)
+            writer.add_entity(entity)
+
+    xref(resolver, db_session, store, index_path)
+
+    pairs = {frozenset((left, right)) for left, right, _ in resolver.get_candidates()}
+    assert frozenset(("ext-1", "ext-2")) not in pairs
+    assert frozenset(("int-1", "ext-1")) in pairs
+    assert frozenset(("int-1", "ext-2")) in pairs

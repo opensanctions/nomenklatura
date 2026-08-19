@@ -115,6 +115,11 @@ def xref(
                 if not left.schema.is_a(range) and not right.schema.is_a(range):
                     continue
 
+            # Two pre-verification suggestions have nothing to anchor to each other;
+            # xref should spend its budget expanding the graph instead.
+            if left.external and right.external:
+                continue
+
             if scored:
                 score = algorithm.compare(left, right, config).score
 
