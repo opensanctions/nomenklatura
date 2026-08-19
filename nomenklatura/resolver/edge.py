@@ -96,12 +96,17 @@ class Edge(object):
 
     @classmethod
     def from_dict(cls, data: Union[RowMapping, Dict[str, Any]]) -> "Edge":
+        # Accept rows from csv.DictReader, where every value is a string and
+        # missing values arrive as "" rather than None.
+        score: Union[None, str, float] = data.get("score")
+        if isinstance(score, str):
+            score = float(score) if len(score) else None
         return cls(
             left_id=data["target"],
             right_id=data["source"],
             judgement=Judgement(data["judgement"]),
-            score=data["score"],
-            user=data["user"],
-            created_at=data.get("created_at"),
-            deleted_at=data.get("deleted_at"),
+            score=score,
+            user=data.get("user") or None,
+            created_at=data.get("created_at") or None,
+            deleted_at=data.get("deleted_at") or None,
         )

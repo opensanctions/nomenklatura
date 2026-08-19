@@ -1,4 +1,6 @@
+from csv import DictReader, DictWriter
 from datetime import timedelta
+from io import StringIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Dict, Tuple
@@ -306,6 +308,111 @@ def test_resolver_store_load(
 
         edge = other_table_resolver.get_edge("a1", "c1")
         assert edge is None, edge
+
+
+def test_resolver_all_edges(resolver: Resolver[StatementEntity], db_session):
+    canon = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide("a2", "b2", Judgement.NEGATIVE)
+    resolver.decide(canon, "a3", Judgement.POSITIVE)
+    resolver.remove("a3")
+    resolver.suggest("a1", "c1", 7.0)
+
+    live = list(resolver.all_edges())
+    assert len(live) == 3, live
+    assert all(e.deleted_at is None for e in live)
+    assert all(e.judgement != Judgement.NO_JUDGEMENT for e in live)
+
+    with_suggestions = list(resolver.all_edges(include_suggestions=True))
+    assert len(with_suggestions) == 4, with_suggestions
+    suggested = [e for e in with_suggestions if e.judgement == Judgement.NO_JUDGEMENT]
+    assert len(suggested) == 1
+    assert suggested[0].score == 7.0
+
+    with_deleted = list(resolver.all_edges(include_deleted=True))
+    assert len(with_deleted) == 4, with_deleted
+    deleted = [e for e in with_deleted if e.deleted_at is not None]
+    assert len(deleted) == 1
+    assert Identifier.get("a3") in deleted[0].key
+
+    everything = list(resolver.all_edges(include_deleted=True, include_suggestions=True))
+    assert len(everything) == 5, everything
+    stamps = [e.created_at for e in everything]
+    assert stamps == sorted(stamps)
+
+
+def test_resolver_load_edges(
+    resolver: Resolver[StatementEntity], other_table_resolver: Resolver[StatementEntity]
+):
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide(canon_a, "a3", Judgement.POSITIVE)
+    resolver.remove("a3")
+    resolver.decide("a2", "b2", Judgement.NEGATIVE)
+    resolver.suggest("a1", "c1", 7.0)
+
+    edges = list(resolver.all_edges(include_deleted=True, include_suggestions=True))
+    other_table_resolver.load_edges(edges)
+
+    assert other_table_resolver.get_canonical("a1") == canon_a
+    # The removed a3 edge travels as a tombstone and must stay deleted:
+    assert other_table_resolver.get_canonical("a3") == "a3"
+    assert other_table_resolver.get_edge(canon_a, "a3") is None
+    assert len(list(other_table_resolver.get_judgements())) == 3
+    edge = other_table_resolver.get_edge("a1", "c1")
+    assert edge is not None, edge
+    assert edge.score == 7.0
+
+
+def test_linker_mappings(resolver: Resolver[StatementEntity], db_session):
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide(canon_a, "a3", Judgement.POSITIVE)
+    resolver.decide("a2", "b2", Judgement.NEGATIVE)
+    resolver.suggest("a1", "c1", 7.0)
+
+    mappings = dict(resolver.get_linker().mappings())
+    assert mappings == {
+        "a1": canon_a.id,
+        "a2": canon_a.id,
+        "a3": canon_a.id,
+        canon_a.id: canon_a.id,
+    }
+
+    # Merging two clusters leaves the losing canonical behind as a stale
+    # intermediate that must still resolve to the winning canonical:
+    canon_d = resolver.decide("d1", "d2", Judgement.POSITIVE)
+    resolver.decide("a1", "d1", Judgement.POSITIVE)
+    merged = resolver.get_canonical("a1")
+    assert merged in (canon_a.id, canon_d.id)
+
+    mappings = dict(resolver.get_linker().mappings())
+    assert len(mappings) == 7, mappings
+    assert set(mappings.values()) == {merged}
+    assert mappings[canon_a.id] == merged
+    assert mappings[canon_d.id] == merged
+
+
+def test_edge_csv_roundtrip():
+    edges = [
+        Edge("a1", "a2", judgement=Judgement.POSITIVE, user="alice", created_at="2024"),
+        Edge("b1", "b2", judgement=Judgement.NO_JUDGEMENT, score=7.0, created_at="2024"),
+        Edge("c1", "c2", judgement=Judgement.NEGATIVE, created_at="2024", deleted_at="2025"),
+    ]
+    fields = ["target", "source", "judgement", "score", "user", "created_at", "deleted_at"]
+    buffer = StringIO()
+    writer = DictWriter(buffer, fieldnames=fields)
+    writer.writeheader()
+    for edge in edges:
+        writer.writerow(edge.to_dict())
+
+    buffer.seek(0)
+    read = [Edge.from_dict(row) for row in DictReader(buffer)]
+    assert read == edges
+    assert read[0].user == "alice"
+    assert read[0].score is None
+    assert read[1].score == 7.0
+    assert read[1].user is None
+    assert read[1].deleted_at is None
+    assert read[2].judgement == Judgement.NEGATIVE
+    assert read[2].deleted_at == "2025"
 
 
 def test_resolver_candidates(resolver: Resolver[StatementEntity], db_session):
