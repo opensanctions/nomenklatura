@@ -58,15 +58,20 @@ class Linker(Generic[SE]):
             return cluster[0]
         return entity_id
 
+    def mappings(self) -> Generator[Tuple[str, str], None, None]:
+        """Yield (entity_id, canonical_id) for every known identifier, including
+        the canonical itself. Use this to export the resolution outcome as a
+        join table, without edges or judgement history."""
+        for entity_id, cluster in self._mapping.items():
+            yield entity_id, cluster[0]
+
     def canonicals(self) -> Generator[Identifier, None, None]:
         """Return all the canonical cluster identifiers."""
-        seen: Set[str] = set()
-        for cluster in self._mapping.values():
-            canonical = cluster[0]
-            if canonical not in seen:
-                ident = Identifier.get(canonical)
+        # Each canonical occurs exactly once in the mapping: as its self-row.
+        for entity_id, canonical_id in self.mappings():
+            if entity_id == canonical_id:
+                ident = Identifier.get(canonical_id)
                 if ident.canonical:
-                    seen.add(canonical)
                     yield ident
 
     def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:

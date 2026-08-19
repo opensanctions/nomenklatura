@@ -385,6 +385,17 @@ def dump_resolver(target: Path, format: str, include_deleted: bool) -> None:
             resolver.dump(target)
 
 
+@cli.command("dump-mapping", help="Dump entity_id -> canonical_id mapping to CSV")
+@click.argument("target", type=OutPath)
+def dump_mapping(target: Path) -> None:
+    linker = _get_linker()
+    with open(target, "w") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["entity_id", "canonical_id"])
+        for entity_id, canonical_id in sorted(linker.mappings(), key=lambda m: (m[1], m[0])):
+            writer.writerow([entity_id, canonical_id])
+
+
 @cli.command("bench", help="Benchmark a matching algorithm")
 @click.argument("name", type=str)
 @click.argument("pairs_file", type=InPath)

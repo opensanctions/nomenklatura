@@ -362,6 +362,34 @@ def test_resolver_load_edges(
     assert edge.score == 7.0
 
 
+def test_linker_mappings(resolver: Resolver[StatementEntity], db_session):
+    canon_a = resolver.decide("a1", "a2", Judgement.POSITIVE)
+    resolver.decide(canon_a, "a3", Judgement.POSITIVE)
+    resolver.decide("a2", "b2", Judgement.NEGATIVE)
+    resolver.suggest("a1", "c1", 7.0)
+
+    mappings = dict(resolver.get_linker().mappings())
+    assert mappings == {
+        "a1": canon_a.id,
+        "a2": canon_a.id,
+        "a3": canon_a.id,
+        canon_a.id: canon_a.id,
+    }
+
+    # Merging two clusters leaves the losing canonical behind as a stale
+    # intermediate that must still resolve to the winning canonical:
+    canon_d = resolver.decide("d1", "d2", Judgement.POSITIVE)
+    resolver.decide("a1", "d1", Judgement.POSITIVE)
+    merged = resolver.get_canonical("a1")
+    assert merged in (canon_a.id, canon_d.id)
+
+    mappings = dict(resolver.get_linker().mappings())
+    assert len(mappings) == 7, mappings
+    assert set(mappings.values()) == {merged}
+    assert mappings[canon_a.id] == merged
+    assert mappings[canon_d.id] == merged
+
+
 def test_edge_csv_roundtrip():
     edges = [
         Edge("a1", "a2", judgement=Judgement.POSITIVE, user="alice", created_at="2024"),
