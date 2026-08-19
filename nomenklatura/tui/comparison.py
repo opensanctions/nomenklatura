@@ -9,6 +9,20 @@ from nomenklatura.tui.util import comparison_props
 
 
 def render_column(entity: Entity) -> Text:
+    """Render the header of one candidate's column in a comparison table.
+
+    An entity backed only by external statements is an unverified enrichment
+    suggestion rather than published data, which changes what a reviewer is
+    actually deciding, so it is marked with a trailing asterisk and a distinct
+    colour for the schema label.
+    """
+    if entity.external:
+        return Text.assemble(
+            (entity.schema.label, "yellow"),
+            " [%s] " % entity.id,
+            ("*", "yellow bold"),
+            no_wrap=True,
+        )
     return Text.assemble(
         (entity.schema.label, "blue"), " [%s]" % entity.id, no_wrap=True
     )
