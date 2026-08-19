@@ -17,25 +17,21 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import statistics
 import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 # Reuse run.py's loader so case_id computation stays in one place.
 sys.path.insert(0, str(Path(__file__).parent))
-from run import load_cases  # noqa: E402
-
 from rich.console import Console
 from rich.table import Table
+from run import load_cases
 
 # Local comparators package import.
 sys.path.insert(0, str(Path(__file__).parent))
-from comparators import COMPARATORS  # noqa: E402
-
+from comparators import COMPARATORS
 
 HERE = Path(__file__).parent
 DEFAULT_CASES = HERE / "cases.csv"
@@ -44,12 +40,12 @@ DEFAULT_THRESHOLD = 0.7
 DEFAULT_TOP_SLOW_PCT = 5.0
 
 
-CaseKey = Tuple[str, str]
+CaseKey = tuple[str, str]
 
 
 def time_comparator(
-    comparator, rows: List[Dict[str, str]], runs: int
-) -> Tuple[Dict[CaseKey, List[float]], Dict[CaseKey, float]]:
+    comparator, rows: list[dict[str, str]], runs: int
+) -> tuple[dict[CaseKey, list[float]], dict[CaseKey, float]]:
     """Time each case `runs` times. Returns per-case μs samples + last-run score.
 
     A single warmup pass is done before timing to absorb first-call import
@@ -59,8 +55,8 @@ def time_comparator(
     for row in rows:
         comparator(row["name1"], row["name2"], row["schema"])
 
-    samples: Dict[CaseKey, List[float]] = defaultdict(list)
-    score: Dict[CaseKey, float] = {}
+    samples: dict[CaseKey, list[float]] = defaultdict(list)
+    score: dict[CaseKey, float] = {}
     for _ in range(runs):
         for row in rows:
             key: CaseKey = (row["case_group"], row["case_id"])
@@ -73,10 +69,10 @@ def time_comparator(
 
 
 def compute_metrics(
-    rows: List[Dict[str, str]],
-    score: Dict[CaseKey, float],
+    rows: list[dict[str, str]],
+    score: dict[CaseKey, float],
     threshold: float,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     tp = fp = tn = fn = 0
     for row in rows:
         key = (row["case_group"], row["case_id"])
@@ -93,10 +89,18 @@ def compute_metrics(
     p = tp / (tp + fp) if tp + fp else 0.0
     r = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * p * r / (p + r) if p + r else 0.0
-    return {"tp": tp, "fp": fp, "tn": tn, "fn": fn, "precision": p, "recall": r, "f1": f1}
+    return {
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
+        "precision": p,
+        "recall": r,
+        "f1": f1,
+    }
 
 
-def percentile(values: List[float], pct: float) -> float:
+def percentile(values: list[float], pct: float) -> float:
     if not values:
         return 0.0
     s = sorted(values)
@@ -104,7 +108,7 @@ def percentile(values: List[float], pct: float) -> float:
     return s[idx]
 
 
-def render_scoreboard(results: Dict[str, dict], console: Console) -> None:
+def render_scoreboard(results: dict[str, dict], console: Console) -> None:
     table = Table(title="Comparator scoreboard (accuracy + timing)")
     table.add_column("comparator")
     table.add_column("F1", justify="right", style="cyan")
@@ -131,8 +135,8 @@ def render_scoreboard(results: Dict[str, dict], console: Console) -> None:
 
 def render_slow_cases(
     name: str,
-    medians: Dict[CaseKey, float],
-    rows_by_key: Dict[CaseKey, Dict[str, str]],
+    medians: dict[CaseKey, float],
+    rows_by_key: dict[CaseKey, dict[str, str]],
     n: int,
     console: Console,
 ) -> None:
@@ -155,25 +159,37 @@ def render_slow_cases(
     console.print(table)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES)
-    parser.add_argument("--runs", type=int, default=DEFAULT_RUNS,
-                        help=f"Number of runs per case (default {DEFAULT_RUNS}).")
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=DEFAULT_RUNS,
+        help=f"Number of runs per case (default {DEFAULT_RUNS}).",
+    )
     parser.add_argument("-t", "--threshold", type=float, default=DEFAULT_THRESHOLD)
-    parser.add_argument("-c", "--comparator", action="append",
-                        choices=sorted(COMPARATORS.keys()),
-                        help="Run only the named comparator(s); default = all.")
-    parser.add_argument("--top-slow-pct", type=float, default=DEFAULT_TOP_SLOW_PCT,
-                        help=f"Report top N%% slowest cases per comparator "
-                             f"(default {DEFAULT_TOP_SLOW_PCT}%%).")
+    parser.add_argument(
+        "-c",
+        "--comparator",
+        action="append",
+        choices=sorted(COMPARATORS.keys()),
+        help="Run only the named comparator(s); default = all.",
+    )
+    parser.add_argument(
+        "--top-slow-pct",
+        type=float,
+        default=DEFAULT_TOP_SLOW_PCT,
+        help=f"Report top N%% slowest cases per comparator "
+        f"(default {DEFAULT_TOP_SLOW_PCT}%%).",
+    )
     args = parser.parse_args(argv)
 
     rows = load_cases(args.cases)
-    rows_by_key: Dict[CaseKey, Dict[str, str]] = {
+    rows_by_key: dict[CaseKey, dict[str, str]] = {
         (r["case_group"], r["case_id"]): r for r in rows
     }
-    chosen = args.comparator if args.comparator else sorted(COMPARATORS.keys())
+    chosen = args.comparator or sorted(COMPARATORS.keys())
 
     console = Console()
     console.print(
@@ -183,7 +199,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     console.print()
 
-    results: Dict[str, dict] = {}
+    results: dict[str, dict] = {}
     for name in chosen:
         console.print(f"[dim]Running {name}…[/dim]")
         comparator = COMPARATORS[name]

@@ -1,12 +1,12 @@
 from itertools import product
-from rigour.ids import LEI, ISIN, INN, OGRN, IMO, BIC
-from rigour.ids import StrictFormat
-from rigour.text.distance import levenshtein
-from followthemoney import E, registry
 
+from followthemoney import E, registry
+from rigour.ids import BIC, IMO, INN, ISIN, LEI, OGRN, StrictFormat
+from rigour.text.distance import levenshtein
+
+from nomenklatura.matching.compare.util import CleanFunc, clean_map
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, has_schema, type_pair
-from nomenklatura.matching.compare.util import clean_map, CleanFunc
 
 
 def _id_prop_match(

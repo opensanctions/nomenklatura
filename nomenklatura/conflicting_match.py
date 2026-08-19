@@ -1,14 +1,16 @@
-from typing import Dict, Set, Tuple, Generic, Generator
-from itertools import combinations
 from collections import defaultdict
+from collections.abc import Generator
+from itertools import combinations
+from typing import Generic
+
+from followthemoney import DS, SE, Statement
+from rich import box
 from rich.console import Console
 from rich.table import Table
-from rich import box
 
-from followthemoney import DS, Statement, SE
-from nomenklatura.store import View
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
+from nomenklatura.store import View
 
 
 class ConflictingMatchReporter(Generic[SE]):
@@ -17,14 +19,14 @@ class ConflictingMatchReporter(Generic[SE]):
         self.view = view
         self.resolver = resolver
         self.threshold = threshold
-        self.matches: Dict[str, Set[str]] = defaultdict(set)
+        self.matches: dict[str, set[str]] = defaultdict(set)
 
     def check_match(self, score: float, left_id: str, right_id: str) -> None:
         if score > self.threshold:
             self.matches[left_id].add(right_id)
             self.matches[right_id].add(left_id)
 
-    def get_conflicting_matches(self) -> Generator[Tuple[str, str, str], None, None]:
+    def get_conflicting_matches(self) -> Generator[tuple[str, str, str], None, None]:
         for candidate_id, matches in self.matches.items():
             for left_id, right_id in combinations(matches, 2):
                 judgement = self.resolver.get_judgement(left_id, right_id)
@@ -32,7 +34,7 @@ class ConflictingMatchReporter(Generic[SE]):
                     yield candidate_id, left_id, right_id
 
     @staticmethod
-    def _sort_key(stmt: Statement) -> Tuple[str, str, int, str, int]:
+    def _sort_key(stmt: Statement) -> tuple[str, str, int, str, int]:
         prop_order = 0 if stmt.prop == "name" else 1
         lang_order = 0 if stmt.lang is None else 1
         return (stmt.dataset, stmt.entity_id, prop_order, stmt.value, lang_order)

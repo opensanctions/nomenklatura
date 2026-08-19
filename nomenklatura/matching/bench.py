@@ -1,13 +1,13 @@
-import logging
 import datetime
-from timeit import timeit
+import logging
 from itertools import cycle
+from timeit import timeit
+
 from followthemoney.util import PathLike
 
 from nomenklatura.matching import get_algorithm
 from nomenklatura.matching.pairs import read_pairs
 from nomenklatura.matching.types import ScoringConfig
-
 
 log = logging.getLogger(__name__)
 

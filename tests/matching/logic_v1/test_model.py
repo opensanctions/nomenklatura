@@ -1,5 +1,5 @@
-from nomenklatura.matching.logic_v1.model import LogicV1
 from nomenklatura.matching.compare.names import name_literal_match
+from nomenklatura.matching.logic_v1.model import LogicV1
 from nomenklatura.matching.logic_v1.phonetic import name_metaphone_match
 from nomenklatura.matching.types import ScoringConfig
 

@@ -1,7 +1,8 @@
+import logging
+from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from functools import cache
-from typing import Any, Dict, Generator, Iterable, List, Mapping, Optional, cast
-import logging
+from typing import Any, Optional, cast
 
 from followthemoney import Statement
 from sqlalchemy import (
@@ -14,12 +15,12 @@ from sqlalchemy import (
     create_engine,
     delete,
 )
-from sqlalchemy.engine import Connection, CursorResult, Dialect, Engine
-from sqlalchemy.sql.expression import Executable
 from sqlalchemy.dialects.postgresql import Insert as PostgreSQLInsert
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import Insert as SQLiteInsert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.engine import Connection, CursorResult, Dialect, Engine
+from sqlalchemy.sql.expression import Executable
 
 from nomenklatura import settings
 
@@ -33,10 +34,10 @@ SQLITE_MAX_VARS = 32766
 log = logging.getLogger(__name__)
 
 
-_ENGINE_CACHE: Dict[str, Engine] = {}
+_ENGINE_CACHE: dict[str, Engine] = {}
 
 
-def get_engine(url: Optional[str] = None) -> Engine:
+def get_engine(url: str | None = None) -> Engine:
     url = url or settings.DB_URL
     engine = _ENGINE_CACHE.get(url)
     if engine is None:
@@ -57,7 +58,7 @@ def _make_engine(url: str) -> Engine:
     )
 
 
-def close_db(url: Optional[str] = None) -> None:
+def close_db(url: str | None = None) -> None:
     if url is None:
         for engine in _ENGINE_CACHE.values():
             engine.dispose()
@@ -105,7 +106,7 @@ class Session:
 
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
-        self._conn: Optional[Connection] = None
+        self._conn: Connection | None = None
 
     @property
     def connection(self) -> Connection:
@@ -175,7 +176,7 @@ class Session:
         return f"<Session({self.engine.url!r})>"
 
 
-def make_session(url: Optional[str] = None) -> Session:
+def make_session(url: str | None = None) -> Session:
     """Build a unit-of-work session from the shared engine pool."""
     return Session(get_engine(url))
 
@@ -239,7 +240,7 @@ def insert_statements(
     with engine.begin() as conn:
         del_q = delete(table).where(table.c.dataset == dataset_name)
         conn.execute(del_q)
-        batch: List[Mapping[str, Any]] = []
+        batch: list[Mapping[str, Any]] = []
 
         for stmt in statements:
             if is_postgresql:
@@ -247,7 +248,7 @@ def insert_statements(
                 # sends as timestamptz, and casting those into the naive timestamp
                 # columns shifts them by the session TimeZone. The ISO strings are
                 # cast literally instead, so a load does not depend on the setting.
-                row = cast(Dict[str, Any], stmt.to_dict())
+                row = cast("dict[str, Any]", stmt.to_dict())
                 row["prop_type"] = stmt.prop_type
             else:
                 row = stmt.to_db_row()
@@ -258,7 +259,7 @@ def insert_statements(
                 log.info("Inserting batch %s statements (total: %s) into %r" % args)
                 conn.execute(upsert, batch)
                 batch = []
-        if len(batch):
+        if batch:
             conn.execute(upsert, batch)
         log.info("Load complete: %r (%d total)" % (dataset_name, dataset_count))
 

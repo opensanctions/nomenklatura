@@ -3,7 +3,7 @@ from datetime import timedelta
 from io import StringIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Dict, Tuple
+
 from followthemoney import Statement, StatementEntity
 
 from nomenklatura import settings
@@ -11,8 +11,8 @@ from nomenklatura.db import make_session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Identifier
 from nomenklatura.resolver.edge import Edge
-from nomenklatura.resolver.resolver import Resolver
 from nomenklatura.resolver.linker import Linker
+from nomenklatura.resolver.resolver import Resolver
 
 
 def test_identifier():
@@ -223,7 +223,7 @@ def test_linker_non_canonical_cluster():
     lexicographic max as canonical — a faulty but acceptable result."""
 
     cluster = ("src-zzz", "src-aaa")
-    mapping: Dict[str, Tuple[str, ...]] = {"src-aaa": cluster, "src-zzz": cluster}
+    mapping: dict[str, tuple[str, ...]] = {"src-aaa": cluster, "src-zzz": cluster}
     linker: Linker = Linker(mapping)
 
     assert linker.get_canonical("src-aaa") == "src-zzz"
@@ -295,7 +295,7 @@ def test_resolver_store_load(
 
         # The removed a3 edge is not exported: the line format carries no
         # deletion field, so a dump/load roundtrip must not resurrect it.
-        with open(path, "r") as fh:
+        with open(path) as fh:
             assert len(fh.readlines()) == 3
 
         other_table_resolver.load(path)
@@ -334,7 +334,9 @@ def test_resolver_all_edges(resolver: Resolver[StatementEntity], db_session):
     assert len(deleted) == 1
     assert Identifier.get("a3") in deleted[0].key
 
-    everything = list(resolver.all_edges(include_deleted=True, include_suggestions=True))
+    everything = list(
+        resolver.all_edges(include_deleted=True, include_suggestions=True)
+    )
     assert len(everything) == 5, everything
     stamps = [e.created_at for e in everything]
     assert stamps == sorted(stamps)
@@ -393,10 +395,26 @@ def test_linker_mappings(resolver: Resolver[StatementEntity], db_session):
 def test_edge_csv_roundtrip():
     edges = [
         Edge("a1", "a2", judgement=Judgement.POSITIVE, user="alice", created_at="2024"),
-        Edge("b1", "b2", judgement=Judgement.NO_JUDGEMENT, score=7.0, created_at="2024"),
-        Edge("c1", "c2", judgement=Judgement.NEGATIVE, created_at="2024", deleted_at="2025"),
+        Edge(
+            "b1", "b2", judgement=Judgement.NO_JUDGEMENT, score=7.0, created_at="2024"
+        ),
+        Edge(
+            "c1",
+            "c2",
+            judgement=Judgement.NEGATIVE,
+            created_at="2024",
+            deleted_at="2025",
+        ),
     ]
-    fields = ["target", "source", "judgement", "score", "user", "created_at", "deleted_at"]
+    fields = [
+        "target",
+        "source",
+        "judgement",
+        "score",
+        "user",
+        "created_at",
+        "deleted_at",
+    ]
     buffer = StringIO()
     writer = DictWriter(buffer, fieldnames=fields)
     writer.writeheader()

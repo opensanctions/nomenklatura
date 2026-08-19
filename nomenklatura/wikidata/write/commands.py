@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from nomenklatura.wikidata.write.values import QSValue, Snak
 
@@ -61,5 +60,5 @@ class AddStatement(QSCommand):
     target: Target
     prop: str
     value: QSValue
-    qualifiers: List[Snak] = field(default_factory=list)
-    references: List[Snak] = field(default_factory=list)
+    qualifiers: list[Snak] = field(default_factory=list)
+    references: list[Snak] = field(default_factory=list)

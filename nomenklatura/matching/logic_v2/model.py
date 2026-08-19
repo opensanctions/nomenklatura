@@ -1,23 +1,32 @@
-from typing import Dict, List
-
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
-from nomenklatura.matching.types import ConfigVar, ConfigVarType
+from nomenklatura.matching.compare.addresses import (
+    address_entity_match,
+    address_prop_match,
+)
 from nomenklatura.matching.compare.countries import country_mismatch
-from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.identifiers import crypto_wallet_address
-from nomenklatura.matching.compare.identifiers import identifier_match
 from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
+from nomenklatura.matching.compare.gender import gender_mismatch
+from nomenklatura.matching.compare.identifiers import (
+    crypto_wallet_address,
+    identifier_match,
+)
 from nomenklatura.matching.compare.names import weak_alias_match
-from nomenklatura.matching.compare.addresses import address_entity_match
-from nomenklatura.matching.compare.addresses import address_prop_match
+from nomenklatura.matching.logic_v2.identifiers import (
+    bic_code_match,
+    inn_code_match,
+    isin_security_match,
+    lei_code_match,
+    npi_code_match,
+    ogrn_code_match,
+    uei_code_match,
+    vessel_imo_mmsi_match,
+)
 from nomenklatura.matching.logic_v2.names.match import name_match
-from nomenklatura.matching.logic_v2.identifiers import bic_code_match
-from nomenklatura.matching.logic_v2.identifiers import inn_code_match, ogrn_code_match
-from nomenklatura.matching.logic_v2.identifiers import isin_security_match
-from nomenklatura.matching.logic_v2.identifiers import lei_code_match
-from nomenklatura.matching.logic_v2.identifiers import vessel_imo_mmsi_match
-from nomenklatura.matching.logic_v2.identifiers import uei_code_match
-from nomenklatura.matching.logic_v2.identifiers import npi_code_match
+from nomenklatura.matching.types import (
+    ConfigVar,
+    ConfigVarType,
+    Feature,
+    HeuristicAlgorithm,
+)
 from nomenklatura.matching.util import FNUL
 
 
@@ -87,9 +96,9 @@ class LogicV2(HeuristicAlgorithm):
 
     @classmethod
     def compute_score(
-        cls, scores: Dict[str, float], weights: Dict[str, float]
+        cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
-        mains: List[float] = []
+        mains: list[float] = []
         for feat in cls.features:
             if feat.qualifier:
                 continue

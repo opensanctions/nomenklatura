@@ -1,11 +1,12 @@
+from collections.abc import Generator
 from types import TracebackType
-from typing import Any, Generator, List, Optional, Set, Tuple, Type
+from typing import Any
 
 from followthemoney import DS, SE, Property, Schema, Statement
 from sqlalchemy import Table, delete, func, select
-from sqlalchemy.engine import Engine, Transaction
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.engine import Engine, Transaction
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
@@ -16,7 +17,7 @@ from nomenklatura.db import (
     get_metadata,
     make_statement_table,
 )
-from nomenklatura.resolver import Linker, Identifier
+from nomenklatura.resolver import Identifier, Linker
 from nomenklatura.store import Store, View, Writer
 
 
@@ -81,7 +82,7 @@ class SQLStore(Store[DS, SE]):
                 current_id = entity_id
                 current_stmts = []
             current_stmts.append(stmt)
-        if len(current_stmts):
+        if current_stmts:
             proxy = self.assemble(current_stmts)
             if proxy is not None:
                 yield proxy
@@ -90,9 +91,9 @@ class SQLStore(Store[DS, SE]):
 class SQLWriter(Writer[DS, SE]):
     def __init__(self, store: SQLStore[DS, SE]):
         self.store: SQLStore[DS, SE] = store
-        self.batch: Set[Statement] = set()
+        self.batch: set[Statement] = set()
         self.conn = self.store.engine.connect()
-        self.tx: Optional[Transaction] = None
+        self.tx: Transaction | None = None
         batch_limit = settings.STATEMENT_BATCH
         if store.engine.dialect.name == "sqlite":
             sqlite_max_batch = SQLITE_MAX_VARS // len(self.store.table.columns)
@@ -107,9 +108,9 @@ class SQLWriter(Writer[DS, SE]):
 
     def __exit__(
         self,
-        type: Optional[Type[BaseException]],
-        value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         self.flush()
         self.close()
@@ -169,14 +170,14 @@ class SQLWriter(Writer[DS, SE]):
         if len(self.batch) >= self.batch_limit:
             self._upsert_batch()
 
-    def pop(self, entity_id: str) -> List[Statement]:
+    def pop(self, entity_id: str) -> list[Statement]:
         if self.tx is None:
             self.tx = self.conn.begin()
 
         table = self.store.table
         q = select(table)
         q = q.where(table.c.canonical_id == entity_id)
-        statements: List[Statement] = []
+        statements: list[Statement] = []
         cursor = self.conn.execute(q)
         for row in cursor.fetchall():
             statements.append(Statement.from_db_row(row))
@@ -194,7 +195,7 @@ class SQLView(View[DS, SE]):
         super().__init__(store, scope, external=external)
         self.store: SQLStore[DS, SE] = store
 
-    def get_entity(self, id: str) -> Optional[SE]:
+    def get_entity(self, id: str) -> SE | None:
         table = self.store.table
         q = select(table)
         q = q.where(table.c.canonical_id == id)
@@ -213,10 +214,9 @@ class SQLView(View[DS, SE]):
             count = cursor.scalar()
             if count is not None and count > 0:
                 return True
-            else:
-                return False
+            return False
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
+    def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         table = self.store.table
         id_ = Identifier.get(id)
         ids = [i.id for i in self.store.linker.connected(id_)]
@@ -237,7 +237,7 @@ class SQLView(View[DS, SE]):
                             yield prop.reverse, entity
 
     def entities(
-        self, include_schemata: Optional[List[Schema]] = None
+        self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)

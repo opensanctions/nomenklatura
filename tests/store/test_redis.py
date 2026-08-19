@@ -1,11 +1,12 @@
-import orjson
-import fakeredis
 from pathlib import Path
-from followthemoney import model, Dataset
+
+import fakeredis
+import orjson
+from followthemoney import Dataset, model
 from followthemoney import StatementEntity as Entity
 
-from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
 from nomenklatura.store.redis_ import RedisStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -52,12 +53,11 @@ def test_leveldb_graph_query(
     redis = fakeredis.FakeStrictRedis(version=6, decode_responses=False)
     store = RedisStore(test_dataset, resolver, db=redis)
     assert len(list(store.view(test_dataset).entities())) == 0
-    with store.writer() as writer:
-        with open(donations_path, "rb") as fh:
-            while line := fh.readline():
-                data = orjson.loads(line)
-                proxy = Entity.from_data(test_dataset, data)
-                writer.add_entity(proxy)
+    with store.writer() as writer, open(donations_path, "rb") as fh:
+        while line := fh.readline():
+            data = orjson.loads(line)
+            proxy = Entity.from_data(test_dataset, data)
+            writer.add_entity(proxy)
     assert len(list(store.view(test_dataset).entities())) == 474
 
     view = store.default_view()

@@ -13,7 +13,7 @@ class Judgement(Enum):
         pair = {self, other}
         if pair == {Judgement.POSITIVE}:
             return Judgement.POSITIVE
-        elif pair == {Judgement.POSITIVE, Judgement.NEGATIVE}:
+        if pair == {Judgement.POSITIVE, Judgement.NEGATIVE}:
             return Judgement.NEGATIVE
         return Judgement.UNSURE
 

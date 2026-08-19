@@ -1,23 +1,24 @@
-import os
 import json
 import logging
+import os
 import traceback
-from banal import as_bool
-from normality import stringify
-from typing import List, Set, Union, Any, Dict, Optional, Generator, Generic
 from abc import ABC, abstractmethod
-from requests import Session
-from requests.exceptions import RequestException, ChunkedEncodingError
-from followthemoney import DS, registry
-from followthemoney import StatementEntity, SE
-from followthemoney.types.topic import TopicType
+from collections.abc import Generator
+from typing import Any, Generic
+
+from banal import as_bool
+from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.settings import USER_AGENT
-from rigour.urls import build_url, ParamsType
+from followthemoney.types.topic import TopicType
+from normality import stringify
+from requests import Session
+from requests.exceptions import ChunkedEncodingError, RequestException
+from rigour.urls import ParamsType, build_url
 
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
 
-EnricherConfig = Dict[str, Any]
+EnricherConfig = dict[str, Any]
 log = logging.getLogger(__name__)
 
 
@@ -44,25 +45,21 @@ class BaseEnricher(Generic[DS]):
             filter_topics.update(registry.topic.names.keys())
         # The resolved `topics` config option. Exposed so that callers gating
         # further processing on the same topics use an identical set.
-        self.filter_topics: Set[str] = filter_topics
+        self.filter_topics: set[str] = filter_topics
 
-    def get_config_expand(
-        self, name: str, default: Optional[str] = None
-    ) -> Optional[str]:
+    def get_config_expand(self, name: str, default: str | None = None) -> str | None:
         value = self.config.get(name, default)
         if value is None:
             return None
         return str(os.path.expandvars(value))
 
-    def get_config_int(self, name: str, default: Union[int, str]) -> int:
+    def get_config_int(self, name: str, default: int | str) -> int:
         return int(self.config.get(name, default))
 
-    def get_config_bool(self, name: str, default: Union[bool, str] = False) -> int:
+    def get_config_bool(self, name: str, default: bool | str = False) -> int:
         return as_bool(self.config.get(name, default))
 
-    def get_config_list(
-        self, name: str, default: Optional[List[str]] = None
-    ) -> List[str]:
+    def get_config_list(self, name: str, default: list[str] | None = None) -> list[str]:
         """Get a config option that is a list of strings."""
         value = self.config.get(name, default)
         if value is None:
@@ -98,10 +95,10 @@ class Enricher(BaseEnricher[DS], ABC):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config)
-        self._session: Optional[Session] = session
+        self._session: Session | None = session
 
     @property
     def session(self) -> Session:
@@ -115,7 +112,7 @@ class Enricher(BaseEnricher[DS], ABC):
         url: str,
         params: ParamsType = None,
         hidden: ParamsType = None,
-        cache_days: Optional[int] = None,
+        cache_days: int | None = None,
     ) -> str:
         url = build_url(url, params=params)
         cache_days_ = self.cache_days if cache_days is None else cache_days
@@ -146,7 +143,7 @@ class Enricher(BaseEnricher[DS], ABC):
         url: str,
         params: ParamsType = None,
         hidden: ParamsType = None,
-        cache_days: Optional[int] = None,
+        cache_days: int | None = None,
     ) -> Any:
         res = self.http_get_cached(url, params, hidden=hidden, cache_days=cache_days)
         return json.loads(res)
@@ -158,7 +155,7 @@ class Enricher(BaseEnricher[DS], ABC):
         json: Any = None,
         data: Any = None,
         headers: HeadersType = None,
-        cache_days: Optional[int] = None,
+        cache_days: int | None = None,
         retry_chunked_encoding_error: int = 1,
     ) -> Any:
         cache_days_ = self.cache_days if cache_days is None else cache_days
@@ -202,13 +199,13 @@ class Enricher(BaseEnricher[DS], ABC):
         return resp_data
 
     def _make_data_entity(
-        self, entity: SE, data: Dict[str, Any], cleaned: bool = True
+        self, entity: SE, data: dict[str, Any], cleaned: bool = True
     ) -> SE:
         """Create an entity which is of the same sub-type of SE as the given
         query entity."""
         return type(entity).from_data(self.dataset, data, cleaned=cleaned)
 
-    def load_entity(self, entity: SE, data: Dict[str, Any]) -> SE:
+    def load_entity(self, entity: SE, data: dict[str, Any]) -> SE:
         proxy = self._make_data_entity(entity, data, cleaned=False)
         for prop in proxy.iterprops():
             if prop.stub:
@@ -237,13 +234,13 @@ class Enricher(BaseEnricher[DS], ABC):
     def match(self, entity: SE) -> Generator[SE, None, None]:
         """Yield candidates from the external source that may describe the
         same real-world entity as the given query entity."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
         """Yield the confirmed match itself, followed by entities related to
         it in the external source (e.g. officers, owners, family members)."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def close(self) -> None:
         if self._session is not None:

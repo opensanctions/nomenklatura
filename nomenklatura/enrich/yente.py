@@ -1,18 +1,18 @@
+import logging
 import os
 import time
-import logging
-from banal import ensure_list
-from typing import Any, Generator, Optional, Dict, List
+from collections.abc import Generator
+from typing import Any
 from urllib.parse import urljoin
-from followthemoney import registry, DS, SE
-from followthemoney import StatementEntity
+
+from banal import ensure_list
+from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.namespace import Namespace
 from requests import Session
 from rigour.urls import build_url
 
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentException
+from nomenklatura.enrich.common import Enricher, EnricherConfig, EnrichmentException
 
 log = logging.getLogger(__name__)
 
@@ -29,23 +29,23 @@ class YenteEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         self._api: str = config.pop("api")
         self._yente_dataset: str = config.pop("dataset", "default")
-        self._cutoff: Optional[float] = config.pop("cutoff", None)
-        self._algorithm: Optional[float] = config.pop("algorithm", "best")
+        self._cutoff: float | None = config.pop("cutoff", None)
+        self._algorithm: float | None = config.pop("algorithm", "best")
         self._nested: bool = config.pop("expand_nested", True)
         self._fuzzy: bool = config.pop("fuzzy", False)
-        self._ns: Optional[Namespace] = None
+        self._ns: Namespace | None = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
 
-        api_key: Optional[str] = os.path.expandvars(config.pop("api_key", "")).strip()
+        api_key: str | None = os.path.expandvars(config.pop("api_key", "")).strip()
         if api_key is None or not len(api_key):
             api_key = os.environ.get("YENTE_API_KEY")
-        self._api_key: Optional[str] = api_key
+        self._api_key: str | None = api_key
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
 
@@ -56,12 +56,12 @@ class YenteEnricher(Enricher[DS]):
         if not entity.schema.matchable:
             return
         url = urljoin(self._api, f"match/{self._yente_dataset}")
-        params: Dict[str, Any] = {"fuzzy": self._fuzzy, "algorithm": self._algorithm}
+        params: dict[str, Any] = {"fuzzy": self._fuzzy, "algorithm": self._algorithm}
         if self._cutoff is not None:
             params["cutoff"] = self._cutoff
         url = build_url(url, params)
         cache_key = f"{url}:{entity.id}"
-        props: Dict[str, List[str]] = {}
+        props: dict[str, list[str]] = {}
         for prop in entity.iterprops():
             if prop.type == registry.entity:
                 continue

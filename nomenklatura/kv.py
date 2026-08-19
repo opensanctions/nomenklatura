@@ -1,11 +1,11 @@
-import redis
 import logging
-from typing import Union
 from functools import cache
-from redis.client import Redis
-from fakeredis import FakeStrictRedis
 
+import redis
+from fakeredis import FakeStrictRedis
+from redis.client import Redis
 from rigour.env import ENCODING
+
 from nomenklatura import settings
 
 log = logging.getLogger(__name__)
@@ -35,6 +35,6 @@ def b(s: str) -> bytes:
     return s.encode(ENCODING)
 
 
-def bv(s: Union[bytes, str, int, float]) -> bytes:
+def bv(s: bytes | str | float) -> bytes:
     """Decode bytes to a string."""
     return s  # type: ignore

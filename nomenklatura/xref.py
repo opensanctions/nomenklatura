@@ -1,19 +1,21 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Type
-from followthemoney import Schema, DS, SE
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
-from nomenklatura.db import Session
-from nomenklatura.store import Store
-from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver
+from followthemoney import DS, SE, Schema
+
 from nomenklatura.blocker import Index
+from nomenklatura.db import Session
+from nomenklatura.judgement import Judgement
 from nomenklatura.matching import DedupeAlgorithm, ScoringAlgorithm, ScoringConfig
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import Store
 
 log = logging.getLogger(__name__)
 
 
-def _print_stats(pairs: int, suggested: int, scores: List[float]) -> None:
+def _print_stats(pairs: int, suggested: int, scores: list[float]) -> None:
     matches = len(scores)
     log.info(
         "Xref: %d pairs, %d scored, %d suggested, avg: %.2f, min: %.2f, max: %.2f",
@@ -37,17 +39,15 @@ def xref(
     scored: bool = True,
     external: bool = True,
     discount_internal: float = 0.7,
-    range: Optional[Schema] = None,
-    auto_threshold: Optional[float] = None,
+    range: Schema | None = None,
+    auto_threshold: float | None = None,
     min_threshold: float = 0.01,
-    focus_datasets: Set[str] = set(),
-    algorithm: Type[ScoringAlgorithm] = DedupeAlgorithm,
-    heuristic: Optional[
-        Callable[[Resolver[SE], SE, SE, float], Optional[float]]
-    ] = None,
-    config: Optional[ScoringConfig] = None,
-    blocker_options: Optional[Dict[str, Any]] = None,
-    user: Optional[str] = None,
+    focus_datasets: set[str] = set(),
+    algorithm: type[ScoringAlgorithm] = DedupeAlgorithm,
+    heuristic: Callable[[Resolver[SE], SE, SE, float], float | None] | None = None,
+    config: ScoringConfig | None = None,
+    blocker_options: dict[str, Any] | None = None,
+    user: str | None = None,
 ) -> None:
     log.info(
         "Begin xref: %r, resolver: %s, limit: %d, patience: %d",
@@ -68,7 +68,7 @@ def xref(
     last_suggested = 0
 
     try:
-        scores: List[float] = []
+        scores: list[float] = []
         suggested = 0
         idx = 0
         resolver.load_into_memory()

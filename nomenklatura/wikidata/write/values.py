@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional
+
 from normality import squash_spaces
-from prefixdate import parse, Precision
+from prefixdate import Precision, parse
 
 # QuickStatements time precision integers, as used in the `/precision` suffix of
 # a time value. They differ from prefixdate's `Precision` (which counts string
@@ -120,17 +121,17 @@ class TimeValue(QSValue):
         return f"{stamp}/{self.precision}"
 
 
-Snak = Tuple[str, QSValue]
+Snak = tuple[str, QSValue]
 
 
-def url_reference(url: str, retrieved: Optional[str] = None) -> List[Snak]:
+def url_reference(url: str, retrieved: str | None = None) -> list[Snak]:
     """Build the standard reference snaks for a sourced statement.
 
     Reach for this when emitting a statement derived from an OpenSanctions
     source: it pairs the source URL (``S854``) with an optional retrieved-at
     date (``S813``), the citation shape Wikidata expects for automated edits.
     """
-    snaks: List[Snak] = [(REF_URL, QSValue.string(url))]
+    snaks: list[Snak] = [(REF_URL, QSValue.string(url))]
     if retrieved is not None:
         date = QSValue.date(retrieved)
         if date is not None:

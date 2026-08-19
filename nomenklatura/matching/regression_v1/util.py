@@ -1,12 +1,13 @@
+from collections.abc import Iterable
+
 from normality.constants import WS
-from typing import Iterable, Set, Tuple
 from rigour.text.distance import levenshtein
 
 from nomenklatura.matching.compat import clean_name_ascii
 
 
-def tokenize(texts: Iterable[str]) -> Set[str]:
-    tokens: Set[str] = set()
+def tokenize(texts: Iterable[str]) -> set[str]:
+    tokens: set[str] = set()
     for text in texts:
         cleaned = clean_name_ascii(text)
         if cleaned is None:
@@ -19,8 +20,8 @@ def tokenize(texts: Iterable[str]) -> Set[str]:
 
 
 def tokenize_pair(
-    pair: Tuple[Iterable[str], Iterable[str]],
-) -> Tuple[Set[str], Set[str]]:
+    pair: tuple[Iterable[str], Iterable[str]],
+) -> tuple[set[str], set[str]]:
     return tokenize(pair[0]), tokenize(pair[1])
 
 

@@ -1,5 +1,5 @@
-from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.matching.logic_v1.multi import numbers_mismatch
+from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e
 

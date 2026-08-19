@@ -1,17 +1,17 @@
 from functools import lru_cache
-from typing import Set
-from followthemoney import EntityProxy, model, E
+
+from followthemoney import E, EntityProxy, model
 from followthemoney.names import entity_names
-from rigour.text.distance import levenshtein_similarity, levenshtein
 from rigour.names import Name, NameTypeTag
 from rigour.text import is_stopword
+from rigour.text.distance import levenshtein, levenshtein_similarity
 
-from nomenklatura.matching.util import MEMO_BATCH, max_in_sets, has_schema
+from nomenklatura.matching.util import MEMO_BATCH, has_schema, max_in_sets
 from nomenklatura.util import unroll
 
 
 @lru_cache(maxsize=MEMO_BATCH)
-def _entity_names(entity: EntityProxy) -> Set[Name]:
+def _entity_names(entity: EntityProxy) -> set[Name]:
     return entity_names(entity, phonetics=False, symbols=False, consolidate=False)
 
 
@@ -72,8 +72,8 @@ def legal_name_levenshtein(left: E, right: E) -> float:
     return max_in_sets(left_names, right_names, _compare_levenshtein)
 
 
-def _entity_lastnames(entity: EntityProxy) -> Set[str]:
-    names: Set[str] = set()
+def _entity_lastnames(entity: EntityProxy) -> set[str]:
+    names: set[str] = set()
     for string in entity.get("lastName", quiet=True):
         n = Name(string, tag=NameTypeTag.PER)
         for part in n.parts:
@@ -94,8 +94,8 @@ def family_name_match(left: E, right: E) -> float:
     return -1.0 if len(overlap) == 0 else 1.0
 
 
-def _name_tokens(entity: EntityProxy) -> Set[str]:
-    tokens: Set[str] = set()
+def _name_tokens(entity: EntityProxy) -> set[str]:
+    tokens: set[str] = set()
     for name in _entity_names(entity):
         for part in name.parts:
             cmp = part.comparable

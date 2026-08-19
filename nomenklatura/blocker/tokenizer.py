@@ -1,12 +1,12 @@
-from normality import WS
-from rigour.ids import StrictFormat
-from rigour.addresses import normalize_address
-from rigour.names import Symbol, NamePartTag
-from rigour.names import tokenize_name
-from rigour.text import is_stopword
-from typing import Generator, Set, Tuple
-from followthemoney import registry, StatementEntity
+from collections.abc import Generator
+
+from followthemoney import StatementEntity, registry
 from followthemoney.names import entity_names
+from normality import WS
+from rigour.addresses import normalize_address
+from rigour.ids import StrictFormat
+from rigour.names import NamePartTag, Symbol, tokenize_name
+from rigour.text import is_stopword
 
 WORD_FIELD = "wd"
 NAME_PART_FIELD = "np"
@@ -58,8 +58,8 @@ TEXT_TYPES = (
 )
 
 
-def tokenize_entity(entity: StatementEntity) -> Generator[Tuple[str, str], None, None]:
-    unique: Set[Tuple[str, str]] = set()
+def tokenize_entity(entity: StatementEntity) -> Generator[tuple[str, str], None, None]:
+    unique: set[tuple[str, str]] = set()
 
     # Parsed name parts
     for name in entity_names(

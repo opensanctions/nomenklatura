@@ -1,18 +1,19 @@
 import re
+
 import pytest
 import requests_mock
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 
+from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import load_entity_file_store
-from nomenklatura.matching import EntityResolveRegression
-from nomenklatura.wikidata import WikidataClient
 from nomenklatura.tui.reconcile import (
     CandidateTable,
     ReconcileApp,
     ReconcileState,
 )
+from nomenklatura.wikidata import WikidataClient
 from nomenklatura.wikidata.reconcile import prepare_review
 
 from .conftest import wd_read_response
@@ -51,9 +52,7 @@ async def test_reconcile_app_navigation(
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
     with requests_mock.Mocker(real_http=False) as m:
-        m.register_uri(
-            "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
-        )
+        m.register_uri("GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}]))
         _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(
@@ -89,9 +88,7 @@ async def test_reconcile_app_negative(
     dataset = Dataset.make({"name": "wikidata"})
     cache = cache_factory(dataset)
     with requests_mock.Mocker(real_http=False) as m:
-        m.register_uri(
-            "GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}])
-        )
+        m.register_uri("GET", WikidataClient.WD_API, json=_dispatch([{"id": "Q7747"}]))
         _mock_summary(m)
         client = WikidataClient(cache)
         items, enrich = prepare_review(

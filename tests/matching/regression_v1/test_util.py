@@ -1,6 +1,8 @@
-from nomenklatura.matching.regression_v1.util import compare_levenshtein
-from nomenklatura.matching.regression_v1.util import tokenize
-from nomenklatura.matching.regression_v1.util import tokenize_pair
+from nomenklatura.matching.regression_v1.util import (
+    compare_levenshtein,
+    tokenize,
+    tokenize_pair,
+)
 
 
 def test_tokenize_normalizes_text_and_drops_short_tokens():

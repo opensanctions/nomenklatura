@@ -1,5 +1,6 @@
-from typing import Generator, Tuple
-from followthemoney import DS, registry, Property, SE
+from collections.abc import Generator
+
+from followthemoney import DS, SE, Property, registry
 
 from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
@@ -48,7 +49,7 @@ def comparison_props(left: SE, right: SE) -> Generator[Property, None, None]:
             if prop.name in schema.featured:
                 weights[prop.name] -= 10
 
-    def sort_props(prop: Property) -> Tuple[int, str]:
+    def sort_props(prop: Property) -> tuple[int, str]:
         return (weights[prop.name], prop.label)
 
     for prop in sorted(props, key=sort_props):

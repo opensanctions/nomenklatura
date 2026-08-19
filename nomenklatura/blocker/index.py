@@ -29,28 +29,30 @@
 # making memory_limit smaller might help fit what the buffer manager manages,
 # plus all the additional DuckDB and non-DuckDB memory usage.
 import csv
-import duckdb
 import logging
-from pathlib import Path
-from itertools import islice
-from time import perf_counter
-from rigour.reset import reset_caches
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Tuple, TypeVar
+from collections.abc import Generator, Iterable
+from itertools import islice
+from pathlib import Path
+from time import perf_counter
+from typing import Any, TypeVar
 
+import duckdb
 from followthemoney import DS, SE, StatementEntity, model, registry
-from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
-from nomenklatura.resolver import Identifier
-from nomenklatura.store import View
+from rigour.reset import reset_caches
+
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
     SYMBOL_FIELD,
     WORD_FIELD,
     tokenize_entity,
 )
+from nomenklatura.resolver import Identifier
+from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
+from nomenklatura.store import View
 
-DuckDBConfig = Dict[str, str | bool | int | float | list[str]]
-BlockingMatches = List[Tuple[Identifier, float]]
+DuckDBConfig = dict[str, str | bool | int | float | list[str]]
+BlockingMatches = list[tuple[Identifier, float]]
 R = TypeVar("R")
 
 log = logging.getLogger(__name__)
@@ -71,13 +73,13 @@ def _bucket_pair_cost(bucket_size: int, cross: bool = False) -> int:
     return bucket_size * max(0, bucket_size - 1) // 2
 
 
-def batched(iterable: Iterable[R], n: int) -> Generator[Tuple[R, ...], None, None]:
+def batched(iterable: Iterable[R], n: int) -> Generator[tuple[R, ...], None, None]:
     iterator = iter(iterable)
     while batch := tuple(islice(iterator, n)):
         yield batch
 
 
-class Index(object):
+class Index:
     """Rank token-overlapping entity candidates with a DuckDB index.
 
     Use this to generate dedupe pairs or match incoming entities when exhaustive
@@ -98,7 +100,7 @@ class Index(object):
         self,
         view: View[DS, SE],
         data_dir: Path,
-        options: Dict[str, Any] = {},
+        options: dict[str, Any] = {},
     ):
         self.view = view
         self.max_candidates = int(options.get("max_candidates", 75))
@@ -153,13 +155,13 @@ class Index(object):
         """)
         self.con.execute(f"DELETE FROM {table}")
 
-        def generate() -> Generator[Tuple[str, str, str, str, int], None, None]:
+        def generate() -> Generator[tuple[str, str, str, str, int], None, None]:
             idx = 0
             tokens = 0
             for entity in entities:
                 if not entity.schema.matchable or entity.id is None:
                     continue
-                counts: Dict[Tuple[str, str], int] = defaultdict(int)
+                counts: dict[tuple[str, str], int] = defaultdict(int)
                 for field, token in tokenize_entity(entity):
                     token = token[:40]  # Limit token length
                     counts[(field, token)] += 1
@@ -587,7 +589,7 @@ class Index(object):
 
     def pairs(
         self, max_pairs: int = 10_000
-    ) -> Iterable[Tuple[Tuple[Identifier, Identifier], float]]:
+    ) -> Iterable[tuple[tuple[Identifier, Identifier], float]]:
         self._ensure_pair_stopwords()
         self._log_pair_query_stats(max_pairs)
         log.info("Generating pairs...")
@@ -637,7 +639,7 @@ class Index(object):
     def match_entities(
         self, entities: Iterable[StatementEntity]
     ) -> Generator[
-        Tuple[Identifier, BlockingMatches],
+        tuple[Identifier, BlockingMatches],
         None,
         None,
     ]:
@@ -653,7 +655,7 @@ class Index(object):
     def _find_matches(
         self,
     ) -> Generator[
-        Tuple[Identifier, BlockingMatches],
+        tuple[Identifier, BlockingMatches],
         None,
         None,
     ]:

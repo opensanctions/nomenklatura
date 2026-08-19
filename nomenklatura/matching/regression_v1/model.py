@@ -1,30 +1,45 @@
 import pickle
-import numpy as np
-from typing import List, Dict, Tuple, cast
 from functools import cache
-from sklearn.pipeline import Pipeline  # type: ignore
-from followthemoney.proxy import E
+from typing import cast
 
-from nomenklatura.matching.regression_v1.names import first_name_match
-from nomenklatura.matching.regression_v1.names import family_name_match
-from nomenklatura.matching.regression_v1.names import name_levenshtein, name_match
-from nomenklatura.matching.regression_v1.names import name_token_overlap, name_numbers
-from nomenklatura.matching.regression_v1.misc import phone_match, email_match
-from nomenklatura.matching.regression_v1.misc import address_match, address_numbers
-from nomenklatura.matching.regression_v1.misc import identifier_match, birth_place
-from nomenklatura.matching.regression_v1.misc import org_identifier_match
-from nomenklatura.matching.regression_v1.misc import gender_mismatch
-from nomenklatura.matching.regression_v1.misc import country_mismatch
-from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
-from nomenklatura.matching.compare.dates import dob_year_disjoint
+import numpy as np
+from followthemoney.proxy import E
+from sklearn.pipeline import Pipeline  # type: ignore
+
+from nomenklatura.matching.compare.dates import (
+    dob_matches,
+    dob_year_disjoint,
+    dob_year_matches,
+)
+from nomenklatura.matching.regression_v1.misc import (
+    address_match,
+    address_numbers,
+    birth_place,
+    country_mismatch,
+    email_match,
+    gender_mismatch,
+    identifier_match,
+    org_identifier_match,
+    phone_match,
+)
+from nomenklatura.matching.regression_v1.names import (
+    family_name_match,
+    first_name_match,
+    name_levenshtein,
+    name_match,
+    name_numbers,
+    name_token_overlap,
+)
 from nomenklatura.matching.types import (
-    FeatureDocs,
+    CompareFunction,
+    Encoded,
     FeatureDoc,
+    FeatureDocs,
+    FtResult,
     MatchingResult,
+    ScoringAlgorithm,
     ScoringConfig,
 )
-from nomenklatura.matching.types import CompareFunction, FtResult
-from nomenklatura.matching.types import Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
 from nomenklatura.util import DATA_PATH
 
@@ -34,7 +49,7 @@ class RegressionV1(ScoringAlgorithm):
 
     NAME = "regression-v1"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
-    FEATURES: List[CompareFunction] = [
+    FEATURES: list[CompareFunction] = [
         name_match,
         name_token_overlap,
         name_numbers,
@@ -56,7 +71,7 @@ class RegressionV1(ScoringAlgorithm):
     ]
 
     @classmethod
-    def save(cls, pipe: Pipeline, coefficients: Dict[str, float]) -> None:
+    def save(cls, pipe: Pipeline, coefficients: dict[str, float]) -> None:
         """Store a classification pipeline after training."""
         mdl = pickle.dumps({"pipe": pipe, "coefficients": coefficients})
         with open(cls.MODEL_PATH, "wb") as fh:
@@ -65,12 +80,12 @@ class RegressionV1(ScoringAlgorithm):
 
     @classmethod
     @cache
-    def load(cls) -> Tuple[Pipeline, Dict[str, float]]:
+    def load(cls) -> tuple[Pipeline, dict[str, float]]:
         """Load a pre-trained classification pipeline for ad-hoc use."""
         with open(cls.MODEL_PATH, "rb") as fh:
             matcher = pickle.loads(fh.read())
-        pipe = cast(Pipeline, matcher["pipe"])
-        coefficients = cast(Dict[str, float], matcher["coefficients"])
+        pipe = cast("Pipeline", matcher["pipe"])
+        coefficients = cast("dict[str, float]", matcher["coefficients"])
         current = [f.__name__ for f in cls.FEATURES]
         if list(coefficients.keys()) != current:
             raise RuntimeError("Model was not trained on identical features!")
@@ -98,7 +113,7 @@ class RegressionV1(ScoringAlgorithm):
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
         score = float(pred[0][1])
-        explanations: Dict[str, FtResult] = {}
+        explanations: dict[str, FtResult] = {}
         for feature, coeff in zip(cls.FEATURES, encoded):
             name = feature.__name__
             explanations[name] = FtResult(score=float(coeff), detail=None)

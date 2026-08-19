@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from sqlalchemy.engine import RowMapping
 
@@ -7,16 +7,16 @@ from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.identifier import Identifier, StrIdent
 
 
-class Edge(object):
+class Edge:
     __slots__ = (
-        "key",
-        "source",
-        "target",
-        "judgement",
-        "score",
-        "user",
         "created_at",
         "deleted_at",
+        "judgement",
+        "key",
+        "score",
+        "source",
+        "target",
+        "user",
     )
 
     def __init__(
@@ -24,10 +24,10 @@ class Edge(object):
         left_id: StrIdent,
         right_id: StrIdent,
         judgement: Judgement = Judgement.NO_JUDGEMENT,
-        score: Optional[float] = None,
-        user: Optional[str] = None,
-        created_at: Optional[str] = None,
-        deleted_at: Optional[str] = None,
+        score: float | None = None,
+        user: str | None = None,
+        created_at: str | None = None,
+        deleted_at: str | None = None,
     ):
         self.key = Identifier.pair(left_id, right_id)
         self.target, self.source = self.key
@@ -42,7 +42,7 @@ class Edge(object):
             return self.source
         return self.target
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "target": self.target.id,
             "source": self.source.id,
@@ -70,7 +70,7 @@ class Edge(object):
     def __hash__(self) -> int:
         return hash(self.key)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return hash(self) == hash(other)
 
     def __lt__(self, other: Any) -> bool:
@@ -95,10 +95,10 @@ class Edge(object):
         return edge
 
     @classmethod
-    def from_dict(cls, data: Union[RowMapping, Dict[str, Any]]) -> "Edge":
+    def from_dict(cls, data: RowMapping | dict[str, Any]) -> "Edge":
         # Accept rows from csv.DictReader, where every value is a string and
         # missing values arrive as "" rather than None.
-        score: Union[None, str, float] = data.get("score")
+        score: str | float | None = data.get("score")
         if isinstance(score, str):
             score = float(score) if len(score) else None
         return cls(

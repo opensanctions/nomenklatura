@@ -1,6 +1,7 @@
 import requests_mock
 from followthemoney import Dataset, StatementEntity
-from nomenklatura.enrich import make_enricher, Enricher
+
+from nomenklatura.enrich import Enricher, make_enricher
 
 PATH = "nomenklatura.enrich.permid:PermIDEnricher"
 dataset = Dataset.make({"name": "permid", "title": "PermID"})

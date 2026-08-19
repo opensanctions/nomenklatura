@@ -3,8 +3,9 @@ Test if the different store implementations all behave the same.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import MagicMock
+
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 from pytest import MonkeyPatch
@@ -21,7 +22,7 @@ from nomenklatura.store.sql import SQLWriter
 def _run_store_test(
     store: Store[Dataset, Entity],
     dataset: Dataset,
-    donations_json: List[Dict[str, Any]],
+    donations_json: list[dict[str, Any]],
 ):
     entity_id = "4e0bd810e1fcb49990a2b31709b6140c4c9139c5"
     view = store.default_view()
@@ -76,7 +77,7 @@ def _run_store_test(
 def test_store_sql(
     tmp_path: Path,
     test_dataset: Dataset,
-    donations_json: List[Dict[str, Any]],
+    donations_json: list[dict[str, Any]],
     resolver: Resolver[Entity],
 ):
     uri = f"sqlite:///{tmp_path / 'test.db'}"
@@ -132,7 +133,7 @@ def test_sql_writer_postgresql_no_batch_limit_cap(monkeypatch: MonkeyPatch):
 
 def test_store_memory(
     test_dataset: Dataset,
-    donations_json: List[Dict[str, Any]],
+    donations_json: list[dict[str, Any]],
     resolver: Resolver[Entity],
 ):
     store = SimpleMemoryStore(dataset=test_dataset, linker=resolver)
@@ -142,7 +143,7 @@ def test_store_memory(
 def test_store_level(
     tmp_path: Path,
     test_dataset: Dataset,
-    donations_json: List[Dict[str, Any]],
+    donations_json: list[dict[str, Any]],
     resolver: Resolver[Entity],
 ):
     path = tmp_path / "level.db"

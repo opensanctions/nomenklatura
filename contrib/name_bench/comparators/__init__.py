@@ -13,16 +13,15 @@ from `COMPARATORS.keys()`.
 
 from __future__ import annotations
 
-from typing import Callable, Dict
+from collections.abc import Callable
 
 from .levenshtein import levenshtein_baseline
 from .logicv2 import logicv2_baseline
 
-
 Comparator = Callable[[str, str, str], float]
 
 
-COMPARATORS: Dict[str, Comparator] = {
+COMPARATORS: dict[str, Comparator] = {
     "levenshtein": levenshtein_baseline,
     "logicv2": logicv2_baseline,
 }

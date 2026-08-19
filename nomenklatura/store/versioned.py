@@ -1,13 +1,15 @@
-import orjson
 import logging
-from redis.client import Redis
-from typing import Generator, List, Optional, Set, Tuple, Dict
-from followthemoney import DS, SE, Schema, registry, Property, Statement
-from followthemoney.statement.util import pack_prop, unpack_prop
-from followthemoney.dataset.versions import Version
+from collections.abc import Generator
+from typing import Optional
 
-from nomenklatura.kv import b, bv, get_redis, close_redis
-from nomenklatura.resolver import Linker, Identifier, StrIdent
+import orjson
+from followthemoney import DS, SE, Property, Schema, Statement, registry
+from followthemoney.dataset.versions import Version
+from followthemoney.statement.util import pack_prop, unpack_prop
+from redis.client import Redis
+
+from nomenklatura.kv import b, bv, close_redis, get_redis
+from nomenklatura.resolver import Identifier, Linker, StrIdent
 from nomenklatura.store.base import Store, View, Writer
 
 log = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ def _pack_statement(stmt: Statement) -> bytes:
     return orjson.dumps(values)
 
 
-def _unpack_statement(data: bytes, canonical_id: Optional[str] = None) -> Statement:
+def _unpack_statement(data: bytes, canonical_id: str | None = None) -> Statement:
     (
         id,
         entity_id,
@@ -73,8 +75,8 @@ class VersionedRedisStore(Store[DS, SE]):
 
     def writer(
         self,
-        dataset: Optional[DS] = None,
-        version: Optional[str] = None,
+        dataset: DS | None = None,
+        version: str | None = None,
         timestamps: bool = False,
     ) -> "VersionedRedisWriter[DS, SE]":
         if version is None:
@@ -88,7 +90,7 @@ class VersionedRedisStore(Store[DS, SE]):
         )
 
     def view(
-        self, scope: DS, external: bool = False, versions: Dict[str, str] = {}
+        self, scope: DS, external: bool = False, versions: dict[str, str] = {}
     ) -> "VersionedRedisView[DS, SE]":
         return VersionedRedisView(self, scope, external=external, versions=versions)
 
@@ -96,12 +98,12 @@ class VersionedRedisStore(Store[DS, SE]):
         # Noop because the VersionedStore is not resolved.
         return
 
-    def get_latest(self, dataset: str) -> Optional[str]:
+    def get_latest(self, dataset: str) -> str | None:
         """Get the latest version of a dataset in the store."""
         val = self.db.get(b(f"ds:{dataset}:latest"))
         return val.decode("utf-8") if val is not None else None
 
-    def get_history(self, dataset: str) -> List[str]:
+    def get_history(self, dataset: str) -> list[str]:
         """List all versions of a dataset present in the store."""
         values = self.db.lrange(f"ds:{dataset}:history", 0, -1)
         return [v.decode("utf-8") for v in values]
@@ -169,7 +171,7 @@ class VersionedRedisWriter(Writer[DS, SE]):
         self.ver = f"{dataset.name}:{version}"
         self.store: VersionedRedisStore[DS, SE] = store
         self.prev = store.get_latest(dataset.name)
-        self.buffer: List[Statement] = []
+        self.buffer: list[Statement] = []
 
     def __enter__(self) -> "VersionedRedisWriter[DS, SE]":
         return self
@@ -178,7 +180,7 @@ class VersionedRedisWriter(Writer[DS, SE]):
         db = self.store.db
         pipeline = db.pipeline()
 
-        statements: Dict[str, Set[Statement]] = {}
+        statements: dict[str, set[Statement]] = {}
         for stmt in self.buffer:
             if stmt.entity_id not in statements:
                 statements[stmt.entity_id] = set()
@@ -189,7 +191,7 @@ class VersionedRedisWriter(Writer[DS, SE]):
 
         # Merge with previous version to get accurate first_seen timestamps
         if self.timestamps and self.prev:
-            keys = [b(f"stmt:{self.prev}:{e}") for e in statements.keys()]
+            keys = [b(f"stmt:{self.prev}:{e}") for e in statements]
             for v in db.sunion(keys):
                 pstmt = _unpack_statement(bv(v))
                 for stmt in self.buffer:
@@ -226,8 +228,8 @@ class VersionedRedisWriter(Writer[DS, SE]):
         if len(self.buffer) >= self.BATCH_STATEMENTS:
             self.flush()
 
-    def pop(self, entity_id: str) -> List[Statement]:
-        raise NotImplementedError()
+    def pop(self, entity_id: str) -> list[Statement]:
+        raise NotImplementedError
 
 
 class VersionedRedisView(View[DS, SE]):
@@ -236,20 +238,20 @@ class VersionedRedisView(View[DS, SE]):
         store: VersionedRedisStore[DS, SE],
         scope: DS,
         external: bool = False,
-        versions: Dict[str, str] = {},
+        versions: dict[str, str] = {},
     ) -> None:
         super().__init__(store, scope, external=external)
         self.store: VersionedRedisStore[DS, SE] = store
 
         # Get the latest version for each dataset in the scope
-        self.vers: List[Tuple[str, str]] = []
+        self.vers: list[tuple[str, str]] = []
         for ds in scope.leaf_names:
             version = versions.get(ds, self.store.get_latest(ds))
             if version is not None:
                 self.vers.append((ds, version))
 
-    def _get_stmt_keys(self, entity_id: str) -> List[str]:
-        keys: List[str] = []
+    def _get_stmt_keys(self, entity_id: str) -> list[str]:
+        keys: list[str] = []
         ident = Identifier.get(entity_id)
         for id in self.store.linker.connected(ident):
             keys.extend([f"stmt:{d}:{v}:{id}" for d, v in self.vers])
@@ -273,20 +275,20 @@ class VersionedRedisView(View[DS, SE]):
             stmt = _unpack_statement(bv(v), id)
             yield stmt
 
-    def get_timestamps(self, id: str) -> Dict[str, str]:
+    def get_timestamps(self, id: str) -> dict[str, str]:
         """Get the first seen timestamps associated with all statements of an entity.
 
         Returns a dictionary mapping statement IDs to their first seen timestamps.
         This can be used by an ETL to generate continuous entity histories.
         """
-        timestamps: Dict[str, str] = {}
+        timestamps: dict[str, str] = {}
         for stmt in self._get_statements(id):
             if stmt.id is not None and stmt.first_seen is not None:
                 timestamps[stmt.id] = stmt.first_seen
         return timestamps
 
-    def get_entity(self, id: str) -> Optional[SE]:
-        statements: List[Statement] = []
+    def get_entity(self, id: str) -> SE | None:
+        statements: list[Statement] = []
         for stmt in self._get_statements(id):
             if not stmt.external or self.external:
                 stmt.canonical_id = self.store.linker.get_canonical(stmt.entity_id)
@@ -295,8 +297,8 @@ class VersionedRedisView(View[DS, SE]):
                 statements.append(stmt)
         return self.store.assemble(statements)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
-        keys: List[str] = []
+    def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
+        keys: list[str] = []
         ident = Identifier.get(id)
         for ent_id in self.store.linker.connected(ident):
             keys.extend([f"inv:{d}:{v}:{ent_id}" for d, v in self.vers])
@@ -305,7 +307,7 @@ class VersionedRedisView(View[DS, SE]):
             if len(keys) > 0
             else self.store.db.smembers(keys[0])
         )
-        entities: Set[str] = set()
+        entities: set[str] = set()
         for v in refs:
             entity_id = v.decode("utf-8")
             entities.add(self.store.linker.get_canonical(entity_id))
@@ -336,7 +338,7 @@ class VersionedRedisView(View[DS, SE]):
                     yield stmt
 
     def entities(
-        self, include_schemata: Optional[List[Schema]] = None
+        self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return
@@ -353,7 +355,7 @@ class VersionedRedisView(View[DS, SE]):
         # memory, so we're being careful to only record entity IDs
         # that are part of a cluster with more than one ID.
         try:
-            seen: Set[str] = set()
+            seen: set[str] = set()
             for id in self.store.db.sscan_iter(scope_name):
                 entity_id = id.decode("utf-8")
                 ident = Identifier.get(entity_id)

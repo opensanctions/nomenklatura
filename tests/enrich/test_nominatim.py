@@ -1,6 +1,7 @@
 import requests_mock
 from followthemoney import Dataset, StatementEntity
-from nomenklatura.enrich import make_enricher, enrich, match, Enricher
+
+from nomenklatura.enrich import Enricher, enrich, make_enricher, match
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 

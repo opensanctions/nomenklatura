@@ -1,17 +1,18 @@
+from collections.abc import Iterable
 from itertools import product
-from typing import Iterable, Set
-from prefixdate import Precision
+
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.distance import levenshtein
+from prefixdate import Precision
 from rigour.ids import StrictFormat
+from rigour.text.distance import levenshtein
 
 from nomenklatura.matching.compare.util import clean_map
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, has_schema, props_pair, type_pair
 
 
-def _dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
+def _dates_precision(values: Iterable[str], precision: Precision) -> set[str]:
     dates = set()
     for value in values:
         if len(value) >= precision.value:

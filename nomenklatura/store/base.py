@@ -1,10 +1,19 @@
+from collections.abc import Generator
 from types import TracebackType
-from typing import Optional, Generator, List, Tuple, Generic, Type, cast
-from followthemoney import Schema, registry, Property, DS, Statement
-from followthemoney import StatementEntity, SE
+from typing import Generic, cast
+
+from followthemoney import (
+    DS,
+    SE,
+    Property,
+    Schema,
+    Statement,
+    StatementEntity,
+    registry,
+)
 from followthemoney.statement.util import get_prop_type
 
-from nomenklatura.resolver import Linker, StrIdent
+from nomenklatura.resolver import Linker
 
 
 class Store(Generic[DS, SE]):
@@ -15,21 +24,21 @@ class Store(Generic[DS, SE]):
     def __init__(self, dataset: DS, linker: Linker[SE]):
         self.dataset = dataset
         self.linker = linker
-        self.entity_class = cast(Type[SE], StatementEntity)
+        self.entity_class = cast("type[SE]", StatementEntity)
 
     def writer(self) -> "Writer[DS, SE]":
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def view(self, scope: DS, external: bool = False) -> "View[DS, SE]":
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def default_view(self, external: bool = False) -> "View[DS, SE]":
         return self.view(self.dataset, external=external)
 
-    def assemble(self, statements: List[Statement]) -> Optional[SE]:
+    def assemble(self, statements: list[Statement]) -> SE | None:
         if not len(statements):
             return None
-        canonicals: List[Statement] = []
+        canonicals: list[Statement] = []
         for stmt in statements:
             if get_prop_type(stmt.schema, stmt.prop) == registry.entity.name:
                 ov = stmt._value if stmt.original_value is None else stmt.original_value
@@ -65,14 +74,14 @@ class Writer(Generic[DS, SE]):
         self.store = store
 
     def add_statement(self, stmt: Statement) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def add_entity(self, entity: SE) -> None:
         for stmt in entity.statements:
             self.add_statement(stmt)
 
-    def pop(self, entity_id: str) -> List[Statement]:
-        raise NotImplementedError()
+    def pop(self, entity_id: str) -> list[Statement]:
+        raise NotImplementedError
 
     def flush(self) -> None:
         pass
@@ -85,9 +94,9 @@ class Writer(Generic[DS, SE]):
 
     def __exit__(
         self,
-        type: Optional[Type[BaseException]],
-        value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         self.flush()
 
@@ -109,17 +118,17 @@ class View(Generic[DS, SE]):
         self.external = external
 
     def has_entity(self, id: str) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def get_entity(self, id: str) -> Optional[SE]:
-        raise NotImplementedError()
+    def get_entity(self, id: str) -> SE | None:
+        raise NotImplementedError
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
-        raise NotImplementedError()
+    def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
+        raise NotImplementedError
 
     def get_adjacent(
         self, entity: SE, inverted: bool = True
-    ) -> Generator[Tuple[Property, SE], None, None]:
+    ) -> Generator[tuple[Property, SE], None, None]:
         for prop, value in entity.itervalues():
             if prop.type == registry.entity:
                 child = self.get_entity(value)
@@ -131,14 +140,14 @@ class View(Generic[DS, SE]):
                 yield prop, adjacent
 
     def entities(
-        self, include_schemata: List[Schema] = []
+        self, include_schemata: list[Schema] = []
     ) -> Generator[SE, None, None]:
         """Iterate over all entities in the view.
 
         If `include_schemata` is provided, only entities of the provided schemata will be returned.
         Note that `schemata` will not be expanded via "is_a" relationships."""
 
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__}({self.scope.name!r})>"

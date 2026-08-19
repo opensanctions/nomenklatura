@@ -1,6 +1,7 @@
 import math
-import pytest
 from pathlib import Path
+
+import pytest
 from followthemoney import Dataset, StatementEntity
 
 from nomenklatura.blocker.index import DEFAULT_MAX_BUCKET_SIZE, Index
@@ -39,7 +40,9 @@ def make_manual_index(
             (schema TEXT, id TEXT, field TEXT, token TEXT, count INT)
     """)
     index.con.executemany("INSERT INTO entries VALUES (?, ?, ?, ?, ?)", entries)
-    index.con.execute("""CREATE OR REPLACE TABLE schemata ("left" TEXT, "right" TEXT)""")
+    index.con.execute(
+        """CREATE OR REPLACE TABLE schemata ("left" TEXT, "right" TEXT)"""
+    )
     index.con.executemany("INSERT INTO schemata VALUES (?, ?)", schemata)
     return index
 
@@ -183,7 +186,7 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
         Identifier.get("a061e760dfcf0d5c774fc37c74937193704807b5"),
     )
     false_pos_scores = [score for pair, score in pairs if false_pos == pair]
-    if len(false_pos_scores):
+    if false_pos_scores:
         # Dynamic stopwords are based on block size, so weak low-frequency signals
         # can remain in small fixtures. They should not outrank useful name matches.
         assert max(false_pos_scores) < bmw_score, (false_pos_scores, bmw_score)
@@ -194,12 +197,8 @@ def test_index_pairs(dstore: SimpleMemoryStore, dindex: Index):
 def test_dynamic_stopwords_respect_pair_cost_cap(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("Person", f"k{i}", "np", "np:kept", 1)
-        for i in range(4)
-    ] + [
-        ("Person", f"s{i}", "np", "np:stopped", 1)
-        for i in range(5)
+    entries = [("Person", f"k{i}", "np", "np:kept", 1) for i in range(4)] + [
+        ("Person", f"s{i}", "np", "np:stopped", 1) for i in range(5)
     ]
     index = make_manual_index(
         index_path,
@@ -238,16 +237,11 @@ def test_dynamic_stopwords_respect_pair_cost_cap(
 def test_dynamic_stopwords_count_compatible_schema_pairs_once(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("Company", f"c{i}", "np", "np:cross", 1)
-        for i in range(2)
-    ] + [
-        ("LegalEntity", f"l{i}", "np", "np:cross", 1)
-        for i in range(3)
-    ] + [
-        ("Person", f"p{i}", "np", "np:same", 1)
-        for i in range(4)
-    ]
+    entries = (
+        [("Company", f"c{i}", "np", "np:cross", 1) for i in range(2)]
+        + [("LegalEntity", f"l{i}", "np", "np:cross", 1) for i in range(3)]
+        + [("Person", f"p{i}", "np", "np:same", 1) for i in range(4)]
+    )
     index = make_manual_index(
         index_path,
         dstore,
@@ -276,13 +270,8 @@ def test_dynamic_stopwords_count_compatible_schema_pairs_once(
         index.close()
 
 
-def test_dynamic_stopwords_filter_by_token(
-    index_path: Path, dstore: SimpleMemoryStore
-):
-    entries = [
-        ("Person", f"s{i}", "np", "np:stopped", 1)
-        for i in range(5)
-    ]
+def test_dynamic_stopwords_filter_by_token(index_path: Path, dstore: SimpleMemoryStore):
+    entries = [("Person", f"s{i}", "np", "np:stopped", 1) for i in range(5)]
     index = make_manual_index(
         index_path,
         dstore,
@@ -315,10 +304,7 @@ def test_dynamic_stopwords_filter_by_token(
 def test_pairs_join_filtered_term_frequencies(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("Person", f"s{i}", "np", "np:stopped", 1)
-        for i in range(5)
-    ] + [
+    entries = [("Person", f"s{i}", "np", "np:stopped", 1) for i in range(5)] + [
         ("Person", "k1", "np", "np:kept", 1),
         ("Person", "k2", "np", "np:kept", 1),
     ]
@@ -352,10 +338,7 @@ def test_pairs_join_filtered_term_frequencies(
 def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("Person", f"idx{i}", "np", "np:shared", 1)
-        for i in range(5)
-    ]
+    entries = [("Person", f"idx{i}", "np", "np:shared", 1) for i in range(5)]
     index = make_manual_index(
         index_path,
         dstore,
@@ -424,12 +407,8 @@ def test_matching_keeps_internal_stopword_when_cross_cost_is_safe(
 def test_matching_stopwords_respect_cross_pair_cost(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("Person", f"c{i}", "np", "np:cross", 1)
-        for i in range(3)
-    ] + [
-        ("Person", f"k{i}", "np", "np:kept", 1)
-        for i in range(2)
+    entries = [("Person", f"c{i}", "np", "np:cross", 1) for i in range(3)] + [
+        ("Person", f"k{i}", "np", "np:kept", 1) for i in range(2)
     ]
     index = make_manual_index(
         index_path,
@@ -492,10 +471,7 @@ def test_matching_stopwords_respect_cross_pair_cost(
 def test_matching_stopwords_count_oriented_schema_pairs_once(
     index_path: Path, dstore: SimpleMemoryStore
 ):
-    entries = [
-        ("LegalEntity", f"l{i}", "np", "np:cross", 1)
-        for i in range(3)
-    ]
+    entries = [("LegalEntity", f"l{i}", "np", "np:cross", 1) for i in range(3)]
     index = make_manual_index(
         index_path,
         dstore,
@@ -535,9 +511,10 @@ def test_matching_stopwords_count_oriented_schema_pairs_once(
             ).fetchall()
         )
         assert stats["np:cross"] == 6
-        assert index.con.execute("SELECT COUNT(*) FROM matching_stopwords").fetchone()[
-            0
-        ] == 0
+        assert (
+            index.con.execute("SELECT COUNT(*) FROM matching_stopwords").fetchone()[0]
+            == 0
+        )
     finally:
         index.close()
 
@@ -676,9 +653,7 @@ def test_index_xref(test_dataset: Dataset, dstore: SimpleMemoryStore, dindex: In
 # Candidate ladder: entity e{i} shares i+1 distinct np tokens with subject q,
 # so scores strictly increase with i (same token weight, log token credit).
 LADDER_ENTRIES = [
-    ("Person", f"e{i}", "np", f"np:t{i}_{j}", 1)
-    for i in range(5)
-    for j in range(i + 1)
+    ("Person", f"e{i}", "np", f"np:t{i}_{j}", 1) for i in range(5) for j in range(i + 1)
 ]
 LADDER_MATCHING = [
     ("Person", "q", "np", f"np:t{i}_{j}", 1) for i in range(5) for j in range(i + 1)

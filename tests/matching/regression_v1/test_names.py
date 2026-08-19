@@ -1,9 +1,11 @@
-from nomenklatura.matching.regression_v1.names import family_name_match
-from nomenklatura.matching.regression_v1.names import first_name_match
-from nomenklatura.matching.regression_v1.names import name_levenshtein
-from nomenklatura.matching.regression_v1.names import name_match
-from nomenklatura.matching.regression_v1.names import name_numbers
-from nomenklatura.matching.regression_v1.names import name_token_overlap
+from nomenklatura.matching.regression_v1.names import (
+    family_name_match,
+    first_name_match,
+    name_levenshtein,
+    name_match,
+    name_numbers,
+    name_token_overlap,
+)
 
 from ..factory import e
 

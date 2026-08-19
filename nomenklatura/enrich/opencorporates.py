@@ -1,24 +1,29 @@
 import json
 import logging
-from normality import slugify_text, squash_spaces
-from typing import List, cast, Any, Dict, Generator, Optional
+from collections.abc import Generator
+from typing import Any, cast
 from urllib.parse import urlparse
+
 from banal import ensure_dict
-from followthemoney import registry, DS, SE
+from followthemoney import DS, SE, registry
+from normality import slugify_text, squash_spaces
 from requests import Session
 from requests.exceptions import RequestException
-from rigour.urls import build_url, ParamsType
 from rigour.territories import get_territory
+from rigour.urls import ParamsType, build_url
 
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
-
+from nomenklatura.enrich.common import (
+    Enricher,
+    EnricherConfig,
+    EnrichmentAbort,
+    EnrichmentException,
+)
 
 log = logging.getLogger(__name__)
 
 
-def parse_date(raw: Any) -> Optional[str]:
+def parse_date(raw: Any) -> str | None:
     return registry.date.clean(raw)
 
 
@@ -37,11 +42,11 @@ class OpenCorporatesEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         token_var = "${OPENCORPORATES_API_TOKEN}"
-        self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
+        self.api_token: str | None = self.get_config_expand("api_token", token_var)
         self.quota_exceeded = False
         if self.api_token == token_var:
             self.api_token = None
@@ -55,7 +60,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
         OpenCorporates."""
         self.skip_jurisdictions.update(["xk", "su"])
 
-    def oc_get_cached(self, url: str, params: ParamsType = None) -> Optional[Any]:
+    def oc_get_cached(self, url: str, params: ParamsType = None) -> Any | None:
         url = build_url(url, params=params)
         response = self.cache.get(url, max_age=self.cache_days)
         if response is None:
@@ -74,7 +79,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
                         )
                         self.quota_exceeded = True
                         return None
-                    elif rex.response.status_code == 401:
+                    if rex.response.status_code == 401:
                         raise EnrichmentAbort(
                             "Authorization failure: %s" % url
                         ) from rex
@@ -120,14 +125,14 @@ class OpenCorporatesEnricher(Enricher[DS]):
 
     def clean_query(self, query: str) -> str:
         """Clean a query string for OpenCorporates search."""
-        out: List[str] = []
+        out: list[str] = []
         for char in query:
             if char in self.QUERY_SKIP:
                 char = " "
             out.append(char)
         return squash_spaces("".join(out))
 
-    def filter_ftm_countries(self, countries: List[str]) -> List[str]:
+    def filter_ftm_countries(self, countries: list[str]) -> list[str]:
         """Filter a list of country codes to those known to followthemoney."""
         valid_countries = []
         for code in countries:
@@ -143,17 +148,17 @@ class OpenCorporatesEnricher(Enricher[DS]):
             valid_countries.append(territory.code)
         return valid_countries
 
-    def jurisdiction_to_country(self, juris: Optional[Any]) -> Optional[str]:
+    def jurisdiction_to_country(self, juris: Any | None) -> str | None:
         if juris is None:
             return None
         return str(juris).split("_", 1)[0]
 
     def company_entity(
-        self, ref: SE, data: Dict[str, Any], entity: Optional[SE] = None
+        self, ref: SE, data: dict[str, Any], entity: SE | None = None
     ) -> SE:
         if "company" in data:
             data = ensure_dict(data.get("company", data))
-        oc_url = cast(Optional[str], data.get("opencorporates_url"))
+        oc_url = cast("str | None", data.get("opencorporates_url"))
         if oc_url is None:
             raise ValueError("Company has no URL: %r" % data)
         if entity is None:
@@ -162,7 +167,7 @@ class OpenCorporatesEnricher(Enricher[DS]):
         entity.add("name", data.get("name"))
 
         # TODO: make this an adjacent object?
-        address: Dict[str, Any] = ensure_dict(data.get("registered_address"))
+        address: dict[str, Any] = ensure_dict(data.get("registered_address"))
         entity.add("country", address.get("country"))
 
         juris = self.jurisdiction_to_country(data.get("jurisdiction_code"))

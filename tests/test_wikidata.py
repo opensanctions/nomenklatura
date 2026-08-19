@@ -1,16 +1,18 @@
 import re
+from datetime import UTC
+
 import pytest
 import requests_mock
 from followthemoney import Dataset
 from followthemoney import StatementEntity as Entity
 
 from nomenklatura.cache import Cache
+from nomenklatura.enrich.wikidata import clean_wikidata_name
+from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import load_entity_file_store
-from nomenklatura.matching import EntityResolveRegression
 from nomenklatura.wikidata import Claim, LangText, WikidataClient
 from nomenklatura.wikidata.reconcile import candidate_proxy, reconcile
-from nomenklatura.enrich.wikidata import clean_wikidata_name
 
 from .conftest import wd_read_response
 
@@ -190,6 +192,7 @@ def test_search_items_aliases(test_cache: Cache):
 
 def test_make_session():
     from followthemoney.settings import USER_AGENT
+
     from nomenklatura.wikidata.util import make_session
 
     session = make_session()
@@ -228,7 +231,9 @@ def test_candidate_proxy(test_cache: Cache):
         assert "ru" in proxy.get("citizenship")
 
 
-def test_reconcile_auto(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+def test_reconcile_auto(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-putin", "schema": "Person", '
@@ -249,13 +254,25 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity], cache_factory, db_
         )
         client = WikidataClient(cache)
         commands = reconcile(
-            resolver, db_session, store, client, dataset, EntityResolveRegression,
-            threshold=0.5, create=True,
+            resolver,
+            db_session,
+            store,
+            client,
+            dataset,
+            EntityResolveRegression,
+            threshold=0.5,
+            create=True,
         )
         # Without create=True the unmatched person yields no create commands.
         no_create = reconcile(
-            resolver, db_session, store, client, dataset, EntityResolveRegression,
-            threshold=0.5, create=False,
+            resolver,
+            db_session,
+            store,
+            client,
+            dataset,
+            EntityResolveRegression,
+            threshold=0.5,
+            create=False,
         )
 
     # The matching person is linked to the QID; the non-matching one is not.
@@ -267,6 +284,7 @@ def test_reconcile_auto(tmp_path, resolver: Resolver[Entity], cache_factory, db_
 
     assert any(isinstance(c, CreateItem) for c in commands)
     assert not any(isinstance(c, CreateItem) for c in no_create)
+
 
 def test_entity_qid():
     from nomenklatura.wikidata.util import entity_qid
@@ -295,7 +313,9 @@ def test_entity_qid():
     assert entity_qid(none) is None
 
 
-def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+def test_reconcile_wikidata_id(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     # A person already linked via the wikidataId property is enriched, not
     # re-searched or proposed for creation.
     path = tmp_path / "entities.ijson"
@@ -310,12 +330,19 @@ def test_reconcile_wikidata_id(tmp_path, resolver: Resolver[Entity], cache_facto
         m.register_uri("GET", WikidataClient.WD_API, json=wd_read_response)
         client = WikidataClient(cache)
         commands = reconcile(
-            resolver, db_session, store, client, dataset, EntityResolveRegression, threshold=0.5
+            resolver,
+            db_session,
+            store,
+            client,
+            dataset,
+            EntityResolveRegression,
+            threshold=0.5,
         )
     # No CREATE for a linked entity; enrichment was attempted against Q7747.
     from nomenklatura.wikidata.write import CreateItem
 
     assert not any(isinstance(c, CreateItem) for c in commands)
+
 
 def _reconcile_state(resolver, session, store, cache):
     from nomenklatura.tui.reconcile import ReconcileState
@@ -342,7 +369,9 @@ def test_create_preview():
     assert preview.get("birthDate") == []
 
 
-def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+def test_reconcile_state_confirm(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-putin", "schema": "Person", "properties": '
@@ -351,7 +380,9 @@ def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity], cache_fac
     store = load_entity_file_store(path, resolver=resolver)
     cache = cache_factory(Dataset.make({"name": "wikidata"}))
     with requests_mock.Mocker(real_http=False) as m:
-        m.register_uri("GET", WikidataClient.WD_API, json=_wd_dispatch([{"id": "Q7747"}]))
+        m.register_uri(
+            "GET", WikidataClient.WD_API, json=_wd_dispatch([{"id": "Q7747"}])
+        )
         m.register_uri(
             "GET",
             re.compile(r"\.wikipedia\.org/api/rest_v1/page/summary/"),
@@ -366,7 +397,10 @@ def test_reconcile_state_confirm(tmp_path, resolver: Resolver[Entity], cache_fac
         state.confirm()
     assert resolver.get_canonical("os-putin") == "Q7747"
 
-def test_reconcile_state_create(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+
+def test_reconcile_state_create(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-nobody", "schema": "Person", '
@@ -387,7 +421,10 @@ def test_reconcile_state_create(tmp_path, resolver: Resolver[Entity], cache_fact
     assert any(isinstance(c, CreateItem) for c in state.commands)
     assert resolver.get_canonical("os-nobody") == "os-nobody"
 
-def test_reconcile_state_skip(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+
+def test_reconcile_state_skip(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     path = tmp_path / "entities.ijson"
     path.write_text(
         '{"id": "os-nobody", "schema": "Person", '
@@ -403,7 +440,10 @@ def test_reconcile_state_skip(tmp_path, resolver: Resolver[Entity], cache_factor
     assert state.commands == []
     assert resolver.get_canonical("os-nobody") == "os-nobody"
 
-def test_reconcile_state_linked_skipped(tmp_path, resolver: Resolver[Entity], cache_factory, db_session):
+
+def test_reconcile_state_linked_skipped(
+    tmp_path, resolver: Resolver[Entity], cache_factory, db_session
+):
     # A person already linked via wikidataId is enriched silently, gets no screen.
     path = tmp_path / "entities.ijson"
     path.write_text(
@@ -418,6 +458,7 @@ def test_reconcile_state_linked_skipped(tmp_path, resolver: Resolver[Entity], ca
         # No reviewable person; the linked one was enriched during load.
         assert state.start() is False
         assert state.person is None
+
 
 def test_fetch_item_no_such_entity(test_cache: Cache):
     # A deleted/never-created QID is a permanent miss: None, and the error
@@ -546,9 +587,9 @@ def test_item_deprecated_claims(test_cache: Cache):
 
 
 def test_claim_is_ended(test_cache: Cache):
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    reference = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    reference = datetime(2026, 7, 1, tzinfo=UTC)
     client = WikidataClient(test_cache, reference_time=reference)
     assert client.reference_time == reference
 
@@ -569,7 +610,9 @@ def test_claim_is_ended(test_cache: Cache):
     # No end qualifier at all:
     assert claim_with_end(None).is_ended() is False
     # An elapsed end date:
-    assert claim_with_end(_time_snak("P582", "+2015-06-01T00:00:00Z")).is_ended() is True
+    assert (
+        claim_with_end(_time_snak("P582", "+2015-06-01T00:00:00Z")).is_ended() is True
+    )
     # "No value" asserts the claim is current:
     novalue = {"snaktype": "novalue", "property": "P582", "datatype": "time"}
     assert claim_with_end(novalue).is_ended() is False
@@ -577,12 +620,14 @@ def test_claim_is_ended(test_cache: Cache):
     somevalue = {"snaktype": "somevalue", "property": "P582", "datatype": "time"}
     assert claim_with_end(somevalue).is_ended() is True
     # A scheduled future end is not yet ended:
-    assert claim_with_end(_time_snak("P582", "+2030-01-01T00:00:00Z")).is_ended() is False
+    assert (
+        claim_with_end(_time_snak("P582", "+2030-01-01T00:00:00Z")).is_ended() is False
+    )
     # A year-precision end only counts once the year has elapsed:
     current_year = _time_snak("P582", "+2026-00-00T00:00:00Z", precision=9)
     assert claim_with_end(current_year).is_ended() is False
     # An explicit reference overrides the client's:
-    later = datetime(2031, 1, 1, tzinfo=timezone.utc)
+    later = datetime(2031, 1, 1, tzinfo=UTC)
     future = claim_with_end(_time_snak("P582", "+2030-01-01T00:00:00Z"))
     assert future.is_ended(reference_time=later) is True
 

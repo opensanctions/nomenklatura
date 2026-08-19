@@ -1,5 +1,4 @@
 import orjson
-
 from followthemoney import Statement
 from followthemoney.statement.util import pack_prop, unpack_prop
 

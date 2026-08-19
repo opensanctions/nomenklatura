@@ -1,8 +1,10 @@
 import time
-import yaml
 from uuid import uuid4
-from typing import Dict, List
-from followthemoney import ValueEntity as Entity, model
+
+import yaml
+from followthemoney import ValueEntity as Entity
+from followthemoney import model
+
 from nomenklatura.matching.logic_v2.model import LogicV2
 
 
@@ -14,7 +16,7 @@ class Check:
         self.candidate = candidate
 
 
-def make_entity(schema: str, props: Dict[str, str]) -> Entity:
+def make_entity(schema: str, props: dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
     schema_obj = model.get(schema)
     assert schema_obj is not None, f"Schema not found: {schema}"
@@ -36,11 +38,11 @@ def make_entity(schema: str, props: Dict[str, str]) -> Entity:
     return entity
 
 
-def load_checks() -> List[Check]:
-    with open("checks.yml", "r") as fh:
+def load_checks() -> list[Check]:
+    with open("checks.yml") as fh:
         checks_data = yaml.safe_load(fh)
     checks = checks_data.get("checks", [])
-    objects: List[Check] = []
+    objects: list[Check] = []
     for check in checks:
         schema = check.get("schema")
         is_match = check.get("match")

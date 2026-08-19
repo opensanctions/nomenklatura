@@ -1,22 +1,21 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
 
-from followthemoney import registry, StatementEntity
+from followthemoney import StatementEntity, registry
 from rigour.langs import iso_639_alpha2
 from rigour.territories import get_territory
 
 from nomenklatura.wikidata.lang import MULTI_LANG
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.write import (
-    QSCommand,
-    CreateItem,
-    SetLabel,
-    SetAlias,
-    AddStatement,
-    QSValue,
-    Snak,
     LAST,
+    AddStatement,
+    CreateItem,
+    QSCommand,
+    QSValue,
+    SetAlias,
+    SetLabel,
+    Snak,
     url_reference,
 )
 
@@ -39,8 +38,8 @@ class PositionClaim:
     """
 
     qid: str
-    start: Optional[str] = None
-    end: Optional[str] = None
+    start: str | None = None
+    end: str | None = None
 
 
 @dataclass
@@ -50,10 +49,10 @@ class _Known:
     is_human: bool = False
     has_birth_date: bool = False
     has_gender: bool = False
-    citizenship_qids: Set[str] = field(default_factory=set)
-    position_qids: Set[str] = field(default_factory=set)
+    citizenship_qids: set[str] = field(default_factory=set)
+    position_qids: set[str] = field(default_factory=set)
     # Casefolded label + alias texts, to avoid re-adding a name WD already lists.
-    name_texts: Set[str] = field(default_factory=set)
+    name_texts: set[str] = field(default_factory=set)
 
 
 def _known_from_item(item: Item) -> _Known:
@@ -78,7 +77,7 @@ def _known_from_item(item: Item) -> _Known:
     return known
 
 
-def _wd_lang(lang: Optional[str]) -> str:
+def _wd_lang(lang: str | None) -> str:
     """Map an FtM language (ISO 639-3) to a Wikidata label/alias language code.
 
     Wikidata keys labels and aliases by mostly-2-letter codes; FtM stores 3-letter
@@ -92,9 +91,9 @@ def _wd_lang(lang: Optional[str]) -> str:
 
 def _references(
     entity: StatementEntity,
-    retrieved: Optional[str],
-    source_url: Optional[str] = None,
-) -> List[Snak]:
+    retrieved: str | None,
+    source_url: str | None = None,
+) -> list[Snak]:
     """Build the citation snaks for statements derived from this entity.
 
     Uses the entity's first `sourceUrl` as `S854`, falling back to `source_url`
@@ -112,15 +111,15 @@ def _references(
     return url_reference(url, retrieved=retrieved)
 
 
-def _name_statements(entity: StatementEntity) -> List[Tuple[str, str]]:
+def _name_statements(entity: StatementEntity) -> list[tuple[str, str]]:
     """Matchable name-type values as `(text, lang)`, lang defaulting to `mul`.
 
     We read statements rather than `get()` so each name keeps its language tag.
     Untagged names get `mul` (Wikidata's language-agnostic code), which is the
     right home for romanized/transliterated personal names.
     """
-    names: List[Tuple[str, str]] = []
-    seen: Set[str] = set()
+    names: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for stmt in entity.statements:
         prop = entity.schema.get(stmt.prop)
         if prop is None or prop.type != registry.name or not prop.matchable:
@@ -140,11 +139,13 @@ def _property_statements(
     entity: StatementEntity,
     target: str,
     known: _Known,
-    references: List[Snak],
-) -> List[QSCommand]:
-    cmds: List[QSCommand] = []
+    references: list[Snak],
+) -> list[QSCommand]:
+    cmds: list[QSCommand] = []
     if not known.is_human:
-        cmds.append(AddStatement(target, "P31", QSValue.item("Q5"), references=references))
+        cmds.append(
+            AddStatement(target, "P31", QSValue.item("Q5"), references=references)
+        )
 
     if not known.has_birth_date:
         dates = set(entity.get("birthDate", quiet=True))
@@ -160,7 +161,11 @@ def _property_statements(
         if len(genders) == 1:
             qid = GENDER_QIDS.get(genders.pop())
             if qid is not None:
-                cmds.append(AddStatement(target, "P21", QSValue.item(qid), references=references))
+                cmds.append(
+                    AddStatement(
+                        target, "P21", QSValue.item(qid), references=references
+                    )
+                )
         elif len(genders) > 1:
             log.warning("Conflicting gender on %s; not emitting P21", entity.id)
 
@@ -178,16 +183,20 @@ def _property_statements(
         if territory.qid in emitted:
             continue
         emitted.add(territory.qid)
-        cmds.append(AddStatement(target, "P27", QSValue.item(territory.qid), references=references))
+        cmds.append(
+            AddStatement(
+                target, "P27", QSValue.item(territory.qid), references=references
+            )
+        )
     return cmds
 
 
 def _position_statements(
-    positions: List[PositionClaim],
+    positions: list[PositionClaim],
     target: str,
     known: _Known,
-    references: List[Snak],
-) -> List[QSCommand]:
+    references: list[Snak],
+) -> list[QSCommand]:
     """Emit P39 (position held) for QID-bearing positions Wikidata lacks.
 
     Conservative by design: a post QID the item already holds is skipped whole
@@ -195,14 +204,14 @@ def _position_statements(
     date qualifiers; one seen through several (re-election) emits a bare
     statement, so we never imply a continuous tenure across a gap.
     """
-    by_qid: Dict[str, List[PositionClaim]] = {}
+    by_qid: dict[str, list[PositionClaim]] = {}
     for claim in positions:
         if claim.qid in known.position_qids:
             continue
         by_qid.setdefault(claim.qid, []).append(claim)
-    cmds: List[QSCommand] = []
+    cmds: list[QSCommand] = []
     for qid, claims in by_qid.items():
-        qualifiers: List[Snak] = []
+        qualifiers: list[Snak] = []
         if len(claims) == 1:
             start = QSValue.date(claims[0].start) if claims[0].start else None
             if start is not None:
@@ -218,10 +227,10 @@ def _position_statements(
 def propose_enrich(
     entity: StatementEntity,
     item: Item,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
-    positions: Optional[List[PositionClaim]] = None,
-) -> List[QSCommand]:
+    retrieved: str | None = None,
+    source_url: str | None = None,
+    positions: list[PositionClaim] | None = None,
+) -> list[QSCommand]:
     """Diff an OS person against a matched Wikidata item into enrichment commands.
 
     Reach for this once a person is resolved to a QID: it emits QuickStatements
@@ -236,7 +245,7 @@ def propose_enrich(
     target = item.id
     known = _known_from_item(item)
     references = _references(entity, retrieved, source_url)
-    cmds: List[QSCommand] = []
+    cmds: list[QSCommand] = []
     for text, lang in _name_statements(entity):
         if text.casefold() in known.name_texts:
             continue
@@ -249,9 +258,9 @@ def propose_enrich(
 
 def propose_create(
     entity: StatementEntity,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
-) -> List[QSCommand]:
+    retrieved: str | None = None,
+    source_url: str | None = None,
+) -> list[QSCommand]:
     """Compose `CREATE` commands for an OS person with no acceptable Wikidata match.
 
     Reach for this for the unmatched side of a reconciliation run: it emits a new
@@ -262,7 +271,7 @@ def propose_create(
     is a fallback citation for entities that carry no `sourceUrl` of their own.
     """
     references = _references(entity, retrieved, source_url)
-    cmds: List[QSCommand] = [CreateItem()]
+    cmds: list[QSCommand] = [CreateItem()]
     names = _name_statements(entity)
     if not names:
         log.warning("No name to create an item for %s", entity.id)

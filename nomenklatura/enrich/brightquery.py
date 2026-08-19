@@ -1,12 +1,14 @@
-from normality import slugify
-import requests
 import logging
+from collections.abc import Generator
+from typing import Any
+
+import requests
 from banal import hash_data
-from typing import Generator, Optional, Dict, Any
+from followthemoney import DS, SE, registry
+from normality import slugify
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 from urllib3.util.retry import Retry
-from followthemoney import DS, SE, registry
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
@@ -26,7 +28,7 @@ class BrightQueryEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[requests.Session] = None,
+        session: requests.Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         self._api_key = self.get_config_expand("api_key", "${BRIGHTQUERY_API_KEY}")
@@ -60,7 +62,7 @@ class BrightQueryEnricher(Enricher[DS]):
         BrightQuery/opendata.org."""
 
     def create_proxy(
-        self, entity: SE, child: Dict[str, Any]
+        self, entity: SE, child: dict[str, Any]
     ) -> Generator[SE, None, None]:
         # Primary, most common name of the Organization, which equals the name of
         # the ultimate parent or sole entity that comprises the Organization.
@@ -119,7 +121,7 @@ class BrightQueryEnricher(Enricher[DS]):
         log.info("Candidate [%s]: %s", proxy.id, name)
         yield proxy
 
-    def search(self, payload: dict[str, Any]) -> Generator[Dict[str, str], None, None]:
+    def search(self, payload: dict[str, Any]) -> Generator[dict[str, str], None, None]:
         cache_id = hash_data(payload)
         cache_key = f"{self.BASE_URL}:{cache_id}"
 

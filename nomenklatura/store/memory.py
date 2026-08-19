@@ -1,8 +1,9 @@
-from typing import Dict, Set, List, Optional, Generator, Tuple
-from followthemoney import DS, SE, Schema, registry, Property, Statement
+from collections.abc import Generator
 
-from nomenklatura.store.base import Store, View, Writer
+from followthemoney import DS, SE, Property, Schema, Statement, registry
+
 from nomenklatura.resolver import Linker
+from nomenklatura.store.base import Store, View, Writer
 
 
 class MemoryStore(Store[DS, SE]):
@@ -13,9 +14,9 @@ class MemoryStore(Store[DS, SE]):
 
     def __init__(self, dataset: DS, linker: Linker[SE]):
         super().__init__(dataset, linker)
-        self.stmts: Dict[str, Set[Statement]] = {}
-        self.inverted: Dict[str, Set[str]] = {}
-        self.entities: Dict[str, Set[str]] = {}
+        self.stmts: dict[str, set[Statement]] = {}
+        self.inverted: dict[str, set[str]] = {}
+        self.entities: dict[str, set[str]] = {}
 
     def writer(self) -> Writer[DS, SE]:
         return MemoryWriter(self)
@@ -48,7 +49,7 @@ class MemoryWriter(Writer[DS, SE]):
                 self.store.inverted[inverted_id] = set()
             self.store.inverted[inverted_id].add(canonical_id)
 
-    def pop(self, entity_id: str) -> List[Statement]:
+    def pop(self, entity_id: str) -> list[Statement]:
         statements = self.store.stmts.pop(entity_id, set())
         for stmt in statements:
             if stmt.dataset in self.store.entities:
@@ -76,17 +77,17 @@ class MemoryView(View[DS, SE]):
             return True
         return False
 
-    def get_entity(self, id: str) -> Optional[SE]:
+    def get_entity(self, id: str) -> SE | None:
         if id not in self.store.stmts:
             return None
-        stmts: List[Statement] = []
+        stmts: list[Statement] = []
         for stmt in self.store.stmts[id]:
             if self.external is False and stmt.external:
                 continue
             stmts.append(stmt)
         return self.store.assemble(stmts)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
+    def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         for inverted_id in self.store.inverted.get(id, []):
             entity = self.get_entity(inverted_id)
             if entity is None:
@@ -95,13 +96,18 @@ class MemoryView(View[DS, SE]):
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
-    def entities(self, include_schemata: Optional[List[Schema]] = None) -> Generator[SE, None, None]:
-        entity_ids: Set[str] = set()
+    def entities(
+        self, include_schemata: list[Schema] | None = None
+    ) -> Generator[SE, None, None]:
+        entity_ids: set[str] = set()
         for scope in self.dataset_names:
             entity_ids.update(self.store.entities.get(scope, []))
         for entity_id in entity_ids:
             entity = self.get_entity(entity_id)
             if entity is not None:
-                if include_schemata is not None and entity.schema not in include_schemata:
+                if (
+                    include_schemata is not None
+                    and entity.schema not in include_schemata
+                ):
                     continue
                 yield entity

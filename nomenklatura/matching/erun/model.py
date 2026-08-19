@@ -1,43 +1,49 @@
 import pickle
-import numpy as np
-from typing import List, Dict, Tuple, cast
 from functools import cache
-from sklearn.pipeline import Pipeline  # type: ignore
-from followthemoney import E
+from typing import cast
 
-from nomenklatura.matching.erun.names import (
-    family_name_match,
-    name_token_overlap,
-    name_numbers,
-    obj_name_levenshtein,
-    legal_name_levenshtein,
-    person_name_levenshtein,
-    org_name_levenshtein,
+import numpy as np
+from followthemoney import E
+from sklearn.pipeline import Pipeline  # type: ignore
+
+from nomenklatura.matching.erun.countries import (
+    org_country_mismatch,
+    per_country_mismatch,
+    position_country_match,
 )
 from nomenklatura.matching.erun.dob import dob_match, dob_year_match
+from nomenklatura.matching.erun.identifiers import (
+    strong_identifier_match,
+    weak_identifier_match,
+)
 from nomenklatura.matching.erun.misc import (
     address_match,
     address_number_disagreement,
     address_number_overlap,
+    birth_place,
+    contact_match,
+    gender_mismatch,
+    security_isin_mismatch,
 )
-from nomenklatura.matching.erun.misc import birth_place, gender_mismatch
-from nomenklatura.matching.erun.misc import contact_match
-from nomenklatura.matching.erun.misc import security_isin_mismatch
-from nomenklatura.matching.erun.countries import (
-    position_country_match,
-    org_country_mismatch,
-    per_country_mismatch,
+from nomenklatura.matching.erun.names import (
+    family_name_match,
+    legal_name_levenshtein,
+    name_numbers,
+    name_token_overlap,
+    obj_name_levenshtein,
+    org_name_levenshtein,
+    person_name_levenshtein,
 )
-from nomenklatura.matching.erun.identifiers import strong_identifier_match
-from nomenklatura.matching.erun.identifiers import weak_identifier_match
 from nomenklatura.matching.types import (
-    FeatureDocs,
+    CompareFunction,
+    Encoded,
     FeatureDoc,
+    FeatureDocs,
+    FtResult,
     MatchingResult,
+    ScoringAlgorithm,
     ScoringConfig,
 )
-from nomenklatura.matching.types import CompareFunction, FtResult
-from nomenklatura.matching.types import Encoded, ScoringAlgorithm
 from nomenklatura.matching.util import make_github_url
 from nomenklatura.util import DATA_PATH
 
@@ -47,7 +53,7 @@ class EntityResolveRegression(ScoringAlgorithm):
 
     NAME = "er-unstable"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
-    FEATURES: List[CompareFunction] = [
+    FEATURES: list[CompareFunction] = [
         name_token_overlap,
         name_numbers,
         legal_name_levenshtein,
@@ -72,7 +78,7 @@ class EntityResolveRegression(ScoringAlgorithm):
     ]
 
     @classmethod
-    def save(cls, pipe: Pipeline, coefficients: Dict[str, float]) -> None:
+    def save(cls, pipe: Pipeline, coefficients: dict[str, float]) -> None:
         """Store a classification pipeline after training."""
         mdl = pickle.dumps({"pipe": pipe, "coefficients": coefficients})
         with open(cls.MODEL_PATH, "wb") as fh:
@@ -81,12 +87,12 @@ class EntityResolveRegression(ScoringAlgorithm):
 
     @classmethod
     @cache
-    def load(cls) -> Tuple[Pipeline, Dict[str, float]]:
+    def load(cls) -> tuple[Pipeline, dict[str, float]]:
         """Load a pre-trained classification pipeline for ad-hoc use."""
         with open(cls.MODEL_PATH, "rb") as fh:
             matcher = pickle.loads(fh.read())
-        pipe = cast(Pipeline, matcher["pipe"])
-        coefficients = cast(Dict[str, float], matcher["coefficients"])
+        pipe = cast("Pipeline", matcher["pipe"])
+        coefficients = cast("dict[str, float]", matcher["coefficients"])
         current = [f.__name__ for f in cls.FEATURES]
         if list(coefficients.keys()) != current:
             raise RuntimeError("Model was not trained on identical features!")
@@ -114,7 +120,7 @@ class EntityResolveRegression(ScoringAlgorithm):
         npfeat = np.array([encoded])
         pred = pipe.predict_proba(npfeat)
         score = float(pred[0][1])
-        explanations: Dict[str, FtResult] = {}
+        explanations: dict[str, FtResult] = {}
         for feature, coeff in zip(cls.FEATURES, encoded):
             name = feature.__name__
             explanations[name] = FtResult(score=float(coeff), detail=None)

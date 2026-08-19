@@ -1,16 +1,16 @@
 from functools import lru_cache
-from typing import Set, Tuple
-from rigour.ids import StrictFormat, get_strong_format_names
 
 from followthemoney import EntityProxy, registry
+from rigour.ids import StrictFormat, get_strong_format_names
+
 from nomenklatura.matching.util import MEMO_BATCH, has_schema
 
 # HONORARY_STRONG = {registry.phone, registry.email, registry.checksum}
 STRONG_FORMATS = get_strong_format_names()
 
 
-def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
-    strong_ids: Set[Tuple[str, str]] = set()
+def _get_strong_identifiers(entity: EntityProxy) -> set[tuple[str, str]]:
+    strong_ids: set[tuple[str, str]] = set()
     for prop, value in entity.itervalues():
         if not prop.matchable:
             continue
@@ -22,8 +22,8 @@ def _get_strong_identifiers(entity: EntityProxy) -> Set[Tuple[str, str]]:
 
 
 @lru_cache(maxsize=MEMO_BATCH)
-def _get_weak_identifiers(entity: EntityProxy) -> Set[str]:
-    weak_ids: Set[str] = set()
+def _get_weak_identifiers(entity: EntityProxy) -> set[str]:
+    weak_ids: set[str] = set()
     for prop, value in entity.itervalues():
         if not prop.matchable or prop.type != registry.identifier:
             continue

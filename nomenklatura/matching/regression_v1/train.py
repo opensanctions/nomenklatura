@@ -1,25 +1,26 @@
 import logging
-import numpy as np
 import multiprocessing
-from typing import Iterable, List, Tuple
+from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
+
+import numpy as np
+from followthemoney.util import PathLike
 from numpy.typing import NDArray
+from sklearn import metrics  # type: ignore
+from sklearn.linear_model import LogisticRegression  # type: ignore
+from sklearn.model_selection import train_test_split  # type: ignore
 from sklearn.pipeline import make_pipeline  # type: ignore
 from sklearn.preprocessing import StandardScaler  # type: ignore
-from sklearn.model_selection import train_test_split  # type: ignore
-from sklearn.linear_model import LogisticRegression  # type: ignore
-from sklearn import metrics  # type: ignore
-from concurrent.futures import ThreadPoolExecutor
-from followthemoney.util import PathLike
 
 from nomenklatura.judgement import Judgement
-from nomenklatura.matching.pairs import read_pairs, JudgedPair
+from nomenklatura.matching.pairs import JudgedPair, read_pairs
 from nomenklatura.matching.regression_v1.model import RegressionV1
 
 log = logging.getLogger(__name__)
 
 
-def pair_convert(pair: JudgedPair) -> Tuple[List[float], int]:
+def pair_convert(pair: JudgedPair) -> tuple[list[float], int]:
     """Encode a pair of training data into features and target."""
     judgement = 1 if pair.judgement == Judgement.POSITIVE else 0
     features = RegressionV1.encode_pair(pair.left, pair.right)
@@ -28,7 +29,7 @@ def pair_convert(pair: JudgedPair) -> Tuple[List[float], int]:
 
 def pairs_to_arrays(
     pairs: Iterable[JudgedPair],
-) -> Tuple[NDArray[np.float32], NDArray[np.float32]]:
+) -> tuple[NDArray[np.float32], NDArray[np.float32]]:
     """Parallelize feature computation for training data"""
     xrows = []
     yrows = []

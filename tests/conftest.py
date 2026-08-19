@@ -1,24 +1,26 @@
 import json
 import shutil
-from typing import Any, Callable, Dict, Generator, List
-import yaml
-import pytest
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from collections.abc import Callable, Generator
 from pathlib import Path
 from tempfile import mkdtemp
-from normality import slugify_text
-from followthemoney import Dataset, StatementEntity as Entity
+from typing import Any
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
-from nomenklatura import settings
-from nomenklatura.store import load_entity_file_store, SimpleMemoryStore
-from nomenklatura.kv import get_redis
+import pytest
+import yaml
+from followthemoney import Dataset
+from followthemoney import StatementEntity as Entity
+from normality import slugify_text
 from sqlalchemy import MetaData
 
-from nomenklatura.db import close_db, get_engine, make_session, Session
-from nomenklatura.resolver import Resolver
+from nomenklatura import settings
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
+from nomenklatura.db import Session, close_db, get_engine, make_session
+from nomenklatura.kv import get_redis
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import SimpleMemoryStore, load_entity_file_store
 
 FIXTURES_PATH = Path(__file__).parent.joinpath("fixtures/")
 FIXTURE_FETCH_HEADERS = {
@@ -49,7 +51,7 @@ def catalog_path():
 
 @pytest.fixture(scope="module")
 def catalog_data(catalog_path):
-    with open(catalog_path, "r") as fh:
+    with open(catalog_path) as fh:
         return yaml.safe_load(fh)
 
 
@@ -59,10 +61,10 @@ def donations_path() -> Path:
 
 
 @pytest.fixture(scope="module")
-def donations_json(donations_path: Path) -> List[Dict[str, Any]]:
+def donations_json(donations_path: Path) -> list[dict[str, Any]]:
     data = []
-    with open(donations_path, "r") as fh:
-        for line in fh.readlines():
+    with open(donations_path) as fh:
+        for line in fh:
             data.append(json.loads(line))
     return data
 
@@ -147,5 +149,5 @@ def wd_read_response(request, context):
                         del value[sect][lang]
         with open(path, "w") as fh:
             json.dump(data, fh)
-    with open(path, "r") as fh:
+    with open(path) as fh:
         return json.load(fh)

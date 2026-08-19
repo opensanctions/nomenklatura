@@ -1,23 +1,20 @@
-from typing import List, Optional, Set
-from followthemoney import registry, E
+from followthemoney import E, registry
+from rigour.addresses import normalize_address, shorten_address_keywords
 
 from nomenklatura.matching.compare.util import extract_numbers
-from nomenklatura.matching.util import type_pair
-from nomenklatura.matching.util import has_schema
-
-from rigour.addresses import normalize_address, shorten_address_keywords
+from nomenklatura.matching.util import has_schema, type_pair
 
 OTHER = registry.gender.OTHER
 
 
-def _norm_address(addr: str, latinize: bool = True) -> Optional[str]:
+def _norm_address(addr: str, latinize: bool = True) -> str | None:
     norm_addr = normalize_address(addr, latinize=latinize, min_length=4)
     if norm_addr is not None:
         norm_addr = shorten_address_keywords(norm_addr, latinize=latinize)
     return norm_addr
 
 
-def _norm_place(places: List[str]) -> Set[str]:
+def _norm_place(places: list[str]) -> set[str]:
     parts = set()
     for place in places:
         norm_place = _norm_address(place)
@@ -52,7 +49,7 @@ def address_match(query: E, result: E) -> float:
     return float(overlap) / float(tokens)
 
 
-def _address_number_sets(query: E, result: E) -> tuple[Set[str], Set[str]]:
+def _address_number_sets(query: E, result: E) -> tuple[set[str], set[str]]:
     lv, rv = type_pair(query, result, registry.address)
     return extract_numbers(lv), extract_numbers(rv)
 

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+
 from followthemoney import StatementEntity
 
 from nomenklatura.judgement import Judgement
@@ -71,8 +72,7 @@ def test_xref_patience_ignores_decided_pairs(
     )
     path = tmp_path / "patience.ijson"
     with open(path, "w") as fh:
-        for entity in entities:
-            fh.write(json.dumps(entity) + "\n")
+        fh.writelines(json.dumps(entity) + "\n" for entity in entities)
     store = load_entity_file_store(path, resolver)
 
     # The noise entities out-rank the genuine pair on token overlap, and

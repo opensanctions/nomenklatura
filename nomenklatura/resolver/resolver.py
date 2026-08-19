@@ -3,10 +3,14 @@
 # function of the table: write methods only touch the DB, then call
 # _update_from_db to refresh. Don't mutate the indexes directly.
 #
-from datetime import timedelta
 import getpass
 import logging
-from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple
+from collections.abc import Generator, Iterable
+from datetime import timedelta
+from typing import Any
+
+from followthemoney import SE, Statement, registry
+from followthemoney.util import PathLike
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from sqlalchemy import (
@@ -22,15 +26,12 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.sql.expression import delete, insert, update
-from followthemoney import registry, Statement, SE
-from followthemoney.util import PathLike
 
 from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
 from nomenklatura.resolver.linker import Linker
-
 
 log = logging.getLogger(__name__)
 
@@ -59,12 +60,12 @@ class Resolver(Linker[SE]):
     ) -> None:
         self._session = session
         # The initial load only needs active edges.
-        self._max_ts: Optional[str] = None
+        self._max_ts: str | None = None
         # Suggestions remain in the table; hot reads use these derived indexes.
         self._linker: Linker[SE] = Linker({})
-        self._blockers: Dict[Tuple[str, str], Judgement] = {}
+        self._blockers: dict[tuple[str, str], Judgement] = {}
 
-        unique_kw: Dict[str, Any] = {"unique": True}
+        unique_kw: dict[str, Any] = {"unique": True}
         if session.is_sqlite:
             unique_kw["sqlite_where"] = text("deleted_at IS NULL")
         if session.is_postgres:
@@ -109,7 +110,7 @@ class Resolver(Linker[SE]):
         """Rebuild both indexes from scratch over every live edge."""
         self._linker = Linker({})
         self._blockers = {}
-        max_ts: Optional[str] = None
+        max_ts: str | None = None
         stmt = select(
             self._table.c.target,
             self._table.c.source,
@@ -158,8 +159,7 @@ class Resolver(Linker[SE]):
                 if created_at is not None and created_at > max_ts:
                     max_ts = created_at
                 if deleted_at is not None:
-                    if deleted_at > max_ts:
-                        max_ts = deleted_at
+                    max_ts = max(max_ts, deleted_at)
                     if judgement == Judgement.POSITIVE:
                         needs_rebuild = True
                     else:
@@ -196,7 +196,7 @@ class Resolver(Linker[SE]):
         cursor.close()
         return linker
 
-    def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Optional[Edge]:
+    def get_edge(self, left_id: StrIdent, right_id: StrIdent) -> Edge | None:
         (target, source) = Identifier.pair(left_id, right_id)
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.target == target.id)
@@ -207,7 +207,7 @@ class Resolver(Linker[SE]):
             return None
         return Edge.from_dict(row._mapping)
 
-    def connected(self, node: Identifier) -> Set[Identifier]:
+    def connected(self, node: Identifier) -> set[Identifier]:
         return self._linker.connected(node)
 
     def get_canonical(self, entity_id: str) -> str:
@@ -222,11 +222,11 @@ class Resolver(Linker[SE]):
         """Return all the canonical cluster identifiers."""
         return self._linker.canonicals()
 
-    def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
+    def get_referents(self, canonical_id: str, canonicals: bool = True) -> set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         node = Identifier.get(canonical_id)
-        referents: Set[str] = set()
+        referents: set[str] = set()
         for connected in self.connected(node):
             if not canonicals and connected.canonical:
                 continue
@@ -235,9 +235,7 @@ class Resolver(Linker[SE]):
             referents.add(connected.id)
         return referents
 
-    def get_resolved_edge(
-        self, left_id: StrIdent, right_id: StrIdent
-    ) -> Optional[Edge]:
+    def get_resolved_edge(self, left_id: StrIdent, right_id: StrIdent) -> Edge | None:
         """
         Return _some_ edge that connects the two entities, if it exists.
         """
@@ -287,9 +285,7 @@ class Resolver(Linker[SE]):
         judgement = self.get_judgement(left, right)
         return judgement == Judgement.NO_JUDGEMENT
 
-    def get_judgements(
-        self, limit: Optional[int] = None
-    ) -> Generator[Edge, None, None]:
+    def get_judgements(self, limit: int | None = None) -> Generator[Edge, None, None]:
         """Get most recently updated edges other than NO_JUDGEMENT."""
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement != Judgement.NO_JUDGEMENT.value)
@@ -303,7 +299,7 @@ class Resolver(Linker[SE]):
                 yield Edge.from_dict(row._mapping)
         cursor.close()
 
-    def _get_suggested(self) -> List[Edge]:
+    def _get_suggested(self) -> list[Edge]:
         """Get all NO_JUDGEMENT edges in descending order of score."""
         stmt = self._table.select()
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
@@ -315,8 +311,8 @@ class Resolver(Linker[SE]):
         return edges
 
     def get_candidates(
-        self, limit: Optional[int] = None
-    ) -> Generator[Tuple[str, str, Optional[float]], None, None]:
+        self, limit: int | None = None
+    ) -> Generator[tuple[str, str, float | None], None, None]:
         returned = 0
         for edge in self._get_suggested():
             if not self.check_candidate(edge.source, edge.target):
@@ -331,7 +327,7 @@ class Resolver(Linker[SE]):
         left_id: StrIdent,
         right_id: StrIdent,
         score: float,
-        user: Optional[str] = None,
+        user: str | None = None,
     ) -> Identifier:
         """Make a NO_JUDGEMENT link between two identifiers to suggest that a user
         should make a decision about whether they are the same or not."""
@@ -355,8 +351,8 @@ class Resolver(Linker[SE]):
         left_id: StrIdent,
         right_id: StrIdent,
         judgement: Judgement,
-        user: Optional[str] = None,
-        score: Optional[float] = None,
+        user: str | None = None,
+        score: float | None = None,
     ) -> Identifier:
         result = self._decide(left_id, right_id, judgement, user=user, score=score)
         # Suggestions are not indexed in memory.
@@ -369,8 +365,8 @@ class Resolver(Linker[SE]):
         left_id: StrIdent,
         right_id: StrIdent,
         judgement: Judgement,
-        user: Optional[str] = None,
-        score: Optional[float] = None,
+        user: str | None = None,
+        score: float | None = None,
     ) -> Identifier:
         """Write a judgement without refreshing the indexes.
 
@@ -483,12 +479,12 @@ class Resolver(Linker[SE]):
         self._update_from_db()
         return changed
 
-    def explode(self, node_id: StrIdent) -> Set[str]:
+    def explode(self, node_id: StrIdent) -> set[str]:
         """Dissolve all edges linked to the cluster to which the node belongs.
         This is the hard way to make sure we re-do context once we realise
         there's been a mistake."""
         node = Identifier.get(node_id)
-        affected: Set[str] = set()
+        affected: set[str] = set()
         for part in self.connected(node):
             affected.add(str(part))
             self._remove_node(part)
@@ -498,7 +494,7 @@ class Resolver(Linker[SE]):
     def prune(
         self,
         cleanup_after: timedelta = timedelta(days=6 * 30),
-        user: Optional[str] = None,
+        user: str | None = None,
     ) -> None:
         """Drop suggestions and simplify the merge graph.
 
@@ -511,7 +507,7 @@ class Resolver(Linker[SE]):
         self._prune_intermediate_merges(cutoff_ts)
         self._update_from_db()
 
-    def _live_edges(self, *conditions: Any) -> List[Edge]:
+    def _live_edges(self, *conditions: Any) -> list[Edge]:
         """Materialise the live edges matching the given column conditions."""
         stmt = self._table.select().where(self._table.c.deleted_at.is_(None))
         for condition in conditions:
@@ -521,7 +517,7 @@ class Resolver(Linker[SE]):
         cursor.close()
         return edges
 
-    def _prune_suggestions(self, user: Optional[str] = None) -> None:
+    def _prune_suggestions(self, user: str | None = None) -> None:
         """Hard-delete NO_JUDGEMENT suggestions (optionally for one user)."""
         stmt = delete(self._table)
         stmt = stmt.where(self._table.c.judgement == Judgement.NO_JUDGEMENT.value)
@@ -564,7 +560,7 @@ class Resolver(Linker[SE]):
         now = timestamp()
         positive = self._table.c.judgement == Judgement.POSITIVE.value
         old = self._table.c.created_at < cutoff_ts
-        removed: Set[Pair] = set()
+        removed: set[Pair] = set()
         for edge in self._live_edges(positive, old):
             if edge.key in removed:
                 continue
@@ -661,14 +657,13 @@ class Resolver(Linker[SE]):
         Only live edges are exported: the line format has no deletion field,
         so including soft-deleted edges would resurrect them on load."""
         with open(path, "w") as fh:
-            for edge in self.all_edges():
-                fh.write(edge.to_line())
+            fh.writelines(edge.to_line() for edge in self.all_edges())
 
     def load(self, path: PathLike) -> None:
         """Load edges directly into the database"""
 
         def _read_edges() -> Generator[Edge, None, None]:
-            with open(path, "r") as fh:
+            with open(path) as fh:
                 for line in fh:
                     yield Edge.from_line(line)
 

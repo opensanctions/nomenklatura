@@ -1,5 +1,9 @@
-from nomenklatura.matching.compare.dates import dob_matches, dob_year_matches
-from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
+from nomenklatura.matching.compare.dates import (
+    dob_day_disjoint,
+    dob_matches,
+    dob_year_disjoint,
+    dob_year_matches,
+)
 from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e

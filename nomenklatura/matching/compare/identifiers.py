@@ -1,10 +1,9 @@
-from rigour.ids import StrictFormat
 from followthemoney import E, registry
+from rigour.ids import StrictFormat
 
-from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import type_pair, props_pair, has_schema
 from nomenklatura.matching.compare.util import clean_map
-from nomenklatura.matching.util import FNUL
+from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import FNUL, has_schema, props_pair, type_pair
 
 
 def crypto_wallet_address(query: E, result: E, config: ScoringConfig) -> FtResult:

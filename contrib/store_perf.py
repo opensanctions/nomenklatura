@@ -1,11 +1,10 @@
-from zavod.logs import get_logger
-from zavod.meta import get_catalog, Dataset
-
 # from zavod.runtime.versions import get_latest
 from zavod.integration.dedupe import get_dataset_linker
+from zavod.logs import get_logger
+from zavod.meta import Dataset, get_catalog
+
 # from zavod.archive import iter_dataset_statements
 # from zavod.entity import Entity
-
 from zavod.store import get_store
 
 # from followthemoney.dataset import Version

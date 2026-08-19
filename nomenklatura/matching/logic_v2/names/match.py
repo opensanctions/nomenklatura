@@ -1,21 +1,28 @@
-from typing import Dict, List, Tuple
-from rigour.names import Alignment, CompareConfig, NameTypeTag, Name, NamePart
-from rigour.names import align_person_name_order, compare_parts, normalize_name
-from rigour.names import remove_obj_prefixes
+from followthemoney import model
+from followthemoney.names import schema_type_tag
+from followthemoney.proxy import E, EntityProxy
+from followthemoney.types import registry
+from rigour.names import (
+    Alignment,
+    CompareConfig,
+    Name,
+    NamePart,
+    NameTypeTag,
+    align_person_name_order,
+    compare_parts,
+    normalize_name,
+    remove_obj_prefixes,
+)
 from rigour.names.symbol import pair_symbols
 from rigour.text import is_stopword
-from followthemoney.proxy import E, EntityProxy
-from followthemoney import model
-from followthemoney.types import registry
-from followthemoney.names import schema_type_tag
 
 from nomenklatura.matching.logic_v2.names.analysis import entity_names, names_product
+from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.magic import (
     SYM_SCORES,
     SYM_WEIGHTS,
     weight_extra_match,
 )
-from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.util import (
     explain_alignment,
     is_family_name,
@@ -31,7 +38,7 @@ def match_name_symbolic(
     result: Name,
     config: ScoringConfig,
     compare_config: CompareConfig,
-) -> Tuple[FtResult, List[Alignment]]:
+) -> tuple[FtResult, list[Alignment]]:
     # Stage 1: Generate all valid symbol-based pairings
     # pairings = generate_symbol_pairings(query, result)
 
@@ -43,11 +50,11 @@ def match_name_symbolic(
     extra_result_weight = config.get_float("nm_extra_result_name")
     family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
-    retmatches: List[Alignment] = []
+    retmatches: list[Alignment] = []
     for edges in pair_symbols(query, result):
         # Symbol-paired alignments arrive with score=1.0 and weight=1.0 placeholders.
         # Override per category before composing.
-        matches: List[Alignment] = []
+        matches: list[Alignment] = []
         for edge in edges:
             assert edge.symbol is not None
             edge.score = SYM_SCORES.get(edge.symbol.category, 1.0)
@@ -186,10 +193,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # only left a superset name on one side. Names whose part tags contradict each other
     # (e.g. a reversed firstName/lastName query against a "Family, Given"-form alias) don't
     # qualify — they fall through to the full machinery, which penalises the role swap.
-    query_comparable: Dict[str, List[Name]] = {}
+    query_comparable: dict[str, list[Name]] = {}
     for name in query_names:
         query_comparable.setdefault(name.comparable, []).append(name)
-    result_comparable: Dict[str, List[Name]] = {}
+    result_comparable: dict[str, list[Name]] = {}
     for name in result_names:
         result_comparable.setdefault(name.comparable, []).append(name)
     common = set(query_comparable).intersection(result_comparable)
@@ -222,7 +229,7 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     )
 
     best = FtResult(score=FNUL, detail=None)
-    best_matches: List[Alignment] = []
+    best_matches: list[Alignment] = []
 
     # This combinatorial explosion is the single biggest determinant of the name
     # matching speed: 1 x 1 is very fast, 2 x 5 still good, but 3 x 200 gets out

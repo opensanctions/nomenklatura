@@ -1,18 +1,18 @@
 from functools import cached_property
-from typing import List, Optional
 from itertools import product
-from normality import ascii_text
+
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.scripts import can_latinize
+from normality import ascii_text
+from rigour.names import tokenize_name
 from rigour.text.distance import is_levenshtein_plausible
 from rigour.text.phonetics import metaphone, soundex
-from rigour.names import tokenize_name
+from rigour.text.scripts import can_latinize
 from rigour.util import list_intersection
 
-from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import type_pair, has_schema
 from nomenklatura.matching.compat import fingerprint_name, name_words
+from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import has_schema, type_pair
 
 
 class NameTokenPhonetic:
@@ -21,7 +21,7 @@ class NameTokenPhonetic:
         self.ascii = ascii_text(token) if can_latinize(token) else None
 
     @cached_property
-    def metaphone(self) -> Optional[str]:
+    def metaphone(self) -> str | None:
         if self.ascii is not None:
             phoneme = metaphone(self.ascii)
             if len(phoneme) >= 3:
@@ -32,7 +32,7 @@ class NameTokenPhonetic:
     #     return f"<NameTokenPhonetic {self.token!r}, {self.ascii!r}, {self.metaphone!r}>"
 
     @classmethod
-    def from_name(cls, name: str) -> List["NameTokenPhonetic"]:
+    def from_name(cls, name: str) -> list["NameTokenPhonetic"]:
         tokens = tokenize_name(name.casefold(), token_min_length=2)
         return [cls(token) for token in tokens]
 
@@ -65,7 +65,7 @@ def compare_parts_phonetic(left: NameTokenPhonetic, right: NameTokenPhonetic) ->
     return left.token == right.token
 
 
-def _clean_phonetic_entity(original: str) -> Optional[str]:
+def _clean_phonetic_entity(original: str) -> str | None:
     """Normalize a legal entity name without transliteration."""
     if not can_latinize(original):
         return None
@@ -73,7 +73,7 @@ def _clean_phonetic_entity(original: str) -> Optional[str]:
 
 
 def _token_names_compare(
-    query_names: List[List[str]], result_names: List[List[str]]
+    query_names: list[list[str]], result_names: list[list[str]]
 ) -> float:
     score = 0.0
     for q, r in product(query_names, result_names):
@@ -107,8 +107,8 @@ def person_name_phonetic_match(query: E, result: E, config: ScoringConfig) -> Ft
     return FtResult(score=score, detail=None)
 
 
-def _metaphone_tokens(token: str) -> List[str]:
-    words: List[str] = []
+def _metaphone_tokens(token: str) -> list[str]:
+    words: list[str] = []
     for word in name_words(_clean_phonetic_entity(token), min_length=2):
         words.append(metaphone_token(word))
     return words
@@ -123,8 +123,8 @@ def name_metaphone_match(query: E, result: E, config: ScoringConfig) -> FtResult
     return FtResult(score=_token_names_compare(query_names, result_names), detail=None)
 
 
-def _soundex_tokens(token: str) -> List[str]:
-    words: List[str] = []
+def _soundex_tokens(token: str) -> list[str]:
+    words: list[str] = []
     for word in name_words(_clean_phonetic_entity(token), min_length=2):
         words.append(soundex_token(word))
     return words

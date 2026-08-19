@@ -1,8 +1,9 @@
-from nomenklatura.matching.erun.identifiers import strong_identifier_match
-from nomenklatura.matching.erun.identifiers import weak_identifier_match
+from nomenklatura.matching.erun.identifiers import (
+    strong_identifier_match,
+    weak_identifier_match,
+)
 
 from ..factory import e
-
 
 LEI = "1595VL9OPPQ5THEK2X30"
 OTHER_LEI = "529900T8BM49AURSDO55"
@@ -30,12 +31,22 @@ def test_strong_identifier_match_falls_back_to_weak_identifiers():
 def test_weak_identifier_match_requires_legal_entities():
     query = e("Company", registrationNumber="77401103")
 
-    assert weak_identifier_match(query, e("Company", registrationNumber="77401103")) == 1.0
-    assert weak_identifier_match(query, e("Company", registrationNumber="77401104")) == 0.0
+    assert (
+        weak_identifier_match(query, e("Company", registrationNumber="77401103")) == 1.0
+    )
+    assert (
+        weak_identifier_match(query, e("Company", registrationNumber="77401104")) == 0.0
+    )
     assert weak_identifier_match(query, e("Company")) == 0.0
-    assert weak_identifier_match(
-        e("Person", idNumber="77401103"), e("Person", idNumber="77401103")
-    ) == 1.0
-    assert weak_identifier_match(
-        e("Address", remarks="77401103"), e("Address", remarks="77401103")
-    ) == 0.0
+    assert (
+        weak_identifier_match(
+            e("Person", idNumber="77401103"), e("Person", idNumber="77401103")
+        )
+        == 1.0
+    )
+    assert (
+        weak_identifier_match(
+            e("Address", remarks="77401103"), e("Address", remarks="77401103")
+        )
+        == 0.0
+    )
