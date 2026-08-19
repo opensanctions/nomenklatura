@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from nomenklatura.matching.compare.addresses import (
     address_entity_match,
     address_prop_match,
@@ -39,7 +41,7 @@ class LogicV2(HeuristicAlgorithm):
     """
 
     NAME = "logic-v2"
-    features = [
+    features: ClassVar[list[Feature]] = [
         Feature(func=name_match, weight=1.0),
         Feature(func=address_entity_match, weight=0.98),
         Feature(func=crypto_wallet_address, weight=0.98),
@@ -59,7 +61,7 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=dob_day_disjoint, weight=-0.25, qualifier=True),
         Feature(func=gender_mismatch, weight=-0.2, qualifier=True),
     ]
-    CONFIG = {
+    CONFIG: ClassVar[dict[str, ConfigVar]] = {
         "nm_name_property": ConfigVar(
             type=ConfigVarType.STRING,
             description="The property to use for name matching. If not set, all name properties are used.",

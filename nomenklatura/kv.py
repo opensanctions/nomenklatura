@@ -37,4 +37,4 @@ def b(s: str) -> bytes:
 
 def bv(s: bytes | str | float) -> bytes:
     """Decode bytes to a string."""
-    return s  # type: ignore
+    return s  # type: ignore[return-value]

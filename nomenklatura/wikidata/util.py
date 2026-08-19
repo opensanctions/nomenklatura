@@ -52,7 +52,7 @@ def make_session(
     """
     session = Session()
     session.headers["User-Agent"] = user_agent
-    session.request = partial(session.request, timeout=timeout)  # type: ignore
+    session.request = partial(session.request, timeout=timeout)  # type: ignore[method-assign]
     retries = Retry(
         total=total_retries,
         backoff_factor=backoff_factor,

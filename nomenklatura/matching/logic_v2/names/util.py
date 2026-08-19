@@ -12,7 +12,7 @@ def part_tags_compatible(query: Name, result: Name) -> bool:
     name against the given name. Such pairs must fall through to the
     full alignment machinery, which penalises the role swap, instead of
     short-circuiting to a 1.0 literal match."""
-    for qp, rp in zip(query.parts, result.parts):
+    for qp, rp in zip(query.parts, result.parts, strict=False):
         if not qp.tag.can_match(rp.tag):
             return False
     return True

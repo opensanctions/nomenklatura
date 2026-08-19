@@ -1,10 +1,10 @@
 import pickle
 from functools import cache
-from typing import cast
+from typing import ClassVar, cast
 
 import numpy as np
 from followthemoney.proxy import E
-from sklearn.pipeline import Pipeline  # type: ignore
+from sklearn.pipeline import Pipeline  # type: ignore[import-untyped]
 
 from nomenklatura.matching.compare.dates import (
     dob_matches,
@@ -49,7 +49,7 @@ class RegressionV1(ScoringAlgorithm):
 
     NAME = "regression-v1"
     MODEL_PATH = DATA_PATH.joinpath(f"{NAME}.pkl")
-    FEATURES: list[CompareFunction] = [
+    FEATURES: ClassVar[list[CompareFunction]] = [
         name_match,
         name_token_overlap,
         name_numbers,
@@ -114,7 +114,7 @@ class RegressionV1(ScoringAlgorithm):
         pred = pipe.predict_proba(npfeat)
         score = float(pred[0][1])
         explanations: dict[str, FtResult] = {}
-        for feature, coeff in zip(cls.FEATURES, encoded):
+        for feature, coeff in zip(cls.FEATURES, encoded, strict=True):
             name = feature.__name__
             explanations[name] = FtResult(score=float(coeff), detail=None)
         return MatchingResult(score=score, explanations=explanations)

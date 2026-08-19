@@ -140,7 +140,7 @@ class View(Generic[DS, SE]):
                 yield prop, adjacent
 
     def entities(
-        self, include_schemata: list[Schema] = []
+        self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
         """Iterate over all entities in the view.
 
