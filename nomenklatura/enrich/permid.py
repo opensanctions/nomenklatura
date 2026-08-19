@@ -2,18 +2,18 @@ import csv
 import io
 import json
 import logging
+from collections.abc import Generator
 from functools import lru_cache
 from itertools import product
-from typing import cast, Set, Generator, Optional, Dict, Any
+from typing import Any, cast
 from urllib.parse import urljoin
 
-from followthemoney import StatementEntity, registry, DS, SE
+from followthemoney import DS, SE, StatementEntity, registry
 from lxml import etree
 from requests import Session
 
 from nomenklatura.cache import Cache
-from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentAbort
+from nomenklatura.enrich.common import Enricher, EnricherConfig, EnrichmentAbort
 from nomenklatura.matching.compat import fingerprint_name
 
 log = logging.getLogger(__name__)
@@ -36,11 +36,11 @@ class PermIDEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         token_var = "${PERMID_API_TOKEN}"
-        self.api_token: Optional[str] = self.get_config_expand("api_token", token_var)
+        self.api_token: str | None = self.get_config_expand("api_token", token_var)
         if self.api_token == token_var:
             self.api_token = None
         if self.api_token is None:
@@ -82,7 +82,7 @@ class PermIDEnricher(Enricher[DS]):
         return sio.getvalue().encode("utf-8")
 
     @lru_cache(maxsize=1000)
-    def fetch_placename(self, value: Optional[str]) -> Optional[str]:
+    def fetch_placename(self, value: str | None) -> str | None:
         if value is None:
             return None
         if not value.startswith("http://sws.geonames.org/"):
@@ -92,7 +92,7 @@ class PermIDEnricher(Enricher[DS]):
         try:
             doc = etree.fromstring(res.encode("utf=8"))
         except Exception:
-            log.warn("Invalid GeoNames response: %s", url)
+            log.warning("Invalid GeoNames response: %s", url)
             self.http_remove_cache(url)
             return None
         for code in doc.findall(".//%scountryCode" % GN):
@@ -101,18 +101,18 @@ class PermIDEnricher(Enricher[DS]):
             return name.text
         return value
 
-    def fetch_permid(self, url: str) -> Optional[Dict[str, Any]]:
+    def fetch_permid(self, url: str) -> dict[str, Any] | None:
         params = {"format": "json-ld"}
         hidden = {"access-token": self.api_token}
         res_raw = self.http_get_cached(url, params=params, hidden=hidden, cache_days=90)
         try:
-            return cast(Dict[str, Any], json.loads(res_raw))
+            return cast("dict[str, Any]", json.loads(res_raw))
         except Exception:
             log.info("Invalid response from PermID: %s", url)
             self.http_remove_cache(url, params=params)
             return None
 
-    def fetch_perm_org(self, entity: SE, url: str) -> Optional[SE]:
+    def fetch_perm_org(self, entity: SE, url: str) -> SE | None:
         res = self.fetch_permid(url)
         if res is None:
             return None
@@ -187,7 +187,7 @@ class PermIDEnricher(Enricher[DS]):
                 headers=headers,
                 cache_days=self.cache_days,
             )
-            seen_matches: Set[str] = set()
+            seen_matches: set[str] = set()
             for result in res.get("outputContentResponse", []):
                 match_permid_url = result.get("Match OpenPermID")
                 if match_permid_url is None or match_permid_url in seen_matches:

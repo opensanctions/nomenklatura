@@ -1,7 +1,9 @@
-from nomenklatura.matching.logic_v1.phonetic import metaphone_token
-from nomenklatura.matching.logic_v1.phonetic import name_metaphone_match
-from nomenklatura.matching.logic_v1.phonetic import name_soundex_match
-from nomenklatura.matching.logic_v1.phonetic import person_name_phonetic_match
+from nomenklatura.matching.logic_v1.phonetic import (
+    metaphone_token,
+    name_metaphone_match,
+    name_soundex_match,
+    person_name_phonetic_match,
+)
 from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e

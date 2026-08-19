@@ -1,24 +1,23 @@
-from typing import Set
 from followthemoney.helpers import post_summary
 
-from nomenklatura.wikidata.model import Claim
 from nomenklatura.wikidata.lang import LangText
+from nomenklatura.wikidata.model import Claim
 
 
 def qualify_value(value: LangText, claim: Claim) -> LangText:
     if value.text is None:
         return value
-    starts: Set[str] = set()
+    starts: set[str] = set()
     for qual in claim.get_qualifier("P580"):
         if qual.text.text is not None:
             starts.add(qual.text.text)
 
-    ends: Set[str] = set()
+    ends: set[str] = set()
     for qual in claim.get_qualifier("P582"):
         if qual.text.text is not None:
             ends.add(qual.text.text)
 
-    dates: Set[str] = set()
+    dates: set[str] = set()
     for qual in claim.get_qualifier("P585"):
         if qual.text.text is not None:
             dates.add(qual.text.text)

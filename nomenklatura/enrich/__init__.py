@@ -1,14 +1,20 @@
 import logging
-from requests import Session
+from collections.abc import Generator, Iterable
 from importlib import import_module
-from typing import Iterable, Generator, Optional, Type, cast
+from typing import cast
+
 from followthemoney import DS, SE
+from requests import Session
 
 from nomenklatura.cache import Cache
-from nomenklatura.matching import DefaultAlgorithm
-from nomenklatura.enrich.common import Enricher, EnricherConfig
-from nomenklatura.enrich.common import EnrichmentAbort, EnrichmentException
+from nomenklatura.enrich.common import (
+    Enricher,
+    EnricherConfig,
+    EnrichmentAbort,
+    EnrichmentException,
+)
 from nomenklatura.judgement import Judgement
+from nomenklatura.matching import DefaultAlgorithm
 from nomenklatura.matching.types import ScoringConfig
 from nomenklatura.resolver import Resolver
 
@@ -17,8 +23,8 @@ __all__ = [
     "Enricher",
     "EnrichmentAbort",
     "EnrichmentException",
-    "make_enricher",
     "enrich",
+    "make_enricher",
     "match",
 ]
 
@@ -27,7 +33,7 @@ def make_enricher(
     dataset: DS,
     cache: Cache,
     config: EnricherConfig,
-    http_session: Optional[Session] = None,
+    http_session: Session | None = None,
 ) -> Enricher[DS]:
     """Instantiate the enricher class named by the `type` import path in the
     given configuration, e.g. `nomenklatura.enrich.wikidata:WikidataEnricher`."""
@@ -39,7 +45,7 @@ def make_enricher(
     clazz = getattr(module, clazz_name)
     if clazz is None or not issubclass(clazz, Enricher):
         raise RuntimeError("Invalid enricher: %r" % enricher_type)
-    enr_clazz = cast(Type[Enricher[DS]], clazz)
+    enr_clazz = cast("type[Enricher[DS]]", clazz)
     return enr_clazz(dataset, cache, config, session=http_session)
 
 
@@ -47,7 +53,7 @@ def match(
     enricher: Enricher[DS],
     resolver: Resolver[SE],
     entities: Iterable[SE],
-    config: Optional[ScoringConfig] = None,
+    config: ScoringConfig | None = None,
 ) -> Generator[SE, None, None]:
     """Stream entities through the enricher and record candidate matches in
     the resolver.

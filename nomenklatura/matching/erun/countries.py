@@ -1,7 +1,7 @@
+from followthemoney import E, registry
 from rigour.territories import territories_intersect
-from followthemoney import registry, E
 
-from nomenklatura.matching.util import type_pair, has_schema
+from nomenklatura.matching.util import has_schema, type_pair
 
 
 def position_country_match(left: E, right: E) -> float:

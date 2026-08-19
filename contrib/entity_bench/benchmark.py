@@ -1,11 +1,13 @@
-from typing import Callable, Dict, List
+from collections.abc import Callable
 from uuid import uuid4
-from rich.console import Console
-from rich.text import Text
-from rich.table import Table
-import yaml
 
-from followthemoney import ValueEntity as Entity, model
+import yaml
+from followthemoney import ValueEntity as Entity
+from followthemoney import model
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
+
 from nomenklatura.matching.types import FtResult
 
 
@@ -29,7 +31,7 @@ class Result:
         self.loss = abs(self.true_score - ft.score)
 
 
-def make_entity(schema: str, props: Dict[str, str]) -> Entity:
+def make_entity(schema: str, props: dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
     schema_obj = model.get(schema)
     assert schema_obj is not None, f"Schema not found: {schema}"
@@ -51,11 +53,11 @@ def make_entity(schema: str, props: Dict[str, str]) -> Entity:
     return entity
 
 
-def load_checks() -> List[Check]:
-    with open("checks.yml", "r") as fh:
+def load_checks() -> list[Check]:
+    with open("checks.yml") as fh:
         checks_data = yaml.safe_load(fh)
     checks = checks_data.get("checks", [])
-    objects: List[Check] = []
+    objects: list[Check] = []
     for check in checks:
         schema = check.get("schema")
         is_match = check.get("match")
@@ -167,8 +169,8 @@ def run_benchmark(
 
 def wrap_matcher(query: Entity, candidate: Entity) -> FtResult:
     """Wrap the matcher function to match the expected signature."""
-    from nomenklatura.matching.logic_v2.names.match import name_match
     from nomenklatura.matching.logic_v2.model import LogicV2
+    from nomenklatura.matching.logic_v2.names.match import name_match
 
     config = LogicV2.default_config()
     return name_match(query, candidate, config)

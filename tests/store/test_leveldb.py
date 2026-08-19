@@ -1,10 +1,11 @@
-import orjson
 import tempfile
 from pathlib import Path
-from followthemoney import model, Dataset, StatementEntity
 
-from nomenklatura.resolver import Resolver
+import orjson
+from followthemoney import Dataset, StatementEntity, model
+
 from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
 from nomenklatura.store.level import LevelDBStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"
@@ -53,12 +54,11 @@ def test_leveldb_graph_query(
     path = Path(tempfile.mkdtemp()) / "xxx"
     store = LevelDBStore(test_dataset, resolver, path)
     assert len(list(store.view(test_dataset).entities())) == 0
-    with store.writer() as writer:
-        with open(donations_path, "rb") as fh:
-            while line := fh.readline():
-                data = orjson.loads(line)
-                proxy = StatementEntity.from_data(test_dataset, data)
-                writer.add_entity(proxy)
+    with store.writer() as writer, open(donations_path, "rb") as fh:
+        while line := fh.readline():
+            data = orjson.loads(line)
+            proxy = StatementEntity.from_data(test_dataset, data)
+            writer.add_entity(proxy)
     store.optimize()
     tview = store.view(test_dataset)
     assert len(list(tview.entities())) == 474

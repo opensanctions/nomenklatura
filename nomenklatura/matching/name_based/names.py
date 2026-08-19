@@ -1,12 +1,11 @@
-from typing import List, Optional, Tuple
 from followthemoney.proxy import E
 from followthemoney.types import registry
 from rigour.text.distance import jaro_winkler
 from rigour.text.phonetics import soundex
 
+from nomenklatura.matching.compat import names_word_list
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, type_pair
-from nomenklatura.matching.compat import names_word_list
 
 
 def _soundex_token(token: str) -> str:
@@ -37,11 +36,11 @@ def jaro_name_parts(query: E, result: E, config: ScoringConfig) -> FtResult:
     algorithm."""
     query_names_, result_names_ = type_pair(query, result, registry.name)
     result_parts = set(names_word_list(result_names_))
-    similiarities: List[float] = []
-    tokens: List[Tuple[str, str]] = []
+    similiarities: list[float] = []
+    tokens: list[tuple[str, str]] = []
     for part in set(names_word_list(query_names_)):
         best = 0.0
-        best_token: Optional[str] = None
+        best_token: str | None = None
 
         for other in result_parts:
             part_similarity = jaro_winkler(part, other)

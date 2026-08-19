@@ -1,14 +1,13 @@
 import logging
-from typing import List, Optional, Type
+
 from followthemoney import DS, SE, Dataset
 
+from nomenklatura.db import Session
+from nomenklatura.matching import ScoringAlgorithm
+from nomenklatura.resolver import Resolver
 from nomenklatura.store import Store
-
 from nomenklatura.tui.dedupe import DedupeApp, DedupeState
 from nomenklatura.tui.reconcile import ReconcileApp, ReconcileState
-from nomenklatura.matching import ScoringAlgorithm
-from nomenklatura.db import Session
-from nomenklatura.resolver import Resolver
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import prepare_review
 from nomenklatura.wikidata.write import QSCommand
@@ -20,7 +19,7 @@ def dedupe_ui(
     resolver: Resolver[SE],
     session: Session,
     store: Store[DS, SE],
-    url_base: Optional[str] = None,
+    url_base: str | None = None,
 ) -> None:
     app = DedupeApp[DS, SE]()
     app.dedupe = DedupeState(session, resolver, store, url_base=url_base)
@@ -33,13 +32,13 @@ def reconcile_ui(
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
-    algorithm: Type[ScoringAlgorithm],
+    algorithm: type[ScoringAlgorithm],
     aliases: bool = False,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
-    user: Optional[str] = None,
-    url_base: Optional[str] = None,
-) -> List[QSCommand]:
+    retrieved: str | None = None,
+    source_url: str | None = None,
+    user: str | None = None,
+    url_base: str | None = None,
+) -> list[QSCommand]:
     """Review pre-ranked Wikidata candidates and return queued commands."""
     items, commands = prepare_review(
         resolver,

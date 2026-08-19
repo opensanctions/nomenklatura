@@ -1,17 +1,17 @@
 from functools import lru_cache
-from typing import Set
+from itertools import product
+
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from itertools import product
-from rigour.text import levenshtein_similarity
 from rigour.addresses import normalize_address, remove_address_keywords
+from rigour.text import levenshtein_similarity
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, MEMO_BATCH, has_schema
 
 
 @lru_cache(maxsize=MEMO_BATCH)
-def _normalize_address(addr: str) -> Set[str]:
+def _normalize_address(addr: str) -> set[str]:
     """Normalize an address string into tokens."""
     norm = normalize_address(addr, latinize=True)
     if norm is None:

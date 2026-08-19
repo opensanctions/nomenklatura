@@ -1,8 +1,7 @@
 from followthemoney.proxy import E
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import props_pair
-from nomenklatura.matching.util import FNUL
+from nomenklatura.matching.util import FNUL, props_pair
 
 
 def gender_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:

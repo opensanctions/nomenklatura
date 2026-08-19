@@ -1,20 +1,21 @@
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Generic, Iterator, List, Optional, Set, Tuple, Type
-from followthemoney import Dataset, DS, SE, StatementEntity, registry
+from typing import Generic
+
+from followthemoney import DS, SE, Dataset, StatementEntity, registry
 from rigour.ids.wikidata import is_qid
 from rigour.territories import get_territory_by_qid
 
 from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
-from nomenklatura.resolver import Resolver
-from nomenklatura.store import Store, View
 from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.matching.types import ScoringConfig
+from nomenklatura.resolver import Resolver
+from nomenklatura.store import Store, View
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
-from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.propose import (
     PositionClaim,
     propose_create,
@@ -22,6 +23,7 @@ from nomenklatura.wikidata.propose import (
 )
 from nomenklatura.wikidata.props import PROPS_DIRECT, PROPS_QUALIFIED, PROPS_TOPICS
 from nomenklatura.wikidata.qualified import qualify_value
+from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.value import clean_wikidata_name, is_alias_strong
 from nomenklatura.wikidata.wikipedia import item_wikipedia_summaries, preferred_langs
 from nomenklatura.wikidata.write import QSCommand
@@ -35,7 +37,7 @@ CACHE_INTERVAL = 10
 REVIEW_SUMMARY_CANDIDATES = 5
 
 
-def candidate_proxy(dataset: Dataset, item: Item) -> Optional[StatementEntity]:
+def candidate_proxy(dataset: Dataset, item: Item) -> StatementEntity | None:
     """Project a Wikidata item into a Person proxy for matching and display.
 
     Reach for this in the reconciliation loop to score and show a search hit
@@ -51,7 +53,7 @@ def candidate_proxy(dataset: Dataset, item: Item) -> Optional[StatementEntity]:
         return None
     proxy = StatementEntity.from_data(dataset, {"schema": "Person", "id": item.id})
     proxy.add("wikidataId", item.id)
-    names: Set[str] = set()
+    names: set[str] = set()
     for label in item.sorted_labels:
         if label.text is None:
             continue
@@ -134,12 +136,12 @@ def create_preview(dataset: Dataset, person: SE) -> StatementEntity:
     return proxy
 
 
-def _first(entity: SE, prop: str) -> Optional[str]:
+def _first(entity: SE, prop: str) -> str | None:
     values = entity.get(prop, quiet=True)
     return values[0] if values else None
 
 
-def position_claims(view: View[DS, SE], person: SE) -> List[PositionClaim]:
+def position_claims(view: View[DS, SE], person: SE) -> list[PositionClaim]:
     """Resolve a person's QID-bearing positions into P39 enrichment input.
 
     Reach for this before enriching a linked/confirmed person: it walks holder →
@@ -152,7 +154,7 @@ def position_claims(view: View[DS, SE], person: SE) -> List[PositionClaim]:
     """
     if person.id is None:
         return []
-    claims: List[PositionClaim] = []
+    claims: list[PositionClaim] = []
     for prop, occupancy in view.get_inverted(person.id):
         if prop.name != "positionOccupancies":
             continue
@@ -172,12 +174,12 @@ def position_claims(view: View[DS, SE], person: SE) -> List[PositionClaim]:
 def rank_candidates(
     client: WikidataClient,
     dataset: Dataset,
-    algorithm: Type[ScoringAlgorithm],
+    algorithm: type[ScoringAlgorithm],
     config: ScoringConfig,
     entity: SE,
     aliases: bool = False,
     limit: int = 10,
-) -> List[Tuple[Item, float, StatementEntity]]:
+) -> list[tuple[Item, float, StatementEntity]]:
     """Search Wikidata for an entity and return its candidates, best first.
 
     Shared by the headless and interactive reconcile paths: it runs the search,
@@ -187,7 +189,7 @@ def rank_candidates(
     Items that aren't human (no proxy) are dropped. `limit` is the per-name search
     cap (default 10, a touch above the API's 7, for better reconciliation recall).
     """
-    scored: List[Tuple[Item, float, StatementEntity]] = []
+    scored: list[tuple[Item, float, StatementEntity]] = []
     for qid in client.search_items(entity, aliases=aliases, limit=limit):
         item = client.fetch_item(qid)
         if item is None:
@@ -207,9 +209,9 @@ def iter_persons(
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
-    algorithm: Type[ScoringAlgorithm],
+    algorithm: type[ScoringAlgorithm],
     aliases: bool = False,
-) -> Iterator[Tuple[SE, Optional[Item], List[Tuple[Item, float, StatementEntity]]]]:
+) -> Iterator[tuple[SE, Item | None, list[tuple[Item, float, StatementEntity]]]]:
     """Yield linked items or ranked candidates for each person."""
     config = algorithm.default_config()
     view = store.default_view()
@@ -225,7 +227,7 @@ def iter_persons(
             if item is not None:
                 yield entity, item, []
             continue
-        candidates: List[Tuple[Item, float, StatementEntity]] = []
+        candidates: list[tuple[Item, float, StatementEntity]] = []
         for cand_item, score, proxy in rank_candidates(
             client, dataset, algorithm, config, entity, aliases
         ):
@@ -242,7 +244,7 @@ class ReviewItem(Generic[SE]):
     """One person and its ranked Wikidata candidates, prepared for review."""
 
     person: SE
-    candidates: List[Tuple[Item, float, StatementEntity]]
+    candidates: list[tuple[Item, float, StatementEntity]]
 
     @property
     def top_score(self) -> float:
@@ -256,16 +258,16 @@ def prepare_review(
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
-    algorithm: Type[ScoringAlgorithm],
+    algorithm: type[ScoringAlgorithm],
     aliases: bool = False,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
-) -> Tuple[List["ReviewItem[SE]"], List[QSCommand]]:
+    retrieved: str | None = None,
+    source_url: str | None = None,
+) -> tuple[list["ReviewItem[SE]"], list[QSCommand]]:
     """Prepare ranked candidates and linked-person enrichments for review."""
     resolver.load_into_memory()
     view = store.default_view()
-    items: List[ReviewItem[SE]] = []
-    commands: List[QSCommand] = []
+    items: list[ReviewItem[SE]] = []
+    commands: list[QSCommand] = []
     seen, linked_count = 0, 0
     for entity, linked_item, candidates in iter_persons(
         resolver, session, store, client, dataset, algorithm, aliases
@@ -286,10 +288,14 @@ def prepare_review(
                 summary.apply(proxy, "summary")
         items.append(ReviewItem(entity, candidates))
         best = " (best %.3f)" % candidates[0][1] if candidates else ""
-        log.info("[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best)
+        log.info(
+            "[%d] %s — %d candidate(s)%s", seen, entity.caption, len(candidates), best
+        )
     session.checkpoint()
     items.sort(key=lambda review: review.top_score, reverse=True)
-    log.info("Prepared %d person(s) for review; %d already linked.", len(items), linked_count)
+    log.info(
+        "Prepared %d person(s) for review; %d already linked.", len(items), linked_count
+    )
     return items, commands
 
 
@@ -299,18 +305,18 @@ def reconcile(
     store: Store[DS, SE],
     client: WikidataClient,
     dataset: Dataset,
-    algorithm: Type[ScoringAlgorithm],
+    algorithm: type[ScoringAlgorithm],
     threshold: float,
     aliases: bool = False,
     create: bool = True,
-    user: Optional[str] = None,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
-) -> List[QSCommand]:
+    user: str | None = None,
+    retrieved: str | None = None,
+    source_url: str | None = None,
+) -> list[QSCommand]:
     """Reconcile persons automatically and return QuickStatements commands."""
     resolver.load_into_memory()
     view = store.default_view()
-    commands: List[QSCommand] = []
+    commands: list[QSCommand] = []
     seen, merged = 0, 0
     for entity, linked_item, candidates in iter_persons(
         resolver, session, store, client, dataset, algorithm, aliases
@@ -322,7 +328,7 @@ def reconcile(
             )
             continue
         seen += 1
-        best_item: Optional[Item] = None
+        best_item: Item | None = None
         best_score = 0.0
         if candidates:
             best_item, best_score, _ = candidates[0]

@@ -1,5 +1,5 @@
-from nomenklatura.matching.logic_v2.names.match import name_match
 from nomenklatura.matching.logic_v2.model import LogicV2
+from nomenklatura.matching.logic_v2.names.match import name_match
 
 from ...factory import e
 

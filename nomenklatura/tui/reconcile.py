@@ -1,13 +1,12 @@
-from typing import Generic, List, Optional, Tuple, cast
+from typing import Generic, cast
 
+from followthemoney import DS, SE, Dataset, StatementEntity, registry
 from rich.console import RenderableType
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.widget import Widget
 from textual.widgets import DataTable, Footer
-
-from followthemoney import DS, SE, Dataset, StatementEntity, registry
 
 from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
@@ -17,8 +16,7 @@ from nomenklatura.tui.comparison import render_comparison
 from nomenklatura.tui.util import apply_judgement
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.propose import propose_create, propose_enrich
-from nomenklatura.wikidata.reconcile import position_claims
-from nomenklatura.wikidata.reconcile import ReviewItem, create_preview
+from nomenklatura.wikidata.reconcile import ReviewItem, create_preview, position_claims
 from nomenklatura.wikidata.write import QSCommand
 
 
@@ -31,12 +29,12 @@ class ReconcileState(Generic[DS, SE]):
         resolver: Resolver[SE],
         store: Store[DS, SE],
         dataset: Dataset,
-        items: List["ReviewItem[SE]"],
-        commands: Optional[List[QSCommand]] = None,
-        retrieved: Optional[str] = None,
-        source_url: Optional[str] = None,
-        user: Optional[str] = None,
-        url_base: Optional[str] = None,
+        items: list["ReviewItem[SE]"],
+        commands: list[QSCommand] | None = None,
+        retrieved: str | None = None,
+        source_url: str | None = None,
+        user: str | None = None,
+        url_base: str | None = None,
     ) -> None:
         self.session = session
         self.resolver = resolver
@@ -50,11 +48,11 @@ class ReconcileState(Generic[DS, SE]):
         self.latinize = False
         self.items = items
         self._index = -1
-        self.person: Optional[SE] = None
-        self.candidates: List[Tuple[Item, float, StatementEntity]] = []
+        self.person: SE | None = None
+        self.candidates: list[tuple[Item, float, StatementEntity]] = []
         # The index after the last candidate represents "none of the above".
         self.highlight = 0
-        self.commands: List[QSCommand] = list(commands or [])
+        self.commands: list[QSCommand] = list(commands or [])
 
     @property
     def at_create(self) -> bool:
@@ -122,11 +120,15 @@ class ReconcileState(Generic[DS, SE]):
         item = self.candidates[self.highlight][0]
         if item.id is not None:
             apply_judgement(
-                self.session, self.resolver, self.store, self.person.id, item.id, judgement
+                self.session,
+                self.resolver,
+                self.store,
+                self.person.id,
+                item.id,
+                judgement,
             )
         del self.candidates[self.highlight]
-        if self.highlight > len(self.candidates):
-            self.highlight = len(self.candidates)
+        self.highlight = min(self.highlight, len(self.candidates))
 
     def skip(self) -> None:
         self.load()
@@ -148,13 +150,12 @@ def _score_bar(score: float) -> Text:
     return Text(f"{bar} {score:.2f}", style=color)
 
 
-def _candidate_row(proxy: StatementEntity) -> Tuple[Text, Text, Text]:
+def _candidate_row(proxy: StatementEntity) -> tuple[Text, Text, Text]:
     """Name / birth year / citizenship cells for a candidate row."""
     dates = proxy.get("birthDate", quiet=True)
     born = min(dates)[:4] if dates else ""
     countries = [
-        registry.country.caption(c) or c
-        for c in proxy.get("citizenship", quiet=True)
+        registry.country.caption(c) or c for c in proxy.get("citizenship", quiet=True)
     ]
     return (
         Text(proxy.caption or proxy.id or ""),
@@ -176,7 +177,9 @@ class CompareWidget(ReconcileAppWidget):
     def render(self) -> RenderableType:
         state = self.state
         if state.person is None:
-            return Text("No more persons to reconcile. Press Q to quit.", justify="center")
+            return Text(
+                "No more persons to reconcile. Press Q to quit.", justify="center"
+            )
         if state.at_create:
             preview = create_preview(state.dataset, state.person)
             return render_comparison(
@@ -208,7 +211,7 @@ class ReconcileApp(App[int], Generic[DS, SE]):
     CSS_PATH = "reconcile.tcss"
     reconcile: ReconcileState[DS, SE]
     # Maps table rows to candidate indexes; informational rows map to None.
-    _row_highlights: List[Optional[int]] = []
+    _row_highlights: list[int | None] = []
 
     BINDINGS = [
         ("x", "confirm", "Confirm"),
@@ -245,14 +248,18 @@ class ReconcileApp(App[int], Generic[DS, SE]):
         if state.person is not None:
             for index, (item, score, proxy) in enumerate(state.candidates):
                 name, born, country = _candidate_row(proxy)
-                table.add_row(_score_bar(score), name, born, country, Text(item.id or ""))
+                table.add_row(
+                    _score_bar(score), name, born, country, Text(item.id or "")
+                )
                 self._row_highlights.append(index)
             if not state.candidates:
                 # No search hits: a non-selectable note so the create row has context.
                 table.add_row(
                     Text(""),
                     Text("(No candidates found)", style="dim italic"),
-                    Text(""), Text(""), Text(""),
+                    Text(""),
+                    Text(""),
+                    Text(""),
                 )
                 self._row_highlights.append(None)
                 create_label = "✚ Create a new item"

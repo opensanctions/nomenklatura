@@ -1,11 +1,11 @@
 from functools import partial
-from typing import Optional
-from requests import Session
-from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
+
 from followthemoney import StatementEntity
 from followthemoney.settings import USER_AGENT
+from requests import Session
+from requests.adapters import HTTPAdapter
 from rigour.ids.wikidata import is_qid
+from urllib3.util import Retry
 
 # Retry on server errors plus the rate-limit / Retry-After statuses (429, 503).
 # urllib3 honours the Retry-After header for these by default, which is how we
@@ -14,7 +14,7 @@ RETRY_STATUSES = [500, 502, 504] + list(Retry.RETRY_AFTER_STATUS_CODES)
 HTTP_TIMEOUT = 90
 
 
-def entity_qid(entity: StatementEntity) -> Optional[str]:
+def entity_qid(entity: StatementEntity) -> str | None:
     """Return the Wikidata QID an entity is already linked to, if any.
 
     Reach for this before searching Wikidata for a person: an entity may carry

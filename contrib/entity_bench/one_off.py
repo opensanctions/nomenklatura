@@ -1,13 +1,14 @@
-from typing import Dict
 from uuid import uuid4
 
-from followthemoney import ValueEntity as Entity, model
-from nomenklatura.matching.types import FtResult
-from nomenklatura.matching.logic_v2.names.match import name_match
+from followthemoney import ValueEntity as Entity
+from followthemoney import model
+
 from nomenklatura.matching.logic_v2.model import LogicV2
+from nomenklatura.matching.logic_v2.names.match import name_match
+from nomenklatura.matching.types import FtResult
 
 
-def make_entity(schema: str, props: Dict[str, str]) -> Entity:
+def make_entity(schema: str, props: dict[str, str]) -> Entity:
     """Create a CompositeEntity with the given schema and properties."""
     schema_obj = model.get(schema)
     assert schema_obj is not None, f"Schema not found: {schema}"

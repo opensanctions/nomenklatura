@@ -1,9 +1,10 @@
+from collections.abc import Iterator
 from functools import lru_cache
-from typing import Dict, FrozenSet, Iterator, List, Optional, Set, Tuple
-from rigour.names import Name, Symbol
-from rigour.text.scripts import common_scripts
+
 from followthemoney import EntityProxy
 from followthemoney.names import entity_names as ftm_entity_name
+from rigour.names import Name, Symbol
+from rigour.text.scripts import common_scripts
 
 from nomenklatura.matching.util import MEMO_BATCH
 
@@ -13,9 +14,9 @@ from nomenklatura.matching.util import MEMO_BATCH
 @lru_cache(maxsize=MEMO_BATCH)
 def entity_names(
     entity: EntityProxy,
-    prop: Optional[str] = None,
+    prop: str | None = None,
     is_query: bool = False,
-) -> Set[Name]:
+) -> set[Name]:
     """This will transform the entity into a set of names with tags applied. The idea
     is to tag the names with the type of entity they are, e.g. person, organization,
     etc. and to tag the parts of the name with their type, e.g. first name, last name,
@@ -25,16 +26,16 @@ def entity_names(
     # but will cache the name objects for the `query` entity across multiple possible `results`.
     # It also requires for the `entity` to have an ID so that hashing it does not raise an
     # exception.
-    props: Optional[Tuple[str, ...]] = None
+    props: tuple[str, ...] | None = None
     if prop is not None:
         props = (prop,)
     return ftm_entity_name(entity, props, infer_initials=is_query, consolidate=False)
 
 
 def names_product(
-    queries: Set[Name],
-    results: Set[Name],
-) -> Iterator[Tuple[Name, Name]]:
+    queries: set[Name],
+    results: set[Name],
+) -> Iterator[tuple[Name, Name]]:
     """Enumerate (query, result) name pairs worth feeding into the scoring core.
 
     Prunes the cross product of two Name sets with three rules:
@@ -66,19 +67,19 @@ def names_product(
         return
 
     # Materialise symbols once per Name; the getter is not cached.
-    q_syms: List[Tuple[Name, FrozenSet[Symbol]]] = [
+    q_syms: list[tuple[Name, frozenset[Symbol]]] = [
         (q, frozenset(q.symbols)) for q in queries
     ]
-    r_syms: List[Tuple[Name, FrozenSet[Symbol]]] = [
+    r_syms: list[tuple[Name, frozenset[Symbol]]] = [
         (r, frozenset(r.symbols)) for r in results
     ]
 
     # First pass: script-sharing pairs always keep; no-script-overlap
     # pairs with symbol overlap are bucketed per query for the dominance
     # checks in the second pass.
-    shared_script_pairs: List[Tuple[Name, Name]] = []
-    shared_script_overlaps: Dict[Name, List[FrozenSet[Symbol]]] = {}
-    per_query_symbol: Dict[Name, List[Tuple[Name, FrozenSet[Symbol]]]] = {}
+    shared_script_pairs: list[tuple[Name, Name]] = []
+    shared_script_overlaps: dict[Name, list[frozenset[Symbol]]] = {}
+    per_query_symbol: dict[Name, list[tuple[Name, frozenset[Symbol]]]] = {}
     for q, qs in q_syms:
         for r, rs in r_syms:
             if common_scripts(q.comparable, r.comparable):

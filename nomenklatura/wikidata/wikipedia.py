@@ -1,11 +1,11 @@
 import logging
-from typing import Dict, List, Optional, Set
 from urllib.parse import quote
+
+from followthemoney import StatementEntity
 from requests import Session
 from requests.exceptions import RequestException
 from rigour.langs import PREFERRED_LANGS
 from rigour.territories import get_territory
-from followthemoney import StatementEntity
 
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
@@ -25,9 +25,7 @@ SUMMARY_CACHE_DAYS = 100
 MAX_SUMMARIES = 5
 
 
-def fetch_summary(
-    cache: Cache, session: Session, lang: str, title: str
-) -> Optional[str]:
+def fetch_summary(cache: Cache, session: Session, lang: str, title: str) -> str | None:
     """Fetch the lead-paragraph plaintext of a Wikipedia article.
 
     Reach for this to give a reconciliation reviewer a one-glance "who is this"
@@ -59,7 +57,7 @@ def fetch_summary(
     return extract or None
 
 
-def preferred_langs(entity: StatementEntity) -> List[str]:
+def preferred_langs(entity: StatementEntity) -> list[str]:
     """Order Wikipedia languages by relevance to a person, best first.
 
     The person's own country languages come first — a national politician's
@@ -68,14 +66,14 @@ def preferred_langs(entity: StatementEntity) -> List[str]:
     ISO 639-3 codes, deduplicated in priority order; feed it to
     `item_wikipedia_summaries`.
     """
-    langs: List[str] = []
+    langs: list[str] = []
     for country in entity.countries:
         territory = get_territory(country)
         if territory is not None:
             langs.extend(territory.langs)
     langs.extend(PREFERRED_LANGS)
-    seen: Set[str] = set()
-    ordered: List[str] = []
+    seen: set[str] = set()
+    ordered: list[str] = []
     for lang in langs:
         if lang not in seen:
             seen.add(lang)
@@ -87,9 +85,9 @@ def item_wikipedia_summaries(
     cache: Cache,
     session: Session,
     item: Item,
-    langs: List[str],
+    langs: list[str],
     limit: int = MAX_SUMMARIES,
-) -> List[LangText]:
+) -> list[LangText]:
     """Fetch lead-paragraph summaries for an item's Wikipedia articles.
 
     Reach for this when preparing a reconciliation candidate for human review:
@@ -101,8 +99,8 @@ def item_wikipedia_summaries(
     links. Each result is a LangText tagged with the article's language, so it
     lands on `summary` with the right lang.
     """
-    by_lang: Dict[str, str] = {}
-    titles: Dict[str, str] = {}
+    by_lang: dict[str, str] = {}
+    titles: dict[str, str] = {}
     for link in item.wikilinks:
         if link.lang is None or link.wiki_site is None:
             continue
@@ -114,7 +112,7 @@ def item_wikipedia_summaries(
             continue
         by_lang[link.lang] = link.wiki_site
         titles[link.lang] = link.title
-    summaries: List[LangText] = []
+    summaries: list[LangText] = []
     for lang in langs:
         if len(summaries) >= limit:
             break

@@ -44,22 +44,20 @@ alias-aware scoring: OFAC scores against the best of an entity's
 aliases.
 """
 
-from typing import List, Optional
-from rigour.names import tokenize_name
-from rigour._core import raw_jaro, raw_jaro_winkler
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from rigour._core import raw_jaro, raw_jaro_winkler
+from rigour.names import tokenize_name
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, type_pair
 
-
 # Tuned against the 164-row positive fixture. Each constant resolves
 # at least one observable OFAC quirk.
-PER_PAIR_JW_FLOOR = 0.5     # per-token-pair JW below this contributes 0
-SHORT_TOKEN_MAX_LEN = 2     # input tokens this short get dropped (with safety)
-WINKLER_PREFIX_MAX = 4      # standard Winkler prefix cap (1990 paper)
-WINKLER_WEIGHT = 0.1        # standard Winkler scaling factor (1990 paper)
+PER_PAIR_JW_FLOOR = 0.5  # per-token-pair JW below this contributes 0
+SHORT_TOKEN_MAX_LEN = 2  # input tokens this short get dropped (with safety)
+WINKLER_PREFIX_MAX = 4  # standard Winkler prefix cap (1990 paper)
+WINKLER_WEIGHT = 0.1  # standard Winkler scaling factor (1990 paper)
 
 
 def _simmetrics_jw(left: str, right: str) -> float:
@@ -89,14 +87,14 @@ def _simmetrics_jw(left: str, right: str) -> float:
     return jaro + prefix_matches * WINKLER_WEIGHT * (1 - jaro)
 
 
-def _tokens(name: str) -> List[str]:
+def _tokens(name: str) -> list[str]:
     """Tokenise via rigour's Unicode-aware splitter, then uppercase.
     Apostrophes / commas / periods are deleted (combining-mark
     category), not split on - `O'BRIEN` stays one token."""
     return [token.upper() for token in tokenize_name(name)]
 
 
-def _drop_short_tokens(tokens: List[str]) -> List[str]:
+def _drop_short_tokens(tokens: list[str]) -> list[str]:
     """Strip tokens of length <= SHORT_TOKEN_MAX_LEN, but never empty
     the list - a single-char query like `Z` keeps its lone token."""
     kept = [t for t in tokens if len(t) > SHORT_TOKEN_MAX_LEN]
@@ -158,8 +156,8 @@ def ofac_name_score(query: E, result: E, config: ScoringConfig) -> FtResult:
     if not query_names or not result_names:
         return FtResult(score=FNUL, detail=None)
     best: float = FNUL
-    best_query: Optional[str] = None
-    best_candidate: Optional[str] = None
+    best_query: str | None = None
+    best_candidate: str | None = None
     best_whole: float = FNUL
     best_per_token: float = FNUL
     for query_name in query_names:

@@ -5,7 +5,6 @@ from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e
 
-
 config = ScoringConfig.defaults()
 
 

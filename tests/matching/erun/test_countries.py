@@ -1,6 +1,8 @@
-from nomenklatura.matching.erun.countries import org_country_mismatch
-from nomenklatura.matching.erun.countries import per_country_mismatch
-from nomenklatura.matching.erun.countries import position_country_match
+from nomenklatura.matching.erun.countries import (
+    org_country_mismatch,
+    per_country_mismatch,
+    position_country_match,
+)
 
 from ..factory import e
 
@@ -20,7 +22,10 @@ def test_org_country_mismatch_only_flags_legal_entities():
     assert org_country_mismatch(query, e("Company", country="de")) == 0.0
     assert org_country_mismatch(query, e("Company", country="fr")) == 1.0
     assert org_country_mismatch(query, e("Company")) == 0.0
-    assert org_country_mismatch(e("Person", country="de"), e("Person", country="fr")) == 0.0
+    assert (
+        org_country_mismatch(e("Person", country="de"), e("Person", country="fr"))
+        == 0.0
+    )
 
 
 def test_person_country_mismatch_only_flags_people():
@@ -29,4 +34,7 @@ def test_person_country_mismatch_only_flags_people():
     assert per_country_mismatch(query, e("Person", country="de")) == 0.0
     assert per_country_mismatch(query, e("Person", country="fr")) == 1.0
     assert per_country_mismatch(query, e("Person")) == 0.0
-    assert per_country_mismatch(e("Company", country="de"), e("Company", country="fr")) == 0.0
+    assert (
+        per_country_mismatch(e("Company", country="de"), e("Company", country="fr"))
+        == 0.0
+    )

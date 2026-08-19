@@ -8,10 +8,11 @@ import logging
 import os
 import time
 from collections import Counter
+from collections.abc import Iterator
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import numpy as np
 from followthemoney import EntityProxy
@@ -125,7 +126,7 @@ class PreparedDataset:
 def cluster_partition(cluster: str, test_size: float, seed: int) -> str:
     """Assign all evidence for a resolver cluster to one stable partition."""
 
-    digest = hashlib.sha256(f"{seed}:{cluster}".encode("utf-8")).digest()
+    digest = hashlib.sha256(f"{seed}:{cluster}".encode()).digest()
     fraction = int.from_bytes(digest[:8], "big") / 2**64
     return "test" if fraction < test_size else "train"
 

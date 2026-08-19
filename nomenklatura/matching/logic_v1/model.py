@@ -1,26 +1,34 @@
-from typing import Dict, List
-
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
-from nomenklatura.matching.compare.countries import country_mismatch
-from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.compare.identifiers import crypto_wallet_address
-from nomenklatura.matching.compare.identifiers import identifier_match
-from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
-from nomenklatura.matching.compare.names import person_name_jaro_winkler
-from nomenklatura.matching.compare.names import last_name_mismatch, name_literal_match
-from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
-from nomenklatura.matching.compare.names import weak_alias_match
 from nomenklatura.matching.compare.addresses import address_entity_match
-from nomenklatura.matching.logic_v1.phonetic import person_name_phonetic_match
-from nomenklatura.matching.logic_v1.phonetic import name_soundex_match
-from nomenklatura.matching.logic_v1.phonetic import name_metaphone_match
-from nomenklatura.matching.logic_v1.identifiers import bic_code_match
-from nomenklatura.matching.logic_v1.identifiers import inn_code_match, ogrn_code_match
-from nomenklatura.matching.logic_v1.identifiers import isin_security_match
-from nomenklatura.matching.logic_v1.identifiers import lei_code_match
-from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
-from nomenklatura.matching.logic_v1.identifiers import orgid_disjoint
+from nomenklatura.matching.compare.countries import country_mismatch
+from nomenklatura.matching.compare.dates import dob_day_disjoint, dob_year_disjoint
+from nomenklatura.matching.compare.gender import gender_mismatch
+from nomenklatura.matching.compare.identifiers import (
+    crypto_wallet_address,
+    identifier_match,
+)
+from nomenklatura.matching.compare.names import (
+    last_name_mismatch,
+    name_fingerprint_levenshtein,
+    name_literal_match,
+    person_name_jaro_winkler,
+    weak_alias_match,
+)
+from nomenklatura.matching.logic_v1.identifiers import (
+    bic_code_match,
+    inn_code_match,
+    isin_security_match,
+    lei_code_match,
+    ogrn_code_match,
+    orgid_disjoint,
+    vessel_imo_mmsi_match,
+)
 from nomenklatura.matching.logic_v1.multi import numbers_mismatch
+from nomenklatura.matching.logic_v1.phonetic import (
+    name_metaphone_match,
+    name_soundex_match,
+    person_name_phonetic_match,
+)
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.util import FNUL
 
 
@@ -62,9 +70,9 @@ class LogicV1(HeuristicAlgorithm):
 
     @classmethod
     def compute_score(
-        cls, scores: Dict[str, float], weights: Dict[str, float]
+        cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
-        mains: List[float] = []
+        mains: list[float] = []
         for feat in cls.features:
             if feat.qualifier:
                 continue

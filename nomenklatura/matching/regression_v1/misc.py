@@ -1,11 +1,10 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import has_overlap, extract_numbers, is_disjoint
-from nomenklatura.matching.util import props_pair, type_pair
-from nomenklatura.matching.util import max_in_sets, has_schema
+from nomenklatura.matching.compare.util import extract_numbers, has_overlap, is_disjoint
 from nomenklatura.matching.compat import clean_name_ascii
+from nomenklatura.matching.regression_v1.util import compare_levenshtein, tokenize_pair
+from nomenklatura.matching.util import has_schema, max_in_sets, props_pair, type_pair
 
 
 def birth_place(query: E, result: E) -> float:

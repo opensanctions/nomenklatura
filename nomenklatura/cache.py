@@ -1,17 +1,18 @@
-import math
 import json
 import logging
-from random import randint
+import math
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, cast, Dict, Optional, Union, Generator
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import MetaData
-from sqlalchemy import Table, Column, DateTime, Unicode
+from datetime import UTC, datetime, timedelta
+from random import randint
+from typing import Any, Union, cast
+
+from followthemoney import Dataset
+from rigour.time import naive_now
+from sqlalchemy import Column, DateTime, MetaData, Table, Unicode
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
-from sqlalchemy.dialects.postgresql import insert as upsert
-from rigour.time import naive_now
-from followthemoney import Dataset
 
 from nomenklatura.db import Session
 
@@ -22,7 +23,7 @@ Value = Union[str, None]
 @dataclass
 class CacheValue:
     key: str
-    dataset: Optional[str]
+    dataset: str | None
     text: Value
     timestamp: datetime
 
@@ -33,7 +34,7 @@ def randomize_cache(days: int) -> timedelta:
     return timedelta(days=randint(min_cache, max_cache))
 
 
-class Cache(object):
+class Cache:
     def __init__(
         self, session: Session, dataset: Dataset, create: bool = False
     ) -> None:
@@ -50,7 +51,7 @@ class Cache(object):
         if create:
             session.create(self._table)
 
-        self._preload: Dict[str, CacheValue] = {}
+        self._preload: dict[str, CacheValue] = {}
 
     def set(self, key: str, value: Value) -> None:
         self._preload.pop(key, None)
@@ -75,9 +76,9 @@ class Cache(object):
     def get(
         self,
         key: str,
-        max_age: Optional[int] = None,
-        min_timestamp: Optional[datetime] = None,
-    ) -> Optional[Value]:
+        max_age: int | None = None,
+        min_timestamp: datetime | None = None,
+    ) -> Value | None:
         """Return the cached value for `key`, or None if there is no fresh entry.
 
         `max_age` bounds staleness in days (with jitter via `randomize_cache`).
@@ -88,12 +89,12 @@ class Cache(object):
         if max_age is not None and max_age < 1:
             return None
 
-        cache_cutoff: Optional[datetime] = None
+        cache_cutoff: datetime | None = None
         if max_age is not None:
             cache_cutoff = naive_now() - randomize_cache(max_age)
         if min_timestamp is not None:
             if min_timestamp.tzinfo is not None:
-                min_timestamp = min_timestamp.astimezone(timezone.utc)
+                min_timestamp = min_timestamp.astimezone(UTC)
                 min_timestamp = min_timestamp.replace(tzinfo=None)
             if cache_cutoff is None or min_timestamp > cache_cutoff:
                 cache_cutoff = min_timestamp
@@ -113,10 +114,10 @@ class Cache(object):
         result = self._session.execute(q)
         row = result.fetchone()
         if row is not None:
-            return cast(Optional[str], row.text)
+            return cast("str | None", row.text)
         return None
 
-    def get_json(self, key: str, max_age: Optional[int] = None) -> Optional[Any]:
+    def get_json(self, key: str, max_age: int | None = None) -> Any | None:
         text = self.get(key, max_age=max_age)
         if text is None:
             return None
@@ -131,7 +132,7 @@ class Cache(object):
         pq = pq.where(self._table.c.key == key)
         self._session.execute(pq)
 
-    def all(self, like: Optional[str]) -> Generator[CacheValue, None, None]:
+    def all(self, like: str | None) -> Generator[CacheValue, None, None]:
         q = select(self._table)
         if like is not None:
             q = q.filter(self._table.c.key.like(like))
@@ -140,7 +141,7 @@ class Cache(object):
         for row in result.yield_per(10000):
             yield CacheValue(row.key, row.dataset, row.text, row.timestamp)
 
-    def preload(self, like: Optional[str] = None) -> None:
+    def preload(self, like: str | None = None) -> None:
         log.info("Pre-loading cache: %r", like)
         for cache in self.all(like=like):
             self._preload[cache.key] = cache

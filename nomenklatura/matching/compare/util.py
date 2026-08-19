@@ -1,13 +1,14 @@
 import re
-from typing import List, Set, Union, Iterable, Callable, Optional
+from collections.abc import Callable, Iterable
+from typing import Optional
 
-CleanFunc = Optional[Callable[[str], Optional[str]]]
+CleanFunc = Optional[Callable[[str], str | None]]
 FIND_NUM = re.compile(r"\d{1,}")
 
 
 def is_disjoint(
-    left: Union[Set[str], List[str]],
-    right: Union[Set[str], List[str]],
+    left: set[str] | list[str],
+    right: set[str] | list[str],
 ) -> bool:
     """Returns true if both sequences are non-empty but have no common values."""
     if len(left) and len(right):
@@ -17,8 +18,8 @@ def is_disjoint(
 
 
 def has_overlap(
-    left: Union[Set[str], List[str]],
-    right: Union[Set[str], List[str]],
+    left: set[str] | list[str],
+    right: set[str] | list[str],
 ) -> bool:
     """Returns true if both sequences are non-empty and have common values."""
     if not set(left).isdisjoint(right):
@@ -27,11 +28,11 @@ def has_overlap(
 
 
 def clean_map(
-    texts: Iterable[Optional[str]],
+    texts: Iterable[str | None],
     clean: CleanFunc = None,
-) -> Set[str]:
+) -> set[str]:
     """Apply a cleaning function to a set of strings and only return non-empty ones."""
-    out: Set[str] = set()
+    out: set[str] = set()
     for text in texts:
         if text is None or len(text) == 0:
             continue
@@ -43,9 +44,9 @@ def clean_map(
     return out
 
 
-def extract_numbers(values: List[str]) -> Set[str]:
+def extract_numbers(values: list[str]) -> set[str]:
     """Extract all numbers from a list of strings."""
-    numbers: Set[str] = set()
+    numbers: set[str] = set()
     for value in values:
         numbers.update(FIND_NUM.findall(value))
     return numbers

@@ -1,26 +1,28 @@
 import json
-import time
 import logging
+import time
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, List, Optional, Set
-from requests import Session
+from typing import Any
+
+from followthemoney import StatementEntity, registry
 from normality import squash_spaces
+from requests import Session
+from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from rigour.urls import build_url
 from rigour.util import MEMO_SMALL
-from rigour.ids.wikidata import is_qid
-from followthemoney import StatementEntity, registry
+
 from nomenklatura.cache import Cache
-from nomenklatura.wikidata.util import make_session
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.query import SparqlResponse
+from nomenklatura.wikidata.util import make_session
 
 log = logging.getLogger(__name__)
 
 
-class WikidataClient(object):
+class WikidataClient:
     """Read items and labels from the Wikidata API and SPARQL endpoint.
 
     Responses are cached in a SQL-backed `Cache` so that crawlers and enrichers
@@ -45,9 +47,9 @@ class WikidataClient(object):
     def __init__(
         self,
         cache: Cache,
-        session: Optional[Session] = None,
+        session: Session | None = None,
         cache_days: int = 14,
-        reference_time: Optional[datetime] = None,
+        reference_time: datetime | None = None,
     ) -> None:
         self.cache = cache
         # A bare session gets 403'd (default UA) and throttled by Wikidata, so
@@ -66,9 +68,9 @@ class WikidataClient(object):
     def fetch_item(
         self,
         qid: str,
-        cache_days: Optional[int] = None,
-        modified_at: Optional[datetime] = None,
-    ) -> Optional[Item]:
+        cache_days: int | None = None,
+        modified_at: datetime | None = None,
+    ) -> Item | None:
         # https://www.mediawiki.org/wiki/Wikibase/API
         # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
         #
@@ -128,7 +130,7 @@ class WikidataClient(object):
             )
         return item
 
-    def _fetch_entities(self, url: str) -> Optional[str]:
+    def _fetch_entities(self, url: str) -> str | None:
         """GET a wbgetentities URL, retrying the transient errors Wikidata hides
         in HTTP 200 bodies (DB lag, rate limits, internal errors).
 
@@ -194,9 +196,7 @@ class WikidataClient(object):
         self.cache.set_json(cache_key, label.pack())
         return label
 
-    def query(
-        self, query_text: str, cache_days: Optional[int] = None
-    ) -> SparqlResponse:
+    def query(self, query_text: str, cache_days: int | None = None) -> SparqlResponse:
         """Query the Wikidata SPARQL endpoint.
 
         Args:
@@ -236,7 +236,7 @@ class WikidataClient(object):
 
     def search_items(
         self, entity: StatementEntity, aliases: bool = False, limit: int = 7
-    ) -> List[str]:
+    ) -> list[str]:
         """Find Wikidata QIDs that might be the same as an OpenSanctions entity.
 
         Reach for this when reconciling an OS entity against Wikidata: it runs the
@@ -255,8 +255,8 @@ class WikidataClient(object):
             names = entity.get_type_values(registry.name, matchable=True)
         else:
             names = entity.get("name", quiet=True)
-        qids: List[str] = []
-        seen: Set[str] = set()
+        qids: list[str] = []
+        seen: set[str] = set()
         for name in names:
             for qid in self._search_name(name, limit=limit):
                 if qid not in seen:
@@ -264,7 +264,7 @@ class WikidataClient(object):
                     qids.append(qid)
         return qids
 
-    def _search_name(self, name: str, limit: int = 7) -> List[str]:
+    def _search_name(self, name: str, limit: int = 7) -> list[str]:
         if not name.strip():
             return []
         params = {
@@ -291,7 +291,7 @@ class WikidataClient(object):
             self.cache.delete(url)
             log.info("Wikidata search has no results: %s", name)
             return []
-        qids: List[str] = []
+        qids: list[str] = []
         for result in results:
             qid = result.get("id")
             if qid is not None and is_qid(qid):

@@ -1,8 +1,8 @@
-from followthemoney import model, Dataset
+from followthemoney import Dataset, model
 from followthemoney import StatementEntity as Entity
 
-from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
 from nomenklatura.store import MemoryStore, SimpleMemoryStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"

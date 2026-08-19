@@ -1,6 +1,6 @@
-from rigour.territories import territories_intersect
 from followthemoney.proxy import E
 from followthemoney.types import registry
+from rigour.territories import territories_intersect
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.util import FNUL, type_pair

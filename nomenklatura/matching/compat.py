@@ -3,29 +3,30 @@
 # rigour, but the different functioning of both could lead to unexpected results.
 # This module is a temporary solution to allow for a smooth transition.
 import logging
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 from functools import lru_cache
+
+from fingerprints.cleanup import clean_name_ascii, clean_name_light
+from fingerprints.types import replace_types
 from normality import squash_spaces
 from normality.constants import WS
 from rigour.names import remove_person_prefixes
-from fingerprints.cleanup import clean_name_ascii, clean_name_light
-from fingerprints.types import replace_types
 
 from nomenklatura.matching.util import MEMO_BATCH
 
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "fingerprint_name",
     "clean_name_ascii",
     "clean_name_light",
-    "names_word_list",
+    "fingerprint_name",
     "name_words",
+    "names_word_list",
 ]
 
 
 @lru_cache(maxsize=MEMO_BATCH)
-def fingerprint_name(original: str) -> Optional[str]:
+def fingerprint_name(original: str) -> str | None:
     """Fingerprint a legal entity name."""
     # this needs to happen before the replacements
     text = original.lower()
@@ -44,9 +45,9 @@ def fingerprint_name(original: str) -> Optional[str]:
 def names_word_list(
     names: Iterable[str],
     min_length: int = 1,
-) -> List[str]:
+) -> list[str]:
     """Get a list of tokens present in the given set of names."""
-    words: List[str] = []
+    words: list[str] = []
     for name in names:
         normalized = fingerprint_name(name)
         if normalized is None:
@@ -57,11 +58,11 @@ def names_word_list(
     return words
 
 
-def name_words(name: Optional[str], min_length: int = 1) -> List[str]:
+def name_words(name: str | None, min_length: int = 1) -> list[str]:
     """Get a list of tokens present in the given name."""
     if name is None:
         return []
-    words: List[str] = []
+    words: list[str] = []
     for word in name.split(WS):
         if len(word) >= min_length:
             words.append(word)

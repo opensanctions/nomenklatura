@@ -1,32 +1,40 @@
-from typing import List, Dict, Tuple
 from itertools import product
+
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour.text.distance import levenshtein_similarity
-from rigour.text.distance import jaro_winkler, is_levenshtein_plausible
+from rigour.text.distance import (
+    is_levenshtein_plausible,
+    jaro_winkler,
+    levenshtein_similarity,
+)
+
+from nomenklatura.matching.compare.util import clean_map, is_disjoint
+from nomenklatura.matching.compat import (
+    clean_name_ascii,
+    clean_name_light,
+    fingerprint_name,
+    name_words,
+    names_word_list,
+)
 from nomenklatura.matching.types import FtResult, ScoringConfig
-from nomenklatura.matching.util import type_pair, props_pair, has_schema
-from nomenklatura.matching.compare.util import is_disjoint, clean_map
-from nomenklatura.matching.compat import clean_name_ascii, clean_name_light
-from nomenklatura.matching.compat import fingerprint_name, name_words, names_word_list
-from nomenklatura.matching.util import FNUL
+from nomenklatura.matching.util import FNUL, has_schema, props_pair, type_pair
 
 
-def _name_parts(name: str) -> List[str]:
+def _name_parts(name: str) -> list[str]:
     return name_words(clean_name_ascii(name))
 
 
-def _align_name_parts(query: List[str], result: List[str]) -> float:
+def _align_name_parts(query: list[str], result: list[str]) -> float:
     if len(query) == 0 or len(result) == 0:
         return 0.0
 
-    scores: Dict[Tuple[str, str], float] = {}
+    scores: dict[tuple[str, str], float] = {}
     # compute all pairwise scores for name parts:
     for qn, rn in product(set(query), set(result)):
         score = jaro_winkler(qn, rn)
         if score > 0.0 and is_levenshtein_plausible(qn, rn):
             scores[(qn, rn)] = score
-    pairs: List[Tuple[str, str]] = []
+    pairs: list[tuple[str, str]] = []
     # original length of query:
     length = len(query)
     total_score = 1.0
@@ -94,13 +102,13 @@ def name_fingerprint_levenshtein(
             if part not in rtokens:
                 rtokens.append(part)
 
-        scores: Dict[Tuple[str, str], float] = {}
+        scores: dict[tuple[str, str], float] = {}
         # compute all pairwise scores for name parts:
         for q, r in product(set(qtokens), set(rtokens)):
             scores[(q, r)] = levenshtein_similarity(
                 q, r, max_edits=None, max_percent=1.0
             )
-        aligned: List[Tuple[str, str, float]] = []
+        aligned: list[tuple[str, str, float]] = []
         # find the best pairing for each name part by score:
         for (q, r), score in sorted(
             scores.items(), key=lambda i: (i[1], i[0]), reverse=True

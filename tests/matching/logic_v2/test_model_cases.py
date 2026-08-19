@@ -1,12 +1,13 @@
-from banal import hash_data, ensure_list
-from typing import List, Optional, TypedDict, Dict, Union
-from followthemoney import EntityProxy
+from typing import TypedDict
+
 import pytest
+from banal import ensure_list, hash_data
+from followthemoney import EntityProxy
 
 from nomenklatura.matching.logic_v2.model import LogicV2
 from nomenklatura.matching.types import ScoringConfig
 
-Props = Dict[str, Union[str, List[str]]]
+Props = dict[str, str | list[str]]
 DefaultConfig = LogicV2.default_config()
 
 
@@ -15,7 +16,7 @@ class MatchCase(TypedDict):
     matches: bool
     query: Props
     result: Props
-    config: Optional[ScoringConfig]
+    config: ScoringConfig | None
 
 
 CASES = [

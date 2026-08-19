@@ -1,12 +1,14 @@
-import orjson
-import fakeredis
 from pathlib import Path
-from followthemoney import model, Dataset, StatementEntity as Entity
+
+import fakeredis
+import orjson
+from followthemoney import Dataset, model
+from followthemoney import StatementEntity as Entity
 from followthemoney.dataset.versions import Version
 from rigour.time import datetime_iso, utc_now
 
-from nomenklatura.resolver import Resolver
 from nomenklatura.judgement import Judgement
+from nomenklatura.resolver import Resolver
 from nomenklatura.store.versioned import VersionedRedisStore
 
 DAIMLER = "66ce9f62af8c7d329506da41cb7c36ba058b3d28"

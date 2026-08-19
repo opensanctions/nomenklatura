@@ -30,7 +30,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from rich.console import Console
 from rich.table import Table
@@ -39,8 +38,7 @@ from rich.table import Table
 # directly (without rigour being installed in editable mode pointing here).
 sys.path.insert(0, str(Path(__file__).parent))
 
-from comparators import COMPARATORS, Comparator  # noqa: E402
-
+from comparators import COMPARATORS, Comparator
 
 HERE = Path(__file__).parent
 DEFAULT_CSV = HERE / "cases.csv"
@@ -89,7 +87,7 @@ def compute_case_id(case_group: str, schema: str, name1: str, name2: str) -> str
     diff between runs still works.
     """
     h = hashlib.blake2b(
-        f"{case_group}|{schema}|{name1}|{name2}".encode("utf-8"),
+        f"{case_group}|{schema}|{name1}|{name2}".encode(),
         digest_size=4,
     )
     return h.hexdigest()
@@ -99,7 +97,7 @@ QUALITY_TIERS = ("STRONG", "MEDIUM", "WEAK")
 DEFAULT_QUALITY = "MEDIUM"
 
 
-def load_cases(csv_path: Path) -> List[Dict[str, str]]:
+def load_cases(csv_path: Path) -> list[dict[str, str]]:
     """Load cases.csv, synthesise `case_id`, normalise `quality`.
 
     `quality` is optional in the CSV; blank or missing values default to
@@ -108,8 +106,8 @@ def load_cases(csv_path: Path) -> List[Dict[str, str]]:
     """
     with csv_path.open("r", encoding="utf-8", newline="") as fh:
         rows = list(csv.DictReader(fh))
-    seen: Dict[str, Dict[str, str]] = {}
-    out: List[Dict[str, str]] = []
+    seen: dict[str, dict[str, str]] = {}
+    out: list[dict[str, str]] = []
     for row in rows:
         cid = compute_case_id(
             row["case_group"], row["schema"], row["name1"], row["name2"]
@@ -135,9 +133,9 @@ def load_cases(csv_path: Path) -> List[Dict[str, str]]:
 
 
 def evaluate(
-    rows: List[Dict[str, str]], comparator: Comparator, threshold: float
-) -> List[CaseResult]:
-    out: List[CaseResult] = []
+    rows: list[dict[str, str]], comparator: Comparator, threshold: float
+) -> list[CaseResult]:
+    out: list[CaseResult] = []
     for row in rows:
         score = comparator(row["name1"], row["name2"], row["schema"])
         out.append(
@@ -159,13 +157,22 @@ def evaluate(
 
 
 DUMP_FIELDS = [
-    "case_group", "case_id", "schema", "name1", "name2",
-    "is_match", "quality", "category", "notes",
-    "score", "predicted_match", "outcome",
+    "case_group",
+    "case_id",
+    "schema",
+    "name1",
+    "name2",
+    "is_match",
+    "quality",
+    "category",
+    "notes",
+    "score",
+    "predicted_match",
+    "outcome",
 ]
 
 
-def dump_csv(results: List[CaseResult], path: Path) -> None:
+def dump_csv(results: list[CaseResult], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=DUMP_FIELDS)
@@ -189,11 +196,11 @@ def dump_csv(results: List[CaseResult], path: Path) -> None:
             )
 
 
-def load_results(path: Path, threshold: float) -> List[CaseResult]:
+def load_results(path: Path, threshold: float) -> list[CaseResult]:
     """Reconstruct CaseResult list from a dumped CSV. Re-derives outcome
     from score + caller-supplied threshold (so summarising at a different
     threshold is a single arg change, not a re-run)."""
-    out: List[CaseResult] = []
+    out: list[CaseResult] = []
     with path.open("r", encoding="utf-8", newline="") as fh:
         for row in csv.DictReader(fh):
             out.append(
@@ -217,7 +224,7 @@ def load_results(path: Path, threshold: float) -> List[CaseResult]:
 # --- Metrics ---
 
 
-def confusion(results: List[CaseResult]) -> Dict[str, float]:
+def confusion(results: list[CaseResult]) -> dict[str, float]:
     tp = sum(1 for r in results if r.outcome == "TP")
     fp = sum(1 for r in results if r.outcome == "FP")
     tn = sum(1 for r in results if r.outcome == "TN")
@@ -228,15 +235,22 @@ def confusion(results: List[CaseResult]) -> Dict[str, float]:
     f1 = 2 * p * r / (p + r) if p + r else 0.0
     acc = (tp + tn) / n if n else 0.0
     return {
-        "n": n, "tp": tp, "fp": fp, "tn": tn, "fn": fn,
-        "precision": p, "recall": r, "f1": f1, "accuracy": acc,
+        "n": n,
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
+        "precision": p,
+        "recall": r,
+        "f1": f1,
+        "accuracy": acc,
     }
 
 
 # --- Rendering ---
 
 
-def metrics_table(title: str, rows: List[tuple], console: Console) -> None:
+def metrics_table(title: str, rows: list[tuple], console: Console) -> None:
     """rows: list of (label, metrics_dict)."""
     table = Table(title=title, show_lines=False)
     table.add_column("")
@@ -265,11 +279,11 @@ def metrics_table(title: str, rows: List[tuple], console: Console) -> None:
     console.print(table)
 
 
-def print_disagreements(results: List[CaseResult], n: int, console: Console) -> None:
+def print_disagreements(results: list[CaseResult], n: int, console: Console) -> None:
     fps = sorted((r for r in results if r.outcome == "FP"), key=lambda r: -r.score)[:n]
     fns = sorted((r for r in results if r.outcome == "FN"), key=lambda r: r.score)[:n]
 
-    def render(title: str, rows: List[CaseResult]) -> None:
+    def render(title: str, rows: list[CaseResult]) -> None:
         if not rows:
             return
         table = Table(title=title)
@@ -281,7 +295,10 @@ def print_disagreements(results: List[CaseResult], n: int, console: Console) -> 
         for r in rows:
             table.add_row(
                 f"{r.case_group}/{r.case_id}",
-                r.schema, r.name1, r.name2, f"{r.score:.3f}",
+                r.schema,
+                r.name1,
+                r.name2,
+                f"{r.score:.3f}",
             )
         console.print(table)
 
@@ -290,14 +307,16 @@ def print_disagreements(results: List[CaseResult], n: int, console: Console) -> 
 
 
 def print_summary(
-    results: List[CaseResult], threshold: float, top: int, console: Console
+    results: list[CaseResult], threshold: float, top: int, console: Console
 ) -> None:
-    console.print(f"[bold]Cases[/bold]: {len(results)}    [bold]Threshold[/bold]: {threshold}")
+    console.print(
+        f"[bold]Cases[/bold]: {len(results)}    [bold]Threshold[/bold]: {threshold}"
+    )
     console.print()
 
     metrics_table("Overall", [("all", confusion(results))], console)
 
-    by_group: Dict[str, List[CaseResult]] = defaultdict(list)
+    by_group: dict[str, list[CaseResult]] = defaultdict(list)
     for r in results:
         by_group[r.case_group].append(r)
     console.print()
@@ -310,7 +329,7 @@ def print_summary(
     # Per-quality slice. Tier order is fixed (STRONG → MEDIUM → WEAK);
     # this orders the table the same way the calibration check below
     # expects scores to walk monotonically.
-    by_quality: Dict[str, List[CaseResult]] = defaultdict(list)
+    by_quality: dict[str, list[CaseResult]] = defaultdict(list)
     for r in results:
         by_quality[r.quality].append(r)
     console.print()
@@ -323,7 +342,7 @@ def print_summary(
     print_calibration(by_quality, console)
     print_strong_failures(results, console)
 
-    by_category: Dict[str, List[CaseResult]] = defaultdict(list)
+    by_category: dict[str, list[CaseResult]] = defaultdict(list)
     for r in results:
         if r.category:
             by_category[r.category].append(r)
@@ -341,14 +360,14 @@ def print_summary(
 
 
 def print_calibration(
-    by_quality: Dict[str, List[CaseResult]], console: Console
+    by_quality: dict[str, list[CaseResult]], console: Console
 ) -> None:
     """Score-curve monotonicity check: STRONG match scores should sit
     above MEDIUM, MEDIUM above WEAK; symmetrically on the non-match side.
     Inversions or ties between adjacent tiers indicate the curve isn't
     differentiating cleanly — a calibration concern.
     """
-    means: Dict[Tuple[str, bool], float] = {}
+    means: dict[tuple[str, bool], float] = {}
     for q in QUALITY_TIERS:
         for is_match in (True, False):
             scores = [r.score for r in by_quality.get(q, []) if r.is_match == is_match]
@@ -371,7 +390,7 @@ def print_calibration(
     console.print(table)
 
     # Monotonicity warnings.
-    warnings: List[str] = []
+    warnings: list[str] = []
     match_seq = [means[(q, True)] for q in QUALITY_TIERS if (q, True) in means]
     nonmatch_seq = [means[(q, False)] for q in QUALITY_TIERS if (q, False) in means]
     for i in range(len(match_seq) - 1):
@@ -392,11 +411,13 @@ def print_calibration(
             console.print(f"[yellow]{w}[/yellow]")
 
 
-def print_strong_failures(results: List[CaseResult], console: Console) -> None:
+def print_strong_failures(results: list[CaseResult], console: Console) -> None:
     """STRONG-tier failures are bugs: the labelled outcome is unambiguous
     by construction, so a wrong verdict here is a real regression.
     """
-    failures = [r for r in results if r.quality == "STRONG" and r.outcome in ("FP", "FN")]
+    failures = [
+        r for r in results if r.quality == "STRONG" and r.outcome in ("FP", "FN")
+    ]
     if not failures:
         return
     failures.sort(key=lambda r: (r.outcome, -abs(r.score - r.threshold)))
@@ -426,37 +447,52 @@ def print_strong_failures(results: List[CaseResult], console: Console) -> None:
 # --- CLI ---
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument(
-        "-c", "--comparator",
+        "-c",
+        "--comparator",
         choices=sorted(COMPARATORS),
         help="Run named comparator over cases.csv and store the per-case result.",
     )
     mode.add_argument(
-        "-s", "--summarize",
-        type=Path, metavar="RUN_CSV",
+        "-s",
+        "--summarize",
+        type=Path,
+        metavar="RUN_CSV",
         help="Summarise a previously stored per-case CSV.",
     )
-    parser.add_argument("--csv", type=Path, default=DEFAULT_CSV, help="Input cases CSV.")
     parser.add_argument(
-        "--out-dir", type=Path, default=DEFAULT_RUN_DATA,
+        "--csv", type=Path, default=DEFAULT_CSV, help="Input cases CSV."
+    )
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=DEFAULT_RUN_DATA,
         help="Where to write per-case dumps in run mode.",
     )
     parser.add_argument(
-        "-t", "--threshold", type=float, default=DEFAULT_THRESHOLD,
+        "-t",
+        "--threshold",
+        type=float,
+        default=DEFAULT_THRESHOLD,
         help="Score threshold for the predicted-match decision.",
     )
     parser.add_argument(
-        "--top", type=int, default=10, help="Top-N disagreements to display.",
+        "--top",
+        type=int,
+        default=10,
+        help="Top-N disagreements to display.",
     )
     parser.add_argument(
-        "--quiet", action="store_true",
+        "--quiet",
+        action="store_true",
         help="Run mode only: skip the summary after dumping.",
     )
     parser.add_argument(
-        "--frozen", action="store_true",
+        "--frozen",
+        action="store_true",
         help="Run mode only: write to <comparator>-frozen.csv (stable name) "
         "instead of timestamped. Use for runs you want to commit as a "
         "stable reference (e.g. logicv2-frozen.csv).",

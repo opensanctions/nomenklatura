@@ -1,11 +1,12 @@
-from banal import hash_data, ensure_list
-from typing import List, TypedDict, Dict, Union
-from followthemoney import EntityProxy
+from typing import TypedDict
+
 import pytest
+from banal import ensure_list, hash_data
+from followthemoney import EntityProxy
 
 from nomenklatura.matching.logic_v2.model import LogicV2
 
-Props = Dict[str, Union[str, List[str]]]
+Props = dict[str, str | list[str]]
 config = LogicV2.default_config()
 
 
@@ -16,7 +17,7 @@ class PairCase(TypedDict):
     result: Props
 
 
-CASES: List[PairCase] = [
+CASES: list[PairCase] = [
     {
         "schema": "Person",
         "better": {"name": "Vladimir Putin"},

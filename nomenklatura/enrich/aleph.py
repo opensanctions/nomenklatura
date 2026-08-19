@@ -1,13 +1,15 @@
+import logging
 import os
 import uuid
-import logging
-from banal import ensure_list, hash_data
-from typing import Any, Dict, cast, Generator, Optional
-from urllib.parse import urljoin
+from collections.abc import Generator
 from functools import cached_property
+from typing import Any, cast
+from urllib.parse import urljoin
+
+from banal import ensure_list, hash_data
+from followthemoney import DS, SE
 from followthemoney.exc import InvalidData
 from followthemoney.namespace import Namespace
-from followthemoney import DS, SE
 from requests import Session
 from rigour.urls import build_url
 
@@ -26,24 +28,24 @@ class AlephEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         self._host: str = os.environ.get("ALEPH_HOST", "https://aleph.occrp.org/")
         self._host = self.get_config_expand("host") or self._host
         self._base_url: str = urljoin(self._host, "/api/2/")
-        self._collection: Optional[str] = self.get_config_expand("collection")
-        self._ns: Optional[Namespace] = None
+        self._collection: str | None = self.get_config_expand("collection")
+        self._ns: Namespace | None = None
         if self.get_config_bool("strip_namespace"):
             self._ns = Namespace()
-        self._api_key: Optional[str] = os.environ.get("ALEPH_API_KEY")
+        self._api_key: str | None = os.environ.get("ALEPH_API_KEY")
         self._api_key = self.get_config_expand("api_key") or self._api_key
         if self._api_key is not None:
             self.session.headers["Authorization"] = f"ApiKey {self._api_key}"
         self.session.headers["X-Aleph-Session"] = str(uuid.uuid4())
 
     @cached_property
-    def collection_id(self) -> Optional[str]:
+    def collection_id(self) -> str | None:
         if self._collection is None:
             return None
         url = urljoin(self._base_url, "collections")
@@ -52,10 +54,10 @@ class AlephEnricher(Enricher[DS]):
         res.raise_for_status()
         response = res.json()
         for result in response.get("results", []):
-            return cast(str, result["id"])
+            return cast("str", result["id"])
         return None
 
-    def load_aleph_entity(self, entity: SE, data: Dict[str, Any]) -> Optional[SE]:
+    def load_aleph_entity(self, entity: SE, data: dict[str, Any]) -> SE | None:
         data["referents"] = [data["id"]]
         try:
             proxy = super().load_entity(entity, data)
@@ -71,7 +73,7 @@ class AlephEnricher(Enricher[DS]):
         return proxy
 
     def convert_nested(
-        self, entity: SE, data: Dict[str, Any]
+        self, entity: SE, data: dict[str, Any]
     ) -> Generator[SE, None, None]:
         proxy = self.load_aleph_entity(entity, data)
         if proxy is not None:

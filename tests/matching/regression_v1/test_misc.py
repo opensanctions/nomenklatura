@@ -1,12 +1,14 @@
-from nomenklatura.matching.regression_v1.misc import address_match
-from nomenklatura.matching.regression_v1.misc import address_numbers
-from nomenklatura.matching.regression_v1.misc import birth_place
-from nomenklatura.matching.regression_v1.misc import country_mismatch
-from nomenklatura.matching.regression_v1.misc import email_match
-from nomenklatura.matching.regression_v1.misc import gender_mismatch
-from nomenklatura.matching.regression_v1.misc import identifier_match
-from nomenklatura.matching.regression_v1.misc import org_identifier_match
-from nomenklatura.matching.regression_v1.misc import phone_match
+from nomenklatura.matching.regression_v1.misc import (
+    address_match,
+    address_numbers,
+    birth_place,
+    country_mismatch,
+    email_match,
+    gender_mismatch,
+    identifier_match,
+    org_identifier_match,
+    phone_match,
+)
 
 from ..factory import e
 

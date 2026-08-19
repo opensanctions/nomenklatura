@@ -1,9 +1,9 @@
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.types import FtResult, ScoringConfig
 from nomenklatura.matching.compare.util import extract_numbers
-from nomenklatura.matching.util import type_pair, has_schema
+from nomenklatura.matching.types import FtResult, ScoringConfig
+from nomenklatura.matching.util import has_schema, type_pair
 
 
 def numbers_mismatch(query: E, result: E, config: ScoringConfig) -> FtResult:

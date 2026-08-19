@@ -1,9 +1,8 @@
-from typing import Optional, Union
+from followthemoney import DS, SE, Property, registry
+from followthemoney import StatementEntity as Entity
 from normality import latinize_text
 from rich.table import Table
 from rich.text import Text
-from followthemoney import DS, registry, Property
-from followthemoney import SE, StatementEntity as Entity
 
 from nomenklatura.store import View
 from nomenklatura.tui.util import comparison_props
@@ -50,9 +49,9 @@ def render_comparison(
     right: SE,
     score: float,
     latinize: bool = False,
-    url_base: Optional[str] = None,
-    score_label: Optional[str] = None,
-) -> Union[Table, Text]:
+    url_base: str | None = None,
+    score_label: str | None = None,
+) -> Table | Text:
     if left is None or right is None:
         return Text("No candidates loaded.", justify="center")
 

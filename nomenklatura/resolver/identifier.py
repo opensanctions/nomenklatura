@@ -1,17 +1,18 @@
+from typing import Any, Union
+
 import shortuuid
-from typing import Any, Optional, Tuple, Union
 from rigour.ids.wikidata import is_qid
 
 from nomenklatura.resolver.common import ResolverLogicError
 
 StrIdent = Union[str, "Identifier"]
-Pair = Tuple["Identifier", "Identifier"]
+Pair = tuple["Identifier", "Identifier"]
 
 
-class Identifier(object):
+class Identifier:
     PREFIX = "NK-"
 
-    __slots__ = ("id", "canonical", "weight")
+    __slots__ = ("canonical", "id", "weight")
 
     def __init__(self, id: str):
         self.id = id
@@ -22,7 +23,7 @@ class Identifier(object):
             self.weight = 3
         self.canonical = self.weight > 1
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return self.id == str(other)
 
     def __lt__(self, other: Any) -> bool:
@@ -55,6 +56,6 @@ class Identifier(object):
         return (max(left, right), min(left, right))
 
     @classmethod
-    def make(cls, value: Optional[str] = None) -> "Identifier":
+    def make(cls, value: str | None = None) -> "Identifier":
         key = value or shortuuid.uuid()
         return cls.get(f"{cls.PREFIX}{key}")

@@ -1,24 +1,23 @@
 import math
-import click
-from pprint import pprint
-from typing import Dict, Type, List
 from pathlib import Path
-from zavod.logs import get_logger, configure_logging
+
+import click
+from followthemoney.cli.util import InPath
+from zavod.logs import configure_logging, get_logger
+
 from nomenklatura.judgement import Judgement
 from nomenklatura.matching import (
+    LogicV1,
     MatcherV1,
-    MatcherV2,
     NameMatcher,
     NameQualifiedMatcher,
-    LogicV1,
+    ScoringAlgorithm,
 )
-from nomenklatura.matching import ScoringAlgorithm
 from nomenklatura.matching.pairs import read_pairs
-from followthemoney.cli.util import InPath
 
 log = get_logger("scoring_loss")
 
-ALGORITHMS: List[Type[ScoringAlgorithm]] = [
+ALGORITHMS: list[type[ScoringAlgorithm]] = [
     MatcherV1,
     # MatcherV2,
     NameMatcher,
@@ -34,8 +33,8 @@ def process_pairs(source_path: Path):
 
     total: int = 0
     threshold: float = 0.7
-    losses: Dict[str, float] = {a.NAME: 0.0 for a in ALGORITHMS}
-    matrix: Dict[str, dict] = {a.NAME: {} for a in ALGORITHMS}
+    losses: dict[str, float] = {a.NAME: 0.0 for a in ALGORITHMS}
+    matrix: dict[str, dict] = {a.NAME: {} for a in ALGORITHMS}
     for pair in read_pairs(source_path):
         if pair.judgement not in (Judgement.POSITIVE, Judgement.NEGATIVE):
             continue

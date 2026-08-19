@@ -3,4 +3,4 @@ from nomenklatura.resolver import Linker, Resolver
 from nomenklatura.store import Store, View
 
 __version__ = "4.13.0"
-__all__ = ["Resolver", "Store", "View", "Judgement", "Linker"]
+__all__ = ["Judgement", "Linker", "Resolver", "Store", "View"]

@@ -1,8 +1,8 @@
 from nomenklatura.wikidata.write import (
+    LAST,
     AddStatement,
     CreateItem,
     ItemValue,
-    LAST,
     MonolingualValue,
     QSValue,
     SetLabel,
@@ -32,7 +32,7 @@ def test_create_block() -> None:
             'LAST\tLen\t"Jane Doe"',
             "LAST\tP31\tQ5",
             "LAST\tP569\t+1980-03-15T00:00:00Z/11"
-            "\tS854\t\"https://example.org/source\""
+            '\tS854\t"https://example.org/source"'
             "\tS813\t+2026-06-14T00:00:00Z/11",
         ]
     )
@@ -46,9 +46,7 @@ def test_enrich_block() -> None:
         AddStatement("Q42", "P27", QSValue.item("Q183"), references=refs),
     ]
     expected = (
-        "Q42\tP27\tQ183"
-        '\tS854\t"https://example.org/de"'
-        "\tS813\t+2026-01-02T00:00:00Z/11"
+        'Q42\tP27\tQ183\tS854\t"https://example.org/de"\tS813\t+2026-01-02T00:00:00Z/11'
     )
     assert serialize(commands) == expected
 
@@ -63,9 +61,7 @@ def test_qualifier_and_reference_ordering() -> None:
         references=[("S854", QSValue.string("https://example.org"))],
     )
     expected = (
-        "Q1\tP39\tQ11696"
-        "\tP580\t+2020-01-01T00:00:00Z/9"
-        '\tS854\t"https://example.org"'
+        'Q1\tP39\tQ11696\tP580\t+2020-01-01T00:00:00Z/9\tS854\t"https://example.org"'
     )
     assert serialize([cmd]) == expected
 

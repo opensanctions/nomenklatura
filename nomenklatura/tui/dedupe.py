@@ -1,6 +1,7 @@
 import asyncio
-from typing import Dict, Generic, Optional, Set, Tuple, cast
+from typing import Generic, cast
 
+from followthemoney import DS, SE, Dataset, StatementEntity
 from rich.console import RenderableType
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -8,8 +9,6 @@ from textual.containers import Grid, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Static
-
-from followthemoney import DS, SE, Dataset, StatementEntity
 
 from nomenklatura.db import Session
 from nomenklatura.judgement import Judgement
@@ -27,7 +26,7 @@ class DedupeState(Generic[DS, SE]):
         session: Session,
         resolver: Resolver[SE],
         store: Store[DS, SE],
-        url_base: Optional[str] = None,
+        url_base: str | None = None,
     ):
         self.session = session
         self.store = store
@@ -35,12 +34,12 @@ class DedupeState(Generic[DS, SE]):
         self.view = store.default_view(external=True)
         self.url_base = url_base
         self.latinize = False
-        self.message: Optional[str] = None
-        self.ignore: Set[Tuple[str, str]] = set()
-        self.left: Optional[SE] = None
-        self.right: Optional[SE] = None
+        self.message: str | None = None
+        self.ignore: set[tuple[str, str]] = set()
+        self.left: SE | None = None
+        self.right: SE | None = None
         self.score = 0.0
-        self.recents: Dict[str, SE] = dict()
+        self.recents: dict[str, SE] = dict()
 
     def load(self) -> bool:
         self.left = None
@@ -94,7 +93,7 @@ class DedupeState(Generic[DS, SE]):
 class DedupeAppWidget(Widget):
     @property
     def dedupe(self) -> DedupeState[Dataset, StatementEntity]:
-        return cast(DedupeApp[Dataset, StatementEntity], self.app).dedupe
+        return cast("DedupeApp[Dataset, StatementEntity]", self.app).dedupe
 
 
 class HistoryItem(Static, DedupeAppWidget):
@@ -112,7 +111,7 @@ class HistoryItem(Static, DedupeAppWidget):
             target_str += f"\n     {target.caption}"
 
         content = (
-            f"{edge.created_at if edge.created_at else 'unknown time'}\n"
+            f"{edge.created_at or 'unknown time'}\n"
             f"{source_str}\n"
             f"{target_str}\n"
             f"{edge.user} decided {edge.judgement.value}"
@@ -121,8 +120,8 @@ class HistoryItem(Static, DedupeAppWidget):
 
 
 class ConfirmEditModal(ModalScreen[bool]):
-    edge: Optional[Edge] = None
-    judgement: Optional[Judgement] = None
+    edge: Edge | None = None
+    judgement: Judgement | None = None
 
     def compose(self) -> ComposeResult:
         assert self.edge is not None
@@ -167,7 +166,9 @@ class HistoryListView(ListView):
         if selected is None:
             return
         edge = selected.query_one(HistoryItem).edge
-        await cast(DedupeApp[Dataset, StatementEntity], self.app).edit(edge, judgement)
+        await cast("DedupeApp[Dataset, StatementEntity]", self.app).edit(
+            edge, judgement
+        )
 
 
 class HistoryWidget(DedupeAppWidget):

@@ -1,17 +1,19 @@
 import json
-from typing import Generator, Dict, Any
-from followthemoney import model, EntityProxy
+from collections.abc import Generator
+from typing import Any
+
+from followthemoney import EntityProxy, model
 from followthemoney.exc import InvalidData
 from followthemoney.util import PathLike
 
 from nomenklatura.judgement import Judgement
 
 
-class JudgedPair(object):
+class JudgedPair:
     """A pair of two entities which have been judged to be the same
     (or not) by a user."""
 
-    __slots__ = ("left", "right", "schema", "weight", "judgement")
+    __slots__ = ("judgement", "left", "right", "schema", "weight")
 
     def __init__(
         self, left: EntityProxy, right: EntityProxy, judgement: Judgement
@@ -22,7 +24,7 @@ class JudgedPair(object):
         self.judgement = judgement
         self.weight = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "left": self.left.to_dict(),
             "right": self.right.to_dict(),
@@ -33,7 +35,7 @@ class JudgedPair(object):
 
 def read_pairs(pairs_file: PathLike) -> Generator[JudgedPair, None, None]:
     """Read judgement pairs (training data) from a JSON file."""
-    with open(pairs_file, "r") as fh:
+    with open(pairs_file) as fh:
         while line := fh.readline():
             data = json.loads(line)
             left_entity = EntityProxy.from_dict(data["left"])

@@ -1,5 +1,5 @@
 import logging
-from typing import Generator, Optional, Set
+from collections.abc import Generator
 
 from followthemoney import DS, SE, StatementEntity, registry
 from followthemoney.helpers import check_person_cutoff
@@ -9,7 +9,6 @@ from rigour.territories import get_territory_by_qid
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
 from nomenklatura.wikidata.client import WikidataClient
-from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.lang import LangText
 from nomenklatura.wikidata.model import Claim, Item
 from nomenklatura.wikidata.props import (
@@ -20,6 +19,7 @@ from nomenklatura.wikidata.props import (
     PROPS_TOPICS,
 )
 from nomenklatura.wikidata.qualified import qualify_value
+from nomenklatura.wikidata.util import entity_qid
 from nomenklatura.wikidata.value import clean_wikidata_name, is_alias_strong
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class WikidataEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         self.depth = self.get_config_int("depth", 1)
@@ -100,7 +100,7 @@ class WikidataEnricher(Enricher[DS]):
         proxy: SE,
         claim: Claim,
         depth: int,
-        seen: Set[str],
+        seen: set[str],
         schema: str,
         other_schema: str,
         source_prop: str,
@@ -160,8 +160,8 @@ class WikidataEnricher(Enricher[DS]):
         self,
         proxy: SE,
         item: Item,
-        depth: Optional[int] = None,
-        seen: Optional[Set[str]] = None,
+        depth: int | None = None,
+        seen: set[str] | None = None,
     ) -> Generator[SE, None, None]:
         if seen is None:
             seen = set()
@@ -195,14 +195,14 @@ class WikidataEnricher(Enricher[DS]):
                 )
                 continue
 
-    def item_proxy(self, ref: SE, item: Item, schema: str = "Person") -> Optional[SE]:
+    def item_proxy(self, ref: SE, item: Item, schema: str = "Person") -> SE | None:
         proxy = self.make_entity(ref, schema)
         proxy.id = item.id
         if item.modified is None:
             return None
         # proxy.add("modifiedAt", item.modified)
         proxy.add("wikidataId", item.id)
-        names: Set[str] = set()
+        names: set[str] = set()
         for label in item.sorted_labels:
             if label.text is None:
                 continue

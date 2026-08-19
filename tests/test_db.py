@@ -1,11 +1,18 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import List, Dict, Any, Generator
-import pytest
-from sqlalchemy import Column, MetaData, Table, Unicode, insert, select
-from followthemoney import Dataset, Statement, StatementEntity
+from typing import Any
 
-from nomenklatura.db import get_engine, make_session, Session
-from nomenklatura.db import make_statement_table, insert_statements
+import pytest
+from followthemoney import Dataset, Statement, StatementEntity
+from sqlalchemy import Column, MetaData, Table, Unicode, insert, select
+
+from nomenklatura.db import (
+    Session,
+    get_engine,
+    insert_statements,
+    make_session,
+    make_statement_table,
+)
 
 
 def _kv_table(session: Session) -> Table:
@@ -19,7 +26,7 @@ def _kv_table(session: Session) -> Table:
     return table
 
 
-def _keys(session: Session, table: Table) -> List[str]:
+def _keys(session: Session, table: Table) -> list[str]:
     return [row.key for row in session.execute(select(table.c.key))]
 
 
@@ -79,11 +86,10 @@ def test_session_context_manager_rolls_back_on_error(tmp_path: Path):
     _kv_table(setup)
     setup.commit()
 
-    with pytest.raises(RuntimeError):
-        with make_session(url) as session:
-            table = Table("kv", MetaData(), autoload_with=session.connection)
-            session.execute(insert(table).values(key="a", value="1"))
-            raise RuntimeError("boom")
+    with pytest.raises(RuntimeError), make_session(url) as session:
+        table = Table("kv", MetaData(), autoload_with=session.connection)
+        session.execute(insert(table).values(key="a", value="1"))
+        raise RuntimeError("boom")
     assert session._conn is None
 
     verify = make_session(url)
@@ -99,14 +105,14 @@ def test_session_dialect(tmp_path: Path):
 
 
 def _parse_statements(
-    test_dataset: Dataset, donations_json: List[Dict[str, Any]]
+    test_dataset: Dataset, donations_json: list[dict[str, Any]]
 ) -> Generator[Statement, None, None]:
     for item in donations_json:
         entity = StatementEntity.from_data(test_dataset, item)
         yield from entity.statements
 
 
-def test_statement_db(test_dataset: Dataset, donations_json: List[Dict[str, Any]]):
+def test_statement_db(test_dataset: Dataset, donations_json: list[dict[str, Any]]):
     engine = get_engine("sqlite:///:memory:")
     metadata = MetaData()
     table = make_statement_table(metadata)
@@ -122,7 +128,7 @@ def test_statement_db(test_dataset: Dataset, donations_json: List[Dict[str, Any]
 
 
 def test_insert_statements_sqlite_large_batch(
-    test_dataset: Dataset, donations_json: List[Dict[str, Any]]
+    test_dataset: Dataset, donations_json: list[dict[str, Any]]
 ):
     """Verify insert_statements caps batch_size on SQLite to avoid exceeding
     SQLITE_MAX_VARIABLE_NUMBER (32,766 host parameters)."""

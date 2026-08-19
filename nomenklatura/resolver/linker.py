@@ -1,6 +1,8 @@
-from typing import Dict, Generator, Generic, Set, Tuple
 import warnings
-from followthemoney import registry, ValueEntity, Statement, SE
+from collections.abc import Generator
+from typing import Generic
+
+from followthemoney import SE, Statement, ValueEntity, registry
 
 from nomenklatura.resolver.identifier import Identifier
 
@@ -14,8 +16,8 @@ class Linker(Generic[SE]):
     tuple with the canonical ID at index 0 and referents following. Every node in
     a cluster maps to the same shared tuple object."""
 
-    def __init__(self, mapping: Dict[str, Tuple[str, ...]]) -> None:
-        self._mapping: Dict[str, Tuple[str, ...]] = mapping
+    def __init__(self, mapping: dict[str, tuple[str, ...]]) -> None:
+        self._mapping: dict[str, tuple[str, ...]] = mapping
 
     def add(self, left: str, right: str) -> str:
         """Merge two identifier clusters and return their canonical.
@@ -23,7 +25,7 @@ class Linker(Generic[SE]):
         Idempotence lets the resolver replay database updates without tracking
         which edges it has already applied.
         """
-        idents: Set[str] = set()
+        idents: set[str] = set()
         for node in (left, right):
             cluster = self._mapping.get(node)
             if cluster is not None:
@@ -35,12 +37,12 @@ class Linker(Generic[SE]):
             self._mapping[node] = members
         return members[0]
 
-    def connected(self, node: Identifier) -> Set[Identifier]:
+    def connected(self, node: Identifier) -> set[Identifier]:
         """Return all entities connected to the given node. Constructs Identifier
         objects on the fly from the internal string representation."""
         return {Identifier.get(n) for n in self.connected_ids(node.id)}
 
-    def connected_ids(self, entity_id: str) -> Tuple[str, ...]:
+    def connected_ids(self, entity_id: str) -> tuple[str, ...]:
         """Return the stored identifiers connected to an entity ID."""
         return self._mapping.get(entity_id, (entity_id,))
 
@@ -58,7 +60,7 @@ class Linker(Generic[SE]):
             return cluster[0]
         return entity_id
 
-    def mappings(self) -> Generator[Tuple[str, str], None, None]:
+    def mappings(self) -> Generator[tuple[str, str], None, None]:
         """Yield (entity_id, canonical_id) for every known identifier, including
         the canonical itself. Use this to export the resolution outcome as a
         join table, without edges or judgement history."""
@@ -74,7 +76,7 @@ class Linker(Generic[SE]):
                 if ident.canonical:
                     yield ident
 
-    def get_referents(self, canonical_id: str, canonicals: bool = True) -> Set[str]:
+    def get_referents(self, canonical_id: str, canonicals: bool = True) -> set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
         canonical identifier."""
         if isinstance(canonical_id, Identifier):

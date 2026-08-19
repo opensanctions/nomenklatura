@@ -7,16 +7,17 @@
 # * Not calling a helper to byte-encode values.
 # * Not having a helper method for building entities.
 import gc
-import orjson
 import logging
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator, List, Optional, Set, Tuple
-from rigour.env import ENCODING as E
+from typing import Any
 
+import orjson
 import plyvel  # type: ignore
-from followthemoney import model, DS, SE, Schema, registry, Property, Statement
+from followthemoney import DS, SE, Property, Schema, Statement, model, registry
 from followthemoney.exc import InvalidData
 from followthemoney.statement.util import get_prop_type
+from rigour.env import ENCODING as E
 
 from nomenklatura import settings
 from nomenklatura.resolver import Linker
@@ -26,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 def unpack_statement(
-    keys: List[str],
+    keys: list[str],
     data: bytes,
 ) -> Statement:
     _, canonical_id, ext, dataset, schema, stmt_id = keys
@@ -99,7 +100,7 @@ class LevelDBWriter(Writer[DS, SE]):
 
     def __init__(self, store: LevelDBStore[DS, SE]):
         self.store: LevelDBStore[DS, SE] = store
-        self.batch: Optional[Any] = None
+        self.batch: Any | None = None
         self.batch_size = 0
 
     def flush(self) -> None:
@@ -139,13 +140,13 @@ class LevelDBWriter(Writer[DS, SE]):
 
         self.batch_size += 1
 
-    def pop(self, entity_id: str) -> List[Statement]:
+    def pop(self, entity_id: str) -> list[Statement]:
         if self.batch_size >= self.BATCH_STATEMENTS:
             self.flush()
         if self.batch is None:
             self.batch = self.store.db.write_batch()
-        statements: List[Statement] = []
-        datasets: Set[str] = set()
+        statements: list[Statement] = []
+        datasets: set[str] = set()
         prefix = f"s:{entity_id}:".encode(E)
         with self.store.db.iterator(prefix=prefix) as it:
             for k, v in it:
@@ -166,7 +167,7 @@ class LevelDBView(View[DS, SE]):
     ) -> None:
         super().__init__(store, scope, external=external)
         self.store: LevelDBStore[DS, SE] = store
-        self.dataset_names: Set[str] = set(scope.dataset_names)
+        self.dataset_names: set[str] = set(scope.dataset_names)
 
     def has_entity(self, id: str) -> bool:
         prefix = f"s:{id}:".encode(E)
@@ -180,8 +181,8 @@ class LevelDBView(View[DS, SE]):
                 return True
         return False
 
-    def get_entity(self, id: str) -> Optional[SE]:
-        statements: List[Statement] = []
+    def get_entity(self, id: str) -> SE | None:
+        statements: list[Statement] = []
         prefix = f"s:{id}:".encode(E)
         with self.store.db.iterator(prefix=prefix) as it:
             for k, v in it:
@@ -194,7 +195,7 @@ class LevelDBView(View[DS, SE]):
                 statements.append(unpack_statement(keys, v))
         return self.store.assemble(statements)
 
-    def get_inverted(self, id: str) -> Generator[Tuple[Property, SE], None, None]:
+    def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         prefix = f"i:{id}:".encode(E)
         with self.store.db.iterator(prefix=prefix, include_value=False) as it:
             for k in it:
@@ -207,13 +208,13 @@ class LevelDBView(View[DS, SE]):
                         yield prop.reverse, entity
 
     def entities(
-        self, include_schemata: Optional[List[Schema]] = None
+        self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
         with self.store.db.iterator(prefix=b"s:", fill_cache=False) as it:
-            current_id: Optional[str] = None
-            current_schema: Optional[Schema] = None
+            current_id: str | None = None
+            current_schema: Schema | None = None
             current_fail: bool = False
-            statements: List[Statement] = []
+            statements: list[Statement] = []
             for k, v in it:
                 keys = k.decode(E).split(":")
                 _, canonical_id, ext, dataset, schema, _ = keys

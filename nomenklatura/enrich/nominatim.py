@@ -1,14 +1,13 @@
 import logging
-from normality import squash_spaces
-from typing import Any, Dict, Iterable, Generator, Optional
+from collections.abc import Generator, Iterable
+from typing import Any
 
+from followthemoney import DS, SE, StatementEntity
+from normality import squash_spaces
 from requests import Session
-from followthemoney import DS, SE
-from followthemoney import StatementEntity
 
 from nomenklatura.cache import Cache
 from nomenklatura.enrich.common import Enricher, EnricherConfig
-
 
 log = logging.getLogger(__name__)
 NOMINATIM = "https://nominatim.openstreetmap.org/search.php"
@@ -20,12 +19,12 @@ class NominatimEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         self.cache.preload(f"{NOMINATIM}%")
 
-    def search_nominatim(self, address: StatementEntity) -> Iterable[Dict[str, Any]]:
+    def search_nominatim(self, address: StatementEntity) -> Iterable[dict[str, Any]]:
         for full in address.get("full"):
             full_norm = squash_spaces(full)
             if len(full_norm) < 5:
@@ -60,7 +59,7 @@ class NominatimEnricher(Enricher[DS]):
             addr.add("full", result["display_name"])
             # addr.add("latitude", result.get("lat"))
             # addr.add("longitude", result.get("lon"))
-            addr_data: Dict[str, str] = result.get("address", {})
+            addr_data: dict[str, str] = result.get("address", {})
             addr.add("country", addr_data.get("country"))
             addr.add("country", addr_data.get("country_code"))
             addr.add("city", addr_data.get("city"))

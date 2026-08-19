@@ -1,8 +1,9 @@
-import os
 import logging
-from typing import Generator, Dict, Optional
-from followthemoney.util import make_entity_id
+import os
+from collections.abc import Generator
+
 from followthemoney import DS, SE
+from followthemoney.util import make_entity_id
 from requests import Session
 
 from nomenklatura.cache import Cache
@@ -26,11 +27,11 @@ class OpenFIGIEnricher(Enricher[DS]):
         dataset: DS,
         cache: Cache,
         config: EnricherConfig,
-        session: Optional[Session] = None,
+        session: Session | None = None,
     ):
         super().__init__(dataset, cache, config, session)
         api_key_var = "${OPENFIGI_API_KEY}"
-        self.api_key: Optional[str] = self.get_config_expand("api_key", api_key_var)
+        self.api_key: str | None = self.get_config_expand("api_key", api_key_var)
         if self.api_key == api_key_var:
             self.api_key = None
         if self.api_key is None:
@@ -46,7 +47,7 @@ class OpenFIGIEnricher(Enricher[DS]):
     def make_security_id(self, figi: str) -> str:
         return f"figi-{figi}"
 
-    def search(self, query: str) -> Generator[Dict[str, str], None, None]:
+    def search(self, query: str) -> Generator[dict[str, str], None, None]:
         body = {"query": query}
         next = None
 

@@ -1,10 +1,11 @@
-from nomenklatura.matching.compare.names import name_literal_match
-from nomenklatura.matching.compare.names import last_name_mismatch
-from nomenklatura.matching.compare.names import name_fingerprint_levenshtein
-from nomenklatura.matching.compare.names import person_name_jaro_winkler
-from nomenklatura.matching.compare.names import weak_alias_match
+from nomenklatura.matching.compare.names import (
+    last_name_mismatch,
+    name_fingerprint_levenshtein,
+    name_literal_match,
+    person_name_jaro_winkler,
+    weak_alias_match,
+)
 from nomenklatura.matching.types import ScoringConfig
-
 
 from ..factory import e
 

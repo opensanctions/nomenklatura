@@ -1,13 +1,13 @@
-from typing import Dict
-
-from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 from nomenklatura.matching.compare.countries import country_mismatch
 from nomenklatura.matching.compare.gender import gender_mismatch
-from nomenklatura.matching.name_based.misc import orgid_disjoint
-from nomenklatura.matching.name_based.misc import dob_day_disjoint, dob_year_disjoint
-from nomenklatura.matching.name_based.names import jaro_name_parts
-from nomenklatura.matching.name_based.names import soundex_name_parts
+from nomenklatura.matching.name_based.misc import (
+    dob_day_disjoint,
+    dob_year_disjoint,
+    orgid_disjoint,
+)
+from nomenklatura.matching.name_based.names import jaro_name_parts, soundex_name_parts
 from nomenklatura.matching.name_based.ofac import ofac_name_score
+from nomenklatura.matching.types import Feature, HeuristicAlgorithm
 
 
 class OFACMatcher(HeuristicAlgorithm):
@@ -33,7 +33,7 @@ class OFACMatcher(HeuristicAlgorithm):
 
     @classmethod
     def compute_score(
-        cls, scores: Dict[str, float], weights: Dict[str, float]
+        cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
         score = 0.0
         for feat in cls.features:
@@ -55,7 +55,7 @@ class NameMatcher(HeuristicAlgorithm):
 
     @classmethod
     def compute_score(
-        cls, scores: Dict[str, float], weights: Dict[str, float]
+        cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
         score = 0.0
         for feat in cls.features:
@@ -83,7 +83,7 @@ class NameQualifiedMatcher(HeuristicAlgorithm):
 
     @classmethod
     def compute_score(
-        cls, scores: Dict[str, float], weights: Dict[str, float]
+        cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
         score = 0.0
         for feat in cls.features:

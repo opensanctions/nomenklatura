@@ -1,14 +1,17 @@
-from typing import List, Type, Optional
-from nomenklatura.matching.regression_v1.model import RegressionV1
-from nomenklatura.matching.regression_v1.train import train_matcher as train_v1_matcher
-from nomenklatura.matching.name_based import NameMatcher, NameQualifiedMatcher, OFACMatcher
 from nomenklatura.matching.erun.model import EntityResolveRegression
 from nomenklatura.matching.erun.train import train_matcher as train_erun_matcher
 from nomenklatura.matching.logic_v1.model import LogicV1
 from nomenklatura.matching.logic_v2.model import LogicV2
+from nomenklatura.matching.name_based import (
+    NameMatcher,
+    NameQualifiedMatcher,
+    OFACMatcher,
+)
+from nomenklatura.matching.regression_v1.model import RegressionV1
+from nomenklatura.matching.regression_v1.train import train_matcher as train_v1_matcher
 from nomenklatura.matching.types import ScoringAlgorithm, ScoringConfig
 
-ALGORITHMS: List[Type[ScoringAlgorithm]] = [
+ALGORITHMS: list[type[ScoringAlgorithm]] = [
     LogicV1,
     LogicV2,
     NameMatcher,
@@ -22,26 +25,26 @@ DefaultAlgorithm = RegressionV1
 DedupeAlgorithm = EntityResolveRegression
 
 
-def get_algorithm(name: str) -> Optional[Type[ScoringAlgorithm]]:
+def get_algorithm(name: str) -> type[ScoringAlgorithm] | None:
     """Return the scoring algorithm class with the given name."""
     for algorithm in ALGORITHMS:
-        if algorithm.NAME == name:
+        if name == algorithm.NAME:
             return algorithm
     return None
 
 
 __all__ = [
-    "RegressionV1",
-    "EntityResolveRegression",
-    "train_v1_matcher",
-    "train_erun_matcher",
-    "DefaultAlgorithm",
     "DedupeAlgorithm",
-    "ScoringAlgorithm",
+    "DefaultAlgorithm",
+    "EntityResolveRegression",
+    "LogicV1",
+    "LogicV2",
     "NameMatcher",
     "NameQualifiedMatcher",
     "OFACMatcher",
+    "RegressionV1",
+    "ScoringAlgorithm",
     "ScoringConfig",
-    "LogicV1",
-    "LogicV2",
+    "train_erun_matcher",
+    "train_v1_matcher",
 ]

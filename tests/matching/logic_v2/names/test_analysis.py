@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from rigour.names import Name, NamePartTag, NameTypeTag, Symbol, analyze_names
 from rigour.text.scripts import common_scripts
@@ -8,11 +7,10 @@ from nomenklatura.matching.logic_v2.names.analysis import entity_names, names_pr
 
 from ...factory import e
 
-
 FIXTURE = Path(__file__).parents[3] / "fixtures" / "putin_names.txt"
 
 
-def _load_fixture_names() -> List[Name]:
+def _load_fixture_names() -> list[Name]:
     lines = [ln.strip() for ln in FIXTURE.read_text().splitlines() if ln.strip()]
     return list(analyze_names(NameTypeTag.PER, lines, consolidate=False))
 
@@ -149,9 +147,7 @@ def test_names_product_latin_query_script_matches_latin_candidates():
     # A Latin query should share script with every Latin fixture entry,
     # so every Latin-script pair survives via the script gate.
     results = set(_load_fixture_names())
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["Vladimir Putin"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["Vladimir Putin"], consolidate=False))
     (query,) = queries
     pairs = list(names_product(queries, results))
     kept = {r for _, r in pairs}
@@ -165,16 +161,12 @@ def test_names_product_cyrillic_query_latinised_comparable():
     # script for comparison — the script gate still fires against Latin
     # candidates.
     results = set(_load_fixture_names())
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["Владимир Путин"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["Владимир Путин"], consolidate=False))
     (query,) = queries
     assert common_scripts(query.comparable, "vladimir")
     pairs = list(names_product(queries, results))
     # At least every Latin candidate should be kept via script overlap.
-    latin_candidates = [
-        r for r in results if common_scripts("vladimir", r.comparable)
-    ]
+    latin_candidates = [r for r in results if common_scripts("vladimir", r.comparable)]
     kept_comparables = {r.comparable for _, r in pairs}
     for r in latin_candidates:
         assert r.comparable in kept_comparables, r.original
@@ -186,9 +178,7 @@ def test_names_product_unknown_script_without_aliases_yields_nothing():
     # shares no script with any fixture candidate — the pruner should
     # drop the entire cross product.
     results = set(_load_fixture_names())
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["விளாடிமிர் புடின்"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["விளாடிமிர் புடின்"], consolidate=False))
     (query,) = queries
     assert len(query.symbols) == 0
     for r in results:
@@ -201,9 +191,7 @@ def test_names_product_partial_alias_rescues_via_symbol_overlap():
     # not the full Q-ID fan-out), so the script gate fails everywhere
     # and only symbol-overlap candidates survive.
     results = set(_load_fixture_names())
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["วลาดิเมียร์ ปูติน"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["วลาดิเมียร์ ปูติน"], consolidate=False))
     (query,) = queries
     assert query.symbols, "expected at least one NAME alias for Thai Putin"
     for r in results:
@@ -221,9 +209,7 @@ def test_names_product_same_script_dominates_cross_script():
     # carrying both a Latin and an Arabic rendering of the same surname.
     # With equal symbolic evidence on both sides, the Latin pair is the
     # better witness and the Arabic pair is dropped before scoring.
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False))
     results = set(
         analyze_names(
             NameTypeTag.PER,
@@ -261,9 +247,7 @@ def test_names_product_cross_script_adds_new_evidence_survives():
     # The same-script dominance rule only prunes when the cross-script
     # pair adds nothing new. A cross-script candidate carrying a symbol
     # the same-script pair doesn't should still survive.
-    queries = set(
-        analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False)
-    )
+    queries = set(analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False))
     # "Fernando" in Cyrillic has Latin-transliterated comparable, so it
     # still lands in the shared-script bucket; pair it with a richer
     # Arabic name that carries an extra symbol.

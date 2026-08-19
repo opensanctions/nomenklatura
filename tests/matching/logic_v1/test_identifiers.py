@@ -1,8 +1,10 @@
-from nomenklatura.matching.logic_v1.identifiers import lei_code_match
-from nomenklatura.matching.logic_v1.identifiers import bic_code_match
-from nomenklatura.matching.logic_v1.identifiers import isin_security_match
-from nomenklatura.matching.logic_v1.identifiers import vessel_imo_mmsi_match
-from nomenklatura.matching.logic_v1.identifiers import orgid_disjoint
+from nomenklatura.matching.logic_v1.identifiers import (
+    bic_code_match,
+    isin_security_match,
+    lei_code_match,
+    orgid_disjoint,
+    vessel_imo_mmsi_match,
+)
 from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e

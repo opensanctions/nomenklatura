@@ -1,15 +1,15 @@
-from typing import Iterable, Set
+from collections.abc import Iterable
+
 from followthemoney.proxy import E
 from followthemoney.types import registry
 
-from nomenklatura.matching.regression_v1.util import tokenize_pair, compare_levenshtein
-from nomenklatura.matching.compare.util import is_disjoint, has_overlap, extract_numbers
-from nomenklatura.matching.util import props_pair, type_pair
-from nomenklatura.matching.util import max_in_sets
+from nomenklatura.matching.compare.util import extract_numbers, has_overlap, is_disjoint
 from nomenklatura.matching.compat import fingerprint_name
+from nomenklatura.matching.regression_v1.util import compare_levenshtein, tokenize_pair
+from nomenklatura.matching.util import max_in_sets, props_pair, type_pair
 
 
-def normalize_names(raws: Iterable[str]) -> Set[str]:
+def normalize_names(raws: Iterable[str]) -> set[str]:
     names = set()
     for raw in raws:
         name = fingerprint_name(raw)

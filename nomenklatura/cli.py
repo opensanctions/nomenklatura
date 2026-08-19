@@ -1,31 +1,47 @@
 import csv
-import shutil
-import yaml
-import click
 import logging
+import shutil
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, Optional, Tuple
-from followthemoney import Dataset, ValueEntity, StatementEntity as Entity
-from followthemoney.statement import Statement, CSV, FORMATS
-from followthemoney.statement import write_statements, read_path_statements
-from followthemoney.cli.util import path_writer, InPath, OutPath
-from followthemoney.cli.util import path_entities, write_entity
+
+import click
+import yaml
+from followthemoney import Dataset, ValueEntity
+from followthemoney import StatementEntity as Entity
 from followthemoney.cli.aggregate import sorted_aggregate
+from followthemoney.cli.util import (
+    InPath,
+    OutPath,
+    path_entities,
+    path_writer,
+    write_entity,
+)
+from followthemoney.statement import (
+    CSV,
+    FORMATS,
+    Statement,
+    read_path_statements,
+    write_statements,
+)
 
 from nomenklatura.cache import Cache
-from nomenklatura.db import make_session, Session
-from nomenklatura.matching import train_v1_matcher, train_erun_matcher
-from nomenklatura.store import load_entity_file_store
-from nomenklatura.resolver import Resolver, Linker
-from nomenklatura.resolver.edge import Edge
-from nomenklatura.enrich import Enricher, make_enricher, match, enrich
-from nomenklatura.matching import get_algorithm, DedupeAlgorithm
-from nomenklatura.xref import xref as run_xref
-from nomenklatura.tui import dedupe_ui, reconcile_ui
+from nomenklatura.db import Session, make_session
+from nomenklatura.enrich import Enricher, enrich, make_enricher, match
+from nomenklatura.matching import (
+    DedupeAlgorithm,
+    get_algorithm,
+    train_erun_matcher,
+    train_v1_matcher,
+)
 from nomenklatura.matching.bench import bench_matcher
+from nomenklatura.resolver import Linker, Resolver
+from nomenklatura.resolver.edge import Edge
+from nomenklatura.store import load_entity_file_store
+from nomenklatura.tui import dedupe_ui, reconcile_ui
 from nomenklatura.wikidata.client import WikidataClient
 from nomenklatura.wikidata.reconcile import reconcile as run_reconcile
 from nomenklatura.wikidata.write import QSCommand, serialize
+from nomenklatura.xref import xref as run_xref
 
 INDEX_SEGMENT = "xref-index"
 
@@ -34,10 +50,8 @@ log = logging.getLogger(__name__)
 ResPath = click.Path(dir_okay=False, writable=True, path_type=Path)
 
 
-def _load_enricher(
-    session: Session, path: Path
-) -> Tuple[Dataset, Enricher[Dataset]]:
-    with open(path, "r") as fh:
+def _load_enricher(session: Session, path: Path) -> tuple[Dataset, Enricher[Dataset]]:
+    with open(path) as fh:
         data = yaml.safe_load(fh)
         dataset = Dataset.make(data)
         cache = Cache(session, dataset, create=True)
@@ -52,7 +66,7 @@ def _get_linker() -> Linker[Entity]:
         return Resolver[Entity](session, create=True).get_linker()
 
 
-def _get_data_path(data_path: Optional[Path]) -> Path:
+def _get_data_path(data_path: Path | None) -> Path:
     if data_path is None:
         data_path = Path.cwd() / "nomenklatura.data"
     return data_path
@@ -87,8 +101,8 @@ def cli() -> None:
 )
 def xref_file(
     path: Path,
-    data_path: Optional[Path] = None,
-    auto_threshold: Optional[float] = None,
+    data_path: Path | None = None,
+    auto_threshold: float | None = None,
     algorithm: str = DedupeAlgorithm.NAME,
     limit: int = 5000,
     scored: bool = True,
@@ -152,8 +166,8 @@ def wikidata_reconcile(
     threshold: float = 0.96,
     algorithm: str = DedupeAlgorithm.NAME,
     aliases: bool = False,
-    retrieved: Optional[str] = None,
-    source_url: Optional[str] = None,
+    retrieved: str | None = None,
+    source_url: str | None = None,
     review: bool = False,
     create: bool = False,
 ) -> None:
@@ -251,7 +265,7 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.argument("path", type=InPath)
 @click.option("-x", "--xref", is_flag=True, default=False)
 @click.option("-p", "--data-path", type=Path, default=None)
-def dedupe(path: Path, xref: bool = False, data_path: Optional[Path] = None) -> None:
+def dedupe(path: Path, xref: bool = False, data_path: Path | None = None) -> None:
     with make_session() as session:
         resolver = Resolver[Entity](session, create=True)
         resolver.load_into_memory()
@@ -302,7 +316,7 @@ def match_command(
 @cli.command("enrich", help="Fetch extra info from an enrichment source")
 @click.argument("config", type=InPath)
 @click.argument("entities", type=InPath)
-@click.option("-o", "--outpath", type=OutPath, default="-")  # noqa
+@click.option("-o", "--outpath", type=OutPath, default="-")
 def enrich_command(
     config: Path,
     entities: Path,
@@ -336,7 +350,15 @@ def statements_apply(infile: Path, outpath: Path, format: str) -> None:
         write_statements(outfh, format, _generate())
 
 
-EDGE_FIELDS = ["target", "source", "judgement", "score", "user", "created_at", "deleted_at"]
+EDGE_FIELDS = [
+    "target",
+    "source",
+    "judgement",
+    "score",
+    "user",
+    "created_at",
+    "deleted_at",
+]
 EDGE_FORMATS = ["jsonl", "csv"]
 
 
@@ -349,7 +371,7 @@ def load_resolver(source: Path, format: str) -> None:
         if format == "csv":
 
             def _read_edges() -> Generator[Edge, None, None]:
-                with open(source, "r") as fh:
+                with open(source) as fh:
                     for row in csv.DictReader(fh):
                         yield Edge.from_dict(row)
 
@@ -392,7 +414,9 @@ def dump_mapping(target: Path) -> None:
     with open(target, "w") as fh:
         writer = csv.writer(fh)
         writer.writerow(["entity_id", "canonical_id"])
-        for entity_id, canonical_id in sorted(linker.mappings(), key=lambda m: (m[1], m[0])):
+        for entity_id, canonical_id in sorted(
+            linker.mappings(), key=lambda m: (m[1], m[0])
+        ):
             writer.writerow([entity_id, canonical_id])
 
 

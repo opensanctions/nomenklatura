@@ -1,8 +1,11 @@
 from followthemoney import ValueEntity as Entity
-from nomenklatura.matching.name_based.model import NameMatcher, NameQualifiedMatcher
-from nomenklatura.matching.name_based.model import OFACMatcher
-from nomenklatura.matching.name_based.names import jaro_name_parts
-from nomenklatura.matching.name_based.names import soundex_name_parts
+
+from nomenklatura.matching.name_based.model import (
+    NameMatcher,
+    NameQualifiedMatcher,
+    OFACMatcher,
+)
+from nomenklatura.matching.name_based.names import jaro_name_parts, soundex_name_parts
 from nomenklatura.matching.types import ScoringConfig
 
 from ..factory import e

@@ -1,12 +1,13 @@
-from typing import Iterable, Set
-from prefixdate import Precision
+from collections.abc import Iterable
+
 from followthemoney.proxy import E
+from prefixdate import Precision
 
 from nomenklatura.matching.compare.util import has_overlap
 from nomenklatura.matching.util import has_schema, props_pair
 
 
-def _dates_precision(values: Iterable[str], precision: Precision) -> Set[str]:
+def _dates_precision(values: Iterable[str], precision: Precision) -> set[str]:
     dates = set()
     for value in values:
         if len(value) >= precision.value:

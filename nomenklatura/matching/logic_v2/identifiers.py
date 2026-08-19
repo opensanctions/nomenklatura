@@ -1,7 +1,6 @@
 from functools import cache, lru_cache
-from typing import Optional, Set
 
-from followthemoney import registry, EntityProxy, Property, Schema
+from followthemoney import EntityProxy, Property, Schema, registry
 from rigour.ids import get_identifier_format
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
@@ -9,18 +8,18 @@ from nomenklatura.matching.util import FNUL, MEMO_BATCH, has_schema
 
 
 @cache
-def schema_identifier_props(schema: Schema) -> Set[Property]:
+def schema_identifier_props(schema: Schema) -> set[Property]:
     """Get the set of identifier properties for a given schema."""
-    props: Set[Property] = set()
+    props: set[Property] = set()
     for prop in schema.properties.values():
         if prop.type == registry.identifier and prop.matchable:
             props.add(prop)
     return props
 
 
-def format_values(entity: EntityProxy, format_name: Optional[str]) -> Set[str]:
+def format_values(entity: EntityProxy, format_name: str | None) -> set[str]:
     """Get all identifier values of a given format from an entity."""
-    values: Set[str] = set()
+    values: set[str] = set()
     for prop in schema_identifier_props(entity.schema):
         if prop.format == format_name:
             values.update(entity.get_prop(prop))
@@ -28,7 +27,7 @@ def format_values(entity: EntityProxy, format_name: Optional[str]) -> Set[str]:
 
 
 @lru_cache(maxsize=MEMO_BATCH)
-def unformatted_values(entity: EntityProxy) -> Set[str]:
+def unformatted_values(entity: EntityProxy) -> set[str]:
     """Get all identifier values without a specific format from an entity."""
     return format_values(entity, None)
 

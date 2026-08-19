@@ -1,6 +1,8 @@
-from pathlib import Path
+from collections.abc import Callable, Iterable
 from itertools import product
-from typing import List, Set, TypeVar, Tuple, Iterable, Optional, Callable, Any
+from pathlib import Path
+from typing import Any, TypeVar
+
 from followthemoney import model
 from followthemoney.exc import InvalidData
 from followthemoney.proxy import E
@@ -31,9 +33,9 @@ def has_schema(left: E, right: E, *schemata: str) -> bool:
         return False
 
 
-def props_pair(left: E, right: E, props: List[str]) -> Tuple[Set[str], Set[str]]:
-    left_values: Set[str] = set()
-    right_values: Set[str] = set()
+def props_pair(left: E, right: E, props: list[str]) -> tuple[set[str], set[str]]:
+    left_values: set[str] = set()
+    right_values: set[str] = set()
     for prop in props:
         if prop in left.schema.properties:
             left_values.update(left.get(prop, quiet=True))
@@ -42,15 +44,15 @@ def props_pair(left: E, right: E, props: List[str]) -> Tuple[Set[str], Set[str]]
     return left_values, right_values
 
 
-def type_pair(left: E, right: E, type_: PropertyType) -> Tuple[List[str], List[str]]:
+def type_pair(left: E, right: E, type_: PropertyType) -> tuple[list[str], list[str]]:
     left_values = left.get_type_values(type_, matchable=True)
     right_values = right.get_type_values(type_, matchable=True)
     return left_values, right_values
 
 
 def max_in_sets(
-    left: Iterable[Optional[V]],
-    right: Iterable[Optional[V]],
+    left: Iterable[V | None],
+    right: Iterable[V | None],
     compare_func: Callable[[V, V], float],
     max_res: float = 1.0,
 ) -> float:

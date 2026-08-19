@@ -1,12 +1,12 @@
-from typing import Iterable, List
+from collections.abc import Iterable
 
 from nomenklatura.wikidata.write.commands import (
-    QSCommand,
-    CreateItem,
-    SetLabel,
-    SetDescription,
-    SetAlias,
     AddStatement,
+    CreateItem,
+    QSCommand,
+    SetAlias,
+    SetDescription,
+    SetLabel,
 )
 from nomenklatura.wikidata.write.values import StringValue
 
@@ -28,7 +28,7 @@ def serialize_command(command: QSCommand) -> str:
     if isinstance(command, SetAlias):
         return _line(command.target, f"A{command.lang}", _quote(command.text))
     if isinstance(command, AddStatement):
-        columns: List[str] = [command.target, command.prop, command.value.render()]
+        columns: list[str] = [command.target, command.prop, command.value.render()]
         for prop, value in command.qualifiers:
             columns.extend([prop, value.render()])
         for prop, value in command.references:

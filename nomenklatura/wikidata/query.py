@@ -1,17 +1,17 @@
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 
-class SparqlValue(object):
+class SparqlValue:
     WD_PREFIX = "http://www.wikidata.org/entity/"
 
-    __slots__ = ["type", "value", "lang"]
+    __slots__ = ["lang", "type", "value"]
 
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, data: dict[str, Any]) -> None:
         self.type: str = data["type"]
         self.value: str = data["value"]
         if self.type == "uri" and self.value.startswith(self.WD_PREFIX):
             self.value = self.value[len(self.WD_PREFIX) :]
-        self.lang: Optional[str] = data.get("xml:lang")
+        self.lang: str | None = data.get("xml:lang")
 
     def __str__(self) -> str:
         return self.value
@@ -23,14 +23,14 @@ class SparqlValue(object):
         return hash(repr(self))
 
 
-class SparqlBinding(object):
-    def __init__(self, response: "SparqlResponse", data: Dict[str, Any]) -> None:
+class SparqlBinding:
+    def __init__(self, response: "SparqlResponse", data: dict[str, Any]) -> None:
         self.response = response
-        self.values: Dict[str, SparqlValue] = {}
+        self.values: dict[str, SparqlValue] = {}
         for var, value in data.items():
             self.values[var] = SparqlValue(value)
 
-    def wrapped(self, var: str) -> Optional[SparqlValue]:
+    def wrapped(self, var: str) -> SparqlValue | None:
         if var not in self.response.vars:
             raise KeyError("No such var: %s (in: %r)" % (var, self.response.vars))
         value = self.values.get(var)
@@ -38,7 +38,7 @@ class SparqlBinding(object):
             return None
         return value
 
-    def plain(self, var: str) -> Optional[str]:
+    def plain(self, var: str) -> str | None:
         if var not in self.response.vars:
             raise KeyError("No such var: %s (in: %r)" % (var, self.response.vars))
         if var in self.values:
@@ -51,11 +51,11 @@ class SparqlBinding(object):
         return f"<SparqlBinding({self.values!r})>"
 
 
-class SparqlResponse(object):
-    def __init__(self, query: str, response: Dict[str, Any]) -> None:
+class SparqlResponse:
+    def __init__(self, query: str, response: dict[str, Any]) -> None:
         self.query = query
-        self.vars: List[str] = response["head"]["vars"]
-        self.results: List[SparqlBinding] = []
+        self.vars: list[str] = response["head"]["vars"]
+        self.results: list[SparqlBinding] = []
         for bind in response["results"]["bindings"]:
             self.results.append(SparqlBinding(self, bind))
 

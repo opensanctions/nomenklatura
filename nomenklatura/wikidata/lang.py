@@ -1,8 +1,10 @@
 import logging
-from rigour.langs import PREFERRED_LANGS
-from typing import Callable, Dict, Iterable, List, Optional, Any, Set
-from followthemoney import registry, StatementEntity
+from collections.abc import Callable, Iterable
+from typing import Any, Optional
+
+from followthemoney import StatementEntity, registry
 from normality.cleaning import remove_unsafe_chars
+from rigour.langs import PREFERRED_LANGS
 
 log = logging.getLogger(__name__)
 # This is a special language code used to indicate that a value is multilingual
@@ -13,7 +15,7 @@ PREFERRED_WD_LANGS = list(PREFERRED_LANGS)
 PREFERRED_WD_LANGS.insert(1, MULTI_LANG)
 
 
-class LangText(object):
+class LangText:
     """A text value together with the language it is expressed in.
 
     Wikidata labels and descriptions exist in many languages. Keeping the
@@ -21,20 +23,20 @@ class LangText(object):
     property with the language attached, and lets callers pick a preferred
     display language."""
 
-    __slots__ = ["text", "lang", "original"]
+    __slots__ = ["lang", "original", "text"]
 
     def __init__(
         self,
-        text: Optional[str],
-        lang: Optional[str] = None,
-        original: Optional[str] = None,
+        text: str | None,
+        lang: str | None = None,
+        original: str | None = None,
     ) -> None:
         if text is None or len(text.strip()) == 0:
             text = None
         if text is not None:
             text = remove_unsafe_chars(text)
         self.text = text
-        self.lang: Optional[str] = None
+        self.lang: str | None = None
         if lang is not None:
             if lang == MULTI_LANG:
                 self.lang = MULTI_LANG
@@ -49,7 +51,7 @@ class LangText(object):
         self,
         entity: StatementEntity,
         prop: str,
-        clean: Optional[Callable[[str], Optional[str]]] = None,
+        clean: Callable[[str], str | None] | None = None,
     ) -> None:
         if self.text is None:
             return
@@ -59,14 +61,14 @@ class LangText(object):
         lang = None if self.lang == MULTI_LANG else self.lang
         entity.add(prop, clean_text, lang=lang, original_value=self.original)
 
-    def pack(self) -> Dict[str, Optional[str]]:
+    def pack(self) -> dict[str, str | None]:
         data = {"t": self.text, "l": self.lang}
         if self.original is not None and self.original != self.text:
             data["o"] = self.original
         return data
 
     @classmethod
-    def parse(cls, data: Dict[str, Optional[str]]) -> "LangText":
+    def parse(cls, data: dict[str, str | None]) -> "LangText":
         return LangText(data["t"], data["l"], original=data.get("o"))
 
     @classmethod
@@ -80,7 +82,7 @@ class LangText(object):
         return None
 
     @classmethod
-    def sorted(cls, texts: Iterable["LangText"]) -> List["LangText"]:
+    def sorted(cls, texts: Iterable["LangText"]) -> list["LangText"]:
         def sort_key(lt: LangText) -> Any:
             if lt.lang is None or lt.lang not in PREFERRED_WD_LANGS:
                 index = len(PREFERRED_WD_LANGS)
@@ -91,8 +93,8 @@ class LangText(object):
         return sorted(texts, key=sort_key)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, List[Dict[str, str]]]) -> Set["LangText"]:
-        langs: Set[LangText] = set()
+    def from_dict(cls, data: dict[str, list[dict[str, str]]]) -> set["LangText"]:
+        langs: set[LangText] = set()
         for objs in data.values():
             if not isinstance(objs, list):
                 objs = [objs]
@@ -115,7 +117,7 @@ class LangText(object):
     def __hash__(self) -> int:
         return hash((self.text, self.lang, self.original))
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return hash(self) == hash(other)
 
     def __repr__(self) -> str:

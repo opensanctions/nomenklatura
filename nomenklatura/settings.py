@@ -1,5 +1,6 @@
 from pathlib import Path
-from rigour.env import env_str, env_opt, env_int
+
+from rigour.env import env_int, env_opt, env_str
 
 TESTING = False
 
