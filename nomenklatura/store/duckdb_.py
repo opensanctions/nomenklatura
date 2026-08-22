@@ -204,12 +204,13 @@ class DuckDBView(View[DS, SE]):
         super().__init__(store, scope, external=external)
         self.store: DuckDBStore[DS, SE] = store
 
-    def _filters(self, alias: str = "s") -> str:
-        names = ", ".join(f"'{n}'" for n in sorted(self.dataset_names))
-        query = f"{alias}.dataset IN ({names})"
+    def _filters(self, alias: str = "s") -> tuple[str, list[str]]:
+        names = sorted(self.dataset_names)
+        holes = ", ".join("?" for _ in names)
+        query = f"{alias}.dataset IN ({holes})"
         if self.external is False:
             query += f" AND NOT {alias}.external"
-        return query
+        return query, names
 
     def _lookup(self, ids: Iterable[str]) -> tuple[str, set[str]]:
         """Pick the point-read strategy for the store's mode.
@@ -232,12 +233,13 @@ class DuckDBView(View[DS, SE]):
     def has_entity(self, id: str) -> bool:
         column, lookup = self._lookup([id])
         holes = ", ".join("?" for _ in lookup)
+        filters, params = self._filters()
         cursor = self.store.conn.cursor()
         try:
             row = cursor.execute(
                 f"SELECT 1 FROM {RESOLVED_TABLE} s "
-                f"WHERE s.{column} IN ({holes}) AND {self._filters()} LIMIT 1",
-                list(lookup),
+                f"WHERE s.{column} IN ({holes}) AND {filters} LIMIT 1",
+                [*lookup, *params],
             ).fetchone()
             return row is not None
         finally:
@@ -254,13 +256,14 @@ class DuckDBView(View[DS, SE]):
         if len(lookup) == 0:
             return
         holes = ", ".join("?" for _ in lookup)
+        filters, params = self._filters()
         clusters: dict[str, list[Statement]] = {}
         cursor = self.store.conn.cursor()
         try:
             result = cursor.execute(
                 f"SELECT {STMT_COLUMNS}, s.canonical_id FROM {RESOLVED_TABLE} s "
-                f"WHERE s.{column} IN ({holes}) AND {self._filters()}",
-                list(lookup),
+                f"WHERE s.{column} IN ({holes}) AND {filters}",
+                [*lookup, *params],
             )
             while rows := result.fetchmany(FETCH_SIZE):
                 for row in rows:
@@ -276,13 +279,14 @@ class DuckDBView(View[DS, SE]):
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         canonical = self.store.linker.get_canonical(id)
+        filters, params = self._filters("e")
         owners: set[str] = set()
         cursor = self.store.conn.cursor()
         try:
             result = cursor.execute(
                 f"SELECT DISTINCT e.origin_canonical_id FROM {EDGES_TABLE} e "
-                f"WHERE e.value_canonical_id = ? AND {self._filters('e')}",
-                [canonical],
+                f"WHERE e.value_canonical_id = ? AND {filters}",
+                [canonical, *params],
             )
             while rows := result.fetchmany(FETCH_SIZE):
                 owners.update(row[0] for row in rows)
@@ -296,14 +300,15 @@ class DuckDBView(View[DS, SE]):
     def entities(
         self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
+        filters, params = self._filters()
         query = (
             f"SELECT {STMT_COLUMNS}, s.canonical_id FROM {RESOLVED_TABLE} s "
-            f"WHERE {self._filters()} "
+            f"WHERE {filters} "
             f"ORDER BY s.canonical_id"
         )
         cursor = self.store.conn.cursor()
         try:
-            result = cursor.execute(query)
+            result = cursor.execute(query, params)
             statements: list[Statement] = []
             previous: str | None = None
             while rows := result.fetchmany(FETCH_SIZE):
