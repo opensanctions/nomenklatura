@@ -222,8 +222,8 @@ class Resolver(Linker[SE]):
         """Return all the canonical cluster identifiers."""
         return self._linker.canonicals()
 
-    def iter_pairs(self) -> Generator[tuple[str, str], None, None]:
-        return self._linker.iter_pairs()
+    def mappings(self) -> Generator[tuple[str, str], None, None]:
+        return self._linker.mappings()
 
     def get_referents(self, canonical_id: str, canonicals: bool = True) -> set[str]:
         """Get all the non-canonical entity identifiers which refer to a given
