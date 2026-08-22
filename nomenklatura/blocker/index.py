@@ -37,10 +37,10 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any, ClassVar, TypeVar
 
-import duckdb
 from followthemoney import DS, SE, StatementEntity, model, registry
 from rigour.reset import reset_caches
 
+from nomenklatura import duck
 from nomenklatura.blocker.tokenizer import (
     NAME_PART_FIELD,
     SYMBOL_FIELD,
@@ -48,10 +48,8 @@ from nomenklatura.blocker.tokenizer import (
     tokenize_entity,
 )
 from nomenklatura.resolver import Identifier
-from nomenklatura.settings import DUCKDB_MEMORY, DUCKDB_THREADS
 from nomenklatura.store import View
 
-DuckDBConfig = dict[str, str | bool | int | float | list[str]]
 BlockingMatches = list[tuple[Identifier, float]]
 R = TypeVar("R")
 
@@ -115,26 +113,6 @@ class Index:
         self.max_match_pair_cost = _bucket_pair_cost(self.max_bucket_size, cross=True)
         self.data_dir = data_dir.resolve()
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.duckdb_config: DuckDBConfig = {
-            "preserve_insertion_order": False,
-            "python_enable_replacements": False,
-        }
-
-        # https://duckdb.org/docs/guides/performance/environment
-        # > For ideal performance,
-        # > aggregation-heavy workloads require approx. 5 GB memory per thread and
-        # > join-heavy workloads require approximately 10 GB memory per thread.
-        # > Aim for 5-10 GB memory per thread.
-        memory_budget = options.get("memory", DUCKDB_MEMORY)
-        """Memory budget in megabytes"""
-        if memory_budget is not None:
-            self.duckdb_config["memory_limit"] = f"{memory_budget}MB"
-
-        if DUCKDB_THREADS is not None:
-            # > If you have a limited amount of memory, try to limit the number of threads
-            self.duckdb_config["threads"] = int(DUCKDB_THREADS)
-
-        log.info("DuckDB index configured: %r", self.duckdb_config)
         log.info(
             "Blocker index configured: max_bucket_size=%d, "
             "pair cost cap=%d, matching pair cost cap=%d, "
@@ -146,7 +124,7 @@ class Index:
             self.min_score_ratio,
         )
         self.duckdb_path = self.data_dir / "index.duckdb"
-        self.con = duckdb.connect(self.duckdb_path, config=self.duckdb_config)
+        self.con = duck.connect(self.duckdb_path, memory_mb=options.get("memory"))
 
     def load_entities(self, table: str, entities: Iterable[StatementEntity]) -> None:
         path = self.data_dir / f"{table}.csv"
