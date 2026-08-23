@@ -71,6 +71,33 @@ def _run_store_test(
     entity = view.get_entity(entity.id)
     assert entity is not None
     assert entity.caption == "Tchibo Holding AG"
+
+    # External statements must be filtered by external=False views and
+    # survive a store round-trip with the flag intact:
+    ext_data = {
+        "id": "ext-john-doe",
+        "schema": "Person",
+        "properties": {"name": ["John Doe"]},
+    }
+    ext_entity = Entity.from_data(dataset, ext_data)
+    with store.writer() as writer:
+        for stmt in ext_entity.statements:
+            writer.add_statement(stmt.clone(external=True))
+
+    internal_view = store.view(dataset, external=False)
+    assert internal_view.get_entity("ext-john-doe") is None
+    assert not internal_view.has_entity("ext-john-doe")
+    assert "ext-john-doe" not in {e.id for e in internal_view.entities()}
+
+    ext_view = store.view(dataset, external=True)
+    served = ext_view.get_entity("ext-john-doe")
+    assert served is not None
+    assert ext_view.has_entity("ext-john-doe")
+    served_stmts = list(served.statements)
+    assert len(served_stmts) == len(list(ext_entity.statements))
+    # The synthetic `id` statement is regenerated on read; the flag only
+    # needs to survive on the stored property statements.
+    assert all(s.external for s in served_stmts if s.prop != "id")
     return True
 
 
