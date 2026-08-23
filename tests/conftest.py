@@ -18,7 +18,6 @@ from nomenklatura import settings
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
 from nomenklatura.db import Session, close_db, get_engine, make_session
-from nomenklatura.kv import get_redis
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, load_entity_file_store
 
@@ -41,7 +40,6 @@ def wrap_test():
     meta.reflect(bind=engine)
     meta.drop_all(bind=engine)
     close_db()
-    get_redis.cache_clear()
 
 
 @pytest.fixture(scope="module")

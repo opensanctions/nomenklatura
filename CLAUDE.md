@@ -36,7 +36,7 @@ Nomenklatura is a data deduplication and entity integration framework for [Follo
 **`Store`** (`nomenklatura/store/base.py`) — Generic triple store for FtM statement-based entities. Implementations:
 - `MemoryStore` — in-memory, used for CLI file-based workflows
 - `SQLStore` — PostgreSQL/SQLite persistence
-- `LevelStore` / `RedisStore` — alternative KV backends (optional deps)
+- `LevelStore` — LevelDB-backed KV store (optional dep)
 
 **`blocker.Index`** (`nomenklatura/blocker/index.py`) — DuckDB-backed inverted index for blocking (finding candidate pairs). Tokenizes entities into name parts, phonetics, symbols, and words. Used by `xref`.
 
@@ -65,7 +65,7 @@ Both `nk` and `nomenklatura` invoke `nomenklatura.cli:cli`. Key commands:
 
 ### Settings (`nomenklatura/settings.py`)
 
-Environment variables: `NOMENKLATURA_DB_URL`, `NOMENKLATURA_DB_POOL_SIZE`, `NOMENKLATURA_REDIS_URL`, `NOMENKLATURA_STATEMENT_TABLE`, `NOMENKLATURA_DUCKDB_MEMORY`, `NOMENKLATURA_DUCKDB_THREADS`, `NOMENKLATURA_LEVELDB_MAX_FILES`.
+Environment variables: `NOMENKLATURA_DB_URL`, `NOMENKLATURA_DB_POOL_SIZE`, `NOMENKLATURA_STATEMENT_TABLE`, `NOMENKLATURA_DUCKDB_MEMORY`, `NOMENKLATURA_DUCKDB_THREADS`, `NOMENKLATURA_LEVELDB_MAX_FILES`.
 
 ### Public API
 
