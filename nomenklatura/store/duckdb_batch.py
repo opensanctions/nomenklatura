@@ -14,6 +14,8 @@ from nomenklatura.store.base import Store, View, Writer
 
 FETCH_SIZE = 10_000
 INSERT_BATCH = 50_000
+PREFETCH_BATCH = 1_000
+INVERTED_CAP = 1_000
 
 RAW_COLUMNS = (
     's.id, s.entity_id, s."schema", s.prop, s.value, s.dataset, s.lang, '
@@ -128,6 +130,11 @@ class DuckDBBatchView(View[DS, SE]):
         seq = next(_VIEW_SEQ)
         self.stmt_table = f"nk_stmts_{seq}"
         self.edge_table = f"nk_edges_{seq}"
+        # Rolling per-batch caches filled by `entities(prefetch_nested=True)`.
+        # `None` marks an id known to have no statements; a missing key in
+        # `_inverted` means unknown (reads fall through to the lazy queries).
+        self._cache: dict[str, SE | None] = {}
+        self._inverted: dict[str, list[str]] = {}
         self._build(f"nk_mapping_{seq}")
 
     def _build(self, mapping: str) -> None:
@@ -190,6 +197,8 @@ class DuckDBBatchView(View[DS, SE]):
 
     def _update(self, canonical: str, ids: set[str]) -> None:
         """Re-key a cluster's rows to its current canonical identifier."""
+        self._cache = {}
+        self._inverted = {}
         holes = ", ".join("?" for _ in ids)
         params = [canonical, *ids]
         conn = self.store.conn
@@ -214,6 +223,8 @@ class DuckDBBatchView(View[DS, SE]):
         self.store.conn.execute(f"DROP TABLE IF EXISTS {self.edge_table}")
 
     def has_entity(self, id: str) -> bool:
+        if id in self._cache:
+            return self._cache[id] is not None
         cursor = self.store.conn.cursor()
         try:
             row = cursor.execute(
@@ -231,7 +242,14 @@ class DuckDBBatchView(View[DS, SE]):
 
     def get_entities(self, ids: Iterable[str]) -> Generator[SE, None, None]:
         """Fetch a batch of entities in a single query."""
-        lookup = set(ids)
+        lookup: set[str] = set()
+        for id in set(ids):
+            if id in self._cache:
+                cached = self._cache[id]
+                if cached is not None:
+                    yield cached
+            else:
+                lookup.add(id)
         if len(lookup) == 0:
             return
         holes = ", ".join("?" for _ in lookup)
@@ -256,24 +274,120 @@ class DuckDBBatchView(View[DS, SE]):
                 yield entity
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
-        owners: set[str] = set()
-        cursor = self.store.conn.cursor()
-        try:
-            result = cursor.execute(
-                f"SELECT DISTINCT e.origin_canonical_id FROM {self.edge_table} e "
-                f"WHERE e.value_canonical_id = ?",
-                [id],
-            )
-            while rows := result.fetchmany(FETCH_SIZE):
-                owners.update(row[0] for row in rows)
-        finally:
-            cursor.close()
+        owners: Iterable[str] | None = self._inverted.get(id)
+        if owners is None:
+            lazy: set[str] = set()
+            cursor = self.store.conn.cursor()
+            try:
+                result = cursor.execute(
+                    f"SELECT DISTINCT e.origin_canonical_id FROM {self.edge_table} e "
+                    f"WHERE e.value_canonical_id = ?",
+                    [id],
+                )
+                while rows := result.fetchmany(FETCH_SIZE):
+                    lazy.update(row[0] for row in rows)
+            finally:
+                cursor.close()
+            owners = lazy
         for entity in self.get_entities(owners):
             for prop, value in entity.itervalues():
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
 
+    def _bulk_inverted(self, ids: list[str]) -> set[str]:
+        """Cache the inverted adjacency of a batch of ids in one query.
+
+        Ids with more than INVERTED_CAP owners (hubs) are left uncached, so a
+        later `get_inverted` on them takes the complete lazy path instead of
+        a silently truncated one. Returns the owner ids that were cached."""
+        owners: set[str] = set()
+        if len(ids) == 0:
+            return owners
+        found: dict[str, list[str]] = {}
+        holes = ", ".join("?" for _ in ids)
+        cursor = self.store.conn.cursor()
+        try:
+            result = cursor.execute(
+                f"SELECT value_canonical_id, origin_canonical_id FROM ("
+                f"  SELECT DISTINCT e.value_canonical_id, e.origin_canonical_id "
+                f"  FROM {self.edge_table} e "
+                f"  WHERE e.value_canonical_id IN ({holes})"
+                f") QUALIFY row_number() OVER (PARTITION BY value_canonical_id) <= ?",
+                [*ids, INVERTED_CAP + 1],
+            )
+            while rows := result.fetchmany(FETCH_SIZE):
+                for value_id, origin_id in rows:
+                    found.setdefault(value_id, []).append(origin_id)
+        finally:
+            cursor.close()
+        for id in ids:
+            batch_owners = found.get(id, [])
+            if len(batch_owners) > INVERTED_CAP:
+                continue
+            self._inverted[id] = batch_owners
+            owners.update(batch_owners)
+        return owners
+
+    def _prefetch(self, batch: list[SE]) -> None:
+        """Bulk-load the adjacency of a batch of scanned entities.
+
+        Two fetch rounds: the batch's own neighbors (forward values plus
+        inverted owners), then the endpoints and owners of the edge-schema
+        entities among them — nested exports recurse through edges, so their
+        lookups must be warm too. Four queries per batch, replacing the
+        previous batch's cache."""
+        cache: dict[str, SE | None] = {e.id: e for e in batch if e.id is not None}
+        self._cache = cache
+        self._inverted = {}
+        want = self._bulk_inverted(list(cache.keys()))
+        for entity in batch:
+            for prop, value in entity.itervalues():
+                if prop.type == registry.entity:
+                    want.add(value)
+        want.difference_update(cache)
+        edge_ids: list[str] = []
+        second: set[str] = set()
+        for adjacent in self.get_entities(want):
+            if adjacent.id is None:
+                continue
+            cache[adjacent.id] = adjacent
+            if adjacent.schema.edge:
+                edge_ids.append(adjacent.id)
+                for prop, value in adjacent.itervalues():
+                    if prop.type == registry.entity:
+                        second.add(value)
+        for id in want:
+            cache.setdefault(id, None)
+        second.update(self._bulk_inverted(edge_ids))
+        second.difference_update(cache)
+        for adjacent in self.get_entities(second):
+            if adjacent.id is not None:
+                cache[adjacent.id] = adjacent
+        for id in second:
+            cache.setdefault(id, None)
+
     def entities(
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
+    ) -> Generator[SE, None, None]:
+        if not prefetch_nested:
+            yield from self._scan(include_schemata)
+            return
+        batch: list[SE] = []
+        for entity in self._scan(include_schemata):
+            batch.append(entity)
+            if len(batch) >= PREFETCH_BATCH:
+                self._prefetch(batch)
+                yield from batch
+                batch = []
+        if len(batch) > 0:
+            self._prefetch(batch)
+            yield from batch
+        self._cache = {}
+        self._inverted = {}
+
+    def _scan(
         self, include_schemata: list[Schema] | None = None
     ) -> Generator[SE, None, None]:
         query = f"SELECT {STMT_COLUMNS}, s.canonical_id FROM {self.stmt_table} s "

@@ -228,6 +228,133 @@ def test_duckdb_batch_store_close(
     assert conn.execute("SELECT count(*) FROM statements").fetchone() is not None
 
 
+class _CountingConn:
+    """Counts cursor handouts, i.e. lazy read queries on the view."""
+
+    def __init__(self, conn: duckdb.DuckDBPyConnection) -> None:
+        self.inner = conn
+        self.cursors = 0
+
+    def cursor(self) -> duckdb.DuckDBPyConnection:
+        self.cursors += 1
+        return self.inner.cursor()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.inner, name)
+
+
+def test_duckdb_batch_store_prefetch_parity(
+    test_dataset: Dataset,
+    donations_json: list[dict[str, Any]],
+    resolver: Resolver[Entity],
+) -> None:
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, donations_json)
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    lazy_view = store.default_view()
+    pre_view = store.default_view()
+    lazy = {e.id: e for e in lazy_view.entities()}
+
+    count = 0
+    for entity in pre_view.entities(prefetch_nested=True):
+        count += 1
+        expected = lazy[entity.id]
+        assert entity.schema == expected.schema
+        assert len(list(entity.statements)) == len(list(expected.statements))
+        adjacent = sorted((p.name, a.id) for p, a in pre_view.get_adjacent(entity))
+        assert adjacent == sorted(
+            (p.name, a.id) for p, a in lazy_view.get_adjacent(expected)
+        )
+        assert entity.id is not None
+        inverted = sorted((p.name, a.id) for p, a in pre_view.get_inverted(entity.id))
+        assert inverted == sorted(
+            (p.name, a.id) for p, a in lazy_view.get_inverted(entity.id)
+        )
+    assert count == len(lazy)
+    # The rolling caches are dropped once the scan completes:
+    assert pre_view._cache == {}
+    assert pre_view._inverted == {}
+
+
+def test_duckdb_batch_store_prefetch_queries(
+    test_dataset: Dataset,
+    donations_json: list[dict[str, Any]],
+    resolver: Resolver[Entity],
+) -> None:
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, donations_json)
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    view = store.default_view()
+    counting = _CountingConn(conn)
+    store.conn = counting  # type: ignore[assignment]
+
+    # Mimic the nested export: traverse each root's adjacency and recurse
+    # through edge-schema neighbors to their endpoints.
+    traversed = 0
+    for entity in view.entities(prefetch_nested=True):
+        for _, adjacent in view.get_adjacent(entity):
+            traversed += 1
+            if adjacent.schema.edge:
+                for _, _ in view.get_adjacent(adjacent):
+                    traversed += 1
+    assert traversed > 100
+    # One scan plus the prefetch round for the single batch; no per-entity
+    # lazy queries during traversal.
+    assert counting.cursors <= 5
+
+
+def test_duckdb_batch_store_prefetch_hub_guard(
+    monkeypatch: pytest.MonkeyPatch,
+    test_dataset: Dataset,
+    donations_json: list[dict[str, Any]],
+    resolver: Resolver[Entity],
+) -> None:
+    # With a zero cap, every id with owners is a "hub": it must stay out of
+    # the inverted cache and fall back to the complete lazy path.
+    monkeypatch.setattr("nomenklatura.store.duckdb_batch.INVERTED_CAP", 0)
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, donations_json)
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    lazy_view = store.default_view()
+    pre_view = store.default_view()
+
+    hubs = 0
+    for entity in pre_view.entities(prefetch_nested=True):
+        assert entity.id is not None
+        inverted = sorted((p.name, a.id) for p, a in pre_view.get_inverted(entity.id))
+        assert inverted == sorted(
+            (p.name, a.id) for p, a in lazy_view.get_inverted(entity.id)
+        )
+        if len(inverted) > 0:
+            assert entity.id not in pre_view._inverted
+            hubs += 1
+        else:
+            assert pre_view._inverted.get(entity.id) == []
+    assert hubs > 0
+
+
+def test_duckdb_batch_store_prefetch_update_invalidates(
+    test_dataset: Dataset, resolver: Resolver[Entity]
+) -> None:
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, [PERSON, PERSON_EXT])
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    view = store.default_view()
+
+    scan = view.entities(prefetch_nested=True)
+    assert next(scan) is not None
+    assert len(view._cache) > 0
+
+    merged_id = resolver.decide(
+        "john-doe", "john-doe-2", judgement=Judgement.POSITIVE, user="test"
+    )
+    store.update(merged_id.id)
+    assert view._cache == {}
+    assert view._inverted == {}
+    assert view.get_entity(merged_id.id) is not None
+    assert view.get_entity("john-doe") is None
+
+
 def test_duckdb_batch_store_validation(test_dataset: Dataset) -> None:
     linker: Linker[Entity] = Linker({})
     conn = duckdb.connect()

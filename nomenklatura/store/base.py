@@ -151,12 +151,19 @@ class View(Generic[DS, SE]):
                 yield prop, adjacent
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         """Iterate over all entities in the view.
 
         If `include_schemata` is provided, only entities of the provided schemata will be returned.
-        Note that `schemata` will not be expanded via "is_a" relationships."""
+        Note that `schemata` will not be expanded via "is_a" relationships.
+
+        With `prefetch_nested`, implementations may bulk-load the adjacency of
+        the scanned entities so that `get_entity`, `get_inverted` and
+        `get_adjacent` calls made while iterating avoid per-call lookups.
+        Point-read stores ignore the flag; results are identical either way."""
 
         raise NotImplementedError
 

@@ -339,7 +339,9 @@ class VersionedRedisView(View[DS, SE]):
                     yield stmt
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         if len(self.vers) == 0:
             return

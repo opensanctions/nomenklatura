@@ -237,7 +237,9 @@ class SQLView(View[DS, SE]):
                             yield prop.reverse, entity
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         table: Table = self.store.table
         q = select(table)
