@@ -208,7 +208,9 @@ class LevelDBView(View[DS, SE]):
                         yield prop.reverse, entity
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         with self.store.db.iterator(prefix=b"s:", fill_cache=False) as it:
             current_id: str | None = None

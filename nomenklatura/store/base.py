@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from types import TracebackType
 from typing import Generic, cast
 
@@ -123,6 +123,17 @@ class View(Generic[DS, SE]):
     def get_entity(self, id: str) -> SE | None:
         raise NotImplementedError
 
+    def get_entities(self, ids: Iterable[str]) -> Generator[SE, None, None]:
+        """Fetch several entities in one go.
+
+        Bulk readers (e.g. the xref scoring loop) should prefer this over
+        repeated `get_entity()` calls so that stores backed by query engines
+        can serve the batch from a single query."""
+        for id in ids:
+            entity = self.get_entity(id)
+            if entity is not None:
+                yield entity
+
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         raise NotImplementedError
 
@@ -140,12 +151,19 @@ class View(Generic[DS, SE]):
                 yield prop, adjacent
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         """Iterate over all entities in the view.
 
         If `include_schemata` is provided, only entities of the provided schemata will be returned.
-        Note that `schemata` will not be expanded via "is_a" relationships."""
+        Note that `schemata` will not be expanded via "is_a" relationships.
+
+        With `prefetch_nested`, implementations may bulk-load the adjacency of
+        the scanned entities so that `get_entity`, `get_inverted` and
+        `get_adjacent` calls made while iterating avoid per-call lookups.
+        Point-read stores ignore the flag; results are identical either way."""
 
         raise NotImplementedError
 

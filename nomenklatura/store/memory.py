@@ -97,7 +97,9 @@ class MemoryView(View[DS, SE]):
                     yield prop.reverse, entity
 
     def entities(
-        self, include_schemata: list[Schema] | None = None
+        self,
+        include_schemata: list[Schema] | None = None,
+        prefetch_nested: bool = False,
     ) -> Generator[SE, None, None]:
         entity_ids: set[str] = set()
         for scope in self.dataset_names:
