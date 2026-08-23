@@ -54,19 +54,15 @@ dev = [
     "coverage>=4.1",
     "types-setuptools",
     "types-requests",
-    "types-redis",
     "types-PyYAML",
     "lxml-stubs",
     "requests-mock",
-    "fakeredis",
     "plyvel < 2.0.0",
-    "redis > 5.0.0, < 9.0.0",
     "psycopg2-binary",
     "bump2version",
     "prek",
 ]
 leveldb = ["plyvel < 2.0.0"]
-redis = ["redis > 5.0.0, < 9.0.0"]
 docs = [
     "mkdocs",
     "mkdocs-material",
