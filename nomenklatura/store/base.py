@@ -109,7 +109,12 @@ class View(Generic[DS, SE]):
 
     Entities come back in their merged, canonical form. Use `get_entity()` for
     a lookup by ID, `entities()` to stream the whole scope, and `get_adjacent()`
-    to traverse relationships in both directions."""
+    to traverse relationships in both directions.
+
+    Statements marked `external` (enrichment candidates not yet accepted into
+    the dataset) are excluded from all reads unless the view is constructed
+    with `external=True`; an entity backed only by external statements is
+    absent from an `external=False` view."""
 
     def __init__(self, store: Store[DS, SE], scope: DS, external: bool = False):
         self.store = store
