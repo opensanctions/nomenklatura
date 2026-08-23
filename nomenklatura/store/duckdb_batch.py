@@ -193,6 +193,10 @@ class DuckDBBatchView(View[DS, SE]):
             LEFT JOIN {mapping} mv ON mv.entity_id = s.value
             """
         )
+        conn.execute(
+            f"CREATE INDEX {self.edge_table}_value "
+            f"ON {self.edge_table} (value_canonical_id)"
+        )
         conn.execute(f"DROP TABLE {mapping}")
 
     def _update(self, canonical: str, ids: set[str]) -> None:
