@@ -1,8 +1,12 @@
 name: Test, build and release
 
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
 
 permissions:
   id-token: write
