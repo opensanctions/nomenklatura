@@ -103,7 +103,6 @@ def connect(
     database = ":memory:" if path is None else str(path)
     log.info("DuckDB connect %r, config: %r", database, config)
     conn = duckdb.connect(database, config=config)
-    # icu ships bundled with the duckdb wheel, so this works offline. GLOBAL,
-    # so that cursor() child sessions inherit the pinned timezone.
-    conn.execute("LOAD icu; SET GLOBAL TimeZone = 'UTC'")
+    # GLOBAL, so that cursor() child sessions inherit the pinned timezone.
+    conn.execute("SET GLOBAL TimeZone = 'UTC'")
     return conn
