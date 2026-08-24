@@ -80,7 +80,8 @@ def connect(
     """Open a DuckDB connection with nomenklatura's tuning applied.
 
     Connections come with `preserve_insertion_order` disabled to keep large
-    imports and CTAS out of memory trouble."""
+    imports and CTAS out of memory trouble, and the session timezone pinned
+    to UTC so TIMESTAMPTZ values never render in the host timezone."""
     config: DuckDBConfig = {
         "preserve_insertion_order": False,
         "python_enable_replacements": False,
@@ -101,4 +102,8 @@ def connect(
         config["threads"] = int(threads)
     database = ":memory:" if path is None else str(path)
     log.info("DuckDB connect %r, config: %r", database, config)
-    return duckdb.connect(database, config=config)
+    conn = duckdb.connect(database, config=config)
+    # icu ships bundled with the duckdb wheel, so this works offline. GLOBAL,
+    # so that cursor() child sessions inherit the pinned timezone.
+    conn.execute("LOAD icu; SET GLOBAL TimeZone = 'UTC'")
+    return conn
