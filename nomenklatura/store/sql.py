@@ -69,17 +69,20 @@ class SQLStore(Store[DS, SE]):
     def _iterate(
         self, q: Select[Any], stream: bool = True
     ) -> Generator[SE, None, None]:
+        # Group by canonical_id, not entity_id: queries and scopes operate on
+        # canonical ids, and a merged entity's rows span several entity_ids.
+        # Grouping on entity_id would fragment every merged cluster.
         current_id = None
         current_stmts: list[Statement] = []
         for stmt in self._iterate_stmts(q, stream=stream):
-            entity_id = stmt.entity_id
+            canonical_id = stmt.canonical_id
             if current_id is None:
-                current_id = entity_id
-            if current_id != entity_id:
+                current_id = canonical_id
+            if current_id != canonical_id:
                 proxy = self.assemble(current_stmts)
                 if proxy is not None:
                     yield proxy
-                current_id = entity_id
+                current_id = canonical_id
                 current_stmts = []
             current_stmts.append(stmt)
         if current_stmts:
