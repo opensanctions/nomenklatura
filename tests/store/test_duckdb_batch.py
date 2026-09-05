@@ -1,3 +1,5 @@
+import os
+import tempfile
 from typing import Any
 
 import duckdb
@@ -226,6 +228,33 @@ def test_duckdb_batch_store_close(
     assert len(nk_tables()) == 0
     # The caller's connection and relation survive:
     assert conn.execute("SELECT count(*) FROM statements").fetchone() is not None
+
+
+def test_duckdb_batch_store_mapping_csv_roundtrip(test_dataset: Dataset) -> None:
+    """The mapping travels through a CSV file; ids must survive quoting."""
+    awkward = ["comma,id", 'quote"id', "line\nid", "NULL", " padded "]
+    entities = [
+        {"id": eid, "schema": "Person", "properties": {"name": [f"Name {i}"]}}
+        for i, eid in enumerate(awkward)
+    ]
+    linker: Linker[Entity] = Linker({})
+    canonical = linker.add(awkward[0], awkward[1])
+    for eid in awkward[2:]:
+        canonical = linker.add(canonical, eid)
+
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, entities)
+    tmp_before = set(os.listdir(tempfile.gettempdir()))
+    store = DuckDBBatchStore(test_dataset, linker, conn, "statements")
+    view = store.default_view()
+    assert set(os.listdir(tempfile.gettempdir())) == tmp_before
+
+    proxies = list(view.entities())
+    assert len(proxies) == 1
+    merged = proxies[0]
+    assert merged.id == canonical
+    assert set(merged.get("name")) == {f"Name {i}" for i in range(len(awkward))}
+    assert view.get_entity(canonical) is not None
 
 
 class _CountingConn:

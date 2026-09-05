@@ -1,6 +1,9 @@
 #
 # Materialized, read-heavy statement store on top of a DuckDB relation.
 #
+import csv
+import os
+import tempfile
 from collections.abc import Generator, Iterable
 from itertools import count
 from typing import Any
@@ -13,7 +16,6 @@ from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 
 FETCH_SIZE = 10_000
-INSERT_BATCH = 50_000
 PREFETCH_BATCH = 1_000
 INVERTED_CAP = 1_000
 
@@ -152,14 +154,24 @@ class DuckDBBatchView(View[DS, SE]):
             f"CREATE OR REPLACE TABLE {mapping} "
             "(entity_id VARCHAR, canonical_id VARCHAR)"
         )
-        batch: list[tuple[str, str]] = []
-        for pair in self.store.linker.mappings():
-            batch.append(pair)
-            if len(batch) >= INSERT_BATCH:
-                conn.executemany(f"INSERT INTO {mapping} VALUES (?, ?)", batch)
-                batch.clear()
-        if len(batch) > 0:
-            conn.executemany(f"INSERT INTO {mapping} VALUES (?, ?)", batch)
+        # Row-wise executemany costs ~100 µs/row in DuckDB; a CSV round trip
+        # loads millions of pairs in seconds.
+        fh = tempfile.NamedTemporaryFile(
+            "w", suffix=".csv", newline="", encoding="utf-8", delete=False
+        )
+        try:
+            with fh:
+                csv.writer(fh).writerows(self.store.linker.mappings())
+            # An empty file fails DuckDB's dialect check, hence the size guard.
+            if os.path.getsize(fh.name) > 0:
+                conn.execute(
+                    f"INSERT INTO {mapping} SELECT * FROM read_csv(?, header=false, "
+                    "delim=',', quote='\"', escape='\"', "
+                    "columns={'entity_id': 'VARCHAR', 'canonical_id': 'VARCHAR'})",
+                    [fh.name],
+                )
+        finally:
+            os.unlink(fh.name)
 
         names = sorted(self.dataset_names)
         holes = ", ".join("?" for _ in names)
