@@ -3,7 +3,7 @@ from collections.abc import Generator
 from followthemoney import StatementEntity, registry
 from followthemoney.names import entity_names
 from normality import WS
-from rigour.addresses import normalize_address
+from rigour.addresses import address_fingerprint
 from rigour.ids import StrictFormat
 from rigour.names import NamePartTag, Symbol, tokenize_name
 from rigour.text import is_stopword
@@ -117,11 +117,9 @@ def tokenize_entity(entity: StatementEntity) -> Generator[tuple[str, str], None,
                 unique.add((type.name, f"{prefix}:{clean_id}"))
             continue
         if type == registry.address:
-            norm = normalize_address(value)
-            if norm is not None:
-                # Disable this for now, as it is not performant:
-                # norm = remove_address_keywords(norm) or norm
-                for word in norm.split(WS):
+            addr_fp = address_fingerprint(value)
+            if addr_fp is not None:
+                for word in addr_fp.split(WS):
                     if is_stopword(word):
                         continue
                     if len(word) > 3:
