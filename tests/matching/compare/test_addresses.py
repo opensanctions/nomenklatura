@@ -11,18 +11,18 @@ def test_address_entity_match():
     match = e("Address", full="Main St 123, Springfield, IL")
     assert address_entity_match(left, match, config).score == 1.0
 
-    # subsets are matches:
+    # subsets are near-matches, missing the house number:
     match = e("Address", full="Main St, Springfield, IL")
-    assert address_entity_match(left, match, config).score == 1.0
-
-    # different numbers are imperfect matches:
-    match = e("Address", full="Main St 211, Springfield, IL")
     assert address_entity_match(left, match, config).score < 1.0
-    assert address_entity_match(left, match, config).score > 0.5
+    assert address_entity_match(left, match, config).score > 0.9
+
+    # conflicting house numbers are penalised beyond their token length:
+    match = e("Address", full="Main St 211, Springfield, IL")
+    assert address_entity_match(left, match, config).score < 0.3
+    assert address_entity_match(left, match, config).score > 0.0
 
     mis_match = e("Address", full="456 Elm St, Springfield, IL")
-    assert address_entity_match(left, mis_match, config).score > 0.0
-    assert address_entity_match(left, mis_match, config).score < 0.7
+    assert address_entity_match(left, mis_match, config).score < 0.3
     mis_match = e("Address", full="Harry")
     assert address_entity_match(left, mis_match, config).score == 0.0
     no_value = e("Address")
