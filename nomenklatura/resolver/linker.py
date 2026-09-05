@@ -115,16 +115,21 @@ class Linker(Generic[SE]):
         return proxy
 
     def apply_properties(self, proxy: SE) -> SE:
-        for stmt in proxy._iter_stmt():
-            if proxy.id is not None:
+        if proxy.id is None:
+            return proxy
+        for prop_name, stmts in proxy._statements.items():
+            out: set[Statement] = set()
+            for stmt in stmts:
                 stmt.canonical_id = proxy.id
-            if stmt.prop_type == registry.entity.name:
-                canon_value = self.get_canonical(stmt._value)
-                if canon_value != stmt.value:
-                    stmt = stmt.clone(
-                        value=canon_value,
-                        original_value=stmt.original_value or stmt._value,
-                    )
+                if stmt.prop_type == registry.entity.name:
+                    canon_value = self.get_canonical(stmt._value)
+                    if canon_value != stmt.value:
+                        stmt = stmt.clone(
+                            value=canon_value,
+                            original_value=stmt.original_value or stmt._value,
+                        )
+                out.add(stmt)
+            proxy._statements[prop_name] = out
         return proxy
 
     def apply_statement(self, stmt: Statement) -> Statement:
