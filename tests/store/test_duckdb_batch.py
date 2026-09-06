@@ -223,7 +223,7 @@ def test_duckdb_batch_store_close(
         ).fetchall()
         return {row[0] for row in rows}
 
-    assert len(nk_tables()) == 2  # statements + edges; mapping already dropped
+    assert len(nk_tables()) == 1  # the mapping table is already dropped
     store.close()
     assert len(nk_tables()) == 0
     # The caller's connection and relation survive:
@@ -382,6 +382,43 @@ def test_duckdb_batch_store_prefetch_update_invalidates(
     assert view._inverted == {}
     assert view.get_entity(merged_id.id) is not None
     assert view.get_entity("john-doe") is None
+
+
+def test_duckdb_batch_store_update_rekeys_references(
+    test_dataset: Dataset, resolver: Resolver[Entity]
+) -> None:
+    """Merging the *target* of a reference must move the inverted edge."""
+    company = {
+        "id": "acme",
+        "schema": "Company",
+        "properties": {"name": ["ACME"], "parent": ["john-doe-2"]},
+    }
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, [PERSON, PERSON_EXT, company])
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    view = store.default_view()
+    assert [e.id for _, e in view.get_inverted("john-doe-2")] == ["acme"]
+    assert list(view.get_inverted("john-doe")) == []
+
+    merged_id = resolver.decide(
+        "john-doe", "john-doe-2", judgement=Judgement.POSITIVE, user="test"
+    )
+    store.update(merged_id.id)
+
+    owners = list(view.get_inverted(merged_id.id))
+    assert [e.id for _, e in owners] == ["acme"]
+    assert owners[0][0].name == "subsidiaries"
+    assert list(view.get_inverted("john-doe-2")) == []
+    # The stored value is left as the source wrote it; resolution happens in
+    # assemble, so the read side reports the canonical id:
+    acme = view.get_entity("acme")
+    assert acme is not None
+    assert acme.get("parent") == [merged_id.id]
+    row = conn.execute(
+        f"SELECT value, value_canonical_id FROM {view.stmt_table} "
+        "WHERE prop = 'parent'"
+    ).fetchone()
+    assert row == ("john-doe-2", merged_id.id)
 
 
 def test_duckdb_batch_store_validation(test_dataset: Dataset) -> None:

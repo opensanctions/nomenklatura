@@ -313,7 +313,7 @@ def test_build_and_fit_use_cluster_partitions(tmp_path: Path) -> None:
     dataset = build_dataset(pairs_path, workers=1)
     _, coefficients, report = fit_model(dataset, cv=2, n_jobs=1, max_iter=1_000)
 
-    assert dataset.features.shape == (8, 21)
+    assert dataset.features.shape == (8, len(EntityResolveRegression.FEATURES))
     assert dataset.test_mask.sum() == 2
     assert report["groups"] == 6
     assert report["positive_groups"] == 3

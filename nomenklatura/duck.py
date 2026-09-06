@@ -1,5 +1,4 @@
-#
-# Shared DuckDB conventions for nomenklatura, the DuckDB counterpart to `nomenklatura.db`.
+# Shared DuckDB conventions for nomenklatura
 import logging
 import re
 from pathlib import Path
@@ -87,10 +86,9 @@ def connect(
         "python_enable_replacements": False,
     }
     # https://duckdb.org/docs/guides/performance/environment
-    # > For ideal performance,
-    # > aggregation-heavy workloads require approx. 5 GB memory per thread and
-    # > join-heavy workloads require approximately 10 GB memory per thread.
-    # > Aim for 5-10 GB memory per thread.
+    # > For ideal performance, aggregation-heavy workloads require approx. 5 GB
+    # > memory per thread and join-heavy workloads require approximately 10 GB
+    # > memory per thread. Aim for 5-10 GB memory per thread.
     if memory_mb is None:
         memory_mb = DUCKDB_MEMORY
     if memory_mb is not None:
@@ -103,6 +101,5 @@ def connect(
     database = ":memory:" if path is None else str(path)
     log.info("DuckDB connect %r, config: %r", database, config)
     conn = duckdb.connect(database, config=config)
-    # GLOBAL, so that cursor() child sessions inherit the pinned timezone.
     conn.execute("SET GLOBAL TimeZone = 'UTC'")
     return conn

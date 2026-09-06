@@ -35,20 +35,6 @@ def birth_place(query: E, result: E) -> float:
     return overlap / base_length
 
 
-def address_match(query: E, result: E) -> float:
-    """Text similarity between addresses."""
-    lv, rv = type_pair(query, result, registry.address)
-    lvn = _norm_place(lv)
-    rvn = _norm_place(rv)
-    if len(lvn) == 0 or len(rvn) == 0:
-        return 0.0
-    overlap = len(lvn.intersection(rvn))
-    tokens = max(1.0, min(len(lvn), len(rvn)))
-    if overlap == 0:
-        return 0.0
-    return float(overlap) / float(tokens)
-
-
 def _address_number_sets(query: E, result: E) -> tuple[set[str], set[str]]:
     lv, rv = type_pair(query, result, registry.address)
     return extract_numbers(lv), extract_numbers(rv)
