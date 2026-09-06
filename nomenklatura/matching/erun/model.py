@@ -17,7 +17,6 @@ from nomenklatura.matching.erun.identifiers import (
     weak_identifier_match,
 )
 from nomenklatura.matching.erun.misc import (
-    address_match,
     address_number_disagreement,
     address_number_overlap,
     birth_place,
@@ -72,7 +71,6 @@ class EntityResolveRegression(ScoringAlgorithm):
         org_country_mismatch,
         security_isin_mismatch,
         obj_name_levenshtein,
-        address_match,
         address_number_overlap,
         address_number_disagreement,
     ]

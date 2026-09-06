@@ -2,7 +2,6 @@ from banal import ensure_list
 from followthemoney import EntityProxy
 
 from nomenklatura.matching.erun.misc import (
-    address_match,
     address_number_disagreement,
     address_number_overlap,
     birth_place,
@@ -43,7 +42,7 @@ def test_address_number_features_separate_disagreement_and_missingness() -> None
     assert address_number_disagreement(left, missing) == 0.0
 
 
-def test_birth_place_and_address_match_use_normalized_tokens() -> None:
+def test_birth_place_uses_normalized_tokens() -> None:
     person = EntityProxy.from_dict(
         {
             "id": "person",
@@ -59,13 +58,15 @@ def test_birth_place_and_address_match_use_normalized_tokens() -> None:
         }
     )
     assert birth_place(person, same_person) == 1.0
-    assert birth_place(person, EntityProxy.from_dict({"id": "missing", "schema": "Person", "properties": {}})) == 0.0
-
-    query = entity("12 Main Street, Berlin")
-    partial = entity("Main Street, Berlin")
-    unrelated = entity("34 Other Road, Paris")
-    assert address_match(query, partial) == 1.0
-    assert address_match(query, unrelated) == 0.0
+    assert (
+        birth_place(
+            person,
+            EntityProxy.from_dict(
+                {"id": "missing", "schema": "Person", "properties": {}}
+            ),
+        )
+        == 0.0
+    )
 
 
 def test_gender_mismatch_ignores_missing_and_other_values() -> None:
@@ -93,10 +94,18 @@ def test_contact_match_checks_phone_email_then_url() -> None:
         {"id": "phone", "schema": "Person", "properties": {"phone": ["+49 30 1234"]}}
     )
     email = EntityProxy.from_dict(
-        {"id": "email", "schema": "Person", "properties": {"email": ["alice@example.com"]}}
+        {
+            "id": "email",
+            "schema": "Person",
+            "properties": {"email": ["alice@example.com"]},
+        }
     )
     website = EntityProxy.from_dict(
-        {"id": "website", "schema": "Company", "properties": {"website": ["https://example.com"]}}
+        {
+            "id": "website",
+            "schema": "Company",
+            "properties": {"website": ["https://example.com"]},
+        }
     )
 
     assert contact_match(phone, phone) == 1.0
@@ -107,13 +116,25 @@ def test_contact_match_checks_phone_email_then_url() -> None:
 
 def test_security_isin_mismatch_requires_conflicting_security_codes() -> None:
     query = EntityProxy.from_dict(
-        {"id": "security", "schema": "Security", "properties": {"isin": ["US0378331005"]}}
+        {
+            "id": "security",
+            "schema": "Security",
+            "properties": {"isin": ["US0378331005"]},
+        }
     )
     same = EntityProxy.from_dict(
-        {"id": "same-security", "schema": "Security", "properties": {"isin": ["US0378331005"]}}
+        {
+            "id": "same-security",
+            "schema": "Security",
+            "properties": {"isin": ["US0378331005"]},
+        }
     )
     different = EntityProxy.from_dict(
-        {"id": "other-security", "schema": "Security", "properties": {"isin": ["US5949181045"]}}
+        {
+            "id": "other-security",
+            "schema": "Security",
+            "properties": {"isin": ["US5949181045"]},
+        }
     )
     missing = EntityProxy.from_dict(
         {"id": "missing-isin", "schema": "Security", "properties": {}}
