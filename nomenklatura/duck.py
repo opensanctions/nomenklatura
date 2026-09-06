@@ -79,9 +79,8 @@ def connect(
     """Open a DuckDB connection with nomenklatura's tuning applied.
 
     Connections come with `preserve_insertion_order` disabled to keep large
-    imports and CTAS out of memory trouble, the session timezone pinned to
-    UTC so TIMESTAMPTZ values never render in the host timezone, and FSST
-    string compression disabled so index-scan row fetches stay cheap."""
+    imports and CTAS out of memory trouble, and the session timezone pinned
+    to UTC so TIMESTAMPTZ values never render in the host timezone."""
     config: DuckDBConfig = {
         "preserve_insertion_order": False,
         "python_enable_replacements": False,
@@ -103,7 +102,4 @@ def connect(
     log.info("DuckDB connect %r, config: %r", database, config)
     conn = duckdb.connect(database, config=config)
     conn.execute("SET GLOBAL TimeZone = 'UTC'")
-    # Index scans fetch matching rows one at a time, and decompressing FSST
-    # strings per row is slow.
-    conn.execute("SET GLOBAL disabled_compression_methods = 'fsst'")
     return conn
