@@ -212,6 +212,10 @@ def make_statement_table(
         Column("external", Boolean, default=False, nullable=False),
         Column("first_seen", DateTime, nullable=True),
         Column("last_seen", DateTime, nullable=True),
+        # The metadata object is a process-wide cache (get_metadata), so a
+        # second store in one process re-declares the table; keep the first
+        # definition instead of raising.
+        keep_existing=True,
     )
 
 

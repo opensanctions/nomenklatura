@@ -180,6 +180,14 @@ class Resolver(Linker[SE]):
         """
         self._load_all()
 
+    def commit(self) -> None:
+        """Commit pending judgement writes on this resolver's session.
+
+        Writers (suggest/decide/load_edges callers) own the transaction
+        boundary; this saves them reaching into the private session.
+        """
+        self._session.commit()
+
     def get_linker(self) -> Linker[SE]:
         """Return a linker object that can be used to resolve entities.
         This is less memory-consuming than the full resolver object.
