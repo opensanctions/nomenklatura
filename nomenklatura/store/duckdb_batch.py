@@ -84,7 +84,8 @@ class DuckDBBatchStore(Store[DS, SE]):
     statement artifacts (e.g. parquet files, see `duck.STATEMENT_COLUMNS`)
     instead of first syncing a mutable store. Creating a view bakes the
     linker's resolution, the view's scope and its external flag into a table
-    sorted and indexed on canonical_id — pay seconds per few million
+    sorted and indexed on canonical_id, with the resolved target of every
+    entity reference indexed alongside — pay seconds per few million
     statements once, then the read loop pays index probes, not join work.
     Dedupe decisions made after the build become visible via `update()`,
     which re-keys the affected cluster in every view."""
@@ -131,7 +132,6 @@ class DuckDBBatchView(View[DS, SE]):
         self.store: DuckDBBatchStore[DS, SE] = store
         seq = next(_VIEW_SEQ)
         self.stmt_table = f"nk_stmts_{seq}"
-        self.edge_table = f"nk_edges_{seq}"
         # Rolling per-batch caches filled by `entities(prefetch_nested=True)`.
         # `None` marks an id known to have no statements; a missing key in
         # `_inverted` means unknown (reads fall through to the lazy queries).
@@ -140,15 +140,16 @@ class DuckDBBatchView(View[DS, SE]):
         self._build(f"nk_mapping_{seq}")
 
     def _build(self, mapping: str) -> None:
-        """Bake scope, external flag and current resolution into tables.
+        """Bake scope, external flag and current resolution into one table.
 
-        The statement table clusters row groups by canonical_id and carries an
-        ART index on top, so both full scans and point reads come cheap. The
-        edge table pre-resolves entity-typed property values on both sides,
-        making inverted lookups single probes instead of per-read referent
-        expansion. The linker mapping is loaded only to serve these two joins
-        and dropped again; afterwards all canonicalisation goes through the
-        linker in Python."""
+        The table clusters row groups by canonical_id and carries an ART index
+        on top, so both full scans and point reads come cheap. Entity-typed
+        rows additionally carry the resolved id of the entity they point at in
+        `value_canonical_id` (NULL on every other row), indexed as well, so
+        inverted lookups are single probes instead of per-read referent
+        expansion. `value` itself is never rewritten. The linker mapping is
+        loaded only to serve the two resolution joins and dropped again;
+        afterwards all canonicalisation goes through the linker in Python."""
         conn = self.store.conn
         conn.execute(
             f"CREATE OR REPLACE TABLE {mapping} "
@@ -179,35 +180,34 @@ class DuckDBBatchView(View[DS, SE]):
         if self.external is False:
             where += " AND NOT s.external"
         conn.execute(
-            f"CREATE OR REPLACE TABLE {self.stmt_table} AS "
-            f"SELECT {RAW_COLUMNS}, "
-            f"coalesce(m.canonical_id, s.entity_id) AS canonical_id "
-            f"FROM {self.store.relation} s "
-            f"LEFT JOIN {mapping} m ON m.entity_id = s.entity_id "
-            f"WHERE {where} ORDER BY canonical_id",
+            f"""
+            CREATE OR REPLACE TABLE {self.stmt_table} AS
+            SELECT {RAW_COLUMNS},
+                coalesce(m.canonical_id, s.entity_id) AS canonical_id,
+                CASE WHEN p.prop IS NOT NULL
+                    THEN coalesce(mv.canonical_id, s.value)
+                END AS value_canonical_id
+            FROM {self.store.relation} s
+            LEFT JOIN (VALUES {_entity_prop_values()}) p("schema", prop)
+                ON p."schema" = s."schema" AND p.prop = s.prop
+            LEFT JOIN {mapping} m ON m.entity_id = s.entity_id
+            LEFT JOIN {mapping} mv
+                ON p.prop IS NOT NULL AND mv.entity_id = s.value
+            WHERE {where}
+            ORDER BY canonical_id
+            """,
             names,
         )
         conn.execute(
             f"CREATE INDEX {self.stmt_table}_canonical "
             f"ON {self.stmt_table} (canonical_id)"
         )
+        # ART indexes hold no NULL keys, so this covers only the entity-typed
+        # rows: a partial index in all but name (DuckDB has no partial
+        # indexes, and the NULL behaviour is measured, not documented).
         conn.execute(
-            f"""
-            CREATE OR REPLACE TABLE {self.edge_table} AS
-            SELECT
-                s.value AS value_entity_id,
-                coalesce(mv.canonical_id, s.value) AS value_canonical_id,
-                s.entity_id AS origin_entity_id,
-                s.canonical_id AS origin_canonical_id
-            FROM {self.stmt_table} s
-            JOIN (VALUES {_entity_prop_values()}) p("schema", prop)
-                ON p."schema" = s."schema" AND p.prop = s.prop
-            LEFT JOIN {mapping} mv ON mv.entity_id = s.value
-            """
-        )
-        conn.execute(
-            f"CREATE INDEX {self.edge_table}_value "
-            f"ON {self.edge_table} (value_canonical_id)"
+            f"CREATE INDEX {self.stmt_table}_value "
+            f"ON {self.stmt_table} (value_canonical_id)"
         )
         conn.execute(f"DROP TABLE {mapping}")
 
@@ -223,20 +223,17 @@ class DuckDBBatchView(View[DS, SE]):
             f"WHERE entity_id IN ({holes})",
             params,
         )
+        # `ids` holds every member and every previous canonical of the
+        # cluster, which is exactly the set of values the column can carry
+        # for it; matching on it hits the index where `value` would not.
         conn.execute(
-            f"UPDATE {self.edge_table} SET origin_canonical_id = ? "
-            f"WHERE origin_entity_id IN ({holes})",
-            params,
-        )
-        conn.execute(
-            f"UPDATE {self.edge_table} SET value_canonical_id = ? "
-            f"WHERE value_entity_id IN ({holes})",
+            f"UPDATE {self.stmt_table} SET value_canonical_id = ? "
+            f"WHERE value_canonical_id IN ({holes})",
             params,
         )
 
     def _drop(self) -> None:
         self.store.conn.execute(f"DROP TABLE IF EXISTS {self.stmt_table}")
-        self.store.conn.execute(f"DROP TABLE IF EXISTS {self.edge_table}")
 
     def has_entity(self, id: str) -> bool:
         if id in self._cache:
@@ -296,8 +293,8 @@ class DuckDBBatchView(View[DS, SE]):
             cursor = self.store.conn.cursor()
             try:
                 result = cursor.execute(
-                    f"SELECT DISTINCT e.origin_canonical_id FROM {self.edge_table} e "
-                    f"WHERE e.value_canonical_id = ?",
+                    f"SELECT DISTINCT s.canonical_id FROM {self.stmt_table} s "
+                    f"WHERE s.value_canonical_id = ?",
                     [id],
                 )
                 while rows := result.fetchmany(FETCH_SIZE):
@@ -324,10 +321,10 @@ class DuckDBBatchView(View[DS, SE]):
         cursor = self.store.conn.cursor()
         try:
             result = cursor.execute(
-                f"SELECT value_canonical_id, origin_canonical_id FROM ("
-                f"  SELECT DISTINCT e.value_canonical_id, e.origin_canonical_id "
-                f"  FROM {self.edge_table} e "
-                f"  WHERE e.value_canonical_id IN ({holes})"
+                f"SELECT value_canonical_id, canonical_id FROM ("
+                f"  SELECT DISTINCT s.value_canonical_id, s.canonical_id "
+                f"  FROM {self.stmt_table} s "
+                f"  WHERE s.value_canonical_id IN ({holes})"
                 f") QUALIFY row_number() OVER (PARTITION BY value_canonical_id) <= ?",
                 [*ids, INVERTED_CAP + 1],
             )

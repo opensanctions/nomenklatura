@@ -11,6 +11,12 @@ def test_connect_defaults() -> None:
     conn = duck.connect()
     row = conn.execute("SELECT current_setting('preserve_insertion_order')").fetchone()
     assert row is not None and row[0] is False
+    query = "SELECT current_setting('disabled_compression_methods')"
+    row = conn.execute(query).fetchone()
+    assert row is not None and row[0] == "FSST"
+    # Cursors must inherit it, since the store reads through them:
+    row = conn.cursor().execute(query).fetchone()
+    assert row is not None and row[0] == "FSST"
     conn.close()
 
 
