@@ -189,8 +189,7 @@ class DuckDBBatchView(View[DS, SE]):
             LEFT JOIN (VALUES {_entity_prop_values()}) p("schema", prop)
                 ON p."schema" = s."schema" AND p.prop = s.prop
             LEFT JOIN {mapping} m ON m.entity_id = s.entity_id
-            LEFT JOIN {mapping} mv
-                ON p.prop IS NOT NULL AND mv.entity_id = s.value
+            LEFT JOIN {mapping} mv ON mv.entity_id = s.value
             WHERE {where}
             ORDER BY canonical_id
             """,
