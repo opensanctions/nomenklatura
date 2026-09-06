@@ -85,8 +85,8 @@ class DuckDBBatchStore(Store[DS, SE]):
     instead of first syncing a mutable store. Creating a view bakes the
     linker's resolution, the view's scope and its external flag into a table
     sorted and indexed on canonical_id, with the resolved target of every
-    entity reference indexed alongside — pay seconds per few million
-    statements once, then the read loop pays index probes, not join work.
+    entity reference indexed alongside.
+
     Dedupe decisions made after the build become visible via `update()`,
     which re-keys the affected cluster in every view."""
 
@@ -155,8 +155,6 @@ class DuckDBBatchView(View[DS, SE]):
             f"CREATE OR REPLACE TABLE {mapping} "
             "(entity_id VARCHAR, canonical_id VARCHAR)"
         )
-        # Row-wise executemany costs ~100 µs/row in DuckDB; a CSV round trip
-        # loads millions of pairs in seconds.
         fh = tempfile.NamedTemporaryFile(
             "w", suffix=".csv", newline="", encoding="utf-8", delete=False
         )
@@ -202,9 +200,6 @@ class DuckDBBatchView(View[DS, SE]):
             f"CREATE INDEX {self.stmt_table}_canonical "
             f"ON {self.stmt_table} (canonical_id)"
         )
-        # ART indexes hold no NULL keys, so this covers only the entity-typed
-        # rows: a partial index in all but name (DuckDB has no partial
-        # indexes, and the NULL behaviour is measured, not documented).
         conn.execute(
             f"CREATE INDEX {self.stmt_table}_value "
             f"ON {self.stmt_table} (value_canonical_id)"

@@ -1,5 +1,4 @@
-#
-# Shared DuckDB conventions for nomenklatura, the DuckDB counterpart to `nomenklatura.db`.
+# Shared DuckDB conventions for nomenklatura
 import logging
 import re
 from pathlib import Path
@@ -88,10 +87,9 @@ def connect(
         "python_enable_replacements": False,
     }
     # https://duckdb.org/docs/guides/performance/environment
-    # > For ideal performance,
-    # > aggregation-heavy workloads require approx. 5 GB memory per thread and
-    # > join-heavy workloads require approximately 10 GB memory per thread.
-    # > Aim for 5-10 GB memory per thread.
+    # > For ideal performance, aggregation-heavy workloads require approx. 5 GB
+    # > memory per thread and join-heavy workloads require approximately 10 GB
+    # > memory per thread. Aim for 5-10 GB memory per thread.
     if memory_mb is None:
         memory_mb = DUCKDB_MEMORY
     if memory_mb is not None:
@@ -104,11 +102,8 @@ def connect(
     database = ":memory:" if path is None else str(path)
     log.info("DuckDB connect %r, config: %r", database, config)
     conn = duckdb.connect(database, config=config)
-    # GLOBAL, so that cursor() child sessions inherit the pinned timezone.
     conn.execute("SET GLOBAL TimeZone = 'UTC'")
     # Index scans fetch matching rows one at a time, and decompressing FSST
-    # strings per row makes that ~12x slower than the fetch itself. GLOBAL
-    # rather than per-statement because updates rewrite rows and the next
-    # checkpoint recompresses them under whatever setting is in force then.
+    # strings per row is slow.
     conn.execute("SET GLOBAL disabled_compression_methods = 'fsst'")
     return conn
