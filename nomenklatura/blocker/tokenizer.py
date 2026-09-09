@@ -120,11 +120,8 @@ def tokenize_entity(entity: StatementEntity) -> Generator[tuple[str, str], None,
             addr_fp = address_fingerprint(value)
             if addr_fp is not None:
                 for word in addr_fp.split(WS):
-                    if is_stopword(word):
-                        continue
-                    if len(word) > 3:
-                        yield type.name, f"{prefix}:{word}"
-                    if len(word) > 6:
+                    yield type.name, f"{prefix}:{word}"
+                    if not is_stopword(word) and len(word) > 4:
                         yield WORD_FIELD, f"{WORD_FIELD}:{word}"
 
     yield from unique
