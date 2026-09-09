@@ -11,7 +11,7 @@ def _address_match(query: E, result: E) -> FtResult:
     query_addrs = query.get_type_values(registry.address, matchable=True)
     result_addrs = result.get_type_values(registry.address, matchable=True)
     match = match_addresses(query_addrs, result_addrs)
-    if match is None:
+    if match is None or match.score <= FNUL:
         return FtResult(score=FNUL, detail=None)
     return FtResult(
         match.score,
