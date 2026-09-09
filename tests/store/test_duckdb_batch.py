@@ -232,7 +232,7 @@ def test_duckdb_batch_store_close(
 
 def test_duckdb_batch_store_mapping_csv_roundtrip(test_dataset: Dataset) -> None:
     """The mapping travels through a CSV file; ids must survive quoting."""
-    awkward = ["comma,id", 'quote"id', "line\nid", "NULL", " padded "]
+    awkward = ["line\nid", "comma,id", 'quote"id', "cr\rid", "", "NULL", " padded "]
     entities = [
         {"id": eid, "schema": "Person", "properties": {"name": [f"Name {i}"]}}
         for i, eid in enumerate(awkward)

@@ -161,12 +161,16 @@ class DuckDBBatchView(View[DS, SE]):
         )
         try:
             with fh:
-                csv.writer(fh).writerows(self.store.linker.mappings())
+                writer = csv.writer(fh, quoting=csv.QUOTE_ALL)
+                writer.writerows(self.store.linker.mappings())
             # An empty file fails DuckDB's dialect check, hence the size guard.
             if os.path.getsize(fh.name) > 0:
+                # The dialect sniffer mistakes quoted newlines inside ids for
+                # row breaks, so the terminator is pinned rather than detected.
                 conn.execute(
                     f"INSERT INTO {mapping} SELECT * FROM read_csv(?, header=false, "
-                    "delim=',', quote='\"', escape='\"', "
+                    "delim=',', quote='\"', escape='\"', new_line='\\r\\n', "
+                    "allow_quoted_nulls=false, "
                     "columns={'entity_id': 'VARCHAR', 'canonical_id': 'VARCHAR'})",
                     [fh.name],
                 )
