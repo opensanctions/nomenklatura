@@ -217,12 +217,11 @@ class DuckDBBatchView(View[DS, SE]):
             f"WHERE entity_id IN ({holes})",
             params,
         )
-        # `ids` holds every member and every previous canonical of the
-        # cluster, which is exactly the set of values the column can carry
-        # for it; matching on it hits the index where `value` would not.
+        # Match on the raw reference, not the resolved column: after a split
+        # the rows still carry the old canonical, which `ids` no longer names.
         conn.execute(
             f"UPDATE {self.stmt_table} SET value_canonical_id = ? "
-            f"WHERE value_canonical_id IN ({holes})",
+            f"WHERE value IN ({holes}) AND value_canonical_id IS NOT NULL",
             params,
         )
 

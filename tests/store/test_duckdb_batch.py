@@ -421,6 +421,39 @@ def test_duckdb_batch_store_update_rekeys_references(
     assert row == ("john-doe-2", merged_id.id)
 
 
+def test_duckdb_batch_store_update_rekeys_references_after_split(
+    test_dataset: Dataset, resolver: Resolver[Entity]
+) -> None:
+    """Undoing a merge must hand the inverted edge back to the raw target."""
+    company = {
+        "id": "acme",
+        "schema": "Company",
+        "properties": {"name": ["ACME"], "parent": ["john-doe-2"]},
+    }
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, [PERSON, PERSON_EXT, company])
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    view = store.default_view()
+    merged_id = resolver.decide(
+        "john-doe", "john-doe-2", judgement=Judgement.POSITIVE, user="test"
+    )
+    store.update(merged_id.id)
+    assert [e.id for _, e in view.get_inverted(merged_id.id)] == ["acme"]
+
+    resolver.remove("john-doe-2")
+    store.update("john-doe-2")
+    store.update("john-doe")
+
+    assert list(view.get_inverted(merged_id.id)) == []
+    assert list(view.get_inverted("john-doe")) == []
+    assert [e.id for _, e in view.get_inverted("john-doe-2")] == ["acme"]
+    row = conn.execute(
+        f"SELECT value, value_canonical_id FROM {view.stmt_table} "
+        "WHERE prop = 'parent'"
+    ).fetchone()
+    assert row == ("john-doe-2", "john-doe-2")
+
+
 def test_duckdb_batch_store_validation(test_dataset: Dataset) -> None:
     linker: Linker[Entity] = Linker({})
     conn = duckdb.connect()
