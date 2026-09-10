@@ -1,5 +1,5 @@
 from followthemoney import E, registry
-from rigour.addresses import normalize_address, shorten_address_keywords
+from rigour.addresses import address_fingerprint
 
 from nomenklatura.matching.compare.util import extract_numbers
 from nomenklatura.matching.util import has_schema, type_pair
@@ -7,29 +7,21 @@ from nomenklatura.matching.util import has_schema, type_pair
 OTHER = registry.gender.OTHER
 
 
-def _norm_address(addr: str, latinize: bool = True) -> str | None:
-    norm_addr = normalize_address(addr, latinize=latinize, min_length=4)
-    if norm_addr is not None:
-        norm_addr = shorten_address_keywords(norm_addr, latinize=latinize)
-    return norm_addr
-
-
-def _norm_place(places: list[str]) -> set[str]:
-    parts = set()
+def _place_tokens(places: list[str]) -> set[str]:
+    tokens: set[str] = set()
     for place in places:
-        norm_place = _norm_address(place)
-        if norm_place is not None:
-            for part in norm_place.split(" "):
-                parts.add(part)
-    return parts
+        fingerprint = address_fingerprint(place)
+        if fingerprint is not None:
+            tokens.update(fingerprint.split())
+    return tokens
 
 
 def birth_place(query: E, result: E) -> float:
     """Same place of birth."""
     if not has_schema(query, result, "Person"):
         return 0.0
-    lparts = _norm_place(query.get("birthPlace", quiet=True))
-    rparts = _norm_place(result.get("birthPlace", quiet=True))
+    lparts = _place_tokens(query.get("birthPlace", quiet=True))
+    rparts = _place_tokens(result.get("birthPlace", quiet=True))
     overlap = len(lparts.intersection(rparts))
     base_length = max(1.0, min(len(lparts), len(rparts)))
     return overlap / base_length
