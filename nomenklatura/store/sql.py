@@ -69,17 +69,19 @@ class SQLStore(Store[DS, SE]):
     def _iterate(
         self, q: Select[Any], stream: bool = True
     ) -> Generator[SE, None, None]:
+        # Rows arrive ordered by canonical_id, and a merged cluster spans
+        # several entity_ids.
         current_id = None
         current_stmts: list[Statement] = []
         for stmt in self._iterate_stmts(q, stream=stream):
-            entity_id = stmt.entity_id
+            canonical_id = stmt.canonical_id
             if current_id is None:
-                current_id = entity_id
-            if current_id != entity_id:
+                current_id = canonical_id
+            if current_id != canonical_id:
                 proxy = self.assemble(current_stmts)
                 if proxy is not None:
                     yield proxy
-                current_id = entity_id
+                current_id = canonical_id
                 current_stmts = []
             current_stmts.append(stmt)
         if current_stmts:

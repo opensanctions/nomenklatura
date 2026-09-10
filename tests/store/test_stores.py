@@ -13,6 +13,7 @@ from sqlalchemy import create_mock_engine
 
 from nomenklatura import settings
 from nomenklatura.db import SQLITE_MAX_VARS
+from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
 from nomenklatura.store.level import LevelDBStore
@@ -112,6 +113,38 @@ def test_store_sql(
     try:
         assert str(store.engine.url) == uri
         assert _run_store_test(store, test_dataset, donations_json)
+    finally:
+        store.close()
+
+
+def test_store_sql_merged_entity(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+):
+    a = Entity.from_data(
+        test_dataset,
+        {"id": "a", "schema": "Person", "properties": {"name": ["Anna"]}},
+    )
+    b = Entity.from_data(
+        test_dataset,
+        {"id": "b", "schema": "Person", "properties": {"birthDate": ["1980"]}},
+    )
+    canonical = resolver.decide("a", "b", Judgement.POSITIVE)
+    uri = f"sqlite:///{tmp_path / 'merged.db'}"
+    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
+    try:
+        with store.writer() as writer:
+            writer.add_entity(a)
+            writer.add_entity(b)
+        view = store.default_view()
+        entities = list(view.entities())
+        assert len(entities) == 1
+        assert entities[0].id == canonical.id
+        entity = view.get_entity(canonical.id)
+        assert entity is not None
+        assert entity.get("name") == ["Anna"]
+        assert entity.get("birthDate") == ["1980"]
     finally:
         store.close()
 
