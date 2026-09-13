@@ -49,15 +49,13 @@ def weight_extra_match(parts: Sequence[NamePart], name: Name) -> float:
     of a user-supplied penalty, symbol weights, and some overrides."""
     if len(parts) == 1 and is_stopword(parts[0].form):
         return 0.5
-    sparts = hash(tuple(parts))
+    sparts = tuple(parts)
     weight = 1.0
-    categories = set()
     for span in name.spans:
         if span.symbol.category == Symbol.Category.NUMERIC:
             part = span.parts[0]
             if len(span.parts) == 1 and not part.numeric and len(part.comparable) < 2:
                 continue
-        if sparts == hash(tuple(span.parts)):
-            categories.add(span.symbol.category)
+        if span.parts == sparts:
             weight = weight * EXTRAS_WEIGHTS.get(span.symbol.category, 1.0)
     return weight
