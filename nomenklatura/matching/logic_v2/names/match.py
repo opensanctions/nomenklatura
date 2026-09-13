@@ -16,7 +16,11 @@ from rigour.names import (
 from rigour.names.symbol import pair_symbols
 from rigour.text import is_stopword
 
-from nomenklatura.matching.logic_v2.names.analysis import entity_names, names_product
+from nomenklatura.matching.logic_v2.names.analysis import (
+    entity_names,
+    entity_names_consolidated,
+    names_product,
+)
 from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.magic import (
     SYM_SCORES,
@@ -217,8 +221,8 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # This prevents a scenario where a short version of a name ("John
     # Smith") is matched to a query ("John K Smith"), where a longer version
     # ("John K Smith" != "John R Smith") would have disqualified the match.
-    query_names = Name.consolidate_names(query_names)
-    result_names = Name.consolidate_names(result_names)
+    query_names = entity_names_consolidated(query, prop=name_prop, is_query=True)
+    result_names = entity_names_consolidated(result, prop=name_prop)
 
     # Build the residue-distance config once per name_match. ScoringConfig
     # is invariant for the lifetime of a matcher run, so the inner symbolic
