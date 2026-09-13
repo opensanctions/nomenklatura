@@ -40,8 +40,10 @@ from nomenklatura.matching.util import FNUL
 def match_name_symbolic(
     query: Name,
     result: Name,
-    config: ScoringConfig,
     compare_config: CompareConfig,
+    extra_query_weight: float,
+    extra_result_weight: float,
+    family_name_weight: float,
 ) -> tuple[FtResult, list[Alignment]]:
     # Stage 1: Generate all valid symbol-based pairings
     # pairings = generate_symbol_pairings(query, result)
@@ -50,9 +52,6 @@ def match_name_symbolic(
     # symbolic match (some types of symbols are considered less strong matches than others) and
     # the fuzzy match of the remaining name parts. Special scoring is also applied for extra
     # name parts that are not matched to the other name during name alignment.
-    extra_query_weight = config.get_float("nm_extra_query_name")
-    extra_result_weight = config.get_float("nm_extra_result_name")
-    family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
     retmatches: list[Alignment] = []
     for edges in pair_symbols(query, result):
@@ -224,13 +223,13 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     query_names = entity_names_consolidated(query, prop=name_prop, is_query=True)
     result_names = entity_names_consolidated(result, prop=name_prop)
 
-    # Build the residue-distance config once per name_match. ScoringConfig
-    # is invariant for the lifetime of a matcher run, so the inner symbolic
-    # / pair loop reuses one CompareConfig instance across every
-    # compare_parts call instead of rebuilding from a get_float() per pair.
+    # Read the scoring parameters once per candidate rather than per name pair.
     compare_config = CompareConfig(
         budget_tolerance=config.get_float("nm_fuzzy_cutoff_factor"),
     )
+    extra_query_weight = config.get_float("nm_extra_query_name")
+    extra_result_weight = config.get_float("nm_extra_result_name")
+    family_name_weight = config.get_float("nm_family_name_weight")
 
     best = FtResult(score=FNUL, detail=None)
     best_matches: list[Alignment] = []
@@ -241,7 +240,12 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # symbolic + fuzzy match on them.
     for query_name, result_name in names_product(query_names, result_names):
         ftres, ftmatches = match_name_symbolic(
-            query_name, result_name, config, compare_config
+            query_name,
+            result_name,
+            compare_config,
+            extra_query_weight,
+            extra_result_weight,
+            family_name_weight,
         )
         if ftres.score >= best.score:
             best = ftres
