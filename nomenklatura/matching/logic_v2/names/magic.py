@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 
-from rigour.names import Name, NamePart, Symbol
-from rigour.text import is_stopword
+from rigour.names import Name, NamePart, NamePartTag, Symbol
 
 # Used when a match is two-sided (e.g. international~intl), to modify the importance of the match
 # in the context of a set of matches.
@@ -47,7 +46,7 @@ SYM_SCORES = {
 def weight_extra_match(parts: Sequence[NamePart], name: Name) -> float:
     """Apply a weight to a name part which remained unmatched in the system, as a function
     of a user-supplied penalty, symbol weights, and some overrides."""
-    if len(parts) == 1 and is_stopword(parts[0].form):
+    if len(parts) == 1 and parts[0].tag == NamePartTag.STOP:
         return 0.5
     sparts = tuple(parts)
     weight = 1.0
