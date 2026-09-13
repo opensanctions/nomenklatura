@@ -7,6 +7,7 @@ from rigour.names import (
     CompareConfig,
     Name,
     NamePart,
+    NamePartTag,
     NameTypeTag,
     align_person_name_order,
     compare_parts,
@@ -14,7 +15,6 @@ from rigour.names import (
     remove_obj_prefixes,
 )
 from rigour.names.symbol import pair_symbols
-from rigour.text import is_stopword
 
 from nomenklatura.matching.logic_v2.names.analysis import (
     entity_names,
@@ -98,8 +98,8 @@ def match_name_symbolic(
                 bias = weight_extra_match(match.qps, query)
                 match.weight = extra_query_weight * bias
 
-            if (len(match.qps) == 1 and is_stopword(match.qps[0].form)) or (
-                len(match.rps) == 1 and is_stopword(match.rps[0].form)
+            if (len(match.qps) == 1 and match.qps[0].tag == NamePartTag.STOP) or (
+                len(match.rps) == 1 and match.rps[0].tag == NamePartTag.STOP
             ):
                 # Stopword multiplier: composes with whatever weight
                 # the prior branch contributed (extras override,
