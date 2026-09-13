@@ -32,6 +32,22 @@ def entity_names(
     return ftm_entity_name(entity, props, infer_initials=is_query, consolidate=False)
 
 
+@lru_cache(maxsize=MEMO_BATCH)
+def entity_names_consolidated(
+    entity: EntityProxy,
+    prop: str | None = None,
+    is_query: bool = False,
+) -> set[Name]:
+    """Return `entity_names` with names contained in longer names dropped.
+
+    Cached separately from the raw set because the literal-match early exit in
+    `name_match` still needs the unconsolidated names. Callers must not mutate
+    the returned set.
+    """
+    names = entity_names(entity, prop=prop, is_query=is_query)
+    return Name.consolidate_names(names)
+
+
 def names_product(
     queries: set[Name],
     results: set[Name],

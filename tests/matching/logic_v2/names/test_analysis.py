@@ -3,7 +3,11 @@ from pathlib import Path
 from rigour.names import Name, NamePartTag, NameTypeTag, Symbol, analyze_names
 from rigour.text.scripts import common_scripts
 
-from nomenklatura.matching.logic_v2.names.analysis import entity_names, names_product
+from nomenklatura.matching.logic_v2.names.analysis import (
+    entity_names,
+    entity_names_consolidated,
+    names_product,
+)
 
 from ...factory import e
 
@@ -25,7 +29,7 @@ def test_entity_names_person():
     entity = e("Person", name="Smith, John", firstName="John", lastName="Smith")
     names = entity_names(entity)
     assert len(names) == 1
-    name = names.pop()
+    name = next(iter(names))
     assert name.form == "smith, john"
     assert name.parts[0].form == "smith"
     assert name.parts[0].tag == NamePartTag.FAMILY
@@ -43,7 +47,7 @@ def test_entity_names_company():
     entity = e("Company", name="Westminster Holdings, Ltd.")
     names = entity_names(entity)
     assert len(names) == 1
-    name = names.pop()
+    name = next(iter(names))
     assert name.form == "westminster holdings, ltd"
     assert len(name.spans) > 0
     symbols = set()
@@ -57,15 +61,27 @@ def test_entity_names_company():
     entity = e("Company", name="ABC Gesellschaft mit beschränkter Haftung")
     names = entity_names(entity)
     assert len(names) == 1
-    name = names.pop()
+    name = next(iter(names))
     for span in name.spans:
         if span.symbol.category == Symbol.Category.ORG_CLASS:
             assert span.symbol.id == "LLC"
             assert len(span.parts) == 1
     other = e("Company", name="ABC Ltd.")
-    other_name = entity_names(other).pop()
+    other_name = next(iter(entity_names(other)))
     common = name.symbols.intersection(other_name.symbols)
     assert len(common) == 1
+
+
+def test_entity_names_consolidated():
+    entity = e("Person", name=["John Smith", "John K Smith"])
+    raw = entity_names(entity)
+    consolidated = entity_names_consolidated(entity)
+    assert len(raw) == 2
+    assert len(consolidated) == 1
+    assert consolidated < raw
+    assert next(iter(consolidated)).original == "John K Smith"
+    # Second call is served from the cache and returns the same object.
+    assert entity_names_consolidated(entity) is consolidated
 
 
 def test_names_product_empty_inputs():
