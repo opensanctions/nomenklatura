@@ -1,7 +1,6 @@
 import logging
 from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
-from functools import cache
 from typing import Any, cast
 
 from followthemoney import Statement
@@ -63,15 +62,19 @@ def close_db(url: str | None = None) -> None:
         for engine in _ENGINE_CACHE.values():
             engine.dispose()
         _ENGINE_CACHE.clear()
-        get_metadata.cache_clear()
     else:
         engine_ = _ENGINE_CACHE.pop(url, None)
         if engine_ is not None:
             engine_.dispose()
 
 
-@cache
 def get_metadata() -> MetaData:
+    """Return a fresh MetaData for a caller to declare its tables on.
+
+    Deliberately not cached: SQLStore declares the statement table on the object
+    returned here, so a shared instance makes a second store in the same process
+    raise InvalidRequestError on the duplicate table name.
+    """
     return MetaData()
 
 

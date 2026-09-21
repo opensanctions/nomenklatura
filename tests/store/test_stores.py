@@ -117,6 +117,33 @@ def test_store_sql(
         store.close()
 
 
+def test_two_sql_stores_in_one_process(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+):
+    """A second SQLStore in the same process must not raise.
+
+    SQLStore.__init__ declares the statement table on get_metadata(). While that
+    returned a process-wide cached MetaData, the second store re-declared the same
+    table name on it and SQLAlchemy raised InvalidRequestError.
+    """
+    first = SQLStore(
+        dataset=test_dataset, linker=resolver, uri=f"sqlite:///{tmp_path / 'one.db'}"
+    )
+    try:
+        second = SQLStore(
+            dataset=test_dataset, linker=resolver, uri=f"sqlite:///{tmp_path / 'two.db'}"
+        )
+        try:
+            assert first.table is not second.table
+            assert first.table.name == second.table.name
+        finally:
+            second.close()
+    finally:
+        first.close()
+
+
 def test_store_sql_merged_entity(
     tmp_path: Path,
     test_dataset: Dataset,
