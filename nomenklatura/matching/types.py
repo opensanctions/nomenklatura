@@ -172,9 +172,6 @@ class ScoringConfig(BaseModel):
             return value
         return str(value)
 
-    def __hash__(self) -> int:
-        return hash(self.model_dump_json())
-
 
 class ScoringAlgorithm:
     """An implementation of a scoring system that compares two entities."""
