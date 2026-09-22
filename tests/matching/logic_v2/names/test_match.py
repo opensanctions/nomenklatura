@@ -1,6 +1,9 @@
 from nomenklatura.matching.logic_v2.model import LogicV2
 from nomenklatura.matching.logic_v2.names.analysis import entity_names
-from nomenklatura.matching.logic_v2.names.magic import weight_extra_match
+from nomenklatura.matching.logic_v2.names.magic import (
+    extra_match_weights,
+    weight_extra_match,
+)
 from nomenklatura.matching.logic_v2.names.match import name_match
 
 from ...factory import e
@@ -72,10 +75,10 @@ def test_stopword_extra_weight_uses_part_tag():
     # Diacritic stopwords carry the STOP tag from analysis even though the
     # wordlist lookup on the raw form misses them.
     name, part = _part(e("Organization", name="Verein für Deutsche Sprache"), "für")
-    assert weight_extra_match((part,), name) == 0.5
+    assert weight_extra_match((part,), extra_match_weights(name)) == 0.5
     name, part = _part(e("Company", name="Bank of America"), "of")
-    assert weight_extra_match((part,), name) == 0.5
+    assert weight_extra_match((part,), extra_match_weights(name)) == 0.5
     # A stopword-shaped token claimed by a property tag is not filler.
     entity = e("Person", name="Charles de Gaulle", lastName="de Gaulle")
     name, part = _part(entity, "de")
-    assert weight_extra_match((part,), name) == 1.0
+    assert weight_extra_match((part,), extra_match_weights(name)) == 1.0

@@ -19,7 +19,7 @@ SYM_WEIGHTS = {
 
 # Used when a match is one-sided (e.g. "international" in the query but not the result), to modify
 # the impact of the extra name part on the score.
-# For the categories not listed here, we give a weight of 1.0 (see weight_extra_match below)
+# Categories not listed here leave the weight unchanged.
 EXTRAS_WEIGHTS = {
     # Siemens AG vs. Siemens, sometimes the org class is omitted
     Symbol.Category.ORG_CLASS: 0.7,
@@ -43,18 +43,32 @@ SYM_SCORES = {
 }
 
 
-def weight_extra_match(parts: Sequence[NamePart], name: Name) -> float:
-    """Apply a weight to a name part which remained unmatched in the system, as a function
-    of a user-supplied penalty, symbol weights, and some overrides."""
-    if len(parts) == 1 and parts[0].tag == NamePartTag.STOP:
-        return 0.5
-    sparts = tuple(parts)
-    weight = 1.0
+def extra_match_weights(name: Name) -> dict[tuple[NamePart, ...], float]:
+    """Fold the extras weights of a name's spans into a lookup keyed by span parts.
+
+    Build this once per name and hand it to `weight_extra_match`, which is called
+    once per unmatched part per symbol pairing. Spans whose category leaves the
+    weight at 1.0 are omitted, so most person names yield an empty table.
+    """
+    weights: dict[tuple[NamePart, ...], float] = {}
     for span in name.spans:
-        if span.symbol.category == Symbol.Category.NUMERIC:
+        category = span.symbol.category
+        if category == Symbol.Category.NUMERIC:
             part = span.parts[0]
             if len(span.parts) == 1 and not part.numeric and len(part.comparable) < 2:
                 continue
-        if span.parts == sparts:
-            weight = weight * EXTRAS_WEIGHTS.get(span.symbol.category, 1.0)
-    return weight
+        weight = EXTRAS_WEIGHTS.get(category, 1.0)
+        if weight == 1.0:
+            continue
+        weights[span.parts] = weights.get(span.parts, 1.0) * weight
+    return weights
+
+
+def weight_extra_match(
+    parts: Sequence[NamePart], weights: dict[tuple[NamePart, ...], float]
+) -> float:
+    """Weight a name part which remained unmatched, using the table built by
+    `extra_match_weights` for the name the part belongs to."""
+    if len(parts) == 1 and parts[0].tag == NamePartTag.STOP:
+        return 0.5
+    return weights.get(tuple(parts), 1.0)
