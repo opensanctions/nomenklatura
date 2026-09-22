@@ -25,6 +25,7 @@ from nomenklatura.matching.logic_v2.names.distance import strict_levenshtein
 from nomenklatura.matching.logic_v2.names.magic import (
     SYM_SCORES,
     SYM_WEIGHTS,
+    extra_match_weights,
     weight_extra_match,
 )
 from nomenklatura.matching.logic_v2.names.util import (
@@ -55,6 +56,8 @@ def match_name_symbolic(
     family_name_weight = config.get_float("nm_family_name_weight")
     retval = FtResult(score=FNUL, detail=None)
     retmatches: list[Alignment] = []
+    query_extras = extra_match_weights(query)
+    result_extras = extra_match_weights(result)
     for edges in pair_symbols(query, result):
         # Symbol-paired alignments arrive with score=1.0 and weight=1.0 placeholders.
         # Override per category before composing.
@@ -92,10 +95,10 @@ def match_name_symbolic(
         for match in matches:
             # Matches with one side empty, i.e. unmatched parts
             if len(match.qps) == 0:
-                bias = weight_extra_match(match.rps, result)
+                bias = weight_extra_match(match.rps, result_extras)
                 match.weight = extra_result_weight * bias
             elif len(match.rps) == 0:
-                bias = weight_extra_match(match.qps, query)
+                bias = weight_extra_match(match.qps, query_extras)
                 match.weight = extra_query_weight * bias
 
             if (len(match.qps) == 1 and match.qps[0].tag == NamePartTag.STOP) or (
