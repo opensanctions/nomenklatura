@@ -9,10 +9,10 @@ from unittest.mock import MagicMock
 from followthemoney import Dataset, Statement
 from followthemoney import StatementEntity as Entity
 from pytest import MonkeyPatch
-from sqlalchemy import create_mock_engine, make_url
+from sqlalchemy import create_mock_engine
 
 from nomenklatura import settings
-from nomenklatura.db import SQLITE_MAX_VARS
+from nomenklatura.db import SQLITE_MAX_VARS, get_engine
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
@@ -111,12 +111,25 @@ def test_store_sql(
     uri = settings.DB_URL
     if uri.startswith("sqlite"):
         uri = f"sqlite:///{tmp_path / 'test.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    try:
-        assert store.engine.url == make_url(uri)
-        assert _run_store_test(store, test_dataset, donations_json)
-    finally:
-        store.close()
+    engine = get_engine(uri)
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    assert store.engine is engine
+    assert _run_store_test(store, test_dataset, donations_json)
+
+
+def test_store_sql_two_stores(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+):
+    """A second SQLStore in the same process, on any engine, must not raise."""
+    engine = get_engine(f"sqlite:///{tmp_path / 'one.db'}")
+    first = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    same = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    other = get_engine(f"sqlite:///{tmp_path / 'two.db'}")
+    second = SQLStore(dataset=test_dataset, linker=resolver, engine=other)
+    assert first.table is not same.table
+    assert first.table.name == same.table.name == second.table.name
 
 
 def test_store_sql_large_batch(
@@ -130,22 +143,19 @@ def test_store_sql_large_batch(
     uri = settings.DB_URL
     if uri.startswith("sqlite"):
         uri = f"sqlite:///{tmp_path / 'large.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    try:
-        with store.writer() as writer:
-            for index in range(5000):
-                writer.add_statement(
-                    Statement(
-                        entity_id=f"person-{index}",
-                        prop="name",
-                        schema="Person",
-                        value=f"Person {index}",
-                        dataset=test_dataset.name,
-                    )
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=get_engine(uri))
+    with store.writer() as writer:
+        for index in range(5000):
+            writer.add_statement(
+                Statement(
+                    entity_id=f"person-{index}",
+                    prop="name",
+                    schema="Person",
+                    value=f"Person {index}",
+                    dataset=test_dataset.name,
                 )
-        assert len(list(store.default_view().entities())) == 5000
-    finally:
-        store.close()
+            )
+    assert len(list(store.default_view().entities())) == 5000
 
 
 def test_store_sql_merged_entity(
@@ -162,22 +172,19 @@ def test_store_sql_merged_entity(
         {"id": "b", "schema": "Person", "properties": {"birthDate": ["1980"]}},
     )
     canonical = resolver.decide("a", "b", Judgement.POSITIVE)
-    uri = f"sqlite:///{tmp_path / 'merged.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    try:
-        with store.writer() as writer:
-            writer.add_entity(a)
-            writer.add_entity(b)
-        view = store.default_view()
-        entities = list(view.entities())
-        assert len(entities) == 1
-        assert entities[0].id == canonical.id
-        entity = view.get_entity(canonical.id)
-        assert entity is not None
-        assert entity.get("name") == ["Anna"]
-        assert entity.get("birthDate") == ["1980"]
-    finally:
-        store.close()
+    engine = get_engine(f"sqlite:///{tmp_path / 'merged.db'}")
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    with store.writer() as writer:
+        writer.add_entity(a)
+        writer.add_entity(b)
+    view = store.default_view()
+    entities = list(view.entities())
+    assert len(entities) == 1
+    assert entities[0].id == canonical.id
+    entity = view.get_entity(canonical.id)
+    assert entity is not None
+    assert entity.get("name") == ["Anna"]
+    assert entity.get("birthDate") == ["1980"]
 
 
 def test_sql_writer_sqlite_batch_limit_cap(
@@ -186,15 +193,12 @@ def test_sql_writer_sqlite_batch_limit_cap(
     resolver: Resolver[Entity],
     monkeypatch: MonkeyPatch,
 ):
-    uri = f"sqlite:///{tmp_path / 'test.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    try:
-        monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
-        with store.writer() as writer:
-            assert isinstance(writer, SQLWriter)
-            assert writer.batch_limit == SQLITE_MAX_VARS // len(store.table.columns)
-    finally:
-        store.close()
+    engine = get_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
+    with store.writer() as writer:
+        assert isinstance(writer, SQLWriter)
+        assert writer.batch_limit == SQLITE_MAX_VARS // len(store.table.columns)
 
 
 def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
@@ -203,15 +207,12 @@ def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
     resolver: Resolver[Entity],
     monkeypatch: MonkeyPatch,
 ):
-    uri = f"sqlite:///{tmp_path / 'test.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
-    try:
-        monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
-        with store.writer() as writer:
-            assert isinstance(writer, SQLWriter)
-            assert writer.batch_limit == 500
-    finally:
-        store.close()
+    engine = get_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
+    with store.writer() as writer:
+        assert isinstance(writer, SQLWriter)
+        assert writer.batch_limit == 500
 
 
 def test_sql_writer_postgresql_no_batch_limit_cap(monkeypatch: MonkeyPatch):

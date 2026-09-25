@@ -3,20 +3,14 @@ from types import TracebackType
 from typing import Any
 
 from followthemoney import DS, SE, Property, Schema, Statement
-from sqlalchemy import Table, delete, func, select
+from sqlalchemy import MetaData, Table, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.engine import Engine, Transaction
 from sqlalchemy.sql.selectable import Select
 
 from nomenklatura import settings
-from nomenklatura.db import (
-    SQLITE_MAX_VARS,
-    close_db,
-    get_engine,
-    get_metadata,
-    make_statement_table,
-)
+from nomenklatura.db import SQLITE_MAX_VARS, make_statement_table
 from nomenklatura.resolver import Identifier, Linker
 from nomenklatura.store import Store, View, Writer
 
@@ -25,26 +19,18 @@ class SQLStore(Store[DS, SE]):
     """Persist statements to a SQL database (SQLite or PostgreSQL).
 
     Use this when a dataset is too large to hold in memory, or when several
-    processes need to work with the same store."""
+    processes need to work with the same store. The store draws connections
+    from the given engine but never disposes it; the caller owns its lifecycle.
+    """
 
-    def __init__(
-        self,
-        dataset: DS,
-        linker: Linker[SE],
-        uri: str = settings.DB_URL,
-    ):
+    def __init__(self, dataset: DS, linker: Linker[SE], engine: Engine):
         super().__init__(dataset, linker)
-        self._uri = uri
-        metadata = get_metadata()
-        self.engine: Engine = get_engine(uri)
-        self.table = make_statement_table(metadata)
-        metadata.create_all(self.engine, tables=[self.table], checkfirst=True)
+        self.engine = engine
+        self.table = make_statement_table(MetaData())
+        self.table.create(bind=engine, checkfirst=True)
 
     def writer(self) -> Writer[DS, SE]:
         return SQLWriter(self)
-
-    def close(self) -> None:
-        close_db(self._uri)
 
     def view(self, scope: DS, external: bool = False) -> View[DS, SE]:
         return SQLView(self, scope, external=external)
