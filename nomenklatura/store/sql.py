@@ -138,7 +138,7 @@ class SQLWriter(Writer[DS, SE]):
             )
             self.conn.execute(lstmt)
         elif self.store.engine.dialect.name in ("postgresql", "postgres"):
-            ipstmt = psql_insert(self.store.table).values(values)
+            ipstmt = psql_insert(self.store.table)
             pstmt = ipstmt.on_conflict_do_update(
                 index_elements=["id"],
                 set_=dict(
@@ -150,7 +150,7 @@ class SQLWriter(Writer[DS, SE]):
                     last_seen=ipstmt.excluded.last_seen,
                 ),
             )
-            self.conn.execute(pstmt)
+            self.conn.execute(pstmt, values)
         else:
             msg = f"Upsert not implemented for dialect {self.store.engine.dialect.name}"
             raise NotImplementedError(msg)

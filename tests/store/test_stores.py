@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
-from followthemoney import Dataset
+from followthemoney import Dataset, Statement
 from followthemoney import StatementEntity as Entity
 from pytest import MonkeyPatch
-from sqlalchemy import create_mock_engine
+from sqlalchemy import create_mock_engine, make_url
 
 from nomenklatura import settings
 from nomenklatura.db import SQLITE_MAX_VARS
@@ -108,11 +108,42 @@ def test_store_sql(
     donations_json: list[dict[str, Any]],
     resolver: Resolver[Entity],
 ):
-    uri = f"sqlite:///{tmp_path / 'test.db'}"
+    uri = settings.DB_URL
+    if uri.startswith("sqlite"):
+        uri = f"sqlite:///{tmp_path / 'test.db'}"
     store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
     try:
-        assert str(store.engine.url) == uri
+        assert store.engine.url == make_url(uri)
         assert _run_store_test(store, test_dataset, donations_json)
+    finally:
+        store.close()
+
+
+def test_store_sql_large_batch(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Large batches persist all rows without exceeding database parameter limits."""
+    monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
+    uri = settings.DB_URL
+    if uri.startswith("sqlite"):
+        uri = f"sqlite:///{tmp_path / 'large.db'}"
+    store = SQLStore(dataset=test_dataset, linker=resolver, uri=uri)
+    try:
+        with store.writer() as writer:
+            for index in range(5000):
+                writer.add_statement(
+                    Statement(
+                        entity_id=f"person-{index}",
+                        prop="name",
+                        schema="Person",
+                        value=f"Person {index}",
+                        dataset=test_dataset.name,
+                    )
+                )
+        assert len(list(store.default_view().entities())) == 5000
     finally:
         store.close()
 
