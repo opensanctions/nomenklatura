@@ -28,6 +28,10 @@ class SQLStore(Store[DS, SE]):
         self.engine = engine
         self.table = make_statement_table(MetaData())
         self.table.create(bind=engine, checkfirst=True)
+        # Table.create skips an existing table entirely, so indexes added since
+        # the table was first created are only picked up here.
+        for index in self.table.indexes:
+            index.create(bind=engine, checkfirst=True)
 
     def writer(self) -> Writer[DS, SE]:
         return SQLWriter(self)

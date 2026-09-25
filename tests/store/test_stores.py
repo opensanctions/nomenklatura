@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from followthemoney import Dataset, Statement
 from followthemoney import StatementEntity as Entity
 from pytest import MonkeyPatch
-from sqlalchemy import create_mock_engine
+from sqlalchemy import create_mock_engine, inspect
 
 from nomenklatura import settings
 from nomenklatura.db import SQLITE_MAX_VARS, get_engine
@@ -115,6 +115,29 @@ def test_store_sql(
     store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     assert store.engine is engine
     assert _run_store_test(store, test_dataset, donations_json)
+
+
+def test_store_sql_adds_missing_index(
+    tmp_path: Path,
+    test_dataset: Dataset,
+    resolver: Resolver[Entity],
+):
+    """Opening a store on a table created without the value index adds it."""
+    uri = settings.DB_URL
+    if uri.startswith("sqlite"):
+        uri = f"sqlite:///{tmp_path / 'old.db'}"
+    engine = get_engine(uri)
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    index_name = f"ix_{store.table.name}_value_entity"
+
+    def index_names() -> set[str]:
+        return {ix["name"] for ix in inspect(engine).get_indexes(store.table.name)}
+
+    assert index_name in index_names()
+    next(ix for ix in store.table.indexes if ix.name == index_name).drop(engine)
+    assert index_name not in index_names()
+    SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
+    assert index_name in index_names()
 
 
 def test_store_sql_two_stores(
