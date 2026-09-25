@@ -127,7 +127,7 @@ class Session:
     def is_sqlite(self) -> bool:
         return is_sqlite(self.dialect)
 
-    def execute(self, statement: Executable) -> CursorResult[Any]:
+    def execute(self, statement: Executable) -> CursorResult[*tuple[Any, ...]]:
         return self.connection.execute(statement)
 
     def insert(self, table: Table) -> PostgreSQLInsert | SQLiteInsert:
@@ -232,9 +232,9 @@ def insert_statements(
         index_elements=["id"]
     )
     if not is_postgresql:
-        # Bound the parameters per statement, in case the dialect rewrites the
-        # executemany into a single multi-row INSERT (as psycopg2 does), which
-        # would otherwise exceed SQLITE_MAX_VARIABLE_NUMBER.
+        # Bound the parameters per statement, in case the dialect rewrites
+        # executemany into a single multi-row INSERT, which would otherwise
+        # exceed SQLITE_MAX_VARIABLE_NUMBER.
         sqlite_max_batch = SQLITE_MAX_VARS // len(table.columns)
         batch_size = min(batch_size, sqlite_max_batch)
     with engine.begin() as conn:
@@ -244,10 +244,11 @@ def insert_statements(
 
         for stmt in statements:
             if is_postgresql:
-                # Not to_db_row(): that yields UTC-aware datetimes, which psycopg2
-                # sends as timestamptz, and casting those into the naive timestamp
-                # columns shifts them by the session TimeZone. The ISO strings are
-                # cast literally instead, so a load does not depend on the setting.
+                # Not to_db_row(): that yields UTC-aware datetimes, which the
+                # driver sends as timestamptz, and casting those into the naive
+                # timestamp columns shifts them by the session TimeZone. The ISO
+                # strings are cast literally instead, so a load does not depend
+                # on the setting.
                 row = cast("dict[str, Any]", stmt.to_dict())
                 row["prop_type"] = stmt.prop_type
             else:

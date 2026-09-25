@@ -1,11 +1,22 @@
 from collections.abc import Generator
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
 from followthemoney import Dataset, Statement, StatementEntity
-from sqlalchemy import Column, MetaData, Table, Unicode, insert, select
+from sqlalchemy import (
+    Column,
+    MetaData,
+    Table,
+    Unicode,
+    create_engine,
+    insert,
+    select,
+)
+from sqlalchemy.engine import Engine
 
+from nomenklatura import settings
 from nomenklatura.db import (
     Session,
     get_engine,
@@ -13,6 +24,56 @@ from nomenklatura.db import (
     make_session,
     make_statement_table,
 )
+
+
+@pytest.mark.parametrize("scheme", ["postgresql", "postgresql+psycopg"])
+def test_postgresql_driver(scheme: str) -> None:
+    """Both the default and explicit PostgreSQL URLs select psycopg 3."""
+    engine = get_engine(f"{scheme}://localhost/nomenklatura")
+    assert engine.dialect.driver == "psycopg"
+
+
+@pytest.mark.parametrize("timestamp", [None, "2026-09-24T12:34:56"])
+def test_insert_statements_timestamps(timestamp: str | None) -> None:
+    """Bulk loading preserves UTC and NULL timestamps, including in non-UTC sessions.
+
+    It also preserves Unicode and booleans, ignores duplicate rows, and clears
+    the dataset when given no statements.
+    """
+    engine = get_engine()
+    tz_engine: Engine | None = None
+    if engine.dialect.name == "postgresql":
+        # A dedicated engine sets the time zone on every connection it opens,
+        # so the load cannot pick up a pooled connection in UTC.
+        tz_engine = create_engine(
+            settings.DB_URL, connect_args={"options": "-c timezone=Pacific/Honolulu"}
+        )
+        engine = tz_engine
+    table = make_statement_table(MetaData())
+    table.create(engine)
+    statement = Statement(
+        entity_id="person-1",
+        prop="name",
+        schema="Person",
+        value="Müller",
+        dataset="timestamps",
+        first_seen=timestamp,
+        last_seen=timestamp,
+        external=True,
+    )
+    insert_statements(engine, table, "timestamps", [statement, statement], batch_size=1)
+    with engine.connect() as conn:
+        row = conn.execute(select(table)).one()
+    expected = datetime(2026, 9, 24, 12, 34, 56) if timestamp is not None else None
+    assert row.first_seen == expected
+    assert row.last_seen == expected
+    assert row.value == "Müller"
+    assert row.external is True
+    insert_statements(engine, table, "timestamps", [])
+    with engine.connect() as conn:
+        assert conn.execute(select(table)).first() is None
+    if tz_engine is not None:
+        tz_engine.dispose()
 
 
 def _kv_table(session: Session) -> Table:
@@ -113,7 +174,7 @@ def _parse_statements(
 
 
 def test_statement_db(test_dataset: Dataset, donations_json: list[dict[str, Any]]):
-    engine = get_engine("sqlite:///:memory:")
+    engine = get_engine()
     metadata = MetaData()
     table = make_statement_table(metadata)
     metadata.create_all(bind=engine, tables=[table])
