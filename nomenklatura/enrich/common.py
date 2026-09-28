@@ -14,6 +14,8 @@ from normality import stringify
 from requests import Session
 from requests.exceptions import ChunkedEncodingError, RequestException
 from rigour.urls import ParamsType, build_url
+from urllib3 import Retry
+from urllib3.exceptions import MaxRetryError
 
 from nomenklatura.cache import Cache
 from nomenklatura.util import HeadersType
@@ -156,36 +158,32 @@ class Enricher(BaseEnricher[DS], ABC):
         data: Any = None,
         headers: HeadersType = None,
         cache_days: int | None = None,
-        retry_chunked_encoding_error: int = 1,
+        retry_chunked_encoding_error: int = 3,
     ) -> Any:
         cache_days_ = self.cache_days if cache_days is None else cache_days
         resp_data = self.cache.get_json(cache_key, max_age=cache_days_)
-        if resp_data is None:
+        if resp_data is not None:
+            return resp_data
+
+        # urllib3's Retry on the session does not retry chunked encoding
+        # errors (https://github.com/urllib3/urllib3/issues/2751#issuecomment-2567630065),
+        # so retry them here.
+        retry = Retry(total=retry_chunked_encoding_error, backoff_factor=2)
+        while not retry.is_exhausted():
             try:
                 resp = self.session.post(url, json=json, data=data, headers=headers)
                 resp.raise_for_status()
+                break
             except ChunkedEncodingError as rex:
-                # Due to https://github.com/urllib3/urllib3/issues/2751#issuecomment-2567630065,
-                # urllib3's Retry strategy will not retry on chunked encoding errors.
-                # Since urllib won't retry it, retry it here.
-                # urllib does close the connection.
-                if (
-                    "Response ended prematurely" in str(rex)
-                    and retry_chunked_encoding_error > 0
-                ):
-                    log.info("Retrying due to chunked encoding error: %s", rex)
-                    return self.http_post_json_cached(
-                        url,
-                        cache_key,
-                        json=json,
-                        data=data,
-                        headers=headers,
-                        cache_days=cache_days,
-                        retry_chunked_encoding_error=retry_chunked_encoding_error - 1,
-                    )
-
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
-                raise EnrichmentException(msg) from rex
+                if "Response ended prematurely" not in str(rex):
+                    raise EnrichmentException(msg) from rex
+                try:
+                    retry = retry.increment(method="POST", url=url, error=rex)
+                except MaxRetryError:
+                    raise EnrichmentException(msg) from rex
+                log.info("Retrying due to chunked encoding error: %s", rex)
+                retry.sleep()
             except RequestException as rex:
                 if rex.response is not None and rex.response.status_code in (401, 403):
                     raise EnrichmentAbort("Authorization failure: %s" % url) from rex
@@ -193,9 +191,9 @@ class Enricher(BaseEnricher[DS], ABC):
                 msg = "HTTP POST failed [%s]: %s" % (url, rex)
                 log.info(f"{msg}\n{traceback.format_exc()}")
                 raise EnrichmentException(msg) from rex
-            resp_data = resp.json()
-            if cache_days_ > 0:
-                self.cache.set_json(cache_key, resp_data)
+        resp_data = resp.json()
+        if cache_days_ > 0:
+            self.cache.set_json(cache_key, resp_data)
         return resp_data
 
     def _make_data_entity(
