@@ -9,7 +9,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Index,
     MetaData,
     Table,
     Unicode,
@@ -201,12 +200,8 @@ def make_statement_table(
     Loads replace a dataset's statements wholesale, so indexes are expensive.
     Common queries filter by entity_id or canonical_id, and then dataset,
     and perhaps prop or schema.
-
-    Inbound-edge lookups filter on `value` for entity-typed statements only, so
-    that column gets a partial index. A full index would be far larger and
-    fails on PostgreSQL once any text value exceeds the btree row size limit.
     """
-    table = Table(
+    return Table(
         name,
         metadata,
         Column("id", Unicode(KEY_LEN), primary_key=True, unique=True),
@@ -224,13 +219,6 @@ def make_statement_table(
         Column("first_seen", DateTime, nullable=True),
         Column("last_seen", DateTime, nullable=True),
     )
-    Index(
-        f"ix_{name}_value_entity",
-        table.c.value,
-        sqlite_where=table.c.prop_type == "entity",
-        postgresql_where=table.c.prop_type == "entity",
-    )
-    return table
 
 
 def insert_statements(
