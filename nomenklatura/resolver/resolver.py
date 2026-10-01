@@ -13,21 +13,10 @@ from followthemoney import SE, Statement, registry
 from followthemoney.util import PathLike
 from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
-from sqlalchemy import (
-    Column,
-    Float,
-    Index,
-    Integer,
-    MetaData,
-    Table,
-    Unicode,
-    or_,
-    select,
-    text,
-)
+from sqlalchemy import MetaData, or_, select
 from sqlalchemy.sql.expression import delete, insert, update
 
-from nomenklatura.db import Session
+from nomenklatura.db import Session, make_resolver_table
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.resolver.identifier import Identifier, Pair, StrIdent
@@ -65,37 +54,7 @@ class Resolver(Linker[SE]):
         self._linker: Linker[SE] = Linker({})
         self._blockers: dict[tuple[str, str], Judgement] = {}
 
-        unique_kw: dict[str, Any] = {"unique": True}
-        if session.is_sqlite:
-            unique_kw["sqlite_where"] = text("deleted_at IS NULL")
-        if session.is_postgres:
-            unique_kw["postgresql_where"] = text("deleted_at IS NULL")
-        unique_pair = Index(
-            f"{table_name}_source_target_uniq",
-            text("source"),
-            text("target"),
-            **unique_kw,
-        )
-        # Backs the candidate scan: NO_JUDGEMENT suggestions ordered by score.
-        suggested = Index(
-            f"{table_name}_judgement_score",
-            text("judgement"),
-            text("score"),
-        )
-        self._table = Table(
-            table_name,
-            MetaData(),
-            Column("id", Integer(), primary_key=True),
-            Column("target", Unicode(512), index=True),
-            Column("source", Unicode(512), index=True),
-            Column("judgement", Unicode(14), nullable=False),
-            Column("score", Float, nullable=True),
-            Column("user", Unicode(512), nullable=False),
-            Column("created_at", Unicode(28), index=True),
-            Column("deleted_at", Unicode(28), nullable=True, index=True),
-            unique_pair,
-            suggested,
-        )
+        self._table = make_resolver_table(MetaData(), table_name)
         if create:
             session.create(self._table)
 

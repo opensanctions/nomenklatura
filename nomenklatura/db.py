@@ -9,11 +9,15 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Float,
+    Index,
+    Integer,
     MetaData,
     Table,
     Unicode,
     create_engine,
     delete,
+    text,
 )
 from sqlalchemy.dialects.postgresql import Insert as PostgreSQLInsert
 from sqlalchemy.dialects.postgresql import insert as psql_insert
@@ -204,7 +208,7 @@ def make_statement_table(
     return Table(
         name,
         metadata,
-        Column("id", Unicode(KEY_LEN), primary_key=True, unique=True),
+        Column("id", Unicode(KEY_LEN), primary_key=True),
         Column("entity_id", Unicode(KEY_LEN), index=True, nullable=False),
         Column("canonical_id", Unicode(KEY_LEN), index=True, nullable=False),
         Column("prop", Unicode(KEY_LEN), nullable=False),
@@ -218,6 +222,48 @@ def make_statement_table(
         Column("external", Boolean, default=False, nullable=False),
         Column("first_seen", DateTime, nullable=True),
         Column("last_seen", DateTime, nullable=True),
+    )
+
+
+def make_resolver_table(metadata: MetaData, name: str = "resolver") -> Table:
+    """Declare the resolver judgement table on the given metadata.
+
+    Applications that manage their own schema (e.g. with migrations) register
+    this on their metadata, and construct the `Resolver` without `create`.
+    """
+    return Table(
+        name,
+        metadata,
+        Column("id", Integer(), primary_key=True),
+        Column("target", Unicode(512), index=True),
+        Column("source", Unicode(512), index=True),
+        Column("judgement", Unicode(14), nullable=False),
+        Column("score", Float, nullable=True),
+        Column("user", Unicode(512), nullable=False),
+        Column("created_at", Unicode(28), index=True),
+        Column("deleted_at", Unicode(28), nullable=True, index=True),
+        Index(
+            f"{name}_source_target_uniq",
+            text("source"),
+            text("target"),
+            unique=True,
+            sqlite_where=text("deleted_at IS NULL"),
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+        # Backs the candidate scan: NO_JUDGEMENT suggestions ordered by score.
+        Index(f"{name}_judgement_score", text("judgement"), text("score")),
+    )
+
+
+def make_cache_table(metadata: MetaData, name: str = "cache") -> Table:
+    """Declare the enrichment and HTTP response cache table on the given metadata."""
+    return Table(
+        name,
+        metadata,
+        Column("key", Unicode(), primary_key=True),
+        Column("text", Unicode(), nullable=True),
+        Column("dataset", Unicode(), nullable=False),
+        Column("timestamp", DateTime, index=True),
     )
 
 
