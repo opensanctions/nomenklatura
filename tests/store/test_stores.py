@@ -9,15 +9,23 @@ from unittest.mock import MagicMock
 from followthemoney import Dataset, Statement
 from followthemoney import StatementEntity as Entity
 from pytest import MonkeyPatch
-from sqlalchemy import create_mock_engine, inspect
+from sqlalchemy import create_mock_engine
+from sqlalchemy.engine import Engine
 
 from nomenklatura import settings
-from nomenklatura.db import SQLITE_MAX_VARS, get_engine
+from nomenklatura.db import SQLITE_MAX_VARS, get_engine, make_schema_metadata
 from nomenklatura.judgement import Judgement
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, SQLStore, Store
 from nomenklatura.store.level import LevelDBStore
 from nomenklatura.store.sql import SQLWriter
+
+
+def _schema_engine(url: str) -> Engine:
+    """Get an engine on a database with nomenklatura's tables created."""
+    engine = get_engine(url)
+    make_schema_metadata().create_all(bind=engine)
+    return engine
 
 
 def _run_store_test(
@@ -111,33 +119,10 @@ def test_store_sql(
     uri = settings.DB_URL
     if uri.startswith("sqlite"):
         uri = f"sqlite:///{tmp_path / 'test.db'}"
-    engine = get_engine(uri)
+    engine = _schema_engine(uri)
     store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     assert store.engine is engine
     assert _run_store_test(store, test_dataset, donations_json)
-
-
-def test_store_sql_adds_missing_index(
-    tmp_path: Path,
-    test_dataset: Dataset,
-    resolver: Resolver[Entity],
-):
-    """Opening a store on a table created without the value index adds it."""
-    uri = settings.DB_URL
-    if uri.startswith("sqlite"):
-        uri = f"sqlite:///{tmp_path / 'old.db'}"
-    engine = get_engine(uri)
-    store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
-    index_name = f"ix_{store.table.name}_value_entity"
-
-    def index_names() -> set[str]:
-        return {ix["name"] for ix in inspect(engine).get_indexes(store.table.name)}
-
-    assert index_name in index_names()
-    next(ix for ix in store.table.indexes if ix.name == index_name).drop(engine)
-    assert index_name not in index_names()
-    SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
-    assert index_name in index_names()
 
 
 def test_store_sql_two_stores(
@@ -146,10 +131,10 @@ def test_store_sql_two_stores(
     resolver: Resolver[Entity],
 ):
     """A second SQLStore in the same process, on any engine, must not raise."""
-    engine = get_engine(f"sqlite:///{tmp_path / 'one.db'}")
+    engine = _schema_engine(f"sqlite:///{tmp_path / 'one.db'}")
     first = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     same = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
-    other = get_engine(f"sqlite:///{tmp_path / 'two.db'}")
+    other = _schema_engine(f"sqlite:///{tmp_path / 'two.db'}")
     second = SQLStore(dataset=test_dataset, linker=resolver, engine=other)
     assert first.table is not same.table
     assert first.table.name == same.table.name == second.table.name
@@ -166,7 +151,7 @@ def test_store_sql_large_batch(
     uri = settings.DB_URL
     if uri.startswith("sqlite"):
         uri = f"sqlite:///{tmp_path / 'large.db'}"
-    store = SQLStore(dataset=test_dataset, linker=resolver, engine=get_engine(uri))
+    store = SQLStore(dataset=test_dataset, linker=resolver, engine=_schema_engine(uri))
     with store.writer() as writer:
         for index in range(5000):
             writer.add_statement(
@@ -195,7 +180,7 @@ def test_store_sql_merged_entity(
         {"id": "b", "schema": "Person", "properties": {"birthDate": ["1980"]}},
     )
     canonical = resolver.decide("a", "b", Judgement.POSITIVE)
-    engine = get_engine(f"sqlite:///{tmp_path / 'merged.db'}")
+    engine = _schema_engine(f"sqlite:///{tmp_path / 'merged.db'}")
     store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     with store.writer() as writer:
         writer.add_entity(a)
@@ -216,7 +201,7 @@ def test_sql_writer_sqlite_batch_limit_cap(
     resolver: Resolver[Entity],
     monkeypatch: MonkeyPatch,
 ):
-    engine = get_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    engine = _schema_engine(f"sqlite:///{tmp_path / 'test.db'}")
     store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     monkeypatch.setattr(settings, "STATEMENT_BATCH", 10000)
     with store.writer() as writer:
@@ -230,7 +215,7 @@ def test_sql_writer_sqlite_batch_limit_uses_setting_when_lower(
     resolver: Resolver[Entity],
     monkeypatch: MonkeyPatch,
 ):
-    engine = get_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    engine = _schema_engine(f"sqlite:///{tmp_path / 'test.db'}")
     store = SQLStore(dataset=test_dataset, linker=resolver, engine=engine)
     monkeypatch.setattr(settings, "STATEMENT_BATCH", 500)
     with store.writer() as writer:

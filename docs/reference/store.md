@@ -12,7 +12,7 @@ Three classes cooperate:
 
 ## Choosing a backend
 
-Use [MemoryStore][nomenklatura.store.MemoryStore] for datasets that fit in memory — this is what the `nk` command line uses when it reads entities from a file, via [load_entity_file_store][nomenklatura.store.load_entity_file_store]. Use [SQLStore][nomenklatura.store.sql.SQLStore] to persist statements to SQLite or PostgreSQL. Two further backends, `LevelStore` (LevelDB) and `RedisStore`, live in `nomenklatura.store.level` and `nomenklatura.store.redis_` and require the optional `plyvel` and `redis` dependencies.
+Use [MemoryStore][nomenklatura.store.MemoryStore] for datasets that fit in memory — this is what the `nk` command line uses when it reads entities from a file, via [load_entity_file_store][nomenklatura.store.load_entity_file_store]. Use [SQLStore][nomenklatura.store.sql.SQLStore] to persist statements to SQLite or PostgreSQL, in a database whose tables were created with `nk migrate`. Two further backends, `LevelStore` (LevelDB) and `RedisStore`, live in `nomenklatura.store.level` and `nomenklatura.store.redis_` and require the optional `plyvel` and `redis` dependencies.
 
 ```python
 from pathlib import Path
@@ -21,7 +21,7 @@ from nomenklatura.db import make_session
 from nomenklatura.store import load_entity_file_store
 
 with make_session() as session:
-    resolver = Resolver(session, create=True)
+    resolver = Resolver(session)
     store = load_entity_file_store(Path("entities.ftm.json"), resolver)
     view = store.default_view()
     for entity in view.entities():

@@ -19,9 +19,10 @@ Much of the functionality of `nomenklatura` can be used as a command-line tool. 
 With the file in place, you will cross-reference the entities to generate de-duplication candidates, then run the interactive de-duplication UI in your console, and eventually apply the judgements to generate a new file with merged entities:
 
 ```bash
+# create the tables in a sqlite database, `nomenklatura.db`, which holds the de-duplication info:
+$ nomenklatura migrate
 # generate merge candidates using an in-memory index:
 $ nomenklatura xref entities.ijson
-# note there is now a sqlite database, `nomenklatura.db` that contains de-duplication info.
 $ nomenklatura dedupe entities.ijson
 # will pop up a user interface.
 $ nomenklatura apply entities.ijson -o merged.ijson
@@ -32,7 +33,9 @@ $ cat merged.ijson | wc -l
 468 
 ```
 
-The resolver graph database location can be customised by setting the environment variable `NOMENKLATURA_DB_URL`
+The resolver graph database location can be customised by setting the environment variable `NOMENKLATURA_DB_URL`. Run `nomenklatura migrate` again after upgrading nomenklatura, to apply any new schema migrations.
+
+An application whose database also holds its own tables, and which manages them with [Alembic](https://alembic.sqlalchemy.org/), includes nomenklatura's revisions instead: add `nomenklatura:migrations/versions` to its `version_locations`, include `nomenklatura.db.make_schema_metadata()` in its target metadata, and run `alembic upgrade heads`.
 
 ### Programmatic usage
 

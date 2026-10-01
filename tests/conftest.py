@@ -17,7 +17,14 @@ from sqlalchemy import MetaData
 from nomenklatura import settings
 from nomenklatura.blocker.index import Index
 from nomenklatura.cache import Cache
-from nomenklatura.db import Session, close_db, get_engine, make_session
+from nomenklatura.db import (
+    Session,
+    close_db,
+    get_engine,
+    make_resolver_table,
+    make_schema_metadata,
+    make_session,
+)
 from nomenklatura.resolver import Resolver
 from nomenklatura.store import SimpleMemoryStore, load_entity_file_store
 
@@ -33,6 +40,8 @@ settings.TESTING = True
 def wrap_test():
     if settings.DB_URL.startswith("sqlite"):
         settings.DB_URL = "sqlite:///:memory:"
+    # The migrations are tested against this metadata in test_migrations.py.
+    make_schema_metadata().create_all(bind=get_engine())
     yield
     # Reflect so per-instance metadata tables are dropped between tests.
     engine = get_engine()
@@ -69,12 +78,13 @@ def donations_json(donations_path: Path) -> list[dict[str, Any]]:
 
 @pytest.fixture(scope="function")
 def resolver(db_session: Session) -> Resolver[Entity]:
-    return Resolver[Entity](db_session, create=True)
+    return Resolver[Entity](db_session)
 
 
 @pytest.fixture(scope="function")
 def other_table_resolver(db_session: Session) -> Resolver[Entity]:
-    return Resolver(db_session, create=True, table_name="another_table")
+    make_resolver_table(MetaData(), "another_table").create(bind=get_engine())
+    return Resolver(db_session, table_name="another_table")
 
 
 @pytest.fixture(scope="function")
@@ -99,13 +109,13 @@ def db_session() -> Generator[Session, None, None]:
 
 @pytest.fixture(scope="function")
 def test_cache(db_session: Session, test_dataset: Dataset) -> Cache:
-    return Cache(db_session, test_dataset, create=True)
+    return Cache(db_session, test_dataset)
 
 
 @pytest.fixture(scope="function")
 def cache_factory(db_session: Session) -> Callable[[Dataset], Cache]:
     """Build caches for arbitrary datasets on the per-test session."""
-    return lambda dataset: Cache(db_session, dataset, create=True)
+    return lambda dataset: Cache(db_session, dataset)
 
 
 @pytest.fixture(scope="function")

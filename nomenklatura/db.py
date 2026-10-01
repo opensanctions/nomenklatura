@@ -138,11 +138,6 @@ class Session:
         """Build an insert that supports the active database's upsert API."""
         return dialect_insert(self.dialect, table)
 
-    def create(self, *tables: Table) -> None:
-        """Create the given tables on this session's connection."""
-        for table in tables:
-            table.create(bind=self.connection, checkfirst=True)
-
     def checkpoint(self) -> None:
         """Commit the current transaction without releasing the connection."""
         if self._conn is not None:
@@ -244,14 +239,14 @@ def make_resolver_table(metadata: MetaData, name: str = "resolver") -> Table:
         Column("deleted_at", Unicode(28), nullable=True, index=True),
         Index(
             f"{name}_source_target_uniq",
-            text("source"),
-            text("target"),
+            "source",
+            "target",
             unique=True,
             sqlite_where=text("deleted_at IS NULL"),
             postgresql_where=text("deleted_at IS NULL"),
         ),
         # Backs the candidate scan: NO_JUDGEMENT suggestions ordered by score.
-        Index(f"{name}_judgement_score", text("judgement"), text("score")),
+        Index(f"{name}_judgement_score", "judgement", "score"),
     )
 
 
@@ -265,6 +260,20 @@ def make_cache_table(metadata: MetaData, name: str = "cache") -> Table:
         Column("dataset", Unicode(), nullable=False),
         Column("timestamp", DateTime, index=True),
     )
+
+
+def make_schema_metadata() -> MetaData:
+    """Declare all of nomenklatura's tables, as its migrations create them.
+
+    This is the target for autogenerating migrations. An application whose
+    database also hosts nomenklatura's tables includes it in its own Alembic
+    target metadata, so that autogenerate does not propose to drop them.
+    """
+    metadata = MetaData()
+    make_statement_table(metadata)
+    make_resolver_table(metadata)
+    make_cache_table(metadata)
+    return metadata
 
 
 def insert_statements(

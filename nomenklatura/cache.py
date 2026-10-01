@@ -35,14 +35,10 @@ def randomize_cache(days: int) -> timedelta:
 
 
 class Cache:
-    def __init__(
-        self, session: Session, dataset: Dataset, create: bool = False
-    ) -> None:
+    def __init__(self, session: Session, dataset: Dataset) -> None:
         self.dataset = dataset
         self._session = session
         self._table = make_cache_table(MetaData())
-        if create:
-            session.create(self._table)
 
         self._preload: dict[str, CacheValue] = {}
 

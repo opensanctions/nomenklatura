@@ -44,7 +44,6 @@ class Resolver(Linker[SE]):
     def __init__(
         self,
         session: Session,
-        create: bool = False,
         table_name: str = "resolver",
     ) -> None:
         self._session = session
@@ -55,8 +54,6 @@ class Resolver(Linker[SE]):
         self._blockers: dict[tuple[str, str], Judgement] = {}
 
         self._table = make_resolver_table(MetaData(), table_name)
-        if create:
-            session.create(self._table)
 
     def _index_row(self, target: str, source: str, judgement: Judgement) -> None:
         """Fold a live database row into the in-memory indexes."""

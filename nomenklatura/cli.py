@@ -34,6 +34,7 @@ from nomenklatura.matching import (
     train_v1_matcher,
 )
 from nomenklatura.matching.bench import bench_matcher
+from nomenklatura.migrations import upgrade
 from nomenklatura.resolver import Linker, Resolver
 from nomenklatura.resolver.edge import Edge
 from nomenklatura.store import load_entity_file_store
@@ -54,7 +55,7 @@ def _load_enricher(session: Session, path: Path) -> tuple[Dataset, Enricher[Data
     with open(path) as fh:
         data = yaml.safe_load(fh)
         dataset = Dataset.make(data)
-        cache = Cache(session, dataset, create=True)
+        cache = Cache(session, dataset)
         enricher = make_enricher(dataset, cache, data)
         if enricher is None:
             raise TypeError("Could not load enricher")
@@ -63,7 +64,7 @@ def _load_enricher(session: Session, path: Path) -> tuple[Dataset, Enricher[Data
 
 def _get_linker() -> Linker[Entity]:
     with make_session() as session:
-        return Resolver[Entity](session, create=True).get_linker()
+        return Resolver[Entity](session).get_linker()
 
 
 def _get_data_path(data_path: Path | None) -> Path:
@@ -75,6 +76,11 @@ def _get_data_path(data_path: Path | None) -> Path:
 @click.group(help="Nomenklatura data integration")
 def cli() -> None:
     logging.basicConfig(level=logging.INFO)
+
+
+@cli.command("migrate", help="Create or upgrade the nomenklatura database tables")
+def migrate() -> None:
+    upgrade()
 
 
 @cli.command("xref", help="Generate dedupe candidates")
@@ -111,7 +117,7 @@ def xref_file(
     discount_internal: float = 1.0,
 ) -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         data_path = _get_data_path(data_path)
 
@@ -176,14 +182,14 @@ def wikidata_reconcile(
         raise click.UsageError("--create cannot be combined with --review")
     session = make_session()
     try:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         store = load_entity_file_store(path, resolver=resolver)
         algorithm_type = get_algorithm(algorithm)
         if algorithm_type is None:
             raise click.Abort(f"Unknown algorithm: {algorithm}")
         dataset = Dataset.make({"name": "wikidata", "title": "Wikidata"})
-        cache = Cache(session, dataset, create=True)
+        cache = Cache(session, dataset)
         client = WikidataClient(cache)
         if review:
             commands = reconcile_ui(
@@ -229,7 +235,7 @@ def _write_qs(path: Path, commands: list[QSCommand]) -> None:
 @cli.command("prune", help="Remove dedupe candidates")
 def xref_prune() -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         resolver.prune()
 
@@ -267,7 +273,7 @@ def make_sortable(path: Path, outpath: Path) -> None:
 @click.option("-p", "--data-path", type=Path, default=None)
 def dedupe(path: Path, xref: bool = False, data_path: Path | None = None) -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         data_path = _get_data_path(data_path)
         store = load_entity_file_store(path, resolver=resolver)
@@ -301,7 +307,7 @@ def match_command(
     outpath: Path,
 ) -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         _, enricher = _load_enricher(session, config)
         try:
@@ -323,7 +329,7 @@ def enrich_command(
     outpath: Path,
 ) -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         resolver.load_into_memory()
         _, enricher = _load_enricher(session, config)
         try:
@@ -367,7 +373,7 @@ EDGE_FORMATS = ["jsonl", "csv"]
 @click.option("-f", "--format", type=click.Choice(EDGE_FORMATS), default="jsonl")
 def load_resolver(source: Path, format: str) -> None:
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         if format == "csv":
 
             def _read_edges() -> Generator[Edge, None, None]:
@@ -396,7 +402,7 @@ def dump_resolver(target: Path, format: str, include_deleted: bool) -> None:
             "The jsonl line format cannot represent deleted edges; use -f csv.",
         )
     with make_session() as session:
-        resolver = Resolver[Entity](session, create=True)
+        resolver = Resolver[Entity](session)
         if format == "csv":
             with open(target, "w") as fh:
                 writer = csv.DictWriter(fh, fieldnames=EDGE_FIELDS)

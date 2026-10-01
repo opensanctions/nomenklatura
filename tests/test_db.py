@@ -49,8 +49,8 @@ def test_insert_statements_timestamps(timestamp: str | None) -> None:
             settings.DB_URL, connect_args={"options": "-c timezone=Pacific/Honolulu"}
         )
         engine = tz_engine
+    # The conftest creates the table on the default database.
     table = make_statement_table(MetaData())
-    table.create(engine)
     statement = Statement(
         entity_id="person-1",
         prop="name",
@@ -83,7 +83,7 @@ def _kv_table(session: Session) -> Table:
         Column("key", Unicode(), primary_key=True),
         Column("value", Unicode()),
     )
-    session.create(table)
+    table.create(bind=session.connection, checkfirst=True)
     return table
 
 

@@ -237,11 +237,9 @@ def test_linker_non_canonical_cluster():
 def test_update_from_db():
     """Load committed decisions made by another resolver session."""
     session1 = make_session()
-    r1 = Resolver(session1, create=True)
-    # PostgreSQL locks the uncommitted table creation.
-    session1.checkpoint()
+    r1 = Resolver(session1)
     session2 = make_session()
-    r2 = Resolver(session2, create=True)
+    r2 = Resolver(session2)
 
     try:
         r1.load_into_memory()

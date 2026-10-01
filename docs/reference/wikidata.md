@@ -6,7 +6,7 @@
 
 The client returns items as [Item][nomenklatura.wikidata.Item] objects, which expose labels, aliases, descriptions, and claims. A [Claim][nomenklatura.wikidata.Claim] is one property statement on an item — for example `P569` (date of birth) — with its qualifiers and references. Text values are wrapped in [LangText][nomenklatura.wikidata.LangText], which keeps the language tag alongside the string.
 
-Fetching an item requires a `Cache`, which stores API responses in the same SQL database the rest of `nomenklatura` uses:
+Fetching an item requires a `Cache`, which stores API responses in the same SQL database the rest of `nomenklatura` uses (create its tables with `nk migrate`):
 
 ```python
 from followthemoney import Dataset
@@ -16,7 +16,7 @@ from nomenklatura.wikidata import WikidataClient
 
 dataset = Dataset.make({"name": "wikidata_demo", "title": "Wikidata demo"})
 with make_session() as session:
-    cache = Cache(session, dataset, create=True)
+    cache = Cache(session, dataset)
     client = WikidataClient(cache)
     item = client.fetch_item("Q7747")
     if item is not None:
