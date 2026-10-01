@@ -9,12 +9,12 @@ from typing import Any, cast
 
 from followthemoney import Dataset
 from rigour.time import naive_now
-from sqlalchemy import Column, DateTime, MetaData, Table, Unicode
+from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import delete
 
-from nomenklatura.db import Session
+from nomenklatura.db import Session, make_cache_table
 
 log = logging.getLogger(__name__)
 Value = str | None
@@ -40,14 +40,7 @@ class Cache:
     ) -> None:
         self.dataset = dataset
         self._session = session
-        self._table = Table(
-            "cache",
-            MetaData(),
-            Column("key", Unicode(), primary_key=True),
-            Column("text", Unicode(), nullable=True),
-            Column("dataset", Unicode(), nullable=False),
-            Column("timestamp", DateTime, index=True),
-        )
+        self._table = make_cache_table(MetaData())
         if create:
             session.create(self._table)
 
