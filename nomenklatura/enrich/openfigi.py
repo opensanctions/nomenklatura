@@ -100,6 +100,10 @@ class OpenFIGIEnricher(Enricher[DS]):
         if entity.schema.is_a("Organization"):
             yield from self.match_organization(entity)
         if entity.schema.is_a("Security"):
+            if entity.external:
+                # We gain very little by matching entirely-external securities,
+                # yet there could be hundreds of thousands. Just skip.
+                return
             yield from self.match_security(entity)
 
     def expand(self, entity: SE, match: SE) -> Generator[SE, None, None]:
