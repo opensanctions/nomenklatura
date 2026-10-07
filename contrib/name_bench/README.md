@@ -211,8 +211,8 @@ post-hoc.
     originating test function; `category` groups by sub-test
     (e.g. `friedrich_fps`, `obama_tps`).
 
-- `cascade_entities` (300 rows) — company and vessel name pairs from
-  [Cascade Screening](https://github.com/ArslaneSempai-ui/cascade-screening)'s
+- `crusetra_entities` (300 rows) — company and vessel name pairs from
+  [Crusetra Screening](https://github.com/ArslaneSempai-ui/crusetra-screening)'s
   authored pair sets, released under MIT in its `contrib/opensanctions/`.
   At most four pairs for each of the 75 most frequent error types
   (holding vs operating company, vessel vs owner, sister ships, names cut
