@@ -9,7 +9,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Index,
     MetaData,
     Table,
     Unicode,
@@ -198,35 +197,28 @@ def make_statement_table(
 ) -> Table:
     """Declare the statement table on the given metadata.
 
-    Inbound-edge lookups filter on `value` for entity-typed statements only, so
-    that column gets a partial index. A full index would be far larger and
-    fails on PostgreSQL once any text value exceeds the btree row size limit.
+    Loads replace a dataset's statements wholesale, so indexes are expensive.
+    Common queries filter by entity_id or canonical_id, and then dataset,
+    and perhaps prop or schema.
     """
-    table = Table(
+    return Table(
         name,
         metadata,
         Column("id", Unicode(KEY_LEN), primary_key=True, unique=True),
         Column("entity_id", Unicode(KEY_LEN), index=True, nullable=False),
         Column("canonical_id", Unicode(KEY_LEN), index=True, nullable=False),
-        Column("prop", Unicode(KEY_LEN), index=True, nullable=False),
-        Column("prop_type", Unicode(KEY_LEN), index=True, nullable=False),
-        Column("schema", Unicode(KEY_LEN), index=True, nullable=False),
+        Column("prop", Unicode(KEY_LEN), nullable=False),
+        Column("prop_type", Unicode(KEY_LEN), nullable=False),
+        Column("schema", Unicode(KEY_LEN), nullable=False),
         Column("value", Unicode(VALUE_LEN), nullable=False),
         Column("original_value", Unicode(VALUE_LEN), nullable=True),
         Column("dataset", Unicode(KEY_LEN), index=True),
-        Column("origin", Unicode(KEY_LEN), index=True),
+        Column("origin", Unicode(KEY_LEN)),
         Column("lang", Unicode(KEY_LEN), nullable=True),
         Column("external", Boolean, default=False, nullable=False),
         Column("first_seen", DateTime, nullable=True),
         Column("last_seen", DateTime, nullable=True),
     )
-    Index(
-        f"ix_{name}_value_entity",
-        table.c.value,
-        sqlite_where=table.c.prop_type == "entity",
-        postgresql_where=table.c.prop_type == "entity",
-    )
-    return table
 
 
 def insert_statements(

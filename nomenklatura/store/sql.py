@@ -3,7 +3,7 @@ from types import TracebackType
 from typing import Any
 
 from followthemoney import DS, SE, Property, Schema, Statement
-from sqlalchemy import MetaData, Table, delete, func, select
+from sqlalchemy import Index, MetaData, Table, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as psql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.engine import Engine, Transaction
@@ -27,6 +27,17 @@ class SQLStore(Store[DS, SE]):
         super().__init__(dataset, linker)
         self.engine = engine
         self.table = make_statement_table(MetaData())
+        # Inbound-edge lookups filter on `value` for entity-typed statements
+        # only, so that column gets a partial index. A full index would be far
+        # larger and fails on PostgreSQL once any text value exceeds the btree
+        # row size limit. It is declared here rather than on the shared table
+        # because only this store's reads need it.
+        Index(
+            f"ix_{self.table.name}_value_entity",
+            self.table.c.value,
+            sqlite_where=self.table.c.prop_type == "entity",
+            postgresql_where=self.table.c.prop_type == "entity",
+        )
         self.table.create(bind=engine, checkfirst=True)
         # Table.create skips an existing table entirely, so indexes added since
         # the table was first created are only picked up here.
