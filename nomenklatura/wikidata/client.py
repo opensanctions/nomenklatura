@@ -12,6 +12,8 @@ from rigour.ids.wikidata import is_qid
 from rigour.time import utc_now
 from rigour.urls import build_url
 from rigour.util import MEMO_SMALL
+from urllib3.exceptions import MaxRetryError
+from urllib3.util import Retry
 
 from nomenklatura.cache import Cache
 from nomenklatura.wikidata.lang import LangText
@@ -40,6 +42,10 @@ class WikidataClient:
     # and test-overridable (set the backoff to 0 to skip real sleeps in tests).
     API_MAX_ATTEMPTS = 3
     API_RETRY_BACKOFF = 2.0  # seconds, exponential base: 2s, 4s between attempts
+    # Retry budget for SPARQL responses that arrive as HTTP 200 but with a
+    # truncated or corrupt body.
+    QUERY_RETRIES = 3
+    QUERY_RETRY_BACKOFF = 10.0
 
     LABEL_PREFIX = "wd:lb:"
     LABEL_CACHE_DAYS = 100
@@ -209,30 +215,63 @@ class WikidataClient:
         url = build_url(self.QUERY_API, params=params)
         effective_cache = cache_days if cache_days is not None else self.cache_days
         raw = self.cache.get(url, max_age=effective_cache)
-        if raw is None:
-            log.debug(
-                "Cache MISS fetching Wikidata SPARQL query: %s cache_days=%s",
-                clean_text,
-                effective_cache,
-            )
-            headers = {"Accept": "application/sparql-results+json"}
-            res = self.session.get(url, headers=headers)
-            res.raise_for_status()
-            raw = res.text
-            self.cache.set(url, raw)
-        else:
+        if raw is not None:
             log.debug(
                 "Cache HIT fetching Wikidata SPARQL query: %s cache_days=%s",
                 clean_text,
                 effective_cache,
             )
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError as err:
-            self.cache.delete(url)
-            log.exception("Failed to parse JSON: %s", err)
-            return SparqlResponse(clean_text, {})
+            try:
+                return SparqlResponse(clean_text, json.loads(raw))
+            except json.JSONDecodeError:
+                # Written before responses were validated: drop and refetch.
+                self.cache.delete(url)
+        log.debug(
+            "Cache MISS fetching Wikidata SPARQL query: %s cache_days=%s",
+            clean_text,
+            effective_cache,
+        )
+        raw, data = self._fetch_sparql(url)
+        self.cache.set(url, raw)
         return SparqlResponse(clean_text, data)
+
+    def _fetch_sparql(self, url: str) -> tuple[str, Any]:
+        """GET a SPARQL query URL, retrying responses whose body doesn't parse.
+
+        The query service sometimes abandons a response mid-stream after it
+        has already sent `200 OK` (e.g. when a query runs into its execution
+        budget under load), leaving a truncated JSON body. The session's
+        status-code retries can't see that, so it is retried here, with backoff.
+        Raises the `JSONDecodeError` once the retries are exhausted.
+        """
+        # As of 2026-10-12 we're hitting the 200 response but invalid json in
+        # about 1/8 crawls, making this worthwhile.
+        # Response times vary between about 8s and their timeout (60s) so optimising
+        # the query might help but might add other complexity.
+
+        headers = {"Accept": "application/sparql-results+json"}
+        retry = Retry(
+            total=self.QUERY_RETRIES,
+            backoff_factor=self.QUERY_RETRY_BACKOFF,
+        )
+        while True:
+            res = self.session.get(url, headers=headers)
+            res.raise_for_status()
+            try:
+                return res.text, json.loads(res.text)
+            except json.JSONDecodeError as err:
+                try:
+                    retry = retry.increment(method="GET", url=url, error=err)
+                except MaxRetryError:
+                    log.error("Failed to parse SPARQL response JSON: %s", err)
+                    raise err
+                log.warning(
+                    "Failed to parse SPARQL response JSON (retry %d/%d): %s",
+                    len(retry.history),
+                    self.QUERY_RETRIES,
+                    err,
+                )
+                retry.sleep()
 
     def search_items(
         self, entity: StatementEntity, aliases: bool = False, limit: int = 7

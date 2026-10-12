@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import UTC
 
@@ -111,6 +112,50 @@ def test_client_query(test_cache: Cache):
             assert "Q" in repr(result)
             assert len(result.values) == 1
             assert result.plain("person") is not None
+
+
+SPARQL_OK = {
+    "head": {"vars": ["person"]},
+    "results": {
+        "bindings": [
+            {"person": {"type": "uri", "value": "http://www.wikidata.org/entity/Q7747"}}
+        ]
+    },
+}
+SPARQL_QUERY = "SELECT ?person WHERE { ?person wdt:P39 wd:Q11696 . }"
+
+
+def test_query_truncated_recovers(test_cache: Cache):
+    # A 200 whose body was cut off mid-stream is retried rather than surfacing
+    # as a broken response, and only the complete body is cached.
+    truncated = json.dumps(SPARQL_OK)[:40]
+    responses = [{"text": truncated}, {"text": truncated}, {"json": SPARQL_OK}]
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.QUERY_API, responses)
+        client = WikidataClient(test_cache)
+        client.QUERY_RETRY_BACKOFF = 0  # don't sleep between retries in tests
+        response = client.query(SPARQL_QUERY)
+        assert len(response) == 1
+        assert m.call_count == 3
+        # Served from the cache now:
+        assert len(client.query(SPARQL_QUERY)) == 1
+        assert m.call_count == 3
+
+
+def test_query_truncated_exhausted(test_cache: Cache):
+    truncated = json.dumps(SPARQL_OK)[:40]
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.QUERY_API, text=truncated)
+        client = WikidataClient(test_cache)
+        client.QUERY_RETRY_BACKOFF = 0
+        with pytest.raises(json.JSONDecodeError):
+            client.query(SPARQL_QUERY)
+        assert m.call_count == WikidataClient.QUERY_RETRIES + 1
+    # Nothing was cached, so a later call refetches:
+    with requests_mock.Mocker(real_http=False) as m:
+        m.register_uri("GET", WikidataClient.QUERY_API, json=SPARQL_OK)
+        assert len(client.query(SPARQL_QUERY)) == 1
+        assert m.call_count == 1
 
 
 def test_search_items(test_cache: Cache):
