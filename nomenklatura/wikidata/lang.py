@@ -4,12 +4,9 @@ from typing import Any, Optional
 
 from followthemoney import StatementEntity, registry
 from normality.cleaning import remove_unsafe_chars
-from rigour.langs import PREFERRED_LANGS
+from rigour.langs import MULTI_LANG, PREFERRED_LANGS
 
 log = logging.getLogger(__name__)
-# This is a special language code used to indicate that a value is multilingual
-# (more specifically: not language-dependent, which is always a lie).
-MULTI_LANG = "mul"
 PREFERRED_WD_LANGS = list(PREFERRED_LANGS)
 # After English, before all the others:
 PREFERRED_WD_LANGS.insert(1, MULTI_LANG)
@@ -38,10 +35,7 @@ class LangText:
         self.text = text
         self.lang: str | None = None
         if lang is not None:
-            if lang == MULTI_LANG:
-                self.lang = MULTI_LANG
-            else:
-                self.lang = registry.language.clean_text(lang)
+            self.lang = registry.language.clean_text(lang)
         if lang is not None and self.lang is None:
             # Language is given, but it is not one supported by the FtM ecosystem:
             self.text = None
@@ -58,8 +52,7 @@ class LangText:
         clean_text = self.text if clean is None else clean(self.text)
         if clean_text is None or clean_text.strip() == "":
             return
-        lang = None if self.lang == MULTI_LANG else self.lang
-        entity.add(prop, clean_text, lang=lang, original_value=self.original)
+        entity.add(prop, clean_text, lang=self.lang, original_value=self.original)
 
     def pack(self) -> dict[str, str | None]:
         data = {"t": self.text, "l": self.lang}
