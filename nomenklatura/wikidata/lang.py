@@ -4,8 +4,7 @@ from typing import Any, Optional
 
 from followthemoney import StatementEntity, registry
 from normality.cleaning import remove_unsafe_chars
-from rigour.langs import MULTI_LANG as MULTI_LANG
-from rigour.langs import PREFERRED_LANGS
+from rigour.langs import MULTI_LANG, PREFERRED_LANGS
 
 log = logging.getLogger(__name__)
 PREFERRED_WD_LANGS = list(PREFERRED_LANGS)
