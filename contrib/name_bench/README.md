@@ -211,6 +211,12 @@ post-hoc.
     originating test function; `category` groups by sub-test
     (e.g. `friedrich_fps`, `obama_tps`).
 
+- `crusetra_entities` (300 rows) — synthetic company and vessel
+  name pairs contributed by Arslane Chaouche (MIT-licensed).
+  `category` carries the contributor's error type (e.g.
+  `holding-vs-operating`, `vessel-vs-owner`); `notes` names the
+  source pair file.
+
 Planned additions:
 
 - `qarin_negatives` / `un_sc_positives` / `us_congress` —
