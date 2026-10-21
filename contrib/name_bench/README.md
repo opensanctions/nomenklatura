@@ -211,14 +211,11 @@ post-hoc.
     originating test function; `category` groups by sub-test
     (e.g. `friedrich_fps`, `obama_tps`).
 
-- `crusetra_entities` (300 rows) — company and vessel name pairs from
-  [Crusetra Screening](https://github.com/ArslaneSempai-ui/crusetra-screening)'s
-  authored pair sets, released under MIT in its `contrib/opensanctions/`.
-  At most four pairs for each of the 75 most frequent error types
-  (holding vs operating company, vessel vs owner, sister ships, names cut
-  at 35 characters in customs filings, legal forms abbreviated or
-  translated, …). `category` carries the author's error type; `notes`
-  names the source file.
+- `crusetra_entities` (300 rows) — synthetic company and vessel
+  name pairs contributed by Arslane Chaouche (MIT-licensed).
+  `category` carries the contributor's error type (e.g.
+  `holding-vs-operating`, `vessel-vs-owner`); `notes` names the
+  source pair file.
 
 Planned additions:
 
