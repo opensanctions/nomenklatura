@@ -230,7 +230,7 @@ nk_unit_tests,Person,John Doe,Juan Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_
 nk_unit_tests,Person,John Doeburg,John Dowburg,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
 nk_unit_tests,Person,John Doe,John Down,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
 nk_unit_tests,Person,Serei Lavrov,Sergei Lavrov,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
-nk_unit_tests,Person,Serej Lavrov,Сергей Викторович Лавров,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
+nk_unit_tests,Person,Serei Lavrov,Сергей Викторович Лавров,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
 nk_unit_tests,Person,Ramimakhlouf,Rami Makhlouf,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
 nk_unit_tests,Person,A Nazarbayev,Nursultan Naza,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
 nk_unit_tests,Person,Ted Doe,Theodore Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES
