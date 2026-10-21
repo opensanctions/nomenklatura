@@ -1005,10 +1005,10 @@ crusetra_entities,Company,Levitsky Packaging Solutions Ltd,Levitskiy Packaging S
 crusetra_entities,Company,Khoury Stone Works Ltd,Khouri Stone Works Limited,true,,romanisation,paires-entites-21.json
 crusetra_entities,Company,Rabinovich Medical Logistics Ltd,Rabinowitz Medical Logistics Ltd,true,,romanisation,paires-entites-21.json
 crusetra_entities,Company,Rachamim Ohayon Import & Marketing Ltd,Rakhamim Ohayon Import and Marketing Ltd,true,,romanisation,paires-entites-21.json
-crusetra_entities,Company,"האחים חדאד חומרי בניין בע""מ",Haddad Brothers Building Materials Ltd,true,,script-translation,paires-entites-21.json
-crusetra_entities,Company,"נחמיאס תוצרת טרייה בע""מ",Nakhmias Fresh Produce Ltd,true,,script-translation,paires-entites-21.json
-crusetra_entities,Company,"גורביץ' חלקים מדויקים בע""מ",Gurevich Precision Parts Ltd,true,,script-translation,paires-entites-21.json
-crusetra_entities,Company,"צור אמיתי לוגיסטיקה בע""מ",Tzur Amitai Logistics Ltd,true,,script-translation,paires-entites-21.json
+crusetra_entities,Company,"האחים חדאד חומרי בניין בע""מ",Haddad Brothers Building Materials Ltd,true,WEAK,script-translation,paires-entites-21.json
+crusetra_entities,Company,"נחמיאס תוצרת טרייה בע""מ",Nakhmias Fresh Produce Ltd,true,WEAK,script-translation,paires-entites-21.json
+crusetra_entities,Company,"גורביץ' חלקים מדויקים בע""מ",Gurevich Precision Parts Ltd,true,WEAK,script-translation,paires-entites-21.json
+crusetra_entities,Company,"צור אמיתי לוגיסטיקה בע""מ",Tzur Amitai Logistics Ltd,true,WEAK,script-translation,paires-entites-21.json
 crusetra_entities,Company,Zhelvinsky Sudoremontny Zavod,Jelvinskiy Sudoremontnyi Zavod,true,,transliteration,paires-entites-2.json
 crusetra_entities,Company,Kholmogrant-Stroy OOO,Holmogrant-Stroi OOO,true,,transliteration,paires-entites-2.json
 crusetra_entities,Company,Verkhnyaya Strelka Agro,Werchnjaja Strelka Agro,true,,transliteration,paires-entites-2.json
@@ -1077,10 +1077,10 @@ crusetra_entities,Vessel,KAPITAN ZAVYALOV,KAPITAN ZAVJALOV,true,,vessel-translit
 crusetra_entities,Vessel,MEKHANIK KHARITONOV,MEHANIK HARITONOV,true,,vessel-transliteration,paires-entites-12.json
 crusetra_entities,Vessel,KERCHENSKIY PROLIV-3,KERCHENSKY PROLIV 3,true,,vessel-transliteration,paires-entites-12.json
 crusetra_entities,Vessel,GENERAL KHOTINTSEV,GENERAL HOTINCEV,true,,vessel-transliteration,paires-entites-12.json
-crusetra_entities,Company,Shaltiel Hovalot Ltd,Shaltiel Transport Limited,true,,translation,paires-entites-21.json
-crusetra_entities,Company,Chobanyan Kat LLC,Chobanyan Milk LLC,true,,translation,paires-entites-21.json
-crusetra_entities,Company,Gyumri Metagh LLC,Gyumri Metal LLC,true,,translation,paires-entites-21.json
-crusetra_entities,Company,Tsiklauri Gvino LLC,Tsiklauri Wine LLC,true,,translation,paires-entites-21.json
+crusetra_entities,Company,Shaltiel Hovalot Ltd,Shaltiel Transport Limited,true,WEAK,translation,paires-entites-21.json
+crusetra_entities,Company,Chobanyan Kat LLC,Chobanyan Milk LLC,true,WEAK,translation,paires-entites-21.json
+crusetra_entities,Company,Gyumri Metagh LLC,Gyumri Metal LLC,true,WEAK,translation,paires-entites-21.json
+crusetra_entities,Company,Tsiklauri Gvino LLC,Tsiklauri Wine LLC,true,WEAK,translation,paires-entites-21.json
 crusetra_entities,Company,PrAT Zhytomyrskyi Kakhelnyi Zavod,ChAO Zhitomirskiy Kafelnyi Zavod,true,,russian-based-spelling,paires-entites-23.json
 crusetra_entities,Company,ФОП Мороз Василь Іванович,FOP Moroz Vasilii Ivanovich,true,,russian-based-spelling,paires-entites-23.json
 crusetra_entities,Company,ТОВ «Бриз Одеса»,Briz Odessa LLC,true,,russian-based-spelling,paires-entites-23.json
