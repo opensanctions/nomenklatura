@@ -55,6 +55,10 @@ def test_model_apply():
     assert ent.get("alias") == ["clean part"]
     ent.pop("alias")
 
+    multi = LangText("Vladimir Putin", "mul")
+    multi.apply(ent, "alias")
+    assert [s.lang for s in ent.get_statements("alias")] == ["mul"]
+
 
 def test_client_query(test_cache: Cache):
     data = {

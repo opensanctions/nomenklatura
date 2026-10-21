@@ -2,10 +2,9 @@ import logging
 from dataclasses import dataclass, field
 
 from followthemoney import StatementEntity, registry
-from rigour.langs import iso_639_alpha2
+from rigour.langs import MULTI_LANG, iso_639_alpha2
 from rigour.territories import get_territory
 
-from nomenklatura.wikidata.lang import MULTI_LANG
 from nomenklatura.wikidata.model import Item
 from nomenklatura.wikidata.write import (
     LAST,
