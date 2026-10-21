@@ -223,8 +223,8 @@ def test_names_product_same_script_dominates_cross_script():
     # cross-script candidate's overlap, the cross-script pair is pruned.
     # Motivating case (issue #248): a Latin query against an entity
     # carrying both a Latin and an Arabic rendering of the same surname.
-    # With equal symbolic evidence on both sides, the Latin pair is the
-    # better witness and the Arabic pair is dropped before scoring.
+    # When the Arabic pair carries no symbol the Latin pair lacks, the Latin
+    # pair is the better witness and the Arabic pair is dropped before scoring.
     queries = set(analyze_names(NameTypeTag.PER, ["Fernando Perez"], consolidate=False))
     results = set(
         analyze_names(
@@ -246,12 +246,12 @@ def test_names_product_same_script_dominates_cross_script():
     (query,) = queries
     latin = next(r for r in results if r.comparable == "fernando perez royo")
     arabic = next(r for r in results if r.comparable == "فرناندو بيريز")
-    # Sanity: latin shares script, arabic doesn't, and their overlaps
-    # with the query are equal — the exact precondition the rule targets.
+    # Sanity: latin shares script, arabic doesn't, and arabic's overlap with
+    # the query is covered by latin's — the precondition the rule targets.
     assert common_scripts(query.comparable, latin.comparable)
     assert not common_scripts(query.comparable, arabic.comparable)
-    assert (set(query.symbols) & set(latin.symbols)) == (
-        set(query.symbols) & set(arabic.symbols)
+    assert (set(query.symbols) & set(arabic.symbols)) <= (
+        set(query.symbols) & set(latin.symbols)
     )
     pairs = list(names_product(queries, results))
     kept = {r for _, r in pairs}
@@ -288,7 +288,7 @@ def test_names_product_cross_script_adds_new_evidence_survives():
     arabic = next(r for r in results if r.comparable == "فرناندو بيريز")
     latin_overlap = set(query.symbols) & set(latin.symbols)
     arabic_overlap = set(query.symbols) & set(arabic.symbols)
-    assert latin_overlap < arabic_overlap  # arabic adds new evidence
+    assert not arabic_overlap <= latin_overlap  # arabic adds new evidence
     pairs = list(names_product(queries, results))
     kept = {r for _, r in pairs}
     assert latin in kept

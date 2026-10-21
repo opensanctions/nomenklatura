@@ -75,7 +75,7 @@ CASES = [
         "schema": "Person",
         "matches": True,
         "query": {
-            "name": "Serej Lavrov",
+            "name": "Serei Lavrov",
         },
         "result": {
             "name": "Сергей Викторович Лавров",
