@@ -46,7 +46,7 @@ aliases.
 
 from followthemoney.proxy import E
 from followthemoney.types import registry
-from rigour._core import raw_jaro, raw_jaro_winkler
+from rigour.text.distance import jaro, jaro_winkler
 from rigour.names import tokenize_name
 
 from nomenklatura.matching.types import FtResult, ScoringConfig
@@ -69,12 +69,12 @@ def _simmetrics_jw(left: str, right: str) -> float:
     with shared prefixes - e.g.
     `VLADIMIR PUTIN <-> VLADIMIROVKA ADVANCED WEAPONS AND RESEARCH
     COMPLEX` lands at 82 in OFAC but just 64 with standard JW. We
-    compute pure Jaro via `raw_jaro` and apply the prefix bonus
+    compute pure Jaro via `jaro` and apply the prefix bonus
     ourselves to recover that cluster."""
     if not left or not right:
         return 0.0
-    jaro = raw_jaro(left, right)
-    if jaro == 0.0:
+    jaro_score = jaro(left, right, cutoff=0.0)
+    if jaro_score == 0.0:
         return 0.0
     prefix_matches = 0
     for left_char, right_char in zip(
@@ -84,7 +84,7 @@ def _simmetrics_jw(left: str, right: str) -> float:
             prefix_matches += 1
         else:
             break
-    return jaro + prefix_matches * WINKLER_WEIGHT * (1 - jaro)
+    return jaro_score + prefix_matches * WINKLER_WEIGHT * (1 - jaro_score)
 
 
 def _tokens(name: str) -> list[str]:
@@ -127,7 +127,7 @@ def _per_token_score(query: str, candidate: str) -> float:
     plain mean would give 73.
 
     Per-token JW rarely sits in the 0.6-0.7 band where the 1990
-    threshold matters, so `raw_jaro_winkler` is fine here."""
+    threshold matters, so `jaro_winkler` is fine here."""
     query_tokens = _drop_short_tokens(_tokens(query))
     candidate_tokens = _tokens(candidate)
     if not query_tokens or not candidate_tokens:
@@ -136,7 +136,7 @@ def _per_token_score(query: str, candidate: str) -> float:
     for query_token in query_tokens:
         best = max(
             (
-                raw_jaro_winkler(query_token, candidate_token)
+                jaro_winkler(query_token, candidate_token, cutoff=0.0)
                 for candidate_token in candidate_tokens
             ),
             default=0.0,
