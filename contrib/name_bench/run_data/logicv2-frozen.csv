@@ -10,13 +10,13 @@ nk_checks,8ad8a306,Company,SiemensAG,Siemens AG,true,MEDIUM,,,0.9800,true,TP
 nk_checks,cd40611d,Company,Siemens Aktiengeselschaft,Siemens AG,true,MEDIUM,,,1.0000,true,TP
 nk_checks,ea8bf6f0,Company,Volkswagen Aktiengesellschaft,Siemens Aktiengesellschaft,false,MEDIUM,,,0.4118,false,TN
 nk_checks,57f6b397,Person,Shaikh Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,1.0000,true,TP
-nk_checks,97b4ed6e,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9772,true,TP
-nk_checks,4796f2a8,Person,"AL BEN ALI, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9578,true,TP
-nk_checks,ecda9a1b,Person,Usama bin Laden,Shaikh Isa Bin Tarif Al Bin Ali,false,STRONG,,,0.2793,false,TN
-nk_checks,5292ed89,Person,"AL BEN MAHMOUD, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,false,MEDIUM,,,0.7468,true,FP
+nk_checks,97b4ed6e,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9760,true,TP
+nk_checks,4796f2a8,Person,"AL BEN ALI, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,,,0.9550,true,TP
+nk_checks,ecda9a1b,Person,Usama bin Laden,Shaikh Isa Bin Tarif Al Bin Ali,false,STRONG,,,0.2817,false,TN
+nk_checks,5292ed89,Person,"AL BEN MAHMOUD, Isa Ben Tarif",Shaikh Isa Bin Tarif Al Bin Ali,false,MEDIUM,,,0.7297,true,FP
 nk_checks,88aa5c0c,Person,MOHAMMADHASNI HAJI SSAD KHAN ZARKARI,HAJI ASAD KHAN ZARKARI MOHAMMADHASNI,true,MEDIUM,,,0.8000,true,TP
 nk_checks,3b99af10,Person,MOHAMMAD HASNI HAJI SSAD KHAN ZARKARI,HAJI ASAD KHAN ZARKARI MOHAMMADHASNI,true,MEDIUM,,,0.7973,true,TP
-nk_checks,b3420203,Person,Hans Friedrich,Hans Friedrich,true,MEDIUM,,,1.0000,true,TP
+nk_checks,b3420203,Person,Hans Friedrich,Hans Friedrich,true,STRONG,,,1.0000,true,TP
 nk_checks,2581ab19,Person,Friedrich Hans,Hans Friedrich,false,MEDIUM,,,1.0000,true,FP
 nk_checks,37b435ab,Person,Hans O Friedrich,Hans Joachim Friedrich,false,MEDIUM,,,0.6667,false,TN
 nk_checks,2315b667,Person,Hans J Friedrich,Hans Joachim Friedrich,true,MEDIUM,,,0.6667,false,FN
@@ -51,16 +51,17 @@ nk_checks,0731bce8,Person,SergeiLavrov,Sergei Lavrov,true,STRONG,,,0.9846,true,T
 nk_checks,16f24eb2,Person,Serei Lavrov,Sergei Lavrov,true,MEDIUM,Character Deletion,,0.9167,true,TP
 nk_checks,2aade929,Person,Alexandr Lukashnko,Alexander Lukashenko,true,MEDIUM,Character Addition/Deletion,,0.9000,true,TP
 nk_checks,113bf091,Person,Alexander Luakshenko,Alexander Lukashenko,true,MEDIUM,Character Addition/Deletion,,0.9050,true,TP
-nk_checks,2c23e05a,Person,Kim Jong-uun,Kim Jong-un,true,MEDIUM,Character Repetition,,0.6667,false,FN
-nk_checks,f7e7c301,Person,Kim Joonng-un,Kim Jong-un,true,MEDIUM,Character Repetition,,0.6667,false,FN
+nk_checks,2c23e05a,Person,Kim Jong-uun,Kim Jong-un,true,MEDIUM,Character Repetition,,0.7407,true,TP
+nk_checks,f7e7c301,Person,Kim Joonng-un,Kim Jong-un,true,MEDIUM,Character Repetition,,0.6296,false,FN
 nk_checks,b4b09197,Person,rimaldiV nituP,Vladimir Putin,true,WEAK,Character Reversal,,0.0000,false,FN
 nk_checks,a57107d5,Person,Vladimir nitPu,Vladimir Putin,true,WEAK,Character Reversal,,0.5000,false,FN
 nk_checks,fb7343cd,Person,Nicolás Maduro SA,Nicolás Maduro,true,MEDIUM,Contextual Ending,,0.7143,true,TP
 nk_checks,68ac99f9,Person,Nicolás Maduro LLC,Nicolás Maduro,true,MEDIUM,Contextual Ending,,0.7143,true,TP
 nk_checks,9da3f8e6,Person,Mr. Recep Tayyip Erdoğan,Recep Tayyip Erdoğan,true,STRONG,Contextual Beginning,,1.0000,true,TP
-nk_checks,68f66b8b,Person,President Erdoğan,Recep Tayyip Erdoğan,true,MEDIUM,Contextual Beginning,,0.7143,true,TP
-nk_checks,86370207,Person,Basharr al-Assad,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.9524,true,TP
-nk_checks,72c45f00,Person,Bashar al-Asasd,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.8800,true,TP
+nk_checks,68f66b8b,Person,President Erdoğan,Recep Tayyip Erdoğan,true,WEAK,Contextual Beginning,,0.7143,true,TP
+nk_checks,86370207,Person,Basharr al-Assad,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.9471,true,TP
+nk_checks,72c45f00,Person,Bashar al-Asasd,Bashar al-Assad,true,MEDIUM,Fat Finger Typo,,0.8667,true,TP
+nk_checks,ab299579,Person,Bashar xal-Assad,Bashar al-Assad,true,STRONG,Fat Finger Typo,,0.7407,true,TP
 nk_checks,cf960508,Person,Shi Jinping,Xi Jinping,true,MEDIUM,Phonetic Replacement,,0.9500,true,TP
 nk_checks,928eb9e4,Person,Si Jinpin,Xi Jinping,true,MEDIUM,Phonetic Replacement,,0.8786,true,TP
 nk_checks,ef75463e,Person,Margarita-Simonyan,Margarita Simonyan,true,MEDIUM,Special Characters Addition,,1.0000,true,TP
@@ -68,7 +69,7 @@ nk_checks,10f1a279,Person,Margarita Simonyán,Margarita Simonyan,true,MEDIUM,Spe
 nk_checks,568f972d,Person,A. Khamenei,Ali Khamenei,true,WEAK,Initials Usage,,0.5882,false,FN
 nk_checks,e3a8b81f,Person,J.-C. Juncker,Jean-Claude Juncker,true,WEAK,Initials Usage,,0.9500,true,TP
 nk_checks,c22a1079,Person,JC Juncker,Jean-Claude Juncker,true,WEAK,Initials Usage,,0.9500,true,TP
-nk_checks,afb7912c,Organization,PLA,People’s Liberation Army,true,MEDIUM,Abbreviation,,0.9000,true,TP
+nk_checks,afb7912c,Organization,PLA,People’s Liberation Army,true,WEAK,Abbreviation,,0.9000,true,TP
 nk_checks,64f611b0,Organization,PLA China,People’s Liberation Army,true,MEDIUM,Abbreviation,,0.9000,true,TP
 nk_checks,3510efaf,Person,AlisherUsmanov,Alisher Usmanov,true,MEDIUM,Word Joining,,0.9867,true,TP
 nk_checks,21312e24,Person,Alisher-Usmanov,Alisher Usmanov,true,MEDIUM,Word Joining,,1.0000,true,TP
@@ -95,7 +96,7 @@ nk_checks,8069c1c3,Person,Ihab Makhlouf,Rami Makhlouf,false,MEDIUM,,,0.5000,fals
 nk_checks,c1a1edbf,Person,Hafez Makhlouf,Rami Makhlouf,false,MEDIUM,,,0.5000,false,TN
 nk_checks,fd580ad8,Person,Bibi Netanyahu,Benjamin Netanyahu,true,WEAK,Nickname Usage,,0.5000,false,FN
 nk_checks,f8fc314f,Person,Ben Netanyahu,Benjamin Netanyahu,true,WEAK,Nickname Usage,,0.8222,true,TP
-nk_checks,f023048c,Person,Boris Netanyahu,Benjamin Netanyahu,false,MEDIUM,,,0.5000,false,TN
+nk_checks,f023048c,Person,Boris Netanyahu,Benjamin Netanyahu,false,STRONG,,,0.5000,false,TN
 nk_checks,bcb43666,Person,Emanuel Macron,Emmanuel Macron,true,MEDIUM,Common Misspelling,,0.9500,true,TP
 nk_checks,f94ee9ed,Person,Emmanuel Macrone,Emmanuel Macron,true,MEDIUM,Common Misspelling,,0.9286,true,TP
 nk_checks,e63fb282,Person,Pot Pouv,Pol Pot,false,MEDIUM,,,0.5000,false,TN
@@ -126,13 +127,13 @@ nk_checks,15ed6201,Person,Sergej Viktorovich Navros,Sergey Viktorovich LAVROV,fa
 nk_checks,e9d1c1cc,Person,Jeremy Thomas England,Thomas Lindemann,false,MEDIUM,,,0.3571,false,TN
 nk_checks,588971d9,Person,Niranjan Thomas Alva,Thomas Lindemann,false,MEDIUM,,,0.3571,false,TN
 nk_checks,55e29636,Person,Thomas A. Lind,Thomas Lindemann,false,MEDIUM,,,0.5000,false,TN
-nk_checks,9e17e0a0,Person,Thomas A. Lindeman,Thomas Lindemann,true,MEDIUM,,,0.7917,true,TP
+nk_checks,9e17e0a0,Person,Thomas A. Lindeman,Thomas Lindemann,true,MEDIUM,,,0.8333,true,TP
 nk_checks,7501a126,Person,Ротенберг Аркадий,Arkadii Romanovich Rotenberg,true,MEDIUM,,,0.8636,true,TP
-nk_checks,aab171a4,Person,Osama bin Laden,Usāma bin Muhammad ibn Awad ibn Lādin,true,MEDIUM,,,0.5163,false,FN
+nk_checks,aab171a4,Person,Osama bin Laden,Usāma bin Muhammad ibn Awad ibn Lādin,true,WEAK,,,0.7149,true,TP
 nk_checks,7839701e,Person,Muhammad bin Salman,Usāma bin Muhammad ibn Awad ibn Lādin,false,MEDIUM,,,0.5435,false,TN
 nk_checks,2c108e72,Company,Goodwill Company,Good Will Company,true,MEDIUM,,,0.9829,true,TP
 nk_checks,e89e0d84,Organization,Government of Estonia,Government of Ethiopia,false,MEDIUM,,,0.2308,false,TN
-nk_checks,3d3369f1,Company,CRYSTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,,,1.0000,true,TP
+nk_checks,3d3369f1,Company,CRYSTALORD LIMITED,CRYSTALORD LTD,true,STRONG,,,1.0000,true,TP
 nk_checks,aa536cea,Company,CRISTALORD LIMITED,CRYSTALORD LTD,true,MEDIUM,,,0.9205,true,TP
 nk_checks,b50ebbe3,Company,CRYSTALORD SYSTEMS LIMITED,CRYSTALORD LTD,false,WEAK,,,0.7522,true,FP
 nk_checks,f36c459f,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,true,MEDIUM,,,1.0000,true,TP
@@ -148,10 +149,10 @@ nk_checks,5d62297c,Company,Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO
 nk_checks,5a28795c,Company,ANO Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,false,MEDIUM,,,0.6803,false,TN
 nk_checks,5f2b41d2,Company,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,,,0.7463,true,TP
 nk_checks,66674791,LegalEntity,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,,,0.7463,true,TP
-nk_checks,4cba6088,Person,Boris Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.8000,true,TP
-nk_checks,774c8d2d,Person,Geoffrey Boris Johnson,Alexandre Boris de Pfeffel Johnson,false,STRONG,,,0.6061,false,TN
-nk_checks,99818732,Person,Boris de Pfeffel Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9524,true,TP
-nk_checks,b8f02373,Person,Boris Johnson de Pfeffel,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9524,true,TP
+nk_checks,4cba6088,Person,Boris Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.8097,true,TP
+nk_checks,774c8d2d,Person,Geoffrey Boris Johnson,Alexandre Boris de Pfeffel Johnson,false,STRONG,,,0.6116,false,TN
+nk_checks,99818732,Person,Boris de Pfeffel Johnson,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9487,true,TP
+nk_checks,b8f02373,Person,Boris Johnson de Pfeffel,Alexandre Boris de Pfeffel Johnson,true,MEDIUM,,,0.9487,true,TP
 nk_checks,e1cf3f2c,Company,A.B.C. Company,A.B.C. Company,true,STRONG,,,1.0000,true,TP
 nk_checks,a133649c,Company,ABC Company,A.B.C. Company,true,STRONG,,,1.0000,true,TP
 nk_checks,cd91961d,Company,ABC Co.,A.B.C. Company,true,MEDIUM,,,0.9769,true,TP
@@ -194,10 +195,10 @@ nk_checks,b8ad8c1e,Organization,ndrangheta,'Ndrangheta,true,MEDIUM,,,1.0000,true
 nk_checks,8eda6e19,Organization,Andrang Heta,'Ndrangheta,true,MEDIUM,,,0.9000,true,TP
 nk_checks,ec402bc3,Organization,Al Qaeda,Al Qa'ida,true,STRONG,,,0.9000,true,TP
 nk_checks,5ddda764,Organization,Al Qaeda,Al-Qa'ida/Islamic Army,true,STRONG,,,0.9000,true,TP
-nk_checks,9bd251f2,Organization,Al-Qaida in Iraq,Al-Qaida in the Arabian Peninsula,false,MEDIUM,,,0.5512,false,TN
-nk_checks,2400d834,Person,'Abd al-Aziz al-Nuristani,Abdul Aziz Nooristani,true,MEDIUM,,,0.8037,true,TP
+nk_checks,9bd251f2,Organization,Al-Qaida in Iraq,Al-Qaida in the Arabian Peninsula,false,MEDIUM,,,0.5578,false,TN
+nk_checks,2400d834,Person,'Abd al-Aziz al-Nuristani,Abdul Aziz Nooristani,true,MEDIUM,,,0.8411,true,TP
 nk_checks,48560f14,Person,"NURISTANI, Abdul Aziz",Abdul Aziz Nooristani,true,MEDIUM,,,0.9565,true,TP
-nk_checks,b6d9e4d5,Person,"NURISTANI, Abdul Aziz",ABDUL AZIZ Aziz Nooristani,true,MEDIUM,,,0.9565,true,TP
+nk_checks,b6d9e4d5,Person,"NURISTANI, Abdul Aziz",ABDUL AZIZ Aziz Nooristani,true,MEDIUM,,,0.8800,true,TP
 nk_checks,8330d8cd,Vessel,Hellenic Spirit,MV Hellenic Spirit,true,MEDIUM,,,1.0000,true,TP
 nk_checks,72d78232,Vessel,Lady Leila,Lady Rania,false,MEDIUM,,,0.0000,false,TN
 nk_checks,38430e7c,Vessel,Zu Zag Bong 6,Zu Zag Bong 5,true,MEDIUM,,,0.5964,false,FN
@@ -211,13 +212,13 @@ nk_checks,bc5ad42c,Person,"Frost, William G.",William W Frost,false,MEDIUM,,,0.6
 nk_checks,d54ddd32,Person,GENA C RANDOLPH,"Randolph, Gena",true,MEDIUM,,,0.7143,true,TP
 nk_checks,a4cfc4c2,Person,GERD RANDOLPH,"Randolph, Gena",false,MEDIUM,,,0.5000,false,TN
 nk_checks,e0a7b412,Organization,The BSF Foundation,The BIRD Foundation,false,MEDIUM,,,0.2308,false,TN
-nk_checks,4df61699,Person,Eric A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6667,false,TN
-nk_checks,8082a5cc,Person,Aaron A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6667,false,TN
+nk_checks,4df61699,Person,Eric A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6296,false,TN
+nk_checks,8082a5cc,Person,Aaron A. Wendt,Josh A. Wendt,false,MEDIUM,,,0.6296,false,TN
 nk_checks,95a2f48a,Company,"BWI Industries, Inc.","BAE Industries, Inc.",false,STRONG,,,0.5000,false,TN
 nk_checks,d27d29e3,LegalEntity,"BWI Industries, Inc.","BAE Industries, Inc.",true,MEDIUM,,,0.5000,false,FN
-nk_checks,acb967e1,Company,"BAE Systems, Inc.","BAE Industries, Inc.",false,MEDIUM,,,0.6296,false,TN
+nk_checks,acb967e1,Company,"BAE Systems, Inc.","BAE Industries, Inc.",false,MEDIUM,,,0.7083,true,FP
 nk_checks,0e94256b,Person,Allaidin Hussain ALWAN,Ahmad al-Hamidawi,false,MEDIUM,,,0.0000,false,TN
-nk_checks,1834d88e,Organization,"Academy of Military Medical Sciences, Insitute of Medical Equipment","Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology",false,MEDIUM,,,0.6773,false,TN
+nk_checks,1834d88e,Organization,"Academy of Military Medical Sciences, Insitute of Medical Equipment","Academy of Military Medical Sciences, Institute of Micobiology and Epidemiology",false,MEDIUM,,,0.6804,false,TN
 nk_checks,1ce61548,Company,Management Company,Westminister Management Company,false,MEDIUM,,,0.7500,true,FP
 nk_checks,d6e1ce25,Company,Management Company 23,Management Company,false,MEDIUM,,,0.3659,false,TN
 nk_checks,09a9b423,LegalEntity,Elois,Alice Costandina Titus,false,MEDIUM,,,0.0000,false,TN
@@ -229,7 +230,7 @@ nk_unit_tests,3405b51f,Person,John Doe,Juan Doe,true,MEDIUM,logic_v2_cases,test_
 nk_unit_tests,692c3aee,Person,John Doeburg,John Dowburg,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8673,true,TP
 nk_unit_tests,3c6d442e,Person,John Doe,John Down,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.5000,false,FN
 nk_unit_tests,b429d61a,Person,Serei Lavrov,Sergei Lavrov,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9167,true,TP
-nk_unit_tests,ac07623a,Person,Serej Lavrov,Сергей Викторович Лавров,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8312,true,TP
+nk_unit_tests,2eda3144,Person,Serei Lavrov,Сергей Викторович Лавров,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8312,true,TP
 nk_unit_tests,fd71cebd,Person,Ramimakhlouf,Rami Makhlouf,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.9846,true,TP
 nk_unit_tests,c70bd94f,Person,A Nazarbayev,Nursultan Naza,false,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.0000,false,TN
 nk_unit_tests,8e854163,Person,Ted Doe,Theodore Doe,true,MEDIUM,logic_v2_cases,test_logic_v2_cases.py CASES,0.8222,true,TP
@@ -275,10 +276,10 @@ nk_unit_tests,fa660f4c,Person,Thomas Lindemann,Iain Thomas Rankin,false,MEDIUM,l
 nk_unit_tests,d1cb9eb8,Person,Michelle Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.9091,true,TP
 nk_unit_tests,59d68634,Person,Michele Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.8485,true,TP
 nk_unit_tests,5f5b08f4,Person,Michele Nichaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.7531,true,TP
-nk_unit_tests,6f459879,Person,Michele Nychaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.6864,false,FN
+nk_unit_tests,6f459879,Person,Michele Nychaela,Michaela Michelle Micheli,false,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.6864,false,TN
 nk_unit_tests,09f42754,Person,Michele Mugaloo,Michaela Michelle Micheli,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity,0.4040,false,TN
 nk_unit_tests,5c441fb7,Person,Michaela,Michaela Michelle Micheli,true,MEDIUM,duplicative_tps,test_duplicative_name_similarity,0.7143,true,TP
-nk_unit_tests,dc293452,Person,Michaela,Michelle Obama,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity,0.0000,false,TN
+nk_unit_tests,dc293452,Person,Michaela,Michelle Obama,false,MEDIUM,duplicative_fps,test_duplicative_name_similarity,0.5509,false,TN
 nk_unit_tests,9b94d1e7,Person,Jan Daniel Bothma,RAZAFIMAHATRATRA Jean Daniel Christian,false,MEDIUM,jw_person_fps,test_person_name_jaro_winkler,0.5625,false,TN
 nk_unit_tests,1e8490b5,Person,Jan Daniel Bothma,JanDaniel Bothma,true,MEDIUM,jw_person_tps,test_person_name_jaro_winkler,0.9900,true,TP
 nk_unit_tests,3eb56801,Company,Siemens AG,Siemens Aktiengesellschaft,true,MEDIUM,fingerprint_tps,test_name_fingerprint_levenshtein,1.0000,true,TP
@@ -295,11 +296,11 @@ nk_unit_tests,fcbd9cd1,Company,faberlic,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,f
 nk_unit_tests,9db4fc2d,Company,faberlick,FABERLIC EUROPE Sp. z o.o.,true,MEDIUM,faberlic_tps,test_org_name_example_1,0.6486,false,FN
 nk_unit_tests,36cbd812,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JSC,true,MEDIUM,missiles_tps,test_org_name_example_2,1.0000,true,TP
 nk_unit_tests,826bb48e,Company,TACTICAL MISSILES CORPORATION OJSC,TACTICAL MISSILES CORPORATION JSC,true,MEDIUM,missiles_tps,test_org_name_example_2,0.9533,true,TP
-nk_unit_tests,80ab85f6,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JOYNT STOCK COMPANY,true,MEDIUM,missiles_tps,test_org_name_example_2,0.6319,false,FN
+nk_unit_tests,80ab85f6,Company,TACTICAL MISSILES CORPORATION JOINT STOCK COMPANY,TACTICAL MISSILES CORPORATION JOYNT STOCK COMPANY,true,MEDIUM,missiles_tps,test_org_name_example_2,0.6765,false,FN
 nk_unit_tests,9e0014c3,Company,Iskusstvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,true,MEDIUM,iskusstvo_tps,test_org_name_example_3,0.9346,true,TP
 nk_unit_tests,6370aa8b,Company,Iskustvo Krasoty,LIMITED LIABILITY COMPANY ISKUSSTVO KRASOTY,true,MEDIUM,iskusstvo_tps,test_org_name_example_3,0.8879,true,TP
 nk_unit_tests,14d475ec,Person,Shaikh Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,arabic_tps,test_arabic_name_similarity,1.0000,true,TP
-nk_unit_tests,91212c94,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,arabic_tps,test_arabic_name_similarity,0.9772,true,TP
+nk_unit_tests,91212c94,Person,Isa Bin Tarif Al Bin Ali,Shaikh Isa Bin Tarif Al Bin Ali,true,MEDIUM,arabic_tps,test_arabic_name_similarity,0.9760,true,TP
 nk_unit_tests,d3fe4aa9,Person,John Smith,"Smith, John",true,MEDIUM,reorder_tps,test_name_match,1.0000,true,TP
 nk_unit_tests,3b30cf44,Person,Vladimir Putin,Vladimir Pudin,true,MEDIUM,putin_tps,test_heuristic_scoring,0.8200,true,TP
 nk_unit_tests,ad79f3e8,Person,Hannibal,Hannibol,true,MEDIUM,single_tps,test_single_name,0.7656,true,TP
@@ -322,35 +323,35 @@ synth_companies,2e1a5888,Company,Exxor Mobil Corporation,Exxon Mobil Corporation
 synth_companies,0ef833d4,Company,Vital Holding S.A.,Vitol Holding S.A.,true,MEDIUM,LLM-proposed deviation,one-letter shift to real word,0.8200,true,TP
 synth_companies,301ed773,Company,Schell plc,Shell plc,true,MEDIUM,LLM-proposed deviation,added consonant (real surname),0.9020,true,TP
 synth_companies,03401615,Company,China State Construction Equipment Corporation,China State Construction Engineering Corporation,false,MEDIUM,LLM-proposed deviation,domain-word swap,0.6774,false,TN
-synth_companies,6fcdfd46,Company,Tayota Motor Corporation,Toyota Motor Corporation,true,MEDIUM,LLM-proposed deviation,vowel reorder,0.8846,true,TP
-synth_companies,5a8e551b,Company,McKenton Corporation,McKesson Corporation,true,MEDIUM,LLM-proposed deviation,plausible-alternate Scottish surname,0.6635,false,FN
+synth_companies,6fcdfd46,Company,Tayota Motor Corporation,Toyota Motor Corporation,true,MEDIUM,LLM-proposed deviation,vowel reorder,0.8472,true,TP
+synth_companies,5a8e551b,Company,McKenton Corporation,McKesson Corporation,false,MEDIUM,LLM-proposed deviation,plausible-alternate Scottish surname,0.6635,false,TN
 synth_companies,0f48b025,Company,Macrosoft Corporation,Microsoft Corporation,true,MEDIUM,LLM-proposed deviation,prefix antonym (micro/macro),0.8386,true,TP
 synth_companies,bfaca36d,Company,"Sencora, Inc.","Cencora, Inc.",true,MEDIUM,LLM-proposed deviation,initial-letter sub,0.8439,true,TP
 synth_companies,28254759,Company,Trafalgura Group Pte. Ltd.,Trafigura Group Pte. Ltd.,true,MEDIUM,LLM-proposed deviation,internal vowel sub,0.8556,true,TP
 synth_companies,2ae4f99c,Company,Cosco Wholesale Corporation,Costco Wholesale Corporation,true,MEDIUM,LLM-proposed deviation,dropped consonant (collides with real Cosco shipping),0.9379,true,TP
 synth_companies,d24457fd,Company,JPMorgon Chace & Co.,JPMorgan Chase & Co.,true,MEDIUM,LLM-proposed deviation,phonetic-near surname (Chace is a real surname),0.7522,true,TP
-synth_companies,5ff50bb6,Company,Industrial and Commercial Bank of Chad Limited,Industrial and Commercial Bank of China Limited,false,MEDIUM,LLM-proposed deviation,geographic swap,0.7872,true,FP
+synth_companies,5ff50bb6,Company,Industrial and Commercial Bank of Chad Limited,Industrial and Commercial Bank of China Limited,false,MEDIUM,LLM-proposed deviation,geographic swap,0.8222,true,FP
 synth_companies,43dd6128,Company,TotalEnergias SE,TotalEnergies SE,true,MEDIUM,LLM-proposed deviation,Spanish-form pluralisation,0.9130,true,TP
 synth_companies,b838460e,Company,Glenmore plc,Glencore plc,true,MEDIUM,LLM-proposed deviation,Scottish-place-name sub (Glenmore is a real distillery),0.8621,true,TP
 synth_companies,6de2e78a,Company,Invidia Corporation,NVIDIA Corporation,true,MEDIUM,LLM-proposed deviation,Latin word substitution,0.8901,true,TP
-synth_companies,32a0c054,Company,BD p.l.c.,BP p.l.c.,true,MEDIUM,LLM-proposed deviation,two-letter ticker collision (BD = Becton Dickinson),0.4118,false,FN
+synth_companies,32a0c054,Company,BD p.l.c.,BP p.l.c.,false,MEDIUM,LLM-proposed deviation,two-letter ticker collision (BD = Becton Dickinson),0.4118,false,TN
 synth_companies,f949679e,Company,"Cardinal Wealth, Inc.","Cardinal Health, Inc.",true,MEDIUM,LLM-proposed deviation,domain-word sub (Health/Wealth),0.8868,true,TP
 synth_companies,9dd03591,Company,Stellaris N.V.,Stellantis N.V.,true,MEDIUM,LLM-proposed deviation,truncated-and-substituted stem,0.8301,true,TP
 synth_companies,e38a1fb2,Company,Chevon Corporation,Chevron Corporation,true,MEDIUM,LLM-proposed deviation,dropped consonant (Chevon is a real meat brand),0.8901,true,TP
 synth_companies,1e09a6bb,Company,China Construction Trust Corporation,China Construction Bank Corporation,false,WEAK,LLM-proposed deviation,sector-word swap (Bank/Trust),0.7031,true,FP
 synth_companies,099c3673,Company,"Samsong Electronics Co., Ltd.","Samsung Electronics Co., Ltd.",true,MEDIUM,LLM-proposed deviation,Korean-Romanisation vowel sub,0.9208,true,TP
 synth_companies,9dc88ec2,Company,"Hon Wai Precision Industry Co., Ltd.","Hon Hai Precision Industry Co., Ltd.",true,MEDIUM,LLM-proposed deviation,plausible-alternate Cantonese name,0.7500,true,TP
-synth_companies,3b6710ee,Company,The Sigma Group,The Cigna Group,true,MEDIUM,LLM-proposed deviation,Greek-letter near-homophone,0.2308,false,FN
+synth_companies,3b6710ee,Company,The Sigma Group,The Cigna Group,false,MEDIUM,LLM-proposed deviation,Greek-letter near-homophone,0.2308,false,TN
 synth_companies,f21e50b4,Company,Agriculture Bank of China Limited,Agricultural Bank of China Limited,true,MEDIUM,LLM-proposed deviation,morphological variant (noun/adjective),0.9806,true,TP
 synth_companies,96f4fd71,Company,Schwartz Gruppe,Schwarz Gruppe,true,MEDIUM,LLM-proposed deviation,Yiddish/German surname-spelling collision,0.9444,true,TP
 synth_companies,342028a3,Company,China Railroad Engineering Corporation,China Railway Engineering Corporation,false,MEDIUM,LLM-proposed deviation,US/UK English synonym (Railroad/Railway),0.6429,false,TN
 synth_companies,306b2215,Company,"Cargille, Incorporated","Cargill, Incorporated",true,MEDIUM,LLM-proposed deviation,French-orthography surname variant,0.9265,true,TP
-synth_companies,03fb72bd,Company,Fjord Motor Company,Ford Motor Company,true,MEDIUM,LLM-proposed deviation,Norse-word substitution (real word),0.9275,true,TP
-synth_companies,59cc256b,Company,Bank of Chima Limited,Bank of China Limited,true,MEDIUM,LLM-proposed deviation,one-letter geographic decoy,0.9014,true,TP
-synth_companies,e629519b,Company,Bank of Armenia Corporation,Bank of America Corporation,false,MEDIUM,LLM-proposed deviation,geographic swap (shared first phoneme),0.8380,true,FP
+synth_companies,03fb72bd,Company,Fjord Motor Company,Ford Motor Company,true,MEDIUM,LLM-proposed deviation,Norse-word substitution (real word),0.9000,true,TP
+synth_companies,59cc256b,Company,Bank of Chima Limited,Bank of China Limited,true,MEDIUM,LLM-proposed deviation,one-letter geographic decoy,0.8839,true,TP
+synth_companies,e629519b,Company,Bank of Armenia Corporation,Bank of America Corporation,false,MEDIUM,LLM-proposed deviation,geographic swap (shared first phoneme),0.6296,false,TN
 synth_companies,c5b9dc8b,Company,General Mortars Company,General Motors Company,true,MEDIUM,LLM-proposed deviation,phonetic-near common-noun (Motors/Mortars),0.3750,false,FN
 synth_companies,7bc64a3c,Company,"Elegance Health, Inc.","Elevance Health, Inc.",true,MEDIUM,LLM-proposed deviation,brand-stem one-letter shift to real word,0.9023,true,TP
-synth_companies,5754bdd0,Company,Berliner Motoren Werke Aktiengesellschaft,Bayerische Motoren Werke Aktiengesellschaft,false,STRONG,LLM-proposed deviation,German-region word swap (BMW expansion),0.7297,true,FP
+synth_companies,5754bdd0,Company,Berliner Motoren Werke Aktiengesellschaft,Bayerische Motoren Werke Aktiengesellschaft,false,STRONG,LLM-proposed deviation,German-region word swap (BMW expansion),0.6774,false,TN
 synth_companies,61fed6df,Company,Mercedes-Benn Group AG,Mercedes-Benz Group AG,true,MEDIUM,LLM-proposed deviation,final-consonant doubling,0.6667,false,FN
 synth_companies,9351c8a1,Company,"Beta Platforms, Inc.","Meta Platforms, Inc.",true,MEDIUM,LLM-proposed deviation,Greek-letter sub,0.8667,true,TP
 synth_companies,f3d73f48,Company,China Railway Constructors Corporation,China Railway Construction Corporation,false,WEAK,LLM-proposed deviation,nominalisation variant,0.8909,true,FP
@@ -361,7 +362,7 @@ synth_people,f9aa11e9,Person,VladimirPutin,Vladimir Putin,true,STRONG,Failed tes
 synth_people,bcded9dc,Person,Владимир Пулин,Владимир Путин,true,STRONG,LLM-proposed deviation,RU surname single-char sub (Cyrillic),0.8200,true,TP
 synth_people,bad9c0e0,Person,Xi Jinpeng,Xi Jinping,true,MEDIUM,LLM-proposed deviation,CN given-name vowel sub (Pinyin),0.9050,true,TP
 synth_people,188f01ce,Person,习近朋,习近平,false,MEDIUM,LLM-proposed deviation,CN given-name char sub (朋 péng vs 平 píng),0.0000,false,TN
-synth_people,655943e2,Person,Kim Jong On,Kim Jong Un,true,MEDIUM,LLM-proposed deviation,KP given-name vowel sub (Latin),0.9667,true,TP
+synth_people,655943e2,Person,Kim Jong On,Kim Jong Un,true,MEDIUM,LLM-proposed deviation,KP given-name vowel sub (Latin),0.9741,true,TP
 synth_people,cbce0094,Person,김종은,김정은,false,MEDIUM,LLM-proposed deviation,KP given-name syllable sub (Hangul),0.9091,true,FP
 synth_people,d8fc098d,Person,Lee Jae Hyung,Lee Jae Myung,true,MEDIUM,LLM-proposed deviation,KR given-name onset sub (Latin),0.8800,true,TP
 synth_people,378fea3f,Person,이재형,이재명,false,MEDIUM,LLM-proposed deviation,KR given-name syllable sub (Hangul),0.8100,true,FP
@@ -373,11 +374,11 @@ synth_people,06a82c3f,Person,Masoud Pezeshfar,Masoud Pezeshkian,false,MEDIUM,LLM
 synth_people,5f4b2750,Person,مسعود پزشک‌فر,مسعود پزشکیان,false,MEDIUM,LLM-proposed deviation,IR surname-suffix swap (Persian),0.5000,false,TN
 synth_people,2a3a3a11,Person,Mohammed bin Sultan,Mohammed bin Salman,true,MEDIUM,LLM-proposed deviation,SA patronymic swap (Latin),0.6667,false,FN
 synth_people,7b34166a,Person,محمد بن سلطان,محمد بن سلمان,true,MEDIUM,LLM-proposed deviation,SA patronymic swap (Arabic),0.8800,true,TP
-synth_people,77d11cf1,Person,Abdel Fattah el-Sirri,Abdel Fattah el-Sisi,true,MEDIUM,LLM-proposed deviation,EG surname consonant sub (Latin),0.6667,false,FN
+synth_people,77d11cf1,Person,Abdel Fattah el-Sirri,Abdel Fattah el-Sisi,true,MEDIUM,LLM-proposed deviation,EG surname consonant sub (Latin),0.6296,false,FN
 synth_people,50ae6266,Person,عبد الفتاح السري,عبد الفتاح السيسي,true,MEDIUM,LLM-proposed deviation,EG surname consonant sub (Arabic),0.5000,false,FN
 synth_people,b2d30b5e,Person,Kyriakos Mitsotakos,Kyriakos Mitsotakis,true,MEDIUM,LLM-proposed deviation,GR surname-ending -ος/-ης (Latin),0.9050,true,TP
 synth_people,bbaa30e8,Person,Κυριάκος Μητσοτάκος,Κυριάκος Μητσοτάκης,true,MEDIUM,LLM-proposed deviation,GR surname-ending -ος/-ης (Greek),0.9050,true,TP
-synth_people,c592cbcb,Person,Narender Modi,Narendra Modi,true,MEDIUM,LLM-proposed deviation,IN given-name plausible-alternate (Latin),0.7812,true,TP
+synth_people,c592cbcb,Person,Narender Modi,Narendra Modi,true,MEDIUM,LLM-proposed deviation,IN given-name plausible-alternate (Latin),0.8828,true,TP
 synth_people,fd43dd7d,Person,नरेन्द्र मोडी,नरेन्द्र मोदी,true,MEDIUM,LLM-proposed deviation,IN surname retroflex/dental swap ड/द (Devanagari),0.5000,false,FN
 synth_people,c3c86c7d,Person,Vajiralongkron,Vajiralongkorn,true,MEDIUM,LLM-proposed deviation,TH royal-name vowel reorder (Latin),0.8622,true,TP
 synth_people,fa4d833a,Person,วชิราลงกรน,วชิราลงกรณ,true,MEDIUM,LLM-proposed deviation,TH final-consonant sub น/ณ (Thai),0.7901,true,TP
@@ -388,18 +389,18 @@ synth_people,ae6f7bfc,Person,Илиана Йорданова,Илиана Йот
 synth_people,0044b23c,Person,Alexander Lukashevich,Alexander Lukashenko,false,MEDIUM,LLM-proposed deviation,BY surname-suffix swap -evich/-enko (Latin),0.5000,false,TN
 synth_people,ed425417,Person,Аляксандр Лукашэвіч,Аляксандр Лукашэнка,false,MEDIUM,LLM-proposed deviation,BY surname-suffix swap (Belarusian Cyrillic),0.5000,false,TN
 synth_people,178dda97,Person,Ukhnaagiin Khürelchükh,Ukhnaagiin Khürelsükh,true,MEDIUM,LLM-proposed deviation,MN surname consonant sub (Latin),0.8682,true,TP
-synth_people,1992db02,Person,Ухнаагийн Хүрэлчүх,Ухнаагийн Хүрэлсүх,true,MEDIUM,LLM-proposed deviation,MN surname consonant sub (Mongolian Cyrillic),0.8828,true,TP
+synth_people,1992db02,Person,Ухнаагийн Хүрэлчүх,Ухнаагийн Хүрэлсүх,true,MEDIUM,LLM-proposed deviation,MN surname consonant sub (Mongolian Cyrillic),0.8403,true,TP
 synth_people,d9de20e1,Person,Mohammed Shamsuddin,Mohammed Shahabuddin,false,MEDIUM,LLM-proposed deviation,BD given-name stem swap (Latin),0.5000,false,TN
 synth_people,c5d653fd,Person,মোহাম্মদ শামসুদ্দিন,মোহাম্মদ সাহাবুদ্দিন,false,MEDIUM,LLM-proposed deviation,BD given-name stem swap (Bengali),0.5000,false,TN
 synth_people,4b4bc6e4,Person,Arif Ali Zardari,Asif Ali Zardari,true,MEDIUM,LLM-proposed deviation,PK given-name onset sub (Latin),0.6667,false,FN
 synth_people,ae4f2e70,Person,عارف علی زرداری,آصف علی زرداری,false,MEDIUM,LLM-proposed deviation,PK given-name onset sub (Urdu),0.6667,false,TN
 synth_people,01871a1b,Person,Kassym-Jomart Tukayev,Kassym-Jomart Tokayev,true,MEDIUM,LLM-proposed deviation,KZ surname vowel sub (Latin),0.9367,true,TP
-synth_people,43ef6307,Person,Қасым-Жомарт Тұқаев,Қасым-Жомарт Тоқаев,true,MEDIUM,LLM-proposed deviation,KZ surname vowel sub ұ/о (Kazakh Cyrillic),0.9367,true,TP
+synth_people,43ef6307,Person,Қасым-Жомарт Тұқаев,Қасым-Жомарт Тоқаев,true,MEDIUM,LLM-proposed deviation,KZ surname vowel sub ұ/о (Kazakh Cyrillic),0.9268,true,TP
 synth_people,31b02065,Person,Abiyot Ahmed,Abiy Ahmed,true,MEDIUM,LLM-proposed deviation,ET given-name plausible-alternate (Latin),0.5000,false,FN
 synth_people,efa34f41,Person,ዐቢዮት አሕመድ,ዐቢይ አሕመድ,true,MEDIUM,LLM-proposed deviation,ET given-name plausible-alternate (Amharic/Ge'ez),0.5000,false,FN
 synth_people,0c8af1e8,Person,Hun Manat,Hun Manet,true,MEDIUM,LLM-proposed deviation,KH given-name vowel sub (Latin),0.8200,true,TP
 synth_people,7e3b43b0,Person,ហ៊ុន ម៉ាណាត,ហ៊ុន ម៉ាណែត,true,MEDIUM,LLM-proposed deviation,KH given-name vowel sub (Khmer),0.8200,true,TP
-synth_people,e333625a,Person,Mohammed Sherif al-Sudani,Mohammed Shia' al-Sudani,false,MEDIUM,LLM-proposed deviation,IQ given-name stem swap (Latin),0.7500,true,FP
+synth_people,e333625a,Person,Mohammed Sherif al-Sudani,Mohammed Shia' al-Sudani,false,MEDIUM,LLM-proposed deviation,IQ given-name stem swap (Latin),0.7297,true,FP
 synth_people,c9d0a3b5,Person,محمد شريف السوداني,محمد شياع السوداني,false,MEDIUM,LLM-proposed deviation,IQ given-name stem swap (Arabic),0.6667,false,TN
 synth_people,f4783954,Person,Friedrich Mertz,Friedrich Merz,true,MEDIUM,LLM-proposed deviation,DE surname doubled-consonant (Mertz is real surname),0.9000,true,TP
 synth_people,95eb8001,Person,Emmanuel Marcon,Emmanuel Macron,true,MEDIUM,LLM-proposed deviation,FR surname vowel reorder,0.8472,true,TP
@@ -408,13 +409,13 @@ synth_people,714273a2,Person,Pedro Sancho,Pedro Sánchez,false,MEDIUM,LLM-propos
 synth_people,f43efe7b,Person,Viktor Orbach,Viktor Orbán,false,MEDIUM,LLM-proposed deviation,HU surname-ending swap to Germanic,0.5000,false,TN
 synth_people,6c1ed17e,Person,Recep Tayyip Erdem,Recep Tayyip Erdoğan,false,MEDIUM,LLM-proposed deviation,TR surname truncation/sub (Erdem is real surname),0.6667,false,TN
 synth_people,acd17145,Person,Javier Mihel,Javier Milei,true,MEDIUM,LLM-proposed deviation,AR surname plausible-alternate,0.5000,false,FN
-synth_people,58476193,Person,Luiz Inácio Lula da Souza,Luiz Inácio Lula da Silva,false,MEDIUM,LLM-proposed deviation,BR surname swap to common Portuguese surname,0.8000,true,FP
+synth_people,58476193,Person,Luiz Inácio Lula da Souza,Luiz Inácio Lula da Silva,false,MEDIUM,LLM-proposed deviation,BR surname swap to common Portuguese surname,0.7872,true,FP
 synth_people,92e2e1cf,Person,Claudia Steinbaum,Claudia Sheinbaum,true,MEDIUM,LLM-proposed deviation,MX surname Yiddish/German collision,0.8951,true,TP
 synth_people,e216248b,Person,Prabowo Subandrio,Prabowo Subianto,false,MEDIUM,LLM-proposed deviation,ID surname collision with historical PM Subandrio,0.5000,false,TN
 synth_people,6ea8c66f,Person,Keir Starkey,Keir Starmer,true,MEDIUM,LLM-proposed deviation,GB surname plausible-alternate (Starkey is real English surname),0.5000,false,FN
 synth_people,12930714,Person,Mark Cooney,Mark Carney,true,MEDIUM,LLM-proposed deviation,CA surname plausible-alternate (Cooney is real Irish-Canadian surname),0.5000,false,FN
 synth_people,16424716,Person,Anthony Albano,Anthony Albanese,false,MEDIUM,LLM-proposed deviation,AU surname truncation to real Italian surname Albano,0.5000,false,TN
-synth_people,a691b063,Person,Bart De Vries,Bart De Wever,false,MEDIUM,LLM-proposed deviation,BE surname swap to common Dutch surname,0.6667,false,TN
+synth_people,a691b063,Person,Bart De Vries,Bart De Wever,false,MEDIUM,LLM-proposed deviation,BE surname swap to common Dutch surname,0.6296,false,TN
 synth_people,81982c5e,Person,Anders Kristersson,Ulf Kristersson,false,MEDIUM,LLM-proposed deviation,SE given-name sub (Anders is common Swedish),0.5000,false,TN
 synth_people,c06a2ff5,Person,Jonas Gahr Stoltenberg,Jonas Gahr Støre,false,MEDIUM,LLM-proposed deviation,NO surname collision with prior Norwegian PM Stoltenberg,0.6667,false,TN
 synth_people,c1b6d14c,Person,Pekka Orpo,Petteri Orpo,false,MEDIUM,LLM-proposed deviation,FI given-name sub (Pekka is common Finnish),0.5000,false,TN
@@ -449,7 +450,7 @@ synth_people,6982e07d,Person,Moammar Qaddafi,Muammar Gaddafi,true,MEDIUM,LLM-pro
 synth_people,72427ba3,Person,Usama bin Ladin,Osama bin Laden,true,STRONG,LLM-proposed deviation,SA UN-style vs media-style transliteration,0.8799,true,TP
 synth_people,32798bc8,Person,Saddam Husayn,Saddam Hussein,true,MEDIUM,LLM-proposed deviation,IQ scholarly vs popular Arabic transliteration,0.9500,true,TP
 synth_people,ee6d0d6d,Person,Hasan Rohani,Hassan Rouhani,true,MEDIUM,LLM-proposed deviation,IR Persian transliteration variant,0.8786,true,TP
-synth_people,66c0befd,Person,Bachar el-Assad,Bashar al-Assad,true,MEDIUM,LLM-proposed deviation,SY French vs English transliteration,0.7600,true,TP
+synth_people,66c0befd,Person,Bachar el-Assad,Bashar al-Assad,true,MEDIUM,LLM-proposed deviation,SY French vs English transliteration,0.8085,true,TP
 synth_people,afe9031e,Person,Mahmood Ahmadinezhad,Mahmoud Ahmadinejad,true,MEDIUM,LLM-proposed deviation,IR Persian transliteration variant,0.8288,true,TP
 synth_people,3b323049,Person,Recep Tayyip Erdogan,Recep Tayyip Erdoğan,true,STRONG,LLM-proposed deviation,TR Turkish ğ stripped,1.0000,true,TP
 synth_people,6513c92b,Person,Aleksandar Vucic,Aleksandar Vučić,true,STRONG,LLM-proposed deviation,RS diacritics stripped,1.0000,true,TP
@@ -469,7 +470,7 @@ synth_people,5e3ebf7e,Person,Bibi Netanyahu,Benjamin Netanyahu,true,WEAK,LLM-pro
 synth_companies,afd05195,Company,"Bowne of Atlanta, Inc.","Bowne of Boston, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap,0.7059,true,FP
 synth_companies,c1ca076d,Company,"Bowne of Chicago, Inc.","Bowne of Cleveland, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap (shared C-),0.7059,true,FP
 synth_companies,a4d2f2b0,Company,"Bowne of Dallas, L.P.","Bowne of Phoenix, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier + entity-form swap,0.5000,false,TN
-synth_companies,e932d2a9,Company,"Bowne of New York City, L.L.C.","Bowne of Los Angeles, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap,0.3348,false,TN
+synth_companies,e932d2a9,Company,"Bowne of New York City, L.L.C.","Bowne of Los Angeles, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap,0.4679,false,TN
 synth_companies,5f3240dd,Company,"Bowne of South Bend, Inc.","Bowne of Boston, Inc.",false,MEDIUM,LLM-proposed deviation,city qualifier swap (shared S-/B-),0.5714,false,TN
 synth_companies,25ea846b,Company,"Bowne Global Solutions (France), S.A.R.L.","Bowne Global Solutions (Germany), G.m.b.H.",false,MEDIUM,LLM-proposed deviation,country qualifier swap,0.7389,true,FP
 synth_companies,d26340ab,Company,"Bowne Global Solutions (Spain), S.L.","Bowne Global Solutions (Netherlands), B.V.",false,MEDIUM,LLM-proposed deviation,country qualifier swap,0.5469,false,TN
@@ -477,7 +478,7 @@ synth_companies,36928d0e,Company,"Bowne Global Solutions (Ireland), Ltd.","Bowne
 synth_companies,df7b1cce,Company,Bowne Global Solutions II (Sweden) AB,Bowne Global Solutions II (Finland) AB,false,MEDIUM,LLM-proposed deviation,country qualifier swap (with II marker shared),0.8462,true,FP
 synth_companies,a1ea92e8,Company,Bowne Global Solutions II (U.K.) Limited,"Bowne Global Solutions II Canada, Inc.",false,MEDIUM,LLM-proposed deviation,country qualifier swap on II series,0.8082,true,FP
 synth_companies,5263724f,Company,"Bowne Global Solutions, Inc.","Bowne Global Solutions II, Inc.",false,MEDIUM,LLM-proposed deviation,Roman-numeral series marker (original vs II),0.9390,true,FP
-synth_companies,479f4cc7,Company,"Bowne International, S.A.R.L.",Bowne International de Mexico S.A. de C.V.,false,MEDIUM,LLM-proposed deviation,country qualifier addition,0.5752,false,TN
+synth_companies,479f4cc7,Company,"Bowne International, S.A.R.L.",Bowne International de Mexico S.A. de C.V.,false,MEDIUM,LLM-proposed deviation,country qualifier addition,0.5830,false,TN
 synth_companies,7f948022,Company,"Bowne Business Solutions, Inc.","Bowne Business Enterprises, L.P.",false,MEDIUM,LLM-proposed deviation,functional-token swap (Solutions/Enterprises),0.4815,false,TN
 synth_companies,b9c19ea9,Company,"Bowne Enterprise Solutions, L.L.C.","Bowne Technology Enterprise, L.L.C.",false,MEDIUM,LLM-proposed deviation,functional-token reorder + swap,0.7246,true,FP
 synth_companies,13ef7be3,Company,"Bowne Litigation Solutions, L.P.","Bowne Solutions, L.L.C.",false,MEDIUM,LLM-proposed deviation,prefix-token addition,0.4643,false,TN
@@ -567,63 +568,63 @@ synth_people,2f67190a,Person,Aung San Suu Win,Aung San Suu Kyi,false,MEDIUM,LLM-
 synth_people,e3f3e9ed,Person,Imran Khaja,Imran Khan,true,MEDIUM,LLM-proposed deviation,surname swap (Khaja is real Pakistani),0.5000,false,FN
 synth_people,6dc206e5,Person,Pervez Musafir,Pervez Musharraf,false,MEDIUM,LLM-proposed deviation,surname swap (Musafir is real Arabic-origin),0.5000,false,TN
 synth_people,b546ef9d,Person,Indira Gokhale,Indira Gandhi,false,MEDIUM,LLM-proposed deviation,surname swap (Gokhale is real Indian — historical politician),0.5000,false,TN
-synth_people,4dcb0dc5,Person,BARZAN IBRAHIM HASSAN AL-MOSULI,BARZAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Tikriti/al-Mosuli),0.8000,true,FP
-synth_people,e03de4ea,Person,AYMAN SABAWI IBRAHIM HASAN AL-DULAIMI,AYMAN SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,ec4cac13,Person,KHAWLA BARZAN IBRAHIM HASAN AL-MASHHADANI,KHAWLA BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,d3e59d38,Person,ALI SADDAM HUSSEIN AL-RAWI,ALI SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
-synth_people,79801125,Person,JAMAL MUSTAFA ABDALLAH SULTAN AL-DULAIMI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,c89ce2b9,Person,WATBAN IBRAHIM HASSAN AL-MOSULI,WATBAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
-synth_people,94be4185,Person,RAFI ABD-AL-LATIF TILFAH AL-DULAIMI,RAFI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
-synth_people,8459584e,Person,HANI ABD-AL-LATIF TILFAH AL-RAWI,HANI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
-synth_people,fd54ba8c,Person,MOHAMMAD BARZAN IBRAHIM HASAN AL-MOSULI,MOHAMMAD BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,b3db56d4,Person,TAHIR JALIL HABBUSH AL-DULAIMI,TAHIR JALIL HABBUSH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
-synth_people,c4a1ee70,Person,YASIR SABAWI IBRAHIM HASAN AL-MOSULI,YASIR SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,8119657f,Person,SADDAM HUSSEIN AL-DULAIMI,SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (most famous variant),0.7500,true,FP
-synth_people,02b386af,Person,IZZAT IBRAHIM AL-MOSULI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Duri/al-Mosuli),0.7500,true,FP
-synth_people,b5ae29ae,Person,JAWHAR MAJID AL-MOSULI,JAWHAR MAJID AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
-synth_people,3d7e9865,Person,NIDAL AL-DULAIMI,NIDAL AL-RABI'I,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6667,false,TN
-synth_people,7f5c1463,Person,INTISSAR AL-DURI,INTISSAR AL-UBAYDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6667,false,TN
-synth_people,678f641a,Person,ADIB SHABAN AL-RAWI,ADIB SHABAN AL-ANI,true,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,TP
-synth_people,662358e1,Person,GHAZI HAMMUD AL-DURI,GHAZI HAMMUD AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
-synth_people,862f0398,Person,YAHIA ABDALLAH AL-DURI,YAHIA ABDALLAH AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
-synth_people,f096fb40,Person,KHAMIS SIRHAN AL-MOSULI,KHAMIS SIRHAN AL-MUHAMMAD,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7500,true,FP
-synth_people,1048cb6a,Person,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-MOSULI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8333,true,FP
-synth_people,caccdca8,Person,UMAR MAHMUD IRHAYYIM AL-DULAIMI,UMAR MAHMUD IRHAYYIM AL-KUBAYSI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
-synth_people,69687eab,Person,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-MOSULI,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-QADULI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8113,true,FP
-synth_people,0eefb9da,Person,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-DOSARI,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-'ANIZI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (Saudi tribal),0.8413,true,FP
-synth_people,f9cd26aa,Person,TAHA YASSIN RAMADAN AL-MOSULI,TAHA YASSIN RAMADAN AL-JIZRAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
-synth_people,ec48123f,Person,AHMAD AL-RAYMI,AHMAD AL-HAMZI,false,MEDIUM,LLM-proposed deviation,Yemeni clan-nisbah swap,0.6667,false,TN
-synth_people,fc3ddbc8,Person,MUHANNAD AL-HIJAZI,MUHANNAD AL-NAJDI,false,MEDIUM,LLM-proposed deviation,Saudi region-nisbah swap,0.6667,false,TN
-synth_people,ba2497d9,Person,MUHAMMAD ABD AL-KARIM AL-HOUTHI,MUHAMMAD ABD AL-KARIM AL-GHAMARI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.7674,true,FP
-synth_people,199cd131,Person,OTHMAN AHMED OTHMAN AL-HARBI,OTHMAN AHMED OTHMAN AL-GHAMDI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8000,true,FP
-synth_people,d4b6c55a,Person,IBRAHIM HASSAN TALI AL-OTAIBI,IBRAHIM HASSAN TALI AL-ASIRI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8000,true,FP
-synth_people,b6f0420f,Person,MAHMOUD MOHAMMAD AHMED AL-DOSARI,MAHMOUD MOHAMMAD AHMED BAHAZIQ,false,MEDIUM,LLM-proposed deviation,Saudi family-name swap,0.6818,false,TN
-synth_people,355c3996,Person,AZZAM ABDULLAH ZUREIK AL-MAULID AL-HARBI,AZZAM ABDULLAH ZUREIK AL-MAULID AL-SUBHI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8571,true,FP
-synth_people,569c116a,Person,MU'TASSIM YAHYA 'ALI AL-HOUTHI,MU'TASSIM YAHYA 'ALI AL-RUMAYSH,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.8000,true,FP
-synth_people,e8f37da4,Person,QASIM MOHAMED MAHDI AL-HOUTHI,QASIM MOHAMED MAHDI AL-RIMI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.8000,true,FP
-synth_people,43d9249a,Person,YUSUF AL-SAN'ANI,YUSUF AL-MADANI,false,MEDIUM,LLM-proposed deviation,Yemeni/Hejazi nisbah swap,0.6667,false,TN
-synth_people,04ebb882,Person,HASAN AL-SALAHAYN SALIH AL-DERNAI,HASAN AL-SALAHAYN SALIH AL-SHA'ARI,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8333,true,FP
-synth_people,3f65546e,Person,IBRAHIM ALI ABU BAKR AL-FITURI,IBRAHIM ALI ABU BAKR TANTOUSH,false,MEDIUM,LLM-proposed deviation,Libyan family-name swap,0.7021,true,FP
-synth_people,ee3f5150,Person,ABD AL-RAHMAN SALIM IBRAHIM AL-MISURATI,ABD AL-RAHMAN SALIM IBRAHIM AL-MILAD,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8113,true,FP
-synth_people,5f34db06,Person,RAMZI MOHAMED ABDULLAH AL-HADHRAMI,RAMZI MOHAMED ABDULLAH BINALSHIBH,false,MEDIUM,LLM-proposed deviation,Yemeni nisbah/family swap,0.6818,false,TN
-synth_people,5194ba22,Person,ABDULLAH AHMED AL HAKIM,ABDULLAH YAHYA AL HAKIM,false,MEDIUM,LLM-proposed deviation,patronymic swap (Yahya/Ahmed),0.7500,true,FP
+synth_people,4dcb0dc5,Person,BARZAN IBRAHIM HASSAN AL-MOSULI,BARZAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Tikriti/al-Mosuli),0.7872,true,FP
+synth_people,e03de4ea,Person,AYMAN SABAWI IBRAHIM HASAN AL-DULAIMI,AYMAN SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,ec4cac13,Person,KHAWLA BARZAN IBRAHIM HASAN AL-MASHHADANI,KHAWLA BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,d3e59d38,Person,ALI SADDAM HUSSEIN AL-RAWI,ALI SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7872,true,FP
+synth_people,79801125,Person,JAMAL MUSTAFA ABDALLAH SULTAN AL-DULAIMI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,c89ce2b9,Person,WATBAN IBRAHIM HASSAN AL-MOSULI,WATBAN IBRAHIM HASSAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7872,true,FP
+synth_people,94be4185,Person,RAFI ABD-AL-LATIF TILFAH AL-DULAIMI,RAFI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,8459584e,Person,HANI ABD-AL-LATIF TILFAH AL-RAWI,HANI ABD-AL-LATIF TILFAH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,fd54ba8c,Person,MOHAMMAD BARZAN IBRAHIM HASAN AL-MOSULI,MOHAMMAD BARZAN IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,b3db56d4,Person,TAHIR JALIL HABBUSH AL-DULAIMI,TAHIR JALIL HABBUSH AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7872,true,FP
+synth_people,c4a1ee70,Person,YASIR SABAWI IBRAHIM HASAN AL-MOSULI,YASIR SABAWI IBRAHIM HASAN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,8119657f,Person,SADDAM HUSSEIN AL-DULAIMI,SADDAM HUSSEIN AL-TIKRITI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (most famous variant),0.7297,true,FP
+synth_people,02b386af,Person,IZZAT IBRAHIM AL-MOSULI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (al-Duri/al-Mosuli),0.7297,true,FP
+synth_people,b5ae29ae,Person,JAWHAR MAJID AL-MOSULI,JAWHAR MAJID AL-DURI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7297,true,FP
+synth_people,3d7e9865,Person,NIDAL AL-DULAIMI,NIDAL AL-RABI'I,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6296,false,TN
+synth_people,7f5c1463,Person,INTISSAR AL-DURI,INTISSAR AL-UBAYDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.6296,false,TN
+synth_people,678f641a,Person,ADIB SHABAN AL-RAWI,ADIB SHABAN AL-ANI,true,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7297,true,TP
+synth_people,662358e1,Person,GHAZI HAMMUD AL-DURI,GHAZI HAMMUD AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7297,true,FP
+synth_people,862f0398,Person,YAHIA ABDALLAH AL-DURI,YAHIA ABDALLAH AL-UBAIDI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7297,true,FP
+synth_people,f096fb40,Person,KHAMIS SIRHAN AL-MOSULI,KHAMIS SIRHAN AL-MUHAMMAD,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7297,true,FP
+synth_people,1048cb6a,Person,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-MOSULI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8246,true,FP
+synth_people,caccdca8,Person,UMAR MAHMUD IRHAYYIM AL-DULAIMI,UMAR MAHMUD IRHAYYIM AL-KUBAYSI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7872,true,FP
+synth_people,69687eab,Person,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-MOSULI,'ABD AL-RAHMAN MUHAMMAD MUSTAFA AL-QADULI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.8000,true,FP
+synth_people,0eefb9da,Person,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-DOSARI,'ABD AL-RAHMAN KHALAF 'UBAYD JUDAY' AL-'ANIZI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap (Saudi tribal),0.8333,true,FP
+synth_people,f9cd26aa,Person,TAHA YASSIN RAMADAN AL-MOSULI,TAHA YASSIN RAMADAN AL-JIZRAWI,false,MEDIUM,LLM-proposed deviation,clan-nisbah swap,0.7872,true,FP
+synth_people,ec48123f,Person,AHMAD AL-RAYMI,AHMAD AL-HAMZI,false,MEDIUM,LLM-proposed deviation,Yemeni clan-nisbah swap,0.6296,false,TN
+synth_people,fc3ddbc8,Person,MUHANNAD AL-HIJAZI,MUHANNAD AL-NAJDI,false,MEDIUM,LLM-proposed deviation,Saudi region-nisbah swap,0.6296,false,TN
+synth_people,ba2497d9,Person,MUHAMMAD ABD AL-KARIM AL-HOUTHI,MUHAMMAD ABD AL-KARIM AL-GHAMARI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.7500,true,FP
+synth_people,199cd131,Person,OTHMAN AHMED OTHMAN AL-HARBI,OTHMAN AHMED OTHMAN AL-GHAMDI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.7872,true,FP
+synth_people,d4b6c55a,Person,IBRAHIM HASSAN TALI AL-OTAIBI,IBRAHIM HASSAN TALI AL-ASIRI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.7872,true,FP
+synth_people,b6f0420f,Person,MAHMOUD MOHAMMAD AHMED AL-DOSARI,MAHMOUD MOHAMMAD AHMED BAHAZIQ,false,MEDIUM,LLM-proposed deviation,Saudi family-name swap,0.7009,true,FP
+synth_people,355c3996,Person,AZZAM ABDULLAH ZUREIK AL-MAULID AL-HARBI,AZZAM ABDULLAH ZUREIK AL-MAULID AL-SUBHI,false,MEDIUM,LLM-proposed deviation,Saudi tribal swap,0.8438,true,FP
+synth_people,569c116a,Person,MU'TASSIM YAHYA 'ALI AL-HOUTHI,MU'TASSIM YAHYA 'ALI AL-RUMAYSH,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.7872,true,FP
+synth_people,e8f37da4,Person,QASIM MOHAMED MAHDI AL-HOUTHI,QASIM MOHAMED MAHDI AL-RIMI,false,MEDIUM,LLM-proposed deviation,Yemeni clan swap,0.7872,true,FP
+synth_people,43d9249a,Person,YUSUF AL-SAN'ANI,YUSUF AL-MADANI,false,MEDIUM,LLM-proposed deviation,Yemeni/Hejazi nisbah swap,0.6296,false,TN
+synth_people,04ebb882,Person,HASAN AL-SALAHAYN SALIH AL-DERNAI,HASAN AL-SALAHAYN SALIH AL-SHA'ARI,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8148,true,FP
+synth_people,3f65546e,Person,IBRAHIM ALI ABU BAKR AL-FITURI,IBRAHIM ALI ABU BAKR TANTOUSH,false,MEDIUM,LLM-proposed deviation,Libyan family-name swap,0.7205,true,FP
+synth_people,ee3f5150,Person,ABD AL-RAHMAN SALIM IBRAHIM AL-MISURATI,ABD AL-RAHMAN SALIM IBRAHIM AL-MILAD,false,MEDIUM,LLM-proposed deviation,Libyan tribal swap,0.8000,true,FP
+synth_people,5f34db06,Person,RAMZI MOHAMED ABDULLAH AL-HADHRAMI,RAMZI MOHAMED ABDULLAH BINALSHIBH,false,MEDIUM,LLM-proposed deviation,Yemeni nisbah/family swap,0.7009,true,FP
+synth_people,5194ba22,Person,ABDULLAH AHMED AL HAKIM,ABDULLAH YAHYA AL HAKIM,false,MEDIUM,LLM-proposed deviation,patronymic swap (Yahya/Ahmed),0.7297,true,FP
 synth_people,2704696b,Person,NESSIM BEN ALI SAHRAOUI,NESSIM BEN ROMDHANE SAHRAOUI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic-Ben swap,0.7500,true,FP
-synth_people,e37e8fdd,Person,MOHAMED BEN BELGACEM BEN HAMID AL-AOUADI,MOHAMED BEN BELGACEM BEN ABDALLAH AL-AOUADI,false,MEDIUM,LLM-proposed deviation,Tunisian grandfather-name swap,0.8571,true,FP
+synth_people,e37e8fdd,Person,MOHAMED BEN BELGACEM BEN HAMID AL-AOUADI,MOHAMED BEN BELGACEM BEN ABDALLAH AL-AOUADI,false,MEDIUM,LLM-proposed deviation,Tunisian grandfather-name swap,0.8507,true,FP
 synth_people,32efdb91,Person,HAMADI BEN AHMED BEN ALI BOUYEHIA,HAMADI BEN ABDUL AZIZ BEN ALI BOUYEHIA,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8143,true,FP
-synth_people,c628d057,Person,NOUREDDINE BEN MOHAMED BEN BELKASSEM AL-DRISSI,NOUREDDINE BEN ALI BEN BELKASSEM AL-DRISSI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8571,true,FP
-synth_people,26797a13,Person,HABIB BEN MOHAMED AL-LOUBIRI,HABIB BEN AHMED AL-LOUBIRI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8000,true,FP
+synth_people,c628d057,Person,NOUREDDINE BEN MOHAMED BEN BELKASSEM AL-DRISSI,NOUREDDINE BEN ALI BEN BELKASSEM AL-DRISSI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.8507,true,FP
+synth_people,26797a13,Person,HABIB BEN MOHAMED AL-LOUBIRI,HABIB BEN AHMED AL-LOUBIRI,false,MEDIUM,LLM-proposed deviation,Tunisian patronymic swap,0.7872,true,FP
 synth_people,6a328c02,Person,SOFIANE BEN AKHDER,SOFIANE BEN GOUMO,false,MEDIUM,LLM-proposed deviation,Libyan family swap,0.6667,false,TN
 synth_people,dc8b07a9,Person,MOHAMED BENGRINE,MOHAMED BELKALEM,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
 synth_people,8a113e58,Person,DJAMEL CHEKKALI,DJAMEL AKKACHA,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
 synth_people,fcc9dba3,Person,KAMEL BENMOHAMED,KAMEL DJERMANE,false,MEDIUM,LLM-proposed deviation,Algerian surname swap,0.5000,false,TN
-synth_people,09c09032,Person,ABU UBAYDAH YUSUF AL-MAGHREBI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,Algerian/Maghreb nisbah swap,0.8000,true,FP
+synth_people,09c09032,Person,ABU UBAYDAH YUSUF AL-MAGHREBI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,Algerian/Maghreb nisbah swap,0.7872,true,FP
 synth_people,1c32f800,Person,YASSIN AOURAGH,YASSIN CHOUKA,false,MEDIUM,LLM-proposed deviation,Moroccan surname swap,0.5000,false,TN
-synth_people,a09435b5,Person,REDOUANE EL HASSANI,REDOUANE EL HABHAB,false,MEDIUM,LLM-proposed deviation,Moroccan surname swap,0.6667,false,TN
-synth_people,eb77cde5,Person,RADI ABD EL SAMIE ABU EL HASSAN EL AYASHI,RADI ABD EL SAMIE ABOU EL YAZID EL AYASHI,false,MEDIUM,LLM-proposed deviation,Egyptian middle-name swap (Yazid/Hassan),0.8667,true,FP
+synth_people,a09435b5,Person,REDOUANE EL HASSANI,REDOUANE EL HABHAB,false,MEDIUM,LLM-proposed deviation,Moroccan surname swap,0.6296,false,TN
+synth_people,eb77cde5,Person,RADI ABD EL SAMIE ABU EL HASSAN EL AYASHI,RADI ABD EL SAMIE ABOU EL YAZID EL AYASHI,false,MEDIUM,LLM-proposed deviation,Egyptian middle-name swap (Yazid/Hassan),0.8519,true,FP
 synth_people,23fc5033,Person,TARIQ ANWAR EL SAYED MOHAMED,TARIQ ANWAR EL SAYED AHMED,false,MEDIUM,LLM-proposed deviation,Egyptian patronymic swap,0.7500,true,FP
 synth_people,0b661810,Person,MOSTAFA HASSAN MOSTAFA IBRAHIM,MOSTAFA KAMEL MOSTAFA IBRAHIM,false,MEDIUM,LLM-proposed deviation,Egyptian middle-name swap,0.7500,true,FP
-synth_people,18256d05,Person,HANI AL-SAYYID AL-MASRI YUSIF,HANI AL-SAYYID AL-SEBAI YUSIF,false,MEDIUM,LLM-proposed deviation,Egyptian nisbah swap,0.8000,true,FP
-synth_people,45c6cc13,Person,ABD EL KADER MAHMOUD AHMED EL SAYED,ABD EL KADER MAHMOUD MOHAMED EL SAYED,false,MEDIUM,LLM-proposed deviation,Egyptian patronymic swap,0.8333,true,FP
+synth_people,18256d05,Person,HANI AL-SAYYID AL-MASRI YUSIF,HANI AL-SAYYID AL-SEBAI YUSIF,false,MEDIUM,LLM-proposed deviation,Egyptian nisbah swap,0.7872,true,FP
+synth_people,45c6cc13,Person,ABD EL KADER MAHMOUD AHMED EL SAYED,ABD EL KADER MAHMOUD MOHAMED EL SAYED,false,MEDIUM,LLM-proposed deviation,Egyptian patronymic swap,0.8246,true,FP
 synth_people,9b5c1937,Person,AKHTAR MOHAMMAD MANSOUR ABDUL MOHAMMED,AKHTAR MOHAMMAD MANSOUR SHAH MOHAMMED,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8403,true,FP
 synth_people,ff33beb0,Person,ABDUL GHANI BARADAR ABDUL HASIB TURK,ABDUL GHANI BARADAR ABDUL AHMAD TURK,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8113,true,FP
 synth_people,8161b1e4,Person,MOHAMMED QASIM MIR ABDUL KHUDAI RAHIM,MOHAMMED QASIM MIR WALI KHUDAI RAHIM,false,MEDIUM,LLM-proposed deviation,Pashtun grandfather-name swap,0.8681,true,FP
@@ -650,7 +651,7 @@ synth_people,03b63248,Person,ALLAH DAD ABDUL,ALLAH DAD MATIN,false,MEDIUM,LLM-pr
 synth_people,598feee2,Person,ABDUL LATIF NOORI,ABDUL LATIF MANSUR,false,MEDIUM,LLM-proposed deviation,Pashtun surname swap,0.5652,false,TN
 synth_people,29936e3a,Person,KO TAE BIN,KO TAE HUN,true,MEDIUM,LLM-proposed deviation,Korean given-name 2nd-syllable swap,0.7246,true,TP
 synth_people,02b9e87c,Person,KIM KYONG MIN,KIM KYONG IL,true,MEDIUM,LLM-proposed deviation,Korean given-name 2nd-syllable swap,0.6667,false,FN
-synth_people,8bfb89d7,Person,KU JA YOUNG,KU JA HYONG,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.8800,true,TP
+synth_people,8bfb89d7,Person,KU JA YOUNG,KU JA HYONG,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.8667,true,TP
 synth_people,593ecabd,Person,JANG YONG MIN,JANG YONG SON,true,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.5000,false,FN
 synth_people,f9641632,Person,KIM SOK JIN,KIM SOK CHOL,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
 synth_people,8dda04e2,Person,RI HONG-CHUL,RI HONG-SOP,false,MEDIUM,LLM-proposed deviation,Korean given-name swap,0.6667,false,TN
@@ -686,7 +687,7 @@ synth_people,c0a2623b,Person,SHAMIL MAGOMEDOVICH ISMAGILOV,SHAMIL MAGOMEDOVICH I
 synth_people,458ff412,Person,ABDULLAH SUNGKAR,ABDULLAH ANSHORI,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
 synth_people,7252b5b1,Person,AHMED MUNANDAR,ARIS MUNANDAR,false,MEDIUM,LLM-proposed deviation,Indonesian given-name swap,0.5000,false,TN
 synth_people,e6c2b7f0,Person,SUDARSO RIFKI,TAUFIK RIFKI,false,MEDIUM,LLM-proposed deviation,Indonesian given-name swap,0.5000,false,TN
-synth_people,4145e823,Person,MOHAMAD IQBAL ABDURRAHIM,MOHAMAD IQBAL ABDURRAHMAN,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap (multi-char),0.6667,false,TN
+synth_people,4145e823,Person,MOHAMAD IQBAL ABDURRAHIM,MOHAMAD IQBAL ABDURRAHMAN,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap (multi-char),0.9121,true,FP
 synth_people,d4004070,Person,UMAR MIRDAD,UMAR PATEK,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
 synth_people,1beae477,Person,AGUS RIFAI,AGUS DWIKARNA,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
 synth_people,925e5404,Person,BAMBANG SUTRISNO,BAMBANG SUKIRNO,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap,0.5000,false,TN
@@ -698,9 +699,9 @@ synth_people,39a7fa2f,Person,MOHAMMAD BAHRUM SUKARNO ANGGIH TAMTOMO,MOHAMMAD BAH
 synth_people,fe5c5acf,Person,ABU BAKAR SUNGKAR,ABU BAKAR BA'ASYIR,false,MEDIUM,LLM-proposed deviation,Indonesian surname swap (real different cleric),0.5652,false,TN
 synth_people,5ee29fb8,Person,ABDULPATTA ESCALON ALONTO,ABDULPATTA ESCALON ABUBAKAR,false,MEDIUM,LLM-proposed deviation,Filipino Moro family-name swap,0.6667,false,TN
 synth_people,306b89d5,Person,MYRNA AJIJUL JAMIRI,MYRNA AJIJUL MABANZA,false,MEDIUM,LLM-proposed deviation,Filipino surname swap,0.6667,false,TN
-synth_people,67368630,Person,ANGELO RAMIREZ DE GUZMAN,ANGELO RAMIREZ TRINIDAD,false,MEDIUM,LLM-proposed deviation,Filipino surname swap,0.5882,false,TN
+synth_people,67368630,Person,ANGELO RAMIREZ DE GUZMAN,ANGELO RAMIREZ TRINIDAD,false,MEDIUM,LLM-proposed deviation,Filipino surname swap,0.6098,false,TN
 synth_people,81e749c8,Person,ISNILON TOTONI MISUARI,ISNILON TOTONI HAPILON,false,MEDIUM,LLM-proposed deviation,Filipino Moro surname swap (Misuari is real different MNLF leader),0.6667,false,TN
-synth_people,32691f10,Person,PIO ABOGNE DE LEON,PIO ABOGNE DE VERA,false,MEDIUM,LLM-proposed deviation,Filipino Spanish-style surname swap,0.7500,true,FP
+synth_people,32691f10,Person,PIO ABOGNE DE LEON,PIO ABOGNE DE VERA,false,MEDIUM,LLM-proposed deviation,Filipino Spanish-style surname swap,0.7297,true,FP
 synth_people,4610e5ea,Person,ABDULLAHI MOHAMED MOHAMED CADDOW,ABDULLAHI OSMAN MOHAMED CADDOW,false,MEDIUM,LLM-proposed deviation,Somali patronymic swap,0.7500,true,FP
 synth_people,2c525c6d,Person,MAXAMED CABDULLAAHI CIISE,MAXAMED CABDULLAAH CIISE,true,MEDIUM,LLM-proposed deviation,Somali patronymic suffix swap (multi-char),0.9697,true,TP
 synth_people,9c380c91,Person,ABDIKADIR HASSAN ABDIKADIR,ABDIKADIR MOHAMED ABDIKADIR,false,MEDIUM,LLM-proposed deviation,Somali patronymic swap,0.6667,false,TN
@@ -731,20 +732,20 @@ synth_people,9b707c89,Person,ABDUL HAQQANI MANAN MOHAMMAD ISHAK,ABDUL MANAN MOHA
 synth_people,716388a5,Person,ABDUL WALI HAMID SEDDIQI,ABDUL WALI SEDDIQI,true,MEDIUM,LLM-proposed deviation,added invented middle name,0.7895,true,TP
 synth_people,fe7bf0cd,Person,FAZL MOHAMMAD HAMID MAZLOOM,FAZL MOHAMMAD MAZLOOM,true,MEDIUM,LLM-proposed deviation,added invented middle,0.7895,true,TP
 synth_people,a4b215bd,Person,SHER ABBAS STANEKZAI,SHER MOHAMMAD ABBAS STANEKZAI PADSHAH KHAN,true,MEDIUM,LLM-proposed deviation,dropped middle+grandfather+tribal,0.8333,true,TP
-synth_people,7785e33c,Person,SAIF AL-DIN AL-RAWI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.8333,true,FP
+synth_people,7785e33c,Person,SAIF AL-DIN AL-RAWI,SAIF-AL-DIN FULAYYIH HASSAN TAHA AL-RAWI,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.8182,true,FP
 synth_people,7a052edb,Person,MOHAMMED MIR WALI RAHIM,MOHAMMED QASIM MIR WALI KHUDAI RAHIM,true,MEDIUM,LLM-proposed deviation,dropped 2 middle parts,0.9091,true,TP
-synth_people,c43ac765,Person,MUHAMMAD AL-AHDAL,MOHAMMAD HAMDI MOHAMMAD SADIQ AL-AHDAL,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.7005,true,FP
-synth_people,1cf6b80a,Person,JAMAL SULTAN AL-TIKRITI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,true,MEDIUM,LLM-proposed deviation,dropped 2 middle patronymics,0.9091,true,TP
+synth_people,c43ac765,Person,MUHAMMAD AL-AHDAL,MOHAMMAD HAMDI MOHAMMAD SADIQ AL-AHDAL,false,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.7308,true,FP
+synth_people,1cf6b80a,Person,JAMAL SULTAN AL-TIKRITI,JAMAL MUSTAFA ABDALLAH SULTAN AL-TIKRITI,true,MEDIUM,LLM-proposed deviation,dropped 2 middle patronymics,0.8824,true,TP
 synth_people,197a42e9,Person,ABDUL GHANI TURK,ABDUL GHANI BARADAR ABDUL AHMAD TURK,true,MEDIUM,LLM-proposed deviation,dropped 3 middle parts,0.8099,true,TP
 synth_people,eb275b5b,Person,AKHTAR MANSOUR,AKHTAR MOHAMMAD MANSOUR SHAH MOHAMMED,true,MEDIUM,LLM-proposed deviation,dropped middle and tail,0.7692,true,TP
-synth_people,6006d296,Person,YASSIN AL-ANABI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,dropped kunya+given+patronymic,0.5988,false,TN
+synth_people,6006d296,Person,YASSIN AL-ANABI,ABU UBAYDAH YUSUF AL-ANABI,false,MEDIUM,LLM-proposed deviation,dropped kunya+given+patronymic,0.5592,false,TN
 synth_people,621e38fc,Person,RAMZI ABDULLAH BINALSHIBH,RAMZI MOHAMED ABDULLAH BINALSHIBH,true,MEDIUM,LLM-proposed deviation,dropped middle (Mohamed),0.9375,true,TP
 synth_people,755b2443,Person,SIRAJUDDIN HAQQANI,SIRAJUDDIN JALLALOUDINE HAQQANI,true,MEDIUM,LLM-proposed deviation,dropped father patronymic,0.9091,true,TP
-synth_people,79edb6a9,Person,FAZEEL AL-PESHAWARI,FAZEEL-A-TUL SHAYKH ABU MOHAMMED AMEEN AL-PESHAWARI,false,MEDIUM,LLM-proposed deviation,dropped 4 middle parts,0.7538,true,FP
+synth_people,79edb6a9,Person,FAZEEL AL-PESHAWARI,FAZEEL-A-TUL SHAYKH ABU MOHAMMED AMEEN AL-PESHAWARI,false,MEDIUM,LLM-proposed deviation,dropped 4 middle parts,0.7397,true,FP
 synth_people,a3782dd0,Person,SALMAN BIN MUHAMMAD AL-RAWI,MUHAMMAD BIN SALMAN AL-RAWI,false,WEAK,LLM-proposed deviation,patronymic reversal (father vs son flip),1.0000,true,FP
 synth_people,cad2cc2a,Person,ABDULLAH BIN OMAR AL-MUHAMMAD,OMAR BIN ABDULLAH AL-MUHAMMAD,false,WEAK,LLM-proposed deviation,patronymic reversal,1.0000,true,FP
 synth_people,ef35369a,Person,AHMAD BIN HASAN AL-UBAIDI,HASAN BIN AHMAD AL-UBAIDI,false,WEAK,LLM-proposed deviation,patronymic reversal,1.0000,true,FP
-synth_people,d65fdd34,Person,IBRAHIM BIN AL-DIN AL-MASRI,SAIF-AL-DIN BIN IBRAHIM AL-MASRI,false,WEAK,LLM-proposed deviation,patronymic reversal + structure change,0.9677,true,FP
+synth_people,d65fdd34,Person,IBRAHIM BIN AL-DIN AL-MASRI,SAIF-AL-DIN BIN IBRAHIM AL-MASRI,false,WEAK,LLM-proposed deviation,patronymic reversal + structure change,0.9643,true,FP
 synth_people,9239f110,Person,ZIMURINDA MWANGACHUCHU,INNOCENT ZIMURINDA,false,MEDIUM,LLM-proposed deviation,dropped given + added invented surname,0.5000,false,TN
 synth_people,bcc9af19,Person,LEODOMIR HABIYAREMYE,LEODOMIR MUGARAGU,false,MEDIUM,LLM-proposed deviation,Rwandan surname swap (different real name),0.5000,false,TN
 synth_people,38ec8ccf,Person,LUCIEN HABIMANA,LUCIEN NZAMBAMWITA,false,MEDIUM,LLM-proposed deviation,Rwandan surname swap,0.5000,false,TN
@@ -754,60 +755,373 @@ synth_people,85df6966,Person,JÚLIO NA NHASSE,JÚLIO NHATE,false,MEDIUM,LLM-prop
 synth_people,337d1be0,Person,ABDULHAI SALEK,ABDULHAI MOTMAEN,false,MEDIUM,LLM-proposed deviation,UN-list collision (two different Abdulhai entries),0.5000,false,TN
 synth_people,bcbfd294,Person,AKHTAR MOHAMMAD MANSOUR,JALALUDDIN HAQQANI,false,MEDIUM,LLM-proposed deviation,completely different Afghan figure (Taliban vs Haqqani),0.0000,false,TN
 synth_people,646b60e1,Person,FAZL RABI,FAZL MOHAMMAD MAZLOOM,false,MEDIUM,LLM-proposed deviation,shared first token only,0.4545,false,TN
-synth_people,f1e4c127,Person,SADDAM HUSSEIN AL-TIKRITI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,both Iraqi Baathists same era; completely different,0.2500,false,TN
+synth_people,f1e4c127,Person,SADDAM HUSSEIN AL-TIKRITI,IZZAT IBRAHIM AL-DURI,false,MEDIUM,LLM-proposed deviation,both Iraqi Baathists same era; completely different,0.1892,false,TN
 synth_people,cc97aac7,Person,KIM JONG SIK,RI HONG-SOP,false,MEDIUM,LLM-proposed deviation,both KP nuclear officials; completely different,0.2133,false,TN
 synth_people,b778706c,Person,ABU BAKAR BA'ASYIR,UMAR PATEK,false,MEDIUM,LLM-proposed deviation,both ID JI figures; completely different,0.0000,false,TN
 synth_people,8e9db955,Person,JANAN AGHA,JALALUDDIN HAQQANI,false,MEDIUM,LLM-proposed deviation,shared zero tokens; completely different Afghan,0.0000,false,TN
 synth_people,7f10550c,Person,HASSAN DAHIR AWEYS,ABDIKADIR MOHAMED ABDIKADIR,false,MEDIUM,LLM-proposed deviation,both Somali al-Shabaab era; completely different,0.0000,false,TN
 synth_people,68983658,Person,SALLY-ANNE FRANCES JONES,NASSER AHMED MUTHANA,false,MEDIUM,LLM-proposed deviation,both UK ISIS recruits; completely different,0.0000,false,TN
 synth_people,404b52f3,Person,ALEXANDA AMON KOTEY,MOSTAFA KAMEL MOSTAFA IBRAHIM,false,MEDIUM,LLM-proposed deviation,both UK figures; completely different,0.0000,false,TN
-synth_corp_positives,a0a95bfb,Company,Apple Incorporated,Apple Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Inc./Incorporated),1.0000,true,TP
-synth_corp_positives,39382331,Company,Siemens Aktiengesellschaft,Siemens AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG/Aktiengesellschaft),1.0000,true,TP
-synth_corp_positives,7ce1f52b,Company,BMW Aktiengesellschaft,BMW AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
-synth_corp_positives,9edd0064,Company,Vodafone Limited,Vodafone Ltd,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Ltd/Limited),1.0000,true,TP
-synth_corp_positives,9a1d8447,Company,Volkswagen Gesellschaft mit beschränkter Haftung,Volkswagen GmbH,true,MEDIUM,LLM-proposed deviation,legal-form expansion (GmbH),1.0000,true,TP
-synth_corp_positives,ca75c45c,Company,Microsoft Corporation,Microsoft Corp.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp./Corporation),0.9769,true,TP
-synth_corp_positives,60643fc0,Company,Toyota Motor Corporation,Toyota Motor Corp,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp/Corporation),0.9870,true,TP
-synth_corp_positives,c913ae2a,Company,Daimler Aktiengesellschaft,Daimler AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
-synth_corp_positives,4ea54d86,Company,Walmart Incorporated,Walmart Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion,1.0000,true,TP
-synth_corp_positives,69a6c100,Company,Lloyds Banking Group Public Limited Company,Lloyds Banking Group plc,true,MEDIUM,LLM-proposed deviation,legal-form expansion (plc),1.0000,true,TP
-synth_corp_positives,53a74d49,Company,"Apple, Inc.",Apple Inc.,true,MEDIUM,LLM-proposed deviation,comma before legal form,1.0000,true,TP
-synth_corp_positives,38a7f3d7,Company,"Bowne Global Solutions, L.L.C.",Bowne Global Solutions LLC,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
-synth_corp_positives,eadc9b68,Company,"Bowne Global Solutions, S.A.R.L.",Bowne Global Solutions SARL,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
-synth_corp_positives,5fb8dd58,Company,Volkswagen Bank G.m.b.H.,Volkswagen Bank GmbH,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
-synth_corp_positives,9c51d869,Company,"JPMorgan Chase Bank, N.A.",JPMorgan Chase Bank NA,true,STRONG,LLM-proposed deviation,periods + comma in N.A.,1.0000,true,TP
-synth_corp_positives,96798acd,Company,Bowne Global Solutions B.V.,Bowne Global Solutions BV,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
-synth_corp_positives,8986cb25,Company,HSBC Holdings p.l.c.,HSBC Holdings plc,true,MEDIUM,LLM-proposed deviation,periods in plc,1.0000,true,TP
-synth_corp_positives,15c8f669,Company,Goldman Sachs & Co. L.L.C.,Goldman Sachs & Co. LLC,true,MEDIUM,LLM-proposed deviation,periods in LLC,1.0000,true,TP
-synth_corp_positives,e037cbf0,Company,Procter & Gamble Co.,Procter and Gamble Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9583,true,TP
-synth_corp_positives,ab5147a9,Company,AT&T Inc.,AT and T Inc.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9600,true,TP
-synth_corp_positives,86b29a9f,Company,JPMorgan Chase & Co.,JPMorgan Chase and Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9583,true,TP
-synth_corp_positives,9d66d932,Company,H&M Hennes & Mauritz AB,H and M Hennes and Mauritz AB,true,MEDIUM,LLM-proposed deviation,& vs and (multiple),0.9615,true,TP
-synth_corp_positives,976e590b,Company,Standard & Poor's,Standard and Poor's,true,MEDIUM,LLM-proposed deviation,& vs and,0.9524,true,TP
-synth_corp_positives,f38d915e,Company,The Coca-Cola Company,Coca-Cola Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
-synth_corp_positives,cab98aa9,Company,The Procter & Gamble Company,Procter & Gamble Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
-synth_corp_positives,15a87c60,Company,"The Goldman Sachs Group, Inc.","Goldman Sachs Group, Inc.",true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
-synth_corp_positives,83ff91f1,Company,The Walt Disnei Company,Walt Disney Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,0.9045,true,TP
-synth_corp_positives,51671995,Company,Coca-Cola Company,Coca Cola Company,true,MEDIUM,LLM-proposed deviation,hyphen vs space in brand,1.0000,true,TP
-synth_corp_positives,aabac46f,Company,Hewlett-Packard Co.,Hewlett Packard Co.,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
-synth_corp_positives,c581c1a5,Company,Daimler-Benz AG,Daimler Benz AG,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
-synth_corp_positives,7ed4b358,Company,PricewaterhouseCoopers LLP,Pricewaterhouse Coopers LLP,true,MEDIUM,LLM-proposed deviation,joined-camelcase vs spaced,0.9949,true,TP
-synth_corp_positives,74c7da2a,Company,J.P. Morgan & Co.,JP Morgan & Co.,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
-synth_corp_positives,a5442041,Company,"S.C. Johnson & Son, Inc.","SC Johnson & Son, Inc.",true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
-synth_corp_positives,16b58055,Company,P.T. Astra International,PT Astra International,true,MEDIUM,LLM-proposed deviation,initial periods (Indonesian PT),1.0000,true,TP
-synth_corp_positives,ca82c57a,Company,C.K. Hutchison Holdings,CK Hutchison Holdings,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
-synth_corp_positives,ff6d41f5,Company,ALPHABET INC.,Alphabet Inc.,true,STRONG,LLM-proposed deviation,casing (uppercase vs title),1.0000,true,TP
-synth_corp_positives,772bb777,Company,"blackrock, inc.","BlackRock, Inc.",true,STRONG,LLM-proposed deviation,casing (lowercase vs camelcase),1.0000,true,TP
-synth_corp_positives,3da0fa16,Company,"SAMSUNG ELECTRONICS CO., LTD.","Samsung Electronics Co., Ltd.",true,MEDIUM,LLM-proposed deviation,casing,1.0000,true,TP
-synth_corp_positives,38994984,Company,Société Générale S.A.,Societe Generale S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
-synth_corp_positives,8ea160d7,Company,Crédit Agricole S.A.,Credit Agricole S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
-synth_corp_positives,9d5f2d48,Organization,"United Nations Educational, Scientific and Cultural Organization",United Nations Educational Scientific and Cultural Organization,true,MEDIUM,LLM-proposed deviation,internal-comma drop,1.0000,true,TP
-synth_corp_positives,b29c1143,Organization,The World Bank,World Bank,true,STRONG,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
-synth_corp_positives,4340481e,Organization,International Labour Organization,International Labor Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Labour/Labor),0.8958,true,TP
-synth_corp_positives,f8756744,Organization,World Health Organisation,World Health Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9769,true,TP
-synth_corp_positives,05363c0a,Organization,Organisation for Economic Co-operation and Development,Organization for Economic Co-operation and Development,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9936,true,TP
-synth_corp_positives,f5e5b8e0,Organization,North Atlantic Treaty Organization,North Atlantic Treaty Organisation,true,MEDIUM,LLM-proposed deviation,en-US/en-GB,0.9909,true,TP
-synth_corp_positives,9a79b9ae,Organization,International Federation of Red Cross and Red Crescent Societies,International Federation of the Red Cross and Red Crescent Societies,true,MEDIUM,LLM-proposed deviation,internal 'the' insertion,0.9872,true,TP
-synth_corp_positives,6b9eebd8,Organization,U.S. Department of State,United States Department of State,true,MEDIUM,LLM-proposed deviation,U.S. abbreviation expansion,0.9619,true,TP
-synth_corp_positives,d4cec93c,Organization,Government of the United Kingdom,Government of United Kingdom,true,MEDIUM,LLM-proposed deviation,internal 'the' drop,0.9850,true,TP
-synth_corp_positives,e9cf6cdd,Organization,The Bank for International Settlements,Bank for International Settlements,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_companies,edbd5ba4,Company,Apple Incorporated,Apple Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Inc./Incorporated),1.0000,true,TP
+synth_companies,c8e541bd,Company,Siemens Aktiengesellschaft,Siemens AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG/Aktiengesellschaft),1.0000,true,TP
+synth_companies,118d5e1f,Company,BMW Aktiengesellschaft,BMW AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
+synth_companies,50e583ea,Company,Vodafone Limited,Vodafone Ltd,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Ltd/Limited),1.0000,true,TP
+synth_companies,a13f0be0,Company,Volkswagen Gesellschaft mit beschränkter Haftung,Volkswagen GmbH,true,MEDIUM,LLM-proposed deviation,legal-form expansion (GmbH),1.0000,true,TP
+synth_companies,27352f1a,Company,Microsoft Corporation,Microsoft Corp.,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp./Corporation),0.9769,true,TP
+synth_companies,2f7e4fdf,Company,Toyota Motor Corporation,Toyota Motor Corp,true,MEDIUM,LLM-proposed deviation,legal-form expansion (Corp/Corporation),0.9850,true,TP
+synth_companies,f03e3b97,Company,Daimler Aktiengesellschaft,Daimler AG,true,MEDIUM,LLM-proposed deviation,legal-form expansion (AG),1.0000,true,TP
+synth_companies,ef03f85a,Company,Walmart Incorporated,Walmart Inc.,true,MEDIUM,LLM-proposed deviation,legal-form expansion,1.0000,true,TP
+synth_companies,6f2e8ad2,Company,Lloyds Banking Group Public Limited Company,Lloyds Banking Group plc,true,MEDIUM,LLM-proposed deviation,legal-form expansion (plc),1.0000,true,TP
+synth_companies,240fada4,Company,"Apple, Inc.",Apple Inc.,true,MEDIUM,LLM-proposed deviation,comma before legal form,1.0000,true,TP
+synth_companies,d4b71700,Company,"Bowne Global Solutions, L.L.C.",Bowne Global Solutions LLC,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
+synth_companies,f84cf841,Company,"Bowne Global Solutions, S.A.R.L.",Bowne Global Solutions SARL,true,MEDIUM,LLM-proposed deviation,periods + comma in legal form,1.0000,true,TP
+synth_companies,3abf1a20,Company,Volkswagen Bank G.m.b.H.,Volkswagen Bank GmbH,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
+synth_companies,a4bdd5d2,Company,"JPMorgan Chase Bank, N.A.",JPMorgan Chase Bank NA,true,STRONG,LLM-proposed deviation,periods + comma in N.A.,1.0000,true,TP
+synth_companies,f6bdc37b,Company,Bowne Global Solutions B.V.,Bowne Global Solutions BV,true,MEDIUM,LLM-proposed deviation,periods in legal form,1.0000,true,TP
+synth_companies,e88fa5c6,Company,HSBC Holdings p.l.c.,HSBC Holdings plc,true,MEDIUM,LLM-proposed deviation,periods in plc,1.0000,true,TP
+synth_companies,842d1567,Company,Goldman Sachs & Co. L.L.C.,Goldman Sachs & Co. LLC,true,MEDIUM,LLM-proposed deviation,periods in LLC,1.0000,true,TP
+synth_companies,7680aad0,Company,Procter & Gamble Co.,Procter and Gamble Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9705,true,TP
+synth_companies,f6ea8ade,Company,AT&T Inc.,AT and T Inc.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9717,true,TP
+synth_companies,ad1d6318,Company,JPMorgan Chase & Co.,JPMorgan Chase and Co.,true,MEDIUM,LLM-proposed deviation,& vs and,0.9705,true,TP
+synth_companies,bd1dd78e,Company,H&M Hennes & Mauritz AB,H and M Hennes and Mauritz AB,true,MEDIUM,LLM-proposed deviation,& vs and (multiple),0.9728,true,TP
+synth_companies,a1564c5f,Company,Standard & Poor's,Standard and Poor's,true,MEDIUM,LLM-proposed deviation,& vs and,0.9662,true,TP
+synth_companies,dc79f867,Company,The Coca-Cola Company,Coca-Cola Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_companies,44509c42,Company,The Procter & Gamble Company,Procter & Gamble Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_companies,67152ebf,Company,"The Goldman Sachs Group, Inc.","Goldman Sachs Group, Inc.",true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_companies,5688e000,Company,The Walt Disnei Company,Walt Disney Company,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,0.9045,true,TP
+synth_companies,2b03df58,Company,Coca-Cola Company,Coca Cola Company,true,MEDIUM,LLM-proposed deviation,hyphen vs space in brand,1.0000,true,TP
+synth_companies,3235f879,Company,Hewlett-Packard Co.,Hewlett Packard Co.,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
+synth_companies,ae3cca74,Company,Daimler-Benz AG,Daimler Benz AG,true,MEDIUM,LLM-proposed deviation,hyphen vs space,1.0000,true,TP
+synth_companies,03fc3320,Company,PricewaterhouseCoopers LLP,Pricewaterhouse Coopers LLP,true,MEDIUM,LLM-proposed deviation,joined-camelcase vs spaced,0.9949,true,TP
+synth_companies,202c0705,Company,J.P. Morgan & Co.,JP Morgan & Co.,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_companies,07e6dd01,Company,"S.C. Johnson & Son, Inc.","SC Johnson & Son, Inc.",true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_companies,c618133e,Company,P.T. Astra International,PT Astra International,true,MEDIUM,LLM-proposed deviation,initial periods (Indonesian PT),1.0000,true,TP
+synth_companies,673a3fc7,Company,C.K. Hutchison Holdings,CK Hutchison Holdings,true,MEDIUM,LLM-proposed deviation,initial periods in initialism,1.0000,true,TP
+synth_companies,a2be408c,Company,ALPHABET INC.,Alphabet Inc.,true,STRONG,LLM-proposed deviation,casing (uppercase vs title),1.0000,true,TP
+synth_companies,ee3ffa8f,Company,"blackrock, inc.","BlackRock, Inc.",true,STRONG,LLM-proposed deviation,casing (lowercase vs camelcase),1.0000,true,TP
+synth_companies,779167c6,Company,"SAMSUNG ELECTRONICS CO., LTD.","Samsung Electronics Co., Ltd.",true,MEDIUM,LLM-proposed deviation,casing,1.0000,true,TP
+synth_companies,5d57f7a6,Company,Société Générale S.A.,Societe Generale S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
+synth_companies,959f3dfa,Company,Crédit Agricole S.A.,Credit Agricole S.A.,true,MEDIUM,LLM-proposed deviation,French diacritic strip,1.0000,true,TP
+synth_companies,6f6f6f66,Organization,"United Nations Educational, Scientific and Cultural Organization",United Nations Educational Scientific and Cultural Organization,true,MEDIUM,LLM-proposed deviation,internal-comma drop,1.0000,true,TP
+synth_companies,36d3112c,Organization,The World Bank,World Bank,true,STRONG,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+synth_companies,f9e97fba,Organization,International Labour Organization,International Labor Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Labour/Labor),0.8958,true,TP
+synth_companies,90166c22,Organization,World Health Organisation,World Health Organization,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9769,true,TP
+synth_companies,6ca25ee3,Organization,Organisation for Economic Co-operation and Development,Organization for Economic Co-operation and Development,true,MEDIUM,LLM-proposed deviation,en-GB/en-US (Organisation/Organization),0.9936,true,TP
+synth_companies,df35b4cb,Organization,North Atlantic Treaty Organization,North Atlantic Treaty Organisation,true,MEDIUM,LLM-proposed deviation,en-US/en-GB,0.9909,true,TP
+synth_companies,7c96e3b1,Organization,International Federation of Red Cross and Red Crescent Societies,International Federation of the Red Cross and Red Crescent Societies,true,MEDIUM,LLM-proposed deviation,internal 'the' insertion,0.9910,true,TP
+synth_companies,03d01e21,Organization,U.S. Department of State,United States Department of State,true,MEDIUM,LLM-proposed deviation,U.S. abbreviation expansion,0.9619,true,TP
+synth_companies,095bf1d4,Organization,Government of the United Kingdom,Government of United Kingdom,true,MEDIUM,LLM-proposed deviation,internal 'the' drop,0.9850,true,TP
+synth_companies,d1eb75e8,Organization,The Bank for International Settlements,Bank for International Settlements,true,MEDIUM,LLM-proposed deviation,leading 'The' drop,1.0000,true,TP
+cust_cases,fe3bb236,Person,NOUREDDINE BEN ALI BEN BELKASSEM DR,Noureddine Ben Ali Ben Belkassem DRISSI,true,STRONG,Customer-provided deviation,Partial surname,0.8333,true,TP
+cust_cases,2942424d,Organization,Stripe LLC,Stripe Limited Liability Company,true,STRONG,Customer-provided deviation,Legal-form expansion,1.0000,true,TP
+cust_cases,a4ca0394,Organization,Stripe LLC,Strip Limited Liability Company,true,STRONG,Customer-provided deviation,Legal-form expansion,0.9020,true,TP
+cust_cases,7baca790,Organization,Sparkles Business Corporation,Sporks Business Corporation,false,STRONG,Customer-provided deviation,Discounting common company name parts,0.3750,false,TN
+cust_cases,c661f3d6,Person,فرناندو بيريز,Fernando Pérez,true,STRONG,Customer-provided deviation,Alphabetic transliteration of Arabic name,0.9000,true,TP
+cluster_align,19181f2b,Company,vanderbilt corp,van der bilt corp,true,STRONG,token_merge_split,"Star-pattern transitive closure at the residue layer (`vanderbilt` paired with `van`,`der`,`bilt` as one cluster). Currently scores 0.219 at the full-matcher level — not a clustering bug; matcher-policy aggregation issue worth investigating separately. Any cluster-rule change should preserve the cluster shape regardless of the score outcome.",0.9744,true,TP
+cluster_align,8251d162,Company,"BAE Systems, Inc.","BAE Industries, Inc.",false,MEDIUM,overlap_threshold_fragility,0.51-threshold fragility example cited in plans/weighted-distance.md. `Systems`/`Industries` overlap fraction is alignment-shape-dependent. Currently 0.708 → FP. Connectivity rule + matcher-policy reconciliation are the open spec items.,0.7083,true,FP
+cluster_align,8bc82386,Person,MOHAMAD IQBAL ABDURRAHIM,MOHAMAD IQBAL ABDURRAHMAN,true,MEDIUM,transposition_typo,3-character drift at long-token suffix. Cited in plans/weighted-distance.md as Phase-4 outcome flip. Currently TP.,0.9121,true,TP
+cluster_align,925820f8,Person,Bashar al-Assad,Hafez al-Assad,false,MEDIUM,stopword_particle,`al-` particle behaviour. Stopword down-weight (0.7 multiplier) interacts with cluster threshold. Currently TN.,0.6296,false,TN
+cluster_align,9fe0d094,Person,Vladimir Vladimirovich Putin,Vladimir Putin,true,STRONG,extra_middle_token,Patronymic surfaces as solo with extras-weight; aggregate carries through. Currently TP. Watch under connectivity rule — solo could shift to paired-zero.,0.7143,true,TP
+cluster_align,5960cae9,Company,"Banco Santander, S.A.","Banco Santander Mexico, S.A.",false,WEAK,geographic_qualifier,Geographic qualifier as extra. `Banco Santander` matches strongly; `Mexico` extras-weight isn't enough to drag below 0.7. Currently 0.938 → FP. Borderline case — labelling is debatable.,0.9375,true,FP
+cluster_align,597da2ac,Person,Osama bin Laden,Usama ibn Laden,true,STRONG,particle_transliteration,`bin`/`ibn` and `Osama`/`Usama` are transliteration variants. Tests confusable cost tier + clustering composing across multiple residue parts. Currently TP.,0.9435,true,TP
+cluster_align,c93ad8f9,Company,Volkswagen AG,Siemens AG,false,STRONG,shared_org_class,Shared org-class token (`AG`) peels off via symbol pairing; residue (`Volkswagen` vs `Siemens`) shouldn't cluster. Sanity check that symbol-paired evidence doesn't leak. Currently TN.,0.4118,false,TN
+crusetra_entities,933e3f8d,Company,Mwangi & Sons Ltd,Mwangi & Daughters Ltd,false,MEDIUM,other-word,paires-entites-15.json,0.6296,false,TN
+crusetra_entities,2e8420b0,Company,Kilifi Coastal Traders Ltd,Kilifi Coastal Transporters Ltd,false,MEDIUM,other-word,paires-entites-15.json,0.7297,true,FP
+crusetra_entities,1fb81e44,Company,Kibaha Cement Traders Ltd,Kibaha Cement Products Ltd,false,MEDIUM,other-word,paires-entites-15.json,0.7418,true,FP
+crusetra_entities,21e9bd3f,Company,Kisumu Lakeside Motors Ltd,Kisumu Lakeside Motor Spares Ltd,false,MEDIUM,other-word,paires-entites-15.json,0.9250,true,FP
+crusetra_entities,ee9a9674,Company,Brennock Steel Tubes Ltd,Brennock Steel Wires Ltd,false,MEDIUM,one-word-sibling,paires-entites-3.json,0.7059,true,FP
+crusetra_entities,2b86597e,Company,Castellan Agro Exports Pvt. Ltd.,Castellan Agro Imports Pvt. Ltd.,false,MEDIUM,one-word-sibling,paires-entites-3.json,0.9137,true,FP
+crusetra_entities,f7c4696e,Company,Marbury Cold Chain Logistics LLC,Marbury Cold Chain Engineering LLC,false,MEDIUM,one-word-sibling,paires-entites-3.json,0.7872,true,FP
+crusetra_entities,cded9627,Company,Tolvane Petroleum Trading FZE,Tolvane Petroleum Refining FZE,false,MEDIUM,one-word-sibling,paires-entites-3.json,0.7059,true,FP
+crusetra_entities,24c021c7,Company,Groupe Diarra Import-Export,Groupe Diakité Import-Export,false,MEDIUM,different-surname,paires-entites-16.json,0.4737,false,TN
+crusetra_entities,c4466ebe,Company,SUARL Traoré Commerce,SUARL Touré Commerce,false,MEDIUM,different-surname,paires-entites-16.json,0.5000,false,TN
+crusetra_entities,bcbb5341,Company,Ets Diallo et Fils,Ets Baldé et Fils,false,MEDIUM,different-surname,paires-entites-16.json,0.7059,true,FP
+crusetra_entities,d6bee684,Company,Ets Ouattara et Cie,Ets Ouédraogo et Cie,false,MEDIUM,different-surname,paires-entites-16.json,0.7059,true,FP
+crusetra_entities,48ca74d1,Company,Tak Shing Trading Company Limited,Tak Hing Trading Company Limited,false,MEDIUM,near-string-real-words,paires-entites-5.json,0.9394,true,FP
+crusetra_entities,3418823b,Company,"Guangzhou Lixing Cosmetics Co., Ltd.","Guangzhou Lixin Cosmetics Co., Ltd.",false,MEDIUM,near-string-real-words,paires-entites-5.json,0.9614,true,FP
+crusetra_entities,082c2b33,Company,"Yu Hsin Machinery Co., Ltd.","Yu Hsing Machinery Co., Ltd.",false,MEDIUM,near-string-real-words,paires-entites-5.json,0.9355,true,FP
+crusetra_entities,47144b71,Company,"Anping Jinqiao Wire Mesh Products Co., Ltd.","Anping Yinqiao Wire Mesh Products Co., Ltd.",false,MEDIUM,near-string-real-words,paires-entites-5.json,0.9531,true,FP
+crusetra_entities,44311802,Company,Odhiambo & Otieno Enterprises Ltd,Odhiambo & Onyango Enterprises Ltd,false,MEDIUM,different-surname,paires-entites-15.json,0.6667,false,TN
+crusetra_entities,4037d659,Company,Karimi Fresh Produce,Kariuki Fresh Produce,false,MEDIUM,different-surname,paires-entites-15.json,0.8810,true,FP
+crusetra_entities,98b8c1c2,Company,Njoroge wa Kamau Hardware Ltd,Njoroge wa Kimani Hardware Ltd,false,MEDIUM,different-surname,paires-entites-15.json,0.7561,true,FP
+crusetra_entities,c44da6e4,Company,Mavroyenis Marine Insurance Brokers,Mavromatis Marine Insurance Brokers,false,MEDIUM,different-surname,paires-entites-17.json,0.7059,true,FP
+crusetra_entities,0c41376f,Company,株式会社風松ホールディングス,風松工業株式会社,false,MEDIUM,holding-vs-operating,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,390deb03,Company,Soryu Kagaku Holdings K.K.,Soryu Kagaku Kogyo K.K.,false,MEDIUM,holding-vs-operating,paires-entites-19.json,0.7979,true,FP
+crusetra_entities,b4c7fd1d,Company,대륜중공업 주식회사,대륜홀딩스 주식회사,false,MEDIUM,holding-vs-operating,paires-entites-19.json,0.4118,false,TN
+crusetra_entities,6e54fb96,Company,Ruiz-Montalvo Trucking LLC,Ruiz-Montalvo Trucking Holdings LLC,false,MEDIUM,holding-vs-operating,paires-entites-20.json,0.9635,true,FP
+crusetra_entities,881681bb,Company,"Ningbo Jiangbei Xinhua Fastener Co., Ltd.","Ningbo Jiangbei Xinhua Valve Co., Ltd.",false,MEDIUM,one-word-sibling-activity,paires-entites-5.json,0.7872,true,FP
+crusetra_entities,d8e1439a,Company,"Zhejiang Yongxu Chemical Co., Ltd.","Zhejiang Yongxu Pharmaceutical Co., Ltd.",false,MEDIUM,one-word-sibling-activity,paires-entites-5.json,0.7143,true,FP
+crusetra_entities,4b3abe69,Company,"Dai Nam Steel Co., Ltd.","Dai Nam Cement Co., Ltd.",false,MEDIUM,one-word-sibling-activity,paires-entites-5.json,0.7297,true,FP
+crusetra_entities,396a780f,Company,"Fuzhou Sanhe Foods Co., Ltd.","Fuzhou Sanhe Packaging Co., Ltd.",false,MEDIUM,one-word-sibling-activity,paires-entites-5.json,0.7297,true,FP
+crusetra_entities,f56971c3,Company,Olvetra GmbH,Olvetra Polska Sp. z o.o.,false,MEDIUM,subsidiary-by-country,paires-entites-4.json,0.8387,true,FP
+crusetra_entities,d7e49b1c,Company,Kessendorf AG,Kessendorf do Brasil Ltda.,false,MEDIUM,subsidiary-by-country,paires-entites-4.json,0.5076,false,TN
+crusetra_entities,97736dde,Company,Marrowby Chemicals Ltd,"Marrowby Chemicals (Thailand) Co., Ltd.",false,MEDIUM,subsidiary-by-country,paires-entites-4.json,0.8828,true,FP
+crusetra_entities,affaf442,Company,Tovarro Industries Inc.,"Tovarro Industries de México, S.A. de C.V.",false,MEDIUM,subsidiary-by-country,paires-entites-4.json,0.5727,false,TN
+crusetra_entities,8553890d,LegalEntity,MV KARADENİZ ŞAHİNİ,Karadeniz Şahini Denizcilik Ltd. Şti.,false,WEAK,vessel-vs-owner,paires-entites-12.json,0.6369,false,TN
+crusetra_entities,2a50f452,LegalEntity,M/V SAMSUN YILDIZI,Samsun Yıldızı Gemi İşletmeciliği A.Ş.,false,WEAK,vessel-vs-owner,paires-entites-12.json,0.4762,false,TN
+crusetra_entities,8eb8e87c,LegalEntity,MV DENİZ KARTALI,Deniz Kartalı Denizcilik A.Ş.,false,WEAK,vessel-vs-owner,paires-entites-12.json,0.6250,false,TN
+crusetra_entities,ac6e7ec7,LegalEntity,KAPITAN GUSEYNOV,Kapitan Guseynov Shipping Ltd,false,WEAK,vessel-vs-owner,paires-entites-12.json,0.8547,true,FP
+crusetra_entities,252c1136,Company,Kitakusu Kaiun K.K.,Kitakusu Kisen K.K.,false,MEDIUM,other-business-word,paires-entites-19.json,0.6667,false,TN
+crusetra_entities,7ae75222,Company,星ノ浦物産株式会社,星ノ浦商事株式会社,false,MEDIUM,other-business-word,paires-entites-19.json,0.6049,false,TN
+crusetra_entities,e03048c2,Company,Hoshinoura Bussan K.K.,Hoshinoura Sangyo K.K.,false,MEDIUM,other-business-word,paires-entites-19.json,0.6667,false,TN
+crusetra_entities,74f20b1e,Company,風松工業株式会社,風松建設株式会社,false,MEDIUM,other-business-word,paires-entites-19.json,0.5625,false,TN
+crusetra_entities,3f59324d,Company,Mwalimu wa Pwani Sacco Ltd,Mwalimu wa Nyanza Sacco Ltd,false,MEDIUM,other-place,paires-entites-15.json,0.7727,true,FP
+crusetra_entities,a65ada60,Vessel,MV Ras Kitau,MV Ras Kiambone,false,MEDIUM,other-place,paires-entites-15.json,0.0000,false,TN
+crusetra_entities,ae881817,Vessel,MV Salaam Dar,MV Salaam Zanzibar,false,MEDIUM,other-place,paires-entites-15.json,0.0000,false,TN
+crusetra_entities,f3b5ce1a,Company,Lefkada Bulk Carriers S.A.,Lefkosia Bulk Carriers S.A.,false,MEDIUM,other-place,paires-entites-17.json,0.7297,true,FP
+crusetra_entities,3d58ccef,Company,Akinyi Textiles Ltd,Atieno Textiles Ltd,false,MEDIUM,other-name,paires-entites-15.json,0.6296,false,TN
+crusetra_entities,50436879,Company,Wanjiru & Wambui Advocates,Wanjiru & Wanjiku Advocates,false,MEDIUM,other-name,paires-entites-15.json,0.6667,false,TN
+crusetra_entities,e3de9635,Company,Haji Muhammad Ashraf & Sons,Haji Muhammad Asghar & Sons,false,MEDIUM,other-name,paires-entites-15.json,0.7500,true,FP
+crusetra_entities,75858449,Company,Chaudhry Nazir Ahmad & Co.,Chaudhry Nazir Hussain & Co.,false,MEDIUM,other-name,paires-entites-15.json,0.6970,false,TN
+crusetra_entities,ed693193,Company,Adriatica Legnami S.r.l.,Adriatica Metalli S.r.l.,false,MEDIUM,different-business-sector-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,17d74469,Company,Jadranska Plovba d.o.o.,Jadranska Ribolov d.o.o.,false,MEDIUM,different-business-sector-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,a666c1d2,Company,Bevk Mizarstvo d.o.o.,Bevk Kovaštvo d.o.o.,false,MEDIUM,different-business-sector-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,cd841141,Company,Zanier Impianti Società Cooperativa,Zanier Servizi Società Cooperativa,false,MEDIUM,different-business-sector-word,paires-entites-18.json,0.6299,false,TN
+crusetra_entities,cb28a9fd,Company,SARL Ivoire Négoce,SARL Ivoire Négoce Sénégal,false,WEAK,different-country-registration,paires-entites-16.json,0.9441,true,FP
+crusetra_entities,d3442da6,Company,Société Sénégalaise d'Arachide,Société Malienne d'Arachide,false,MEDIUM,different-country-registration,paires-entites-16.json,0.5652,false,TN
+crusetra_entities,825a23b8,Company,Compagnie Ivoirienne de Cajou,Compagnie Ghanéenne de Cajou,false,MEDIUM,different-country-registration,paires-entites-16.json,0.6667,false,TN
+crusetra_entities,1fefa9b8,Company,Société Malienne du Bétail,Société Guinéenne du Bétail,false,MEDIUM,different-country-registration,paires-entites-16.json,0.6667,false,TN
+crusetra_entities,6c44ce56,Company,Tarquessa Pharmaceuticals Inc.,Tarquessa Marine Salvage Ltd.,false,MEDIUM,same-word-unrelated-business,paires-entites-3.json,0.5379,false,TN
+crusetra_entities,b5aaa61d,Company,Obsidiana Mining S.A.,Obsidiana Boutique Hotels S.L.,false,MEDIUM,same-word-unrelated-business,paires-entites-3.json,0.3378,false,TN
+crusetra_entities,9a56685d,Company,Kalvenstrand Logistics AB,Kalvenstrand Dental Clinic AB,false,MEDIUM,same-word-unrelated-business,paires-entites-3.json,0.6250,false,TN
+crusetra_entities,4a1e1589,Company,Vardonis Agro Chemicals Pvt Ltd,Vardonis Software Solutions Inc.,false,MEDIUM,same-word-unrelated-business,paires-entites-3.json,0.3514,false,TN
+crusetra_entities,861d52b5,Vessel,MV Kilindini Star,MV Kilindini Sun,false,MEDIUM,vessel-sister-ship,paires-entites-15.json,0.0000,false,TN
+crusetra_entities,0fe8efd6,Vessel,Coaster Mtwara Dawn,Coaster Mtwara Dusk,false,MEDIUM,vessel-sister-ship,paires-entites-15.json,0.5972,false,TN
+crusetra_entities,36b637ef,Vessel,Hamriya Moon,Hamriya Sun,false,MEDIUM,vessel-sister-ship,paires-entites-15.json,0.0000,false,TN
+crusetra_entities,470fb6da,Vessel,MSV Sahil-e-Sindh,MSV Sahil-e-Balochistan,false,MEDIUM,vessel-sister-ship,paires-entites-15.json,0.0000,false,TN
+crusetra_entities,2da5ac48,Vessel,第八星風丸,第十八星風丸,false,MEDIUM,vessel-numeral,paires-entites-19.json,0.8333,true,FP
+crusetra_entities,6db7fc1b,Vessel,Hoshikaze Maru No. 8,Hoshikaze Maru No. 6,false,MEDIUM,vessel-numeral,paires-entites-19.json,0.5952,false,TN
+crusetra_entities,713d5925,Vessel,No.8 Hoshikaze Maru,No.3 Hoshikaze Maru,false,MEDIUM,vessel-numeral,paires-entites-19.json,0.5897,false,TN
+crusetra_entities,85508a67,Vessel,Namisuke Maru No. 11,Namisuke Maru No. 1,false,MEDIUM,vessel-numeral,paires-entites-19.json,0.5952,false,TN
+crusetra_entities,a13919a8,Company,Spedycja Wisłoujście Sp. z o.o. Sp. k.,Żegluga Wisłoujście Sp. z o.o. Sp. k.,false,MEDIUM,different-trade-word,paires-entites-23.json,0.7727,true,FP
+crusetra_entities,bcc50db4,Company,Piekarnia Rodzinna Kamińscy Sp. j.,Cukiernia Rodzinna Kamińscy Sp. j.,false,MEDIUM,different-trade-word,paires-entites-23.json,0.7872,true,FP
+crusetra_entities,61785a68,Company,Wojciechowski Agro Sp. j.,Wojciechowski Auto Sp. j.,false,MEDIUM,different-trade-word,paires-entites-23.json,0.7297,true,FP
+crusetra_entities,63988c80,Company,Łączyńska Wytwórnia Łodzi Sp. j.,Łączyńska Wytwórnia Sieci Sp. j.,false,MEDIUM,different-trade-word,paires-entites-23.json,0.7872,true,FP
+crusetra_entities,b3e139d6,Company,Orvanta Leasing plc,Orvanta Insurance plc,false,MEDIUM,subsidiary-by-activity,paires-entites-4.json,0.6296,false,TN
+crusetra_entities,4f61a03e,Company,Belcastrino Costruzioni S.p.A.,Belcastrino Cementi S.p.A.,false,MEDIUM,subsidiary-by-activity,paires-entites-4.json,0.6296,false,TN
+crusetra_entities,47ce8fbe,Company,Anduvar Shipping Inc.,Anduvar Ship Finance Inc.,false,MEDIUM,subsidiary-by-activity,paires-entites-4.json,0.8345,true,FP
+crusetra_entities,765763d4,Company,Rimsdale Power Generation LLC,Rimsdale Energy Trading LLC,false,MEDIUM,subsidiary-by-activity,paires-entites-4.json,0.4595,false,TN
+crusetra_entities,474b04fd,Vessel,mv haci sukru reis,Hacı Şükrü Kaptan,false,MEDIUM,vessel-other-word,paires-entites-17.json,0.0000,false,TN
+crusetra_entities,e23add39,Vessel,霧雨丸,春雨丸,false,MEDIUM,vessel-other-word,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,00d8e50f,Vessel,Cobalt Hibari,Cobalt Hibiki,false,MEDIUM,vessel-other-word,paires-entites-19.json,0.7160,true,FP
+crusetra_entities,f00aeccb,Vessel,Shirane Glory,Shirane Gloria,false,MEDIUM,vessel-other-word,paires-entites-19.json,0.7347,true,FP
+crusetra_entities,97925f3d,Company,Korvessa Industrial GmbH,Korvessa Industrial Sdn. Bhd.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json,0.9300,true,FP
+crusetra_entities,5e86ba18,Company,Altamura Ferrostampi S.r.l.,Altamura Ferrostampi Pte. Ltd.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json,0.9481,true,FP
+crusetra_entities,989f0696,Company,Tessaline Trade OOO,Tessaline Trade Ltda.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json,0.9300,true,FP
+crusetra_entities,d387292c,Company,Qordova Petroleum FZE,Qordova Petroleum S.A. de C.V.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json,0.7083,true,FP
+crusetra_entities,af601844,Company,Brevanti Trading LLC,Brevanti Logistics LLC,false,MEDIUM,one-word-sibling,paires-entites-4.json,0.6911,false,TN
+crusetra_entities,ba7b706a,Company,Korvath Shipping Ltd,Korvath Chartering Ltd,false,MEDIUM,one-word-sibling,paires-entites-4.json,0.6296,false,TN
+crusetra_entities,f1e1d008,Company,Halsworth Steel Inc.,Halsworth Scrap Inc.,false,MEDIUM,one-word-sibling,paires-entites-4.json,0.6296,false,TN
+crusetra_entities,1f50042c,Company,Drummelin Agro Exports Pvt. Ltd.,Drummelin Agro Imports Pvt. Ltd.,false,MEDIUM,one-word-sibling,paires-entites-4.json,0.9137,true,FP
+crusetra_entities,37d6f95f,Company,Kraška Avtoprevozništvo d.d.,Notranjska Avtoprevozništvo d.d.,false,MEDIUM,different-place-same-business-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,1eacb423,Company,Obalna Špedicija d.o.o.,Soška Špedicija d.o.o.,false,MEDIUM,different-place-same-business-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,e628d53c,Company,Adriatica Serramenti S.p.A.,Istriana Serramenti S.p.A.,false,MEDIUM,different-place-same-business-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,484569d1,Company,Radcliffe Adriatica S.p.A.,Radcliffe Istriana S.p.A.,false,MEDIUM,different-place-same-business-word,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,570ad923,Company,Varsk Global Trading LLC,Tollmere Global Trading LLC,false,MEDIUM,generic-words-only,paires-entites-3.json,0.6429,false,TN
+crusetra_entities,318a0703,Company,Kaverin International Freight Services Inc.,Oduya International Freight Services Inc.,false,MEDIUM,generic-words-only,paires-entites-3.json,0.6970,false,TN
+crusetra_entities,c613d53f,Company,United Heshen Marine Supply Co.,United Cardew Marine Supply Co.,false,MEDIUM,generic-words-only,paires-entites-3.json,0.7059,true,FP
+crusetra_entities,67eb49f7,Company,Amberlo General Trading LLC,Dirwaz General Trading LLC,false,MEDIUM,generic-words-only,paires-entites-3.json,0.5652,false,TN
+crusetra_entities,1ff005ee,Company,Nadwiślańskie Kruszywa Sp. z o.o.,Nadodrzańskie Kruszywa Sp. z o.o.,false,MEDIUM,different-place,paires-entites-23.json,0.6296,false,TN
+crusetra_entities,a11bf967,Company,Elbląskie Formy Stalowe Sp. z o.o.,Olsztyńskie Formy Stalowe Sp. z o.o.,false,MEDIUM,different-place,paires-entites-23.json,0.7297,true,FP
+crusetra_entities,7e38b756,Company,Kaszubskie Kruszywa Sp. z o.o.,Kujawskie Kruszywa Sp. z o.o.,false,MEDIUM,different-place,paires-entites-23.json,0.6296,false,TN
+crusetra_entities,d0338b56,Company,Kaszubska Wytwórnia Pierogów Bielawa Sp. z o.o.,Kaszubska Wytwórnia Pierogów Białogóra Sp. z o.o.,false,MEDIUM,different-place,paires-entites-23.json,0.7872,true,FP
+crusetra_entities,1c229a97,Company,Chłodnia Rybna Szkuner Sp. z o.o.,Chłodnia Rybna Szkwał Sp. z o.o.,false,MEDIUM,different-name-word,paires-entites-23.json,0.7297,true,FP
+crusetra_entities,ce05c448,Company,Przeds. Handl. Lipowa Dolina Sp. z o.o.,Przeds. Handl. Jodłowa Dolina Sp. z o.o.,false,MEDIUM,different-name-word,paires-entites-23.json,0.7872,true,FP
+crusetra_entities,ffeb2e8f,Company,Lewandowski i Wspólnicy Sp. k.,Lewandowski i Synowie Sp. k.,false,MEDIUM,different-name-word,paires-entites-23.json,0.8000,true,FP
+crusetra_entities,6455ea5c,Company,P.U.P. Nabrzeże Sp. z o.o.,P.U.P. Wybrzeże Sp. z o.o.,false,MEDIUM,different-name-word,paires-entites-23.json,0.8177,true,FP
+crusetra_entities,ba60f4cc,Company,Ahmad Rostamian Trading Est.,Karim Rostamian Trading Est.,false,MEDIUM,family-name-different-person,paires-entites-4.json,0.6970,false,TN
+crusetra_entities,749e5da3,Company,Hans Oberwald GmbH,Petra Oberwald GmbH,false,MEDIUM,family-name-different-person,paires-entites-4.json,0.6296,false,TN
+crusetra_entities,5c3bea6b,Company,Ramesh Gopalkrishnan Exports,Suresh Gopalkrishnan Exports,false,MEDIUM,family-name-different-person,paires-entites-4.json,0.5652,false,TN
+crusetra_entities,8e34816a,Company,Transportes Ibáñez Colmenar S.L.,Transportes Ibáñez Robledo S.L.,false,MEDIUM,family-name-different-person,paires-entites-4.json,0.7297,true,FP
+crusetra_entities,cd841c41,Company,Ditta Cecotti Import Export S.r.l.,Ditta Comelli Import Export S.r.l.,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.6970,false,TN
+crusetra_entities,0b21d87f,Company,Alpina Trasporti S.a.s. di Qualizza Renzo & C.,Alpina Trasporti S.a.s. di Petris Renzo & C.,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.8438,true,FP
+crusetra_entities,b39c780b,Company,Carnica Trasporti S.n.c. di Bront Livio & C.,Carnica Trasporti S.n.c. di Molaro Livio & C.,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.8438,true,FP
+crusetra_entities,601469e3,Company,Hrastnik Gradbeništvo d.o.o.,Rupnik Gradbeništvo d.o.o.,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.6296,false,TN
+crusetra_entities,b50278ed,Company,Nakamura Precision Tooling Inc.,Nakamura Precision Tooling Canada Ltd.,false,MEDIUM,foreign-subsidiary,paires-entites-20.json,0.9223,true,FP
+crusetra_entities,430ebbcf,Company,Mbeki-Sandoval Environmental Services LLC,"Mbeki-Sandoval Environmental Services de México, S.A. de C.V.",false,MEDIUM,foreign-subsidiary,paires-entites-20.json,0.7728,true,FP
+crusetra_entities,314d4650,Company,Lundqvist Hydraulics Inc.,Lundqvist Hydraulics (UK) Ltd.,false,MEDIUM,foreign-subsidiary,paires-entites-20.json,0.8951,true,FP
+crusetra_entities,333e352c,Company,Wieczorek Machine Works Inc.,Wieczorek Machine Works GmbH,false,WEAK,foreign-subsidiary,paires-entites-20.json,0.9588,true,FP
+crusetra_entities,ccb4c653,Vessel,YILDIZ KAPTAN,YILDIZ KAPTANLAR,false,WEAK,vessel-plural,paires-entites-12.json,0.5364,false,TN
+crusetra_entities,13720e60,Vessel,KARADENIZ SAHINI,KARADENIZ SAHINLERI,false,WEAK,vessel-plural,paires-entites-12.json,0.5972,false,TN
+crusetra_entities,4d0da1f8,Vessel,DENIZ KARTALI,DENIZ KARTALLARI,false,WEAK,vessel-plural,paires-entites-12.json,0.5364,false,TN
+crusetra_entities,6a21bb1b,Vessel,ALTAIR STAR,ALTAIR STARS,false,WEAK,vessel-plural,paires-entites-12.json,0.8403,true,FP
+crusetra_entities,c4141575,Company,Shah Bros. Ltd,Shah & Shah Ltd,false,MEDIUM,two-words-differ,paires-entites-15.json,0.6911,false,TN
+crusetra_entities,ab8b1324,Company,Msasani Fisheries (T) Ltd,Msasani Fish Processors (T) Ltd,false,MEDIUM,two-words-differ,paires-entites-15.json,0.8892,true,FP
+crusetra_entities,9034b0df,Company,Haji Abdalla & Sons Ltd,Haji Abdulla Hardware Ltd,false,MEDIUM,two-words-differ,paires-entites-15.json,0.6664,false,TN
+crusetra_entities,598b9cd7,Company,Popat Brothers (K) Ltd,Popat & Popat Advocates,false,MEDIUM,two-words-differ,paires-entites-15.json,0.3012,false,TN
+crusetra_entities,c302316b,Company,"Owashi Seiko Co., Ltd.","Otaka Seiko Co., Ltd.",false,MEDIUM,other-proper-name,paires-entites-19.json,0.6296,false,TN
+crusetra_entities,1fbf92de,Company,株式会社八雲堂,株式会社八重堂,false,MEDIUM,other-proper-name,paires-entites-19.json,0.7347,true,FP
+crusetra_entities,719c4cce,Company,月岡繊維株式会社,月見繊維株式会社,false,MEDIUM,other-proper-name,paires-entites-19.json,0.7656,true,FP
+crusetra_entities,0359fb1d,Company,Marushin Juki K.K.,Maruyoshi Juki K.K.,false,MEDIUM,other-proper-name,paires-entites-19.json,0.9037,true,FP
+crusetra_entities,14592518,Company,Brasskey Shipping Three Inc.,Brasskey Shipping Five Inc.,false,MEDIUM,numbered-spv,paires-entites-3.json,0.6486,false,TN
+crusetra_entities,817ab2fa,Company,Marrowgate Leasing 3 Ltd,Marrowgate Leasing 6 Ltd,false,MEDIUM,numbered-spv,paires-entites-3.json,0.6486,false,TN
+crusetra_entities,e86e5abb,Company,Seraphine Navigation II S.A.,Seraphine Navigation IX S.A.,false,MEDIUM,numbered-spv,paires-entites-3.json,0.7321,true,FP
+crusetra_entities,75d60348,Company,Golden Lotus Investment No. 3 Ltd,Golden Lotus Investment No. 8 Ltd,false,MEDIUM,numbered-spv,paires-entites-5.json,0.7719,true,FP
+crusetra_entities,c8b24b28,Company,Cecotti Srl,Comelli Srl,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.4118,false,TN
+crusetra_entities,c2fc0954,Company,Rossetti Sped.,Bassanese Sped.,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.5000,false,TN
+crusetra_entities,c9a6c5ae,Company,Comelli Coop,Bulfon Coop,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.2308,false,TN
+crusetra_entities,982ee5ce,Company,Nikolić Prevoz,Stanković Prevoz,false,MEDIUM,different-surname-same-form,paires-entites-18.json,0.5000,false,TN
+crusetra_entities,c36c8211,Company,Wrightstone Freight Inc.,Rightstone Freight Inc.,false,WEAK,homophone,paires-entites-3.json,0.9691,true,FP
+crusetra_entities,cfb3dacb,Company,Pier Nine Logistics LLC,Peer Nine Logistics LLC,false,WEAK,homophone,paires-entites-3.json,0.9137,true,FP
+crusetra_entities,24011a89,Company,Sole Source Footwear Inc.,Soul Source Footwear Inc.,false,WEAK,homophone,paires-entites-3.json,0.9027,true,FP
+crusetra_entities,f61d9411,Company,Compagnie du Verre Vassalien,Compagnie du Vert Vassalien,false,WEAK,homophone,paires-entites-3.json,0.6667,false,TN
+crusetra_entities,e1b50450,Vessel,Sino Iron I,Sino Iron II,false,MEDIUM,vessel-numeral,paires-entites-13.json,0.8403,true,FP
+crusetra_entities,1e189dba,Vessel,Wattle Star II,Wattle Star III,false,MEDIUM,vessel-numeral,paires-entites-13.json,0.8130,true,FP
+crusetra_entities,84f4aaf2,Vessel,Kaiyo Maru No. 8,Kaiyo Maru No. 9,false,MEDIUM,vessel-numeral,paires-entites-13.json,0.5691,false,TN
+crusetra_entities,b44685d3,Vessel,Seif Feeder 12,Seif Feeder 13,false,MEDIUM,vessel-numeral,paires-entites-15.json,0.6036,false,TN
+crusetra_entities,cd169d79,Vessel,Takanami Star,Takanami Moon,false,MEDIUM,vessel-sister-ship,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,8ba863c0,Vessel,Umisachi Ace,Yamasachi Ace,false,MEDIUM,vessel-sister-ship,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,8d3ab574,Vessel,LNG Tsukuyomi,LNG Tsukiakari,false,MEDIUM,vessel-sister-ship,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,6513f722,Vessel,Seohae Lumina,Donghae Lumina,false,MEDIUM,vessel-sister-ship,paires-entites-19.json,0.0000,false,TN
+crusetra_entities,c09feeef,Vessel,MV Cacaueiro do Atlântico,MV Cacaueiros do Atlântico,false,WEAK,vessel-plural,paires-entites-16.json,0.8371,true,FP
+crusetra_entities,aeb4a2c4,Vessel,MV Fraternité des Mers,MV Fraternités des Mers,false,WEAK,vessel-plural,paires-entites-16.json,0.8145,true,FP
+crusetra_entities,0254f1ed,Vessel,MV Espoir d'Abidjan,MV Espoirs d'Abidjan,false,WEAK,vessel-plural,paires-entites-16.json,0.8240,true,FP
+crusetra_entities,8abab866,Vessel,N/M Rio Paranaguá,N/M Rio Paranaguás,false,WEAK,vessel-plural,paires-entites-16.json,0.8424,true,FP
+crusetra_entities,400e0607,Company,Ashcorran Mining Supplies Ltd,Ashcorran Dining Supplies Ltd,false,MEDIUM,near-string,paires-entites-2.json,0.9101,true,FP
+crusetra_entities,57167254,Company,Halvern Rail Services Ltd,Halvern Mail Services Ltd,false,MEDIUM,near-string,paires-entites-2.json,0.6667,false,TN
+crusetra_entities,b367669b,Company,Pellmoor Timber Exports Ltd,Pellmoor Timber Experts Ltd,false,MEDIUM,near-string,paires-entites-2.json,0.9283,true,FP
+crusetra_entities,b9e22308,Company,Northgrave Paint Co.,Northgrave Plant Co.,false,MEDIUM,near-string,paires-entites-2.json,0.8435,true,FP
+crusetra_entities,29ede977,LegalEntity,PRIAZOVYE-1204,Priazovye Shipmanagement LLC,false,WEAK,vessel-vs-manager,paires-entites-12.json,0.4202,false,TN
+crusetra_entities,e92686dc,LegalEntity,MV LUMINAR KESTREL,Luminar Ship Management Pte. Ltd.,false,WEAK,vessel-vs-manager,paires-entites-4.json,0.3049,false,TN
+crusetra_entities,18aca7ff,LegalEntity,HARVELLO SPIRIT,Harvello Shipmanagement S.A.,false,WEAK,vessel-vs-manager,paires-entites-4.json,0.4673,false,TN
+crusetra_entities,7633c4ab,LegalEntity,DORVANTIS PRIDE,Dorvantis Maritime Services Ltd,false,WEAK,vessel-vs-manager,paires-entites-4.json,0.4386,false,TN
+crusetra_entities,12f03591,Company,"Quillmont Hydraulics, Inc.",Quillmont Hydraulics Incorporated,true,MEDIUM,legal-form-abbreviated,paires-entites-3.json,1.0000,true,TP
+crusetra_entities,f46ee147,Company,"Pellbrook Cold Storage, Limited Liability Company",PELLBROOK COLD STORAGE LLC,true,MEDIUM,legal-form-abbreviated,paires-entites-3.json,1.0000,true,TP
+crusetra_entities,5ce3ff8f,Company,Harrowfield Bearings Limited,HARROWFIELD BEARINGS LTD.,true,MEDIUM,legal-form-abbreviated,paires-entites-3.json,1.0000,true,TP
+crusetra_entities,ef6485b1,Company,Carrowmere Holdings plc,Carrowmere Holdings Public Limited Company,true,MEDIUM,legal-form-abbreviated,paires-entites-3.json,1.0000,true,TP
+crusetra_entities,eaef4e67,Company,Fratelli Brunaccini S.n.c.,F.lli Brunaccini snc,true,MEDIUM,word-abbreviation,paires-entites-3.json,0.6296,false,FN
+crusetra_entities,17580852,Company,Compañía Minera Huallacocha S.A.C.,Cía. Minera Huallacocha SAC,true,MEDIUM,word-abbreviation,paires-entites-3.json,1.0000,true,TP
+crusetra_entities,85bc258a,Company,Tecelagem Serra Azulina Indústria e Comércio Ltda.,TECELAGEM SERRA AZULINA IND. E COM. LTDA,true,MEDIUM,word-abbreviation,paires-entites-3.json,0.7015,true,TP
+crusetra_entities,1054bde4,Company,Venkatadri Forgings & Engg. Works Pvt Ltd,Venkatadri Forgings and Engineering Works Private Limited,true,MEDIUM,word-abbreviation,paires-entites-3.json,0.7916,true,TP
+crusetra_entities,7d2eb3c5,Vessel,Ocean Pioneer (ex-Cape Diamond),Cape Diamond,true,MEDIUM,ex-name-alias,paires-entites-13.json,0.0000,false,FN
+crusetra_entities,48fc2861,Vessel,Star Voyager (ex-Southern Glory),Southern Glory,true,MEDIUM,ex-name-alias,paires-entites-13.json,0.0000,false,FN
+crusetra_entities,83d9c25b,Vessel,Pacific Endeavour (ex-Grand Wheatland),Grand Wheatland,true,MEDIUM,ex-name-alias,paires-entites-13.json,0.0000,false,FN
+crusetra_entities,13409792,Vessel,Wheatland Glory (ex-Pacific Sower),Pacific Sower,true,MEDIUM,ex-name-alias,paires-entites-13.json,0.0000,false,FN
+crusetra_entities,52b8380d,Company,SARL Ivoire Négoce,SARL Ivoire Negoce,true,MEDIUM,accent-variant,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,e7906141,Company,Société Camerounaise de Cacao,Societe Camerounaise de Cacao,true,MEDIUM,accent-variant,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,1c9832f9,Company,Ets Fakhoury Frères,Ets Fakhoury Freres,true,MEDIUM,accent-variant,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,343e6794,Company,SARL Nassif et Associés,SARL Nassif et Associes,true,MEDIUM,accent-variant,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,e3cd7f1e,Company,Levitsky Packaging Solutions Ltd,Levitskiy Packaging Solutions Ltd,true,MEDIUM,romanisation,paires-entites-21.json,0.9667,true,TP
+crusetra_entities,e6773cc9,Company,Khoury Stone Works Ltd,Khouri Stone Works Limited,true,MEDIUM,romanisation,paires-entites-21.json,0.9486,true,TP
+crusetra_entities,5f9f4547,Company,Rabinovich Medical Logistics Ltd,Rabinowitz Medical Logistics Ltd,true,MEDIUM,romanisation,paires-entites-21.json,0.6774,false,FN
+crusetra_entities,cc117974,Company,Rachamim Ohayon Import & Marketing Ltd,Rakhamim Ohayon Import and Marketing Ltd,true,MEDIUM,romanisation,paires-entites-21.json,0.9418,true,TP
+crusetra_entities,b55f90cf,Company,"האחים חדאד חומרי בניין בע""מ",Haddad Brothers Building Materials Ltd,true,WEAK,script-translation,paires-entites-21.json,0.1509,false,FN
+crusetra_entities,3c90225d,Company,"נחמיאס תוצרת טרייה בע""מ",Nakhmias Fresh Produce Ltd,true,WEAK,script-translation,paires-entites-21.json,0.1892,false,FN
+crusetra_entities,0de53f55,Company,"גורביץ' חלקים מדויקים בע""מ",Gurevich Precision Parts Ltd,true,WEAK,script-translation,paires-entites-21.json,0.1892,false,FN
+crusetra_entities,92bfeedd,Company,"צור אמיתי לוגיסטיקה בע""מ",Tzur Amitai Logistics Ltd,true,WEAK,script-translation,paires-entites-21.json,0.1892,false,FN
+crusetra_entities,5535c15c,Company,Zhelvinsky Sudoremontny Zavod,Jelvinskiy Sudoremontnyi Zavod,true,MEDIUM,transliteration,paires-entites-2.json,0.8491,true,TP
+crusetra_entities,83fffd86,Company,Kholmogrant-Stroy OOO,Holmogrant-Stroi OOO,true,MEDIUM,transliteration,paires-entites-2.json,0.8727,true,TP
+crusetra_entities,f22e2a7a,Company,Verkhnyaya Strelka Agro,Werchnjaja Strelka Agro,true,MEDIUM,transliteration,paires-entites-2.json,0.6296,false,FN
+crusetra_entities,ac478041,Company,Qasr Al Ghazalat General Trading,Kasr El Ghazalat General Trading,true,MEDIUM,transliteration,paires-entites-2.json,0.7593,true,TP
+crusetra_entities,e44ad434,Company,Coastline Agro Supplies Ltd - Malindi Branch,Coastline Agro Supplies Ltd,true,MEDIUM,branch-same-entity,paires-entites-15.json,0.6951,false,FN
+crusetra_entities,c011d1b2,Company,Kisumu Lakeside Motors Ltd (Kakamega Branch),Kisumu Lakeside Motors Limited,true,MEDIUM,branch-same-entity,paires-entites-15.json,0.7143,true,TP
+crusetra_entities,af7aef0c,Company,Muheza Sisal Estates Ltd,Muheza Sisal Estates Ltd (Korogwe Branch),true,MEDIUM,branch-same-entity,paires-entites-15.json,0.9158,true,TP
+crusetra_entities,b7cb5d61,Company,"Sindh Agro Chemicals (Pvt) Ltd, Sukkur Branch",Sindh Agro Chemicals (Private) Limited,true,MEDIUM,branch-same-entity,paires-entites-15.json,0.5741,false,FN
+crusetra_entities,a2c9932a,Vessel,HALVERSTONE SPIRIT V.214W (Marshall Islands flag),Halverstone Spirit,true,MEDIUM,annotation,paires-entites-6.json,0.0000,false,FN
+crusetra_entities,8bc5585f,Vessel,M/T Ondara Leigh (ex-Pelican Morrow),ONDARA LEIGH,true,MEDIUM,annotation,paires-entites-6.json,0.0000,false,FN
+crusetra_entities,953622d9,Company,"Rancho Vercel Importadora S.A. de C.V. c/o Aduanas Pedraza, Nuevo Laredo",Rancho Vercel Importadora SA de CV,true,MEDIUM,annotation,paires-entites-6.json,0.4353,false,FN
+crusetra_entities,e8da8cfc,Company,"Tidewell Process Equipment Inc, 12250 Brevard Ln, Pasadena TX 77506","Tidewell Process Equipment, Inc.",true,MEDIUM,annotation,paires-entites-6.json,0.3917,false,FN
+crusetra_entities,389c5283,Vessel,"MV Fraternité des Mers, port d'Abidjan",MV Fraternité des Mers,true,MEDIUM,port-of-registry-appended,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,9fe2f015,Vessel,MV Soja Paranaense,"MV Soja Paranaense, Santos",true,MEDIUM,port-of-registry-appended,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,b1a3b6dc,Vessel,N/M Bahia Trader,"N/M Bahia Trader, Paranaguá",true,MEDIUM,port-of-registry-appended,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,e657ad30,Vessel,MV Costa do Marfim,"MV Costa do Marfim, port d'Abidjan",true,MEDIUM,port-of-registry-appended,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,2e99a309,Company,Kalcic Trgovina d.o.o.,Kalčić Trgovina d.o.o.,true,MEDIUM,accent-diacritic-dropped,paires-entites-18.json,1.0000,true,TP
+crusetra_entities,83218d71,Company,Škerlj Trgovina in Storitve d.o.o.,Skerlj Trgovina in Storitve d.o.o.,true,MEDIUM,accent-diacritic-dropped,paires-entites-18.json,1.0000,true,TP
+crusetra_entities,0df79320,Company,"Hrastnik Gradbeništvo d.o.o., MŠ 5834219000","Hrastnik Gradbenistvo d.o.o., maticna stevilka 5834219000",true,MEDIUM,accent-diacritic-dropped,paires-entites-18.json,0.7692,true,TP
+crusetra_entities,b4bb01b7,Company,Sinožić Ribolov d.o.o.,Sinozic Ribolov d.o.o.,true,MEDIUM,accent-diacritic-dropped,paires-entites-18.json,1.0000,true,TP
+crusetra_entities,8cbd94a9,Company,Kaszubska Wytwórnia Pierogów Bielawa Sp. z o.o.,Kaszubska Wytwornia Pierogow Bielawa Limited Liability Company,true,MEDIUM,legal-form-translated,paires-entites-23.json,0.9702,true,TP
+crusetra_entities,f997a22e,Company,AS „Mangaļsalas Doki“,Mangalsalas Doki JSC,true,MEDIUM,legal-form-translated,paires-entites-23.json,0.9481,true,TP
+crusetra_entities,7b8db3d3,Company,Tõrva Puidutöö OÜ,Tõrva Puidutöö Ltd,true,MEDIUM,legal-form-translated,paires-entites-23.json,0.6803,false,FN
+crusetra_entities,df7d6515,Company,UAB „Šiaurės Vėjo Logistika“,Siaures Vejo Logistika Ltd,true,MEDIUM,legal-form-translated,paires-entites-23.json,0.9622,true,TP
+crusetra_entities,a4b42e03,Vessel,MV Solenne Harbour,Solenne Harbour,true,MEDIUM,vessel-prefix,paires-entites-2.json,1.0000,true,TP
+crusetra_entities,b49522d6,Vessel,M/T Ardrevan Pearl,MT Ardrevan Pearl,true,MEDIUM,vessel-prefix,paires-entites-2.json,1.0000,true,TP
+crusetra_entities,a9de2977,Vessel,SS Maltrevor Queen,Maltrevor Queen,true,MEDIUM,vessel-prefix,paires-entites-2.json,1.0000,true,TP
+crusetra_entities,980f8c8a,Vessel,M.V. Pelgarra Glory,M/V PELGARRA GLORY,true,MEDIUM,vessel-prefix,paires-entites-2.json,1.0000,true,TP
+crusetra_entities,be2b1ca2,Company,Kipkorir Cereals Ltd,Kipkorrir Cereals Ltd,true,MEDIUM,doubled-letter,paires-entites-15.json,0.9630,true,TP
+crusetra_entities,1595cc74,Company,Shabbir Cotton Waste Traders,Shabir Cotton Waste Traders,true,MEDIUM,doubled-letter,paires-entites-15.json,0.9688,true,TP
+crusetra_entities,e3b3ad0b,Company,Amani Bora Enterprisses Ltd,Amani Bora Enterprises Ltd,true,MEDIUM,doubled-letter,paires-entites-15.json,0.9775,true,TP
+crusetra_entities,b2226e89,Company,Comercio de Graos Rossetti,Comercioo de Graos Rossetti,true,MEDIUM,doubled-letter,paires-entites-16.json,0.9730,true,TP
+crusetra_entities,d69bf42f,Company,Shamji Hardware Ltd,Shamjee Hardware Ltd,true,MEDIUM,romanisation,paires-entites-15.json,0.8620,true,TP
+crusetra_entities,b0f40b83,Company,Haji Abdalla & Sons Ltd,Haji Abdulla and Sons Limited,true,MEDIUM,romanisation,paires-entites-15.json,0.9193,true,TP
+crusetra_entities,b916803d,Company,Husain Brothers Industries,Hussain Brothers Industries,true,MEDIUM,romanisation,paires-entites-15.json,0.9107,true,TP
+crusetra_entities,118e4405,Company,Qureshi Leather Works (Pvt) Ltd,Quraishi Leather Works (Pvt) Ltd,true,MEDIUM,romanisation,paires-entites-15.json,0.9447,true,TP
+crusetra_entities,cc2d2507,Company,Harrowvane International Freight Services,Harrowvane Intl Freight Svcs,true,MEDIUM,abbreviation,paires-entites-2.json,0.9769,true,TP
+crusetra_entities,dbe0b19b,Company,Delancourt Brothers Manufacturing Co.,Delancourt Bros. Mfg. Co.,true,MEDIUM,abbreviation,paires-entites-2.json,0.9565,true,TP
+crusetra_entities,1e925078,Company,Fendrake & Mollory Logistics,Fendrake and Mollory Logistics,true,MEDIUM,abbreviation,paires-entites-2.json,0.9747,true,TP
+crusetra_entities,8cf21df1,Company,Vassendra Property Management Associates,Vassendra Property Mgmt. Assoc.,true,MEDIUM,abbreviation,paires-entites-2.json,0.6567,false,FN
+crusetra_entities,12d2c5c8,Company,"Dongguan Fengtai Plastic Products Co., Ltd.",Dongguan Fengtai Plastic Products Company Limited,true,MEDIUM,legal-form-spelled-out,paires-entites-5.json,0.9324,true,TP
+crusetra_entities,074615e5,Company,Northgate Valve Supply Corp.,Northgate Valve Supply Corporation,true,MEDIUM,legal-form-spelled-out,paires-entites-5.json,0.9900,true,TP
+crusetra_entities,0cf42133,Company,Tamarind Bay Seafood Co.,Tamarind Bay Seafood Company,true,MEDIUM,legal-form-spelled-out,paires-entites-5.json,0.9909,true,TP
+crusetra_entities,a449b737,Company,Marlow Down Textiles PLC,Marlow Down Textiles Public Limited Company,true,MEDIUM,legal-form-spelled-out,paires-entites-5.json,1.0000,true,TP
+crusetra_entities,b98965aa,Company,Tagumpay Agri Supplies Corp.,TAGUMPAY AGRI SUPPLIES CORPORATION,true,MEDIUM,registry-written-out,paires-entites-9.json,0.9889,true,TP
+crusetra_entities,298207be,Company,PT Sinar Kenari Abadi,PERSEROAN TERBATAS SINAR KENARI ABADI,true,MEDIUM,registry-written-out,paires-entites-9.json,1.0000,true,TP
+crusetra_entities,a511fbb8,Company,CV Cahaya Bintang Timur Jaya,Commanditaire Vennootschap Cahaya Bintang Timur Jaya,true,MEDIUM,registry-written-out,paires-entites-9.json,1.0000,true,TP
+crusetra_entities,b66a952f,Company,Harum Manis Bakery Supplies Sdn. Bhd.,HARUM MANIS BAKERY SUPPLIES SENDIRIAN BERHAD,true,MEDIUM,registry-written-out,paires-entites-9.json,1.0000,true,TP
+crusetra_entities,96defbd3,Company,Ramesh Kumar Sharma Pvt. Ltd.,Ramesh Kumar Sharma Private Limited,true,MEDIUM,suffix-abbreviation,paires-entites-13.json,0.7872,true,TP
+crusetra_entities,8ebd1435,Company,Deccan Agro Traders Pvt. Ltd.,Deccan Agro Traders Private Limited,true,MEDIUM,suffix-abbreviation,paires-entites-13.json,0.7727,true,TP
+crusetra_entities,bee552a9,Company,Konkan Spice Exports Pvt. Ltd.,Konkan Spice Exports Private Limited,true,MEDIUM,suffix-abbreviation,paires-entites-13.json,0.7500,true,TP
+crusetra_entities,59420073,Company,Whitfield Mining Pty Ltd,Whitfield Mining Pty. Limited,true,MEDIUM,suffix-abbreviation,paires-entites-13.json,0.9417,true,TP
+crusetra_entities,05923cf6,Company,Patel-Desai Traders,Patel Desai Traders,true,MEDIUM,punctuation-spacing,paires-entites-13.json,1.0000,true,TP
+crusetra_entities,fce8e6fb,Company,N.K. Bansal & Co.,N K Bansal and Co,true,MEDIUM,punctuation-spacing,paires-entites-13.json,0.9494,true,TP
+crusetra_entities,8724f020,Company,O'Doyle Grazing Co Pty Ltd,O Doyle Grazing Co Pty Ltd,true,MEDIUM,punctuation-spacing,paires-entites-13.json,0.9924,true,TP
+crusetra_entities,9ce6df96,Company,Wirralong Downs Pty Ltd,Wirra-long Downs Pty Ltd,true,MEDIUM,punctuation-spacing,paires-entites-13.json,0.9933,true,TP
+crusetra_entities,74b4165e,Company,F.lli Pittino S.n.c. di Pittino Aldo e Bruno,Fratelli Pittino S.n.c. di Pittino Aldo e Bruno,true,MEDIUM,abbreviation-expanded,paires-entites-18.json,0.8649,true,TP
+crusetra_entities,6c09991e,Company,Comm. Bront Silvano S.a.s.,Commendatore Bront Silvano S.a.s.,true,MEDIUM,abbreviation-expanded,paires-entites-18.json,0.7297,true,TP
+crusetra_entities,66ba4b6f,Company,Qualizza Impianti Termoidraulici S.a.s. di Qualizza R.,Qualizza Impianti Termoidraulici S.a.s. di Qualizza Renzo,true,MEDIUM,abbreviation-expanded,paires-entites-18.json,0.8438,true,TP
+crusetra_entities,e919e472,Company,Tisza Kereskedelmi Kft.,Tisza Kereskedelmi Korlátolt Felelősségű Társaság,true,MEDIUM,abbreviation-expanded,paires-entites-18.json,1.0000,true,TP
+crusetra_entities,b71a50e1,Vessel,M/V MZIURI (Batumi),მზიური,true,MEDIUM,vessel-script,paires-entites-21.json,0.0000,false,FN
+crusetra_entities,0fdd5e3a,Vessel,MT KHOBI LADY,ხობი ლედი,true,MEDIUM,vessel-script,paires-entites-21.json,0.0000,false,FN
+crusetra_entities,20473146,Vessel,GURIA SPIRIT,გურია სპირიტი,true,MEDIUM,vessel-script,paires-entites-21.json,0.0000,false,FN
+crusetra_entities,b0b26bf2,Vessel,KINNERET DAWN,כנרת דון,true,MEDIUM,vessel-script,paires-entites-21.json,0.0000,false,FN
+crusetra_entities,c2136837,Vessel,KAPITAN ZAVYALOV,KAPITAN ZAVJALOV,true,MEDIUM,vessel-transliteration,paires-entites-12.json,0.8240,true,TP
+crusetra_entities,f5e0077d,Vessel,MEKHANIK KHARITONOV,MEHANIK HARITONOV,true,MEDIUM,vessel-transliteration,paires-entites-12.json,0.7163,true,TP
+crusetra_entities,b2b65f7b,Vessel,KERCHENSKIY PROLIV-3,KERCHENSKY PROLIV 3,true,MEDIUM,vessel-transliteration,paires-entites-12.json,0.8145,true,TP
+crusetra_entities,69e7d7c9,Vessel,GENERAL KHOTINTSEV,GENERAL HOTINCEV,true,MEDIUM,vessel-transliteration,paires-entites-12.json,0.5787,false,FN
+crusetra_entities,fa2689d8,Company,Shaltiel Hovalot Ltd,Shaltiel Transport Limited,true,WEAK,translation,paires-entites-21.json,0.6296,false,FN
+crusetra_entities,7ac64dcb,Company,Chobanyan Kat LLC,Chobanyan Milk LLC,true,WEAK,translation,paires-entites-21.json,0.6296,false,FN
+crusetra_entities,a3039a68,Company,Gyumri Metagh LLC,Gyumri Metal LLC,true,WEAK,translation,paires-entites-21.json,0.6296,false,FN
+crusetra_entities,1a159e93,Company,Tsiklauri Gvino LLC,Tsiklauri Wine LLC,true,WEAK,translation,paires-entites-21.json,0.6296,false,FN
+crusetra_entities,5e3a011b,Company,PrAT Zhytomyrskyi Kakhelnyi Zavod,ChAO Zhitomirskiy Kafelnyi Zavod,true,MEDIUM,russian-based-spelling,paires-entites-23.json,0.5395,false,FN
+crusetra_entities,ef7ed667,Company,ФОП Мороз Василь Іванович,FOP Moroz Vasilii Ivanovich,true,MEDIUM,russian-based-spelling,paires-entites-23.json,0.8920,true,TP
+crusetra_entities,a7d7e216,Company,ТОВ «Бриз Одеса»,Briz Odessa LLC,true,MEDIUM,russian-based-spelling,paires-entites-23.json,0.8864,true,TP
+crusetra_entities,9da4d6a4,Company,ІП Уладзімір Жаўнерчык,IP Vladimir Zhovnerchik,true,MEDIUM,russian-based-spelling,paires-entites-23.json,0.5226,false,FN
+crusetra_entities,b910e516,Company,沧澜远洋航运有限公司,"Canglan Ocean Shipping Co., Ltd.",true,MEDIUM,native-vs-english,paires-entites-8.json,0.0000,false,FN
+crusetra_entities,f50adb14,Company,雾山精密机械股份有限公司,"Wushan Precision Machinery Co., Ltd.",true,MEDIUM,native-vs-english,paires-entites-8.json,0.0000,false,FN
+crusetra_entities,2d974a7d,Company,株式会社霜月水産,"Shimotsuki Suisan Co., Ltd.",true,MEDIUM,native-vs-english,paires-entites-8.json,0.0000,false,FN
+crusetra_entities,120252aa,Company,새벽별물류 주식회사,"Saebyeokbyeol Logistics Co., Ltd.",true,MEDIUM,native-vs-english,paires-entites-8.json,0.0000,false,FN
+crusetra_entities,99b09a6e,Company,SHIPPER: TRANSPORTES REFRIGERADOS DEL SURESTE SA DE CV,"Transportes Refrigerados del Sureste, S.A. de C.V.",true,MEDIUM,residue-party-label,paires-entites-11.json,0.8367,true,TP
+crusetra_entities,8d98120c,Company,BENEFICIARY: Sarıkaya Hububat Ltd. Şti.,Sarikaya Hububat Ltd Sti,true,MEDIUM,residue-party-label,paires-entites-12.json,0.7714,true,TP
+crusetra_entities,9e3045bd,Company,ORDERING CUSTOMER: KALLIOSAARI TRADING OY,Kalliosaari Trading Oy,true,MEDIUM,residue-party-label,paires-entites-12.json,0.5556,false,FN
+crusetra_entities,98c3488a,Company,MESSRS. BALTIC TIMBERLINE OU,Baltic Timberline OÜ,true,MEDIUM,residue-party-label,paires-entites-12.json,0.7714,true,TP
+crusetra_entities,40bef431,Company,Ranjit Cotton Traders Pvt. Ltd.,RANJIT COTTON TRADERS PVT LTD,true,MEDIUM,uppercase-export,paires-entites-13.json,1.0000,true,TP
+crusetra_entities,909ddacf,Company,Blackwood Cattle Co Pty Ltd,FIELD 59: BLACKWOOD CATTLE CO PTY LTD,true,MEDIUM,residue-party-label,paires-entites-13.json,0.8777,true,TP
+crusetra_entities,55b0979a,Company,Deshpande Textiles Pvt. Ltd.,DESHPANDE TEXTILES PVT LTD,true,MEDIUM,uppercase-export,paires-entites-13.json,1.0000,true,TP
+crusetra_entities,b6cffc9e,Company,Chopra Bros. Enterprises,CHOPRA BROS ENTERPRISES,true,MEDIUM,uppercase-export,paires-entites-13.json,1.0000,true,TP
+crusetra_entities,29f59f80,Company,GIE Femmes de Korhogo,G.I.E. Femmes de Korhogo,true,MEDIUM,case-punctuation-spacing,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,35214012,Company,SARL Traoré Commerce,SARL TRAORE COMMERCE,true,MEDIUM,case-punctuation-spacing,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,9abc864a,Company,Groupe Diarra Import-Export,Groupe Diarra Import Export,true,MEDIUM,case-punctuation-spacing,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,6bc583df,Company,SUARL Keita Distribution,Keita Distribution SUARL,true,MEDIUM,case-punctuation-spacing,paires-entites-16.json,1.0000,true,TP
+crusetra_entities,18ba1e3d,Company,"שאלתיאל הובלות בע""מ",Shaltiel Hovalot Ltd,true,MEDIUM,script,paires-entites-21.json,0.2593,false,FN
+crusetra_entities,7c2fe238,Company,«Ծատուրյան Շին» ՍՊԸ,Tsaturyan Shin LLC,true,MEDIUM,script,paires-entites-21.json,0.6803,false,FN
+crusetra_entities,170dc621,Company,შპს კვინიკაძე მეტალი,Kvinikadze Metali LLC,true,MEDIUM,script,paires-entites-21.json,0.9481,true,TP
+crusetra_entities,8100a36e,Company,«Ջանոյան Էքսպրես» ՍՊԸ,Janoyan Express LLC,true,MEDIUM,script,paires-entites-21.json,0.3401,false,FN
+crusetra_entities,ba0a10bc,Company,ရွှေပုလဲ ကုန်သွယ်ရေး ကုမ္ပဏီလီမိတက်,"Shwe Pale Trading Co., Ltd.",true,MEDIUM,burmese-script-vs-latin,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,aec9a852,Company,ရတနာမင်္ဂလာ ပို့ဆောင်ရေး ကုမ္ပဏီလီမိတက်,"Yadanar Mingalar Logistics Co., Ltd.",true,MEDIUM,burmese-script-vs-latin,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,bcbc8534,Company,အောင်ကြယ် ဆန်စက် ကုမ္ပဏီလီမိတက်,"Aung Kyal Rice Mill Co., Ltd.",true,MEDIUM,burmese-script-vs-latin,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,2fbceb9b,Company,ဦးကျော်ဇော်ထွန်း ကုန်သွယ်ရေး,U Kyaw Zaw Htun Trading,true,MEDIUM,burmese-script-vs-latin,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,1ce66847,Vessel,"MV SIAM ORCHID 7, Bangkok",SIAM ORCHID 7,true,MEDIUM,vessel-prefix-and-port,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,d86a3d7e,Vessel,M.T. THONG NAWA 3 (Laem Chabang),THONG NAWA NO.3,true,MEDIUM,vessel-prefix-and-port,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,539ccea6,Vessel,"T/B CHAO LE 8, Sihanoukville",CHAO LE NO. 8,true,MEDIUM,vessel-prefix-and-port,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,6769ac04,Vessel,"MT GOLDEN KINNAREE, Laem Chabang",GOLDEN KINNAREE,true,MEDIUM,vessel-prefix-and-port,paires-entites-22.json,0.0000,false,FN
+crusetra_entities,f2c719a5,Company,Zakłady Mięsne Wiśniewski Sp. z o.o. S.K.A.,Zaklady Miesne Wisniewski spolka z ograniczona odpowiedzialnoscia spolka komandytowo-akcyjna,true,MEDIUM,legal-form-spelled-out,paires-entites-23.json,0.7255,true,TP
+crusetra_entities,8f0b4718,Company,Łączyńska Wytwórnia Łodzi Sp. j.,LACZYNSKA WYTWORNIA LODZI SPOLKA JAWNA,true,MEDIUM,legal-form-spelled-out,paires-entites-23.json,0.6303,false,FN
+crusetra_entities,7662e33a,Company,Spedycja Wisłoujście Sp. z o.o. Sp. k.,Spedycja Wisloujscie spolka z ograniczona odpowiedzialnoscia spolka komandytowa,true,MEDIUM,legal-form-spelled-out,paires-entites-23.json,0.6054,false,FN
+crusetra_entities,6fdba8d1,Company,Bursztynowa Przystań Sp. z o.o.,BURSZTYNOWA PRZYSTAN SPOLKA Z OGRANICZONA ODPOWIEDZIALNOSCIA,true,MEDIUM,legal-form-spelled-out,paires-entites-23.json,1.0000,true,TP
+crusetra_entities,3b04125c,Company,EtsKoffietFreres,Ets Koffi et Freres,true,MEDIUM,missing-space,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,8ecdfcd6,Company,Ets Diallo,EtsDiallo,true,MEDIUM,missing-space,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,bd75af24,Company,GroupeDiarraImportExport,Groupe Diarra Import Export,true,MEDIUM,missing-space,paires-entites-16.json,0.9778,true,TP
+crusetra_entities,5f043cde,Company,Ets Sanogo et Traoré,EtsSanogoetTraore,true,MEDIUM,missing-space,paires-entites-16.json,0.0000,false,FN
+crusetra_entities,d9cc1689,Company,Fabjan Prevozi d.o.o.,Fabjan Prevozi d. o. o.,true,MEDIUM,punctuation-spacing-legal-form,paires-entites-18.json,0.9481,true,TP
+crusetra_entities,689a050e,Company,Rupnik Transport in Logistika d.o.o.,"Rupnik Transport in Logistika, d. o. o.",true,MEDIUM,punctuation-spacing-legal-form,paires-entites-18.json,0.9317,true,TP
+crusetra_entities,0c9987e9,Company,Impresa Cecotti & Bront S.n.c.,Impresa Cecotti e Bront S.n.c.,true,MEDIUM,punctuation-spacing-legal-form,paires-entites-18.json,0.9375,true,TP
+crusetra_entities,f867d381,Company,Jadran Brodogradnja d.d.,"Jadran Brodogradnja, d. d.",true,MEDIUM,punctuation-spacing-legal-form,paires-entites-18.json,0.6667,false,FN
