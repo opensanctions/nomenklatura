@@ -857,10 +857,10 @@ crusetra_entities,Company,Olvetra GmbH,Olvetra Polska Sp. z o.o.,false,,subsidia
 crusetra_entities,Company,Kessendorf AG,Kessendorf do Brasil Ltda.,false,,subsidiary-by-country,paires-entites-4.json
 crusetra_entities,Company,Marrowby Chemicals Ltd,"Marrowby Chemicals (Thailand) Co., Ltd.",false,,subsidiary-by-country,paires-entites-4.json
 crusetra_entities,Company,Tovarro Industries Inc.,"Tovarro Industries de México, S.A. de C.V.",false,,subsidiary-by-country,paires-entites-4.json
-crusetra_entities,Vessel,MV KARADENİZ ŞAHİNİ,Karadeniz Şahini Denizcilik Ltd. Şti.,false,,vessel-vs-owner,paires-entites-12.json
-crusetra_entities,Vessel,M/V SAMSUN YILDIZI,Samsun Yıldızı Gemi İşletmeciliği A.Ş.,false,,vessel-vs-owner,paires-entites-12.json
-crusetra_entities,Vessel,MV DENİZ KARTALI,Deniz Kartalı Denizcilik A.Ş.,false,,vessel-vs-owner,paires-entites-12.json
-crusetra_entities,Vessel,KAPITAN GUSEYNOV,Kapitan Guseynov Shipping Ltd,false,,vessel-vs-owner,paires-entites-12.json
+crusetra_entities,LegalEntity,MV KARADENİZ ŞAHİNİ,Karadeniz Şahini Denizcilik Ltd. Şti.,false,WEAK,vessel-vs-owner,paires-entites-12.json
+crusetra_entities,LegalEntity,M/V SAMSUN YILDIZI,Samsun Yıldızı Gemi İşletmeciliği A.Ş.,false,WEAK,vessel-vs-owner,paires-entites-12.json
+crusetra_entities,LegalEntity,MV DENİZ KARTALI,Deniz Kartalı Denizcilik A.Ş.,false,WEAK,vessel-vs-owner,paires-entites-12.json
+crusetra_entities,LegalEntity,KAPITAN GUSEYNOV,Kapitan Guseynov Shipping Ltd,false,WEAK,vessel-vs-owner,paires-entites-12.json
 crusetra_entities,Company,Kitakusu Kaiun K.K.,Kitakusu Kisen K.K.,false,,other-business-word,paires-entites-19.json
 crusetra_entities,Company,星ノ浦物産株式会社,星ノ浦商事株式会社,false,,other-business-word,paires-entites-19.json
 crusetra_entities,Company,Hoshinoura Bussan K.K.,Hoshinoura Sangyo K.K.,false,,other-business-word,paires-entites-19.json
@@ -981,10 +981,10 @@ crusetra_entities,Company,Ashcorran Mining Supplies Ltd,Ashcorran Dining Supplie
 crusetra_entities,Company,Halvern Rail Services Ltd,Halvern Mail Services Ltd,false,,near-string,paires-entites-2.json
 crusetra_entities,Company,Pellmoor Timber Exports Ltd,Pellmoor Timber Experts Ltd,false,,near-string,paires-entites-2.json
 crusetra_entities,Company,Northgrave Paint Co.,Northgrave Plant Co.,false,,near-string,paires-entites-2.json
-crusetra_entities,Vessel,PRIAZOVYE-1204,Priazovye Shipmanagement LLC,false,,vessel-vs-manager,paires-entites-12.json
-crusetra_entities,Vessel,MV LUMINAR KESTREL,Luminar Ship Management Pte. Ltd.,false,,vessel-vs-manager,paires-entites-4.json
-crusetra_entities,Vessel,HARVELLO SPIRIT,Harvello Shipmanagement S.A.,false,,vessel-vs-manager,paires-entites-4.json
-crusetra_entities,Vessel,DORVANTIS PRIDE,Dorvantis Maritime Services Ltd,false,,vessel-vs-manager,paires-entites-4.json
+crusetra_entities,LegalEntity,PRIAZOVYE-1204,Priazovye Shipmanagement LLC,false,WEAK,vessel-vs-manager,paires-entites-12.json
+crusetra_entities,LegalEntity,MV LUMINAR KESTREL,Luminar Ship Management Pte. Ltd.,false,WEAK,vessel-vs-manager,paires-entites-4.json
+crusetra_entities,LegalEntity,HARVELLO SPIRIT,Harvello Shipmanagement S.A.,false,WEAK,vessel-vs-manager,paires-entites-4.json
+crusetra_entities,LegalEntity,DORVANTIS PRIDE,Dorvantis Maritime Services Ltd,false,WEAK,vessel-vs-manager,paires-entites-4.json
 crusetra_entities,Company,"Quillmont Hydraulics, Inc.",Quillmont Hydraulics Incorporated,true,,legal-form-abbreviated,paires-entites-3.json
 crusetra_entities,Company,"Pellbrook Cold Storage, Limited Liability Company",PELLBROOK COLD STORAGE LLC,true,,legal-form-abbreviated,paires-entites-3.json
 crusetra_entities,Company,Harrowfield Bearings Limited,HARROWFIELD BEARINGS LTD.,true,,legal-form-abbreviated,paires-entites-3.json
