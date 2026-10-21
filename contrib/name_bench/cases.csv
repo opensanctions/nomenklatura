@@ -829,10 +829,10 @@ crusetra_entities,Company,Mwangi & Sons Ltd,Mwangi & Daughters Ltd,false,,other-
 crusetra_entities,Company,Kilifi Coastal Traders Ltd,Kilifi Coastal Transporters Ltd,false,,other-word,paires-entites-15.json
 crusetra_entities,Company,Kibaha Cement Traders Ltd,Kibaha Cement Products Ltd,false,,other-word,paires-entites-15.json
 crusetra_entities,Company,Kisumu Lakeside Motors Ltd,Kisumu Lakeside Motor Spares Ltd,false,,other-word,paires-entites-15.json
-crusetra_entities,Company,Brennock Steel Tubes Ltd,Brennock Steel Wires Ltd,false,,sibling-one-word,paires-entites-3.json
-crusetra_entities,Company,Castellan Agro Exports Pvt. Ltd.,Castellan Agro Imports Pvt. Ltd.,false,,sibling-one-word,paires-entites-3.json
-crusetra_entities,Company,Marbury Cold Chain Logistics LLC,Marbury Cold Chain Engineering LLC,false,,sibling-one-word,paires-entites-3.json
-crusetra_entities,Company,Tolvane Petroleum Trading FZE,Tolvane Petroleum Refining FZE,false,,sibling-one-word,paires-entites-3.json
+crusetra_entities,Company,Brennock Steel Tubes Ltd,Brennock Steel Wires Ltd,false,,one-word-sibling,paires-entites-3.json
+crusetra_entities,Company,Castellan Agro Exports Pvt. Ltd.,Castellan Agro Imports Pvt. Ltd.,false,,one-word-sibling,paires-entites-3.json
+crusetra_entities,Company,Marbury Cold Chain Logistics LLC,Marbury Cold Chain Engineering LLC,false,,one-word-sibling,paires-entites-3.json
+crusetra_entities,Company,Tolvane Petroleum Trading FZE,Tolvane Petroleum Refining FZE,false,,one-word-sibling,paires-entites-3.json
 crusetra_entities,Company,Groupe Diarra Import-Export,Groupe Diakité Import-Export,false,,different-surname,paires-entites-16.json
 crusetra_entities,Company,SUARL Traoré Commerce,SUARL Touré Commerce,false,,different-surname,paires-entites-16.json
 crusetra_entities,Company,Ets Diallo et Fils,Ets Baldé et Fils,false,,different-surname,paires-entites-16.json
@@ -841,10 +841,10 @@ crusetra_entities,Company,Tak Shing Trading Company Limited,Tak Hing Trading Com
 crusetra_entities,Company,"Guangzhou Lixing Cosmetics Co., Ltd.","Guangzhou Lixin Cosmetics Co., Ltd.",false,,near-string-real-words,paires-entites-5.json
 crusetra_entities,Company,"Yu Hsin Machinery Co., Ltd.","Yu Hsing Machinery Co., Ltd.",false,,near-string-real-words,paires-entites-5.json
 crusetra_entities,Company,"Anping Jinqiao Wire Mesh Products Co., Ltd.","Anping Yinqiao Wire Mesh Products Co., Ltd.",false,,near-string-real-words,paires-entites-5.json
-crusetra_entities,Company,Odhiambo & Otieno Enterprises Ltd,Odhiambo & Onyango Enterprises Ltd,false,,other-surname,paires-entites-15.json
-crusetra_entities,Company,Karimi Fresh Produce,Kariuki Fresh Produce,false,,other-surname,paires-entites-15.json
-crusetra_entities,Company,Njoroge wa Kamau Hardware Ltd,Njoroge wa Kimani Hardware Ltd,false,,other-surname,paires-entites-15.json
-crusetra_entities,Company,Mavroyenis Marine Insurance Brokers,Mavromatis Marine Insurance Brokers,false,,other-surname,paires-entites-17.json
+crusetra_entities,Company,Odhiambo & Otieno Enterprises Ltd,Odhiambo & Onyango Enterprises Ltd,false,,different-surname,paires-entites-15.json
+crusetra_entities,Company,Karimi Fresh Produce,Kariuki Fresh Produce,false,,different-surname,paires-entites-15.json
+crusetra_entities,Company,Njoroge wa Kamau Hardware Ltd,Njoroge wa Kimani Hardware Ltd,false,,different-surname,paires-entites-15.json
+crusetra_entities,Company,Mavroyenis Marine Insurance Brokers,Mavromatis Marine Insurance Brokers,false,,different-surname,paires-entites-17.json
 crusetra_entities,Company,株式会社風松ホールディングス,風松工業株式会社,false,,holding-vs-operating,paires-entites-19.json
 crusetra_entities,Company,Soryu Kagaku Holdings K.K.,Soryu Kagaku Kogyo K.K.,false,,holding-vs-operating,paires-entites-19.json
 crusetra_entities,Company,대륜중공업 주식회사,대륜홀딩스 주식회사,false,,holding-vs-operating,paires-entites-19.json
@@ -866,8 +866,8 @@ crusetra_entities,Company,星ノ浦物産株式会社,星ノ浦商事株式会�
 crusetra_entities,Company,Hoshinoura Bussan K.K.,Hoshinoura Sangyo K.K.,false,,other-business-word,paires-entites-19.json
 crusetra_entities,Company,風松工業株式会社,風松建設株式会社,false,,other-business-word,paires-entites-19.json
 crusetra_entities,Company,Mwalimu wa Pwani Sacco Ltd,Mwalimu wa Nyanza Sacco Ltd,false,,other-place,paires-entites-15.json
-crusetra_entities,Company,MV Ras Kitau,MV Ras Kiambone,false,,other-place,paires-entites-15.json
-crusetra_entities,Company,MV Salaam Dar,MV Salaam Zanzibar,false,,other-place,paires-entites-15.json
+crusetra_entities,Vessel,MV Ras Kitau,MV Ras Kiambone,false,,other-place,paires-entites-15.json
+crusetra_entities,Vessel,MV Salaam Dar,MV Salaam Zanzibar,false,,other-place,paires-entites-15.json
 crusetra_entities,Company,Lefkada Bulk Carriers S.A.,Lefkosia Bulk Carriers S.A.,false,,other-place,paires-entites-17.json
 crusetra_entities,Company,Akinyi Textiles Ltd,Atieno Textiles Ltd,false,,other-name,paires-entites-15.json
 crusetra_entities,Company,Wanjiru & Wambui Advocates,Wanjiru & Wanjiku Advocates,false,,other-name,paires-entites-15.json
@@ -877,7 +877,7 @@ crusetra_entities,Company,Adriatica Legnami S.r.l.,Adriatica Metalli S.r.l.,fals
 crusetra_entities,Company,Jadranska Plovba d.o.o.,Jadranska Ribolov d.o.o.,false,,different-business-sector-word,paires-entites-18.json
 crusetra_entities,Company,Bevk Mizarstvo d.o.o.,Bevk Kovaštvo d.o.o.,false,,different-business-sector-word,paires-entites-18.json
 crusetra_entities,Company,Zanier Impianti Società Cooperativa,Zanier Servizi Società Cooperativa,false,,different-business-sector-word,paires-entites-18.json
-crusetra_entities,Company,SARL Ivoire Négoce,SARL Ivoire Négoce Sénégal,false,,different-country-registration,paires-entites-16.json
+crusetra_entities,Company,SARL Ivoire Négoce,SARL Ivoire Négoce Sénégal,false,WEAK,different-country-registration,paires-entites-16.json
 crusetra_entities,Company,Société Sénégalaise d'Arachide,Société Malienne d'Arachide,false,,different-country-registration,paires-entites-16.json
 crusetra_entities,Company,Compagnie Ivoirienne de Cajou,Compagnie Ghanéenne de Cajou,false,,different-country-registration,paires-entites-16.json
 crusetra_entities,Company,Société Malienne du Bétail,Société Guinéenne du Bétail,false,,different-country-registration,paires-entites-16.json
@@ -885,10 +885,10 @@ crusetra_entities,Company,Tarquessa Pharmaceuticals Inc.,Tarquessa Marine Salvag
 crusetra_entities,Company,Obsidiana Mining S.A.,Obsidiana Boutique Hotels S.L.,false,,same-word-unrelated-business,paires-entites-3.json
 crusetra_entities,Company,Kalvenstrand Logistics AB,Kalvenstrand Dental Clinic AB,false,,same-word-unrelated-business,paires-entites-3.json
 crusetra_entities,Company,Vardonis Agro Chemicals Pvt Ltd,Vardonis Software Solutions Inc.,false,,same-word-unrelated-business,paires-entites-3.json
-crusetra_entities,Vessel,MV Kilindini Star,MV Kilindini Sun,false,,sister-ship,paires-entites-15.json
-crusetra_entities,Vessel,Coaster Mtwara Dawn,Coaster Mtwara Dusk,false,,sister-ship,paires-entites-15.json
-crusetra_entities,Vessel,Hamriya Moon,Hamriya Sun,false,,sister-ship,paires-entites-15.json
-crusetra_entities,Vessel,MSV Sahil-e-Sindh,MSV Sahil-e-Balochistan,false,,sister-ship,paires-entites-15.json
+crusetra_entities,Vessel,MV Kilindini Star,MV Kilindini Sun,false,,vessel-sister-ship,paires-entites-15.json
+crusetra_entities,Vessel,Coaster Mtwara Dawn,Coaster Mtwara Dusk,false,,vessel-sister-ship,paires-entites-15.json
+crusetra_entities,Vessel,Hamriya Moon,Hamriya Sun,false,,vessel-sister-ship,paires-entites-15.json
+crusetra_entities,Vessel,MSV Sahil-e-Sindh,MSV Sahil-e-Balochistan,false,,vessel-sister-ship,paires-entites-15.json
 crusetra_entities,Vessel,第八星風丸,第十八星風丸,false,,vessel-numeral,paires-entites-19.json
 crusetra_entities,Vessel,Hoshikaze Maru No. 8,Hoshikaze Maru No. 6,false,,vessel-numeral,paires-entites-19.json
 crusetra_entities,Vessel,No.8 Hoshikaze Maru,No.3 Hoshikaze Maru,false,,vessel-numeral,paires-entites-19.json
@@ -905,10 +905,10 @@ crusetra_entities,Vessel,mv haci sukru reis,Hacı Şükrü Kaptan,false,,vessel-
 crusetra_entities,Vessel,霧雨丸,春雨丸,false,,vessel-other-word,paires-entites-19.json
 crusetra_entities,Vessel,Cobalt Hibari,Cobalt Hibiki,false,,vessel-other-word,paires-entites-19.json
 crusetra_entities,Vessel,Shirane Glory,Shirane Gloria,false,,vessel-other-word,paires-entites-19.json
-crusetra_entities,Company,Korvessa Industrial GmbH,Korvessa Industrial Sdn. Bhd.,false,,same-name-other-jurisdiction,paires-entites-3.json
-crusetra_entities,Company,Altamura Ferrostampi S.r.l.,Altamura Ferrostampi Pte. Ltd.,false,,same-name-other-jurisdiction,paires-entites-3.json
-crusetra_entities,Company,Tessaline Trade OOO,Tessaline Trade Ltda.,false,,same-name-other-jurisdiction,paires-entites-3.json
-crusetra_entities,Company,Qordova Petroleum FZE,Qordova Petroleum S.A. de C.V.,false,,same-name-other-jurisdiction,paires-entites-3.json
+crusetra_entities,Company,Korvessa Industrial GmbH,Korvessa Industrial Sdn. Bhd.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json
+crusetra_entities,Company,Altamura Ferrostampi S.r.l.,Altamura Ferrostampi Pte. Ltd.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json
+crusetra_entities,Company,Tessaline Trade OOO,Tessaline Trade Ltda.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json
+crusetra_entities,Company,Qordova Petroleum FZE,Qordova Petroleum S.A. de C.V.,false,WEAK,same-name-other-jurisdiction,paires-entites-3.json
 crusetra_entities,Company,Brevanti Trading LLC,Brevanti Logistics LLC,false,,one-word-sibling,paires-entites-4.json
 crusetra_entities,Company,Korvath Shipping Ltd,Korvath Chartering Ltd,false,,one-word-sibling,paires-entites-4.json
 crusetra_entities,Company,Halsworth Steel Inc.,Halsworth Scrap Inc.,false,,one-word-sibling,paires-entites-4.json
@@ -940,11 +940,11 @@ crusetra_entities,Company,Hrastnik Gradbeništvo d.o.o.,Rupnik Gradbeništvo d.o
 crusetra_entities,Company,Nakamura Precision Tooling Inc.,Nakamura Precision Tooling Canada Ltd.,false,,foreign-subsidiary,paires-entites-20.json
 crusetra_entities,Company,Mbeki-Sandoval Environmental Services LLC,"Mbeki-Sandoval Environmental Services de México, S.A. de C.V.",false,,foreign-subsidiary,paires-entites-20.json
 crusetra_entities,Company,Lundqvist Hydraulics Inc.,Lundqvist Hydraulics (UK) Ltd.,false,,foreign-subsidiary,paires-entites-20.json
-crusetra_entities,Company,Wieczorek Machine Works Inc.,Wieczorek Machine Works GmbH,false,,foreign-subsidiary,paires-entites-20.json
-crusetra_entities,Vessel,YILDIZ KAPTAN,YILDIZ KAPTANLAR,false,,vessel-plural,paires-entites-12.json
-crusetra_entities,Vessel,KARADENIZ SAHINI,KARADENIZ SAHINLERI,false,,vessel-plural,paires-entites-12.json
-crusetra_entities,Vessel,DENIZ KARTALI,DENIZ KARTALLARI,false,,vessel-plural,paires-entites-12.json
-crusetra_entities,Vessel,ALTAIR STAR,ALTAIR STARS,false,,vessel-plural,paires-entites-12.json
+crusetra_entities,Company,Wieczorek Machine Works Inc.,Wieczorek Machine Works GmbH,false,WEAK,foreign-subsidiary,paires-entites-20.json
+crusetra_entities,Vessel,YILDIZ KAPTAN,YILDIZ KAPTANLAR,false,WEAK,vessel-plural,paires-entites-12.json
+crusetra_entities,Vessel,KARADENIZ SAHINI,KARADENIZ SAHINLERI,false,WEAK,vessel-plural,paires-entites-12.json
+crusetra_entities,Vessel,DENIZ KARTALI,DENIZ KARTALLARI,false,WEAK,vessel-plural,paires-entites-12.json
+crusetra_entities,Vessel,ALTAIR STAR,ALTAIR STARS,false,WEAK,vessel-plural,paires-entites-12.json
 crusetra_entities,Company,Shah Bros. Ltd,Shah & Shah Ltd,false,,two-words-differ,paires-entites-15.json
 crusetra_entities,Company,Msasani Fisheries (T) Ltd,Msasani Fish Processors (T) Ltd,false,,two-words-differ,paires-entites-15.json
 crusetra_entities,Company,Haji Abdalla & Sons Ltd,Haji Abdulla Hardware Ltd,false,,two-words-differ,paires-entites-15.json
@@ -957,26 +957,26 @@ crusetra_entities,Company,Brasskey Shipping Three Inc.,Brasskey Shipping Five In
 crusetra_entities,Company,Marrowgate Leasing 3 Ltd,Marrowgate Leasing 6 Ltd,false,,numbered-spv,paires-entites-3.json
 crusetra_entities,Company,Seraphine Navigation II S.A.,Seraphine Navigation IX S.A.,false,,numbered-spv,paires-entites-3.json
 crusetra_entities,Company,Golden Lotus Investment No. 3 Ltd,Golden Lotus Investment No. 8 Ltd,false,,numbered-spv,paires-entites-5.json
-crusetra_entities,Company,Cecotti Srl,Comelli Srl,false,,different-surname-same-form-chat,paires-entites-18.json
-crusetra_entities,Company,Rossetti Sped.,Bassanese Sped.,false,,different-surname-same-form-chat,paires-entites-18.json
-crusetra_entities,Company,Comelli Coop,Bulfon Coop,false,,different-surname-same-form-chat,paires-entites-18.json
-crusetra_entities,Company,Nikolić Prevoz,Stanković Prevoz,false,,different-surname-same-form-chat,paires-entites-18.json
-crusetra_entities,Company,Wrightstone Freight Inc.,Rightstone Freight Inc.,false,,homophone,paires-entites-3.json
-crusetra_entities,Company,Pier Nine Logistics LLC,Peer Nine Logistics LLC,false,,homophone,paires-entites-3.json
-crusetra_entities,Company,Sole Source Footwear Inc.,Soul Source Footwear Inc.,false,,homophone,paires-entites-3.json
-crusetra_entities,Company,Compagnie du Verre Vassalien,Compagnie du Vert Vassalien,false,,homophone,paires-entites-3.json
-crusetra_entities,Company,Sino Iron I,Sino Iron II,false,,numeral-changed,paires-entites-13.json
-crusetra_entities,Company,Wattle Star II,Wattle Star III,false,,numeral-changed,paires-entites-13.json
-crusetra_entities,Company,Kaiyo Maru No. 8,Kaiyo Maru No. 9,false,,numeral-changed,paires-entites-13.json
-crusetra_entities,Company,Seif Feeder 12,Seif Feeder 13,false,,numeral-changed,paires-entites-15.json
+crusetra_entities,Company,Cecotti Srl,Comelli Srl,false,,different-surname-same-form,paires-entites-18.json
+crusetra_entities,Company,Rossetti Sped.,Bassanese Sped.,false,,different-surname-same-form,paires-entites-18.json
+crusetra_entities,Company,Comelli Coop,Bulfon Coop,false,,different-surname-same-form,paires-entites-18.json
+crusetra_entities,Company,Nikolić Prevoz,Stanković Prevoz,false,,different-surname-same-form,paires-entites-18.json
+crusetra_entities,Company,Wrightstone Freight Inc.,Rightstone Freight Inc.,false,WEAK,homophone,paires-entites-3.json
+crusetra_entities,Company,Pier Nine Logistics LLC,Peer Nine Logistics LLC,false,WEAK,homophone,paires-entites-3.json
+crusetra_entities,Company,Sole Source Footwear Inc.,Soul Source Footwear Inc.,false,WEAK,homophone,paires-entites-3.json
+crusetra_entities,Company,Compagnie du Verre Vassalien,Compagnie du Vert Vassalien,false,WEAK,homophone,paires-entites-3.json
+crusetra_entities,Vessel,Sino Iron I,Sino Iron II,false,,vessel-numeral,paires-entites-13.json
+crusetra_entities,Vessel,Wattle Star II,Wattle Star III,false,,vessel-numeral,paires-entites-13.json
+crusetra_entities,Vessel,Kaiyo Maru No. 8,Kaiyo Maru No. 9,false,,vessel-numeral,paires-entites-13.json
+crusetra_entities,Vessel,Seif Feeder 12,Seif Feeder 13,false,,vessel-numeral,paires-entites-15.json
 crusetra_entities,Vessel,Takanami Star,Takanami Moon,false,,vessel-sister-ship,paires-entites-19.json
 crusetra_entities,Vessel,Umisachi Ace,Yamasachi Ace,false,,vessel-sister-ship,paires-entites-19.json
 crusetra_entities,Vessel,LNG Tsukuyomi,LNG Tsukiakari,false,,vessel-sister-ship,paires-entites-19.json
 crusetra_entities,Vessel,Seohae Lumina,Donghae Lumina,false,,vessel-sister-ship,paires-entites-19.json
-crusetra_entities,Company,MV Cacaueiro do Atlântico,MV Cacaueiros do Atlântico,false,,plural-vs-singular,paires-entites-16.json
-crusetra_entities,Company,MV Fraternité des Mers,MV Fraternités des Mers,false,,plural-vs-singular,paires-entites-16.json
-crusetra_entities,Company,MV Espoir d'Abidjan,MV Espoirs d'Abidjan,false,,plural-vs-singular,paires-entites-16.json
-crusetra_entities,Company,N/M Rio Paranaguá,N/M Rio Paranaguás,false,,plural-vs-singular,paires-entites-16.json
+crusetra_entities,Vessel,MV Cacaueiro do Atlântico,MV Cacaueiros do Atlântico,false,WEAK,vessel-plural,paires-entites-16.json
+crusetra_entities,Vessel,MV Fraternité des Mers,MV Fraternités des Mers,false,WEAK,vessel-plural,paires-entites-16.json
+crusetra_entities,Vessel,MV Espoir d'Abidjan,MV Espoirs d'Abidjan,false,WEAK,vessel-plural,paires-entites-16.json
+crusetra_entities,Vessel,N/M Rio Paranaguá,N/M Rio Paranaguás,false,WEAK,vessel-plural,paires-entites-16.json
 crusetra_entities,Company,Ashcorran Mining Supplies Ltd,Ashcorran Dining Supplies Ltd,false,,near-string,paires-entites-2.json
 crusetra_entities,Company,Halvern Rail Services Ltd,Halvern Mail Services Ltd,false,,near-string,paires-entites-2.json
 crusetra_entities,Company,Pellmoor Timber Exports Ltd,Pellmoor Timber Experts Ltd,false,,near-string,paires-entites-2.json
@@ -993,10 +993,10 @@ crusetra_entities,Company,Fratelli Brunaccini S.n.c.,F.lli Brunaccini snc,true,,
 crusetra_entities,Company,Compañía Minera Huallacocha S.A.C.,Cía. Minera Huallacocha SAC,true,,word-abbreviation,paires-entites-3.json
 crusetra_entities,Company,Tecelagem Serra Azulina Indústria e Comércio Ltda.,TECELAGEM SERRA AZULINA IND. E COM. LTDA,true,,word-abbreviation,paires-entites-3.json
 crusetra_entities,Company,Venkatadri Forgings & Engg. Works Pvt Ltd,Venkatadri Forgings and Engineering Works Private Limited,true,,word-abbreviation,paires-entites-3.json
-crusetra_entities,Company,Ocean Pioneer (ex-Cape Diamond),Cape Diamond,true,,ex-name-alias,paires-entites-13.json
-crusetra_entities,Company,Star Voyager (ex-Southern Glory),Southern Glory,true,,ex-name-alias,paires-entites-13.json
-crusetra_entities,Company,Pacific Endeavour (ex-Grand Wheatland),Grand Wheatland,true,,ex-name-alias,paires-entites-13.json
-crusetra_entities,Company,Wheatland Glory (ex-Pacific Sower),Pacific Sower,true,,ex-name-alias,paires-entites-13.json
+crusetra_entities,Vessel,Ocean Pioneer (ex-Cape Diamond),Cape Diamond,true,,ex-name-alias,paires-entites-13.json
+crusetra_entities,Vessel,Star Voyager (ex-Southern Glory),Southern Glory,true,,ex-name-alias,paires-entites-13.json
+crusetra_entities,Vessel,Pacific Endeavour (ex-Grand Wheatland),Grand Wheatland,true,,ex-name-alias,paires-entites-13.json
+crusetra_entities,Vessel,Wheatland Glory (ex-Pacific Sower),Pacific Sower,true,,ex-name-alias,paires-entites-13.json
 crusetra_entities,Company,SARL Ivoire Négoce,SARL Ivoire Negoce,true,,accent-variant,paires-entites-16.json
 crusetra_entities,Company,Société Camerounaise de Cacao,Societe Camerounaise de Cacao,true,,accent-variant,paires-entites-16.json
 crusetra_entities,Company,Ets Fakhoury Frères,Ets Fakhoury Freres,true,,accent-variant,paires-entites-16.json
@@ -1017,8 +1017,8 @@ crusetra_entities,Company,Coastline Agro Supplies Ltd - Malindi Branch,Coastline
 crusetra_entities,Company,Kisumu Lakeside Motors Ltd (Kakamega Branch),Kisumu Lakeside Motors Limited,true,,branch-same-entity,paires-entites-15.json
 crusetra_entities,Company,Muheza Sisal Estates Ltd,Muheza Sisal Estates Ltd (Korogwe Branch),true,,branch-same-entity,paires-entites-15.json
 crusetra_entities,Company,"Sindh Agro Chemicals (Pvt) Ltd, Sukkur Branch",Sindh Agro Chemicals (Private) Limited,true,,branch-same-entity,paires-entites-15.json
-crusetra_entities,Company,HALVERSTONE SPIRIT V.214W (Marshall Islands flag),Halverstone Spirit,true,,annotation,paires-entites-6.json
-crusetra_entities,Company,M/T Ondara Leigh (ex-Pelican Morrow),ONDARA LEIGH,true,,annotation,paires-entites-6.json
+crusetra_entities,Vessel,HALVERSTONE SPIRIT V.214W (Marshall Islands flag),Halverstone Spirit,true,,annotation,paires-entites-6.json
+crusetra_entities,Vessel,M/T Ondara Leigh (ex-Pelican Morrow),ONDARA LEIGH,true,,annotation,paires-entites-6.json
 crusetra_entities,Company,"Rancho Vercel Importadora S.A. de C.V. c/o Aduanas Pedraza, Nuevo Laredo",Rancho Vercel Importadora SA de CV,true,,annotation,paires-entites-6.json
 crusetra_entities,Company,"Tidewell Process Equipment Inc, 12250 Brevard Ln, Pasadena TX 77506","Tidewell Process Equipment, Inc.",true,,annotation,paires-entites-6.json
 crusetra_entities,Vessel,"MV Fraternité des Mers, port d'Abidjan",MV Fraternité des Mers,true,,port-of-registry-appended,paires-entites-16.json
@@ -1041,10 +1041,10 @@ crusetra_entities,Company,Kipkorir Cereals Ltd,Kipkorrir Cereals Ltd,true,,doubl
 crusetra_entities,Company,Shabbir Cotton Waste Traders,Shabir Cotton Waste Traders,true,,doubled-letter,paires-entites-15.json
 crusetra_entities,Company,Amani Bora Enterprisses Ltd,Amani Bora Enterprises Ltd,true,,doubled-letter,paires-entites-15.json
 crusetra_entities,Company,Comercio de Graos Rossetti,Comercioo de Graos Rossetti,true,,doubled-letter,paires-entites-16.json
-crusetra_entities,Company,Shamji Hardware Ltd,Shamjee Hardware Ltd,true,,romanisation-variant,paires-entites-15.json
-crusetra_entities,Company,Haji Abdalla & Sons Ltd,Haji Abdulla and Sons Limited,true,,romanisation-variant,paires-entites-15.json
-crusetra_entities,Company,Husain Brothers Industries,Hussain Brothers Industries,true,,romanisation-variant,paires-entites-15.json
-crusetra_entities,Company,Qureshi Leather Works (Pvt) Ltd,Quraishi Leather Works (Pvt) Ltd,true,,romanisation-variant,paires-entites-15.json
+crusetra_entities,Company,Shamji Hardware Ltd,Shamjee Hardware Ltd,true,,romanisation,paires-entites-15.json
+crusetra_entities,Company,Haji Abdalla & Sons Ltd,Haji Abdulla and Sons Limited,true,,romanisation,paires-entites-15.json
+crusetra_entities,Company,Husain Brothers Industries,Hussain Brothers Industries,true,,romanisation,paires-entites-15.json
+crusetra_entities,Company,Qureshi Leather Works (Pvt) Ltd,Quraishi Leather Works (Pvt) Ltd,true,,romanisation,paires-entites-15.json
 crusetra_entities,Company,Harrowvane International Freight Services,Harrowvane Intl Freight Svcs,true,,abbreviation,paires-entites-2.json
 crusetra_entities,Company,Delancourt Brothers Manufacturing Co.,Delancourt Bros. Mfg. Co.,true,,abbreviation,paires-entites-2.json
 crusetra_entities,Company,Fendrake & Mollory Logistics,Fendrake and Mollory Logistics,true,,abbreviation,paires-entites-2.json
@@ -1066,7 +1066,7 @@ crusetra_entities,Company,N.K. Bansal & Co.,N K Bansal and Co,true,,punctuation-
 crusetra_entities,Company,O'Doyle Grazing Co Pty Ltd,O Doyle Grazing Co Pty Ltd,true,,punctuation-spacing,paires-entites-13.json
 crusetra_entities,Company,Wirralong Downs Pty Ltd,Wirra-long Downs Pty Ltd,true,,punctuation-spacing,paires-entites-13.json
 crusetra_entities,Company,F.lli Pittino S.n.c. di Pittino Aldo e Bruno,Fratelli Pittino S.n.c. di Pittino Aldo e Bruno,true,,abbreviation-expanded,paires-entites-18.json
-crusetra_entities,Company,Comm. Bront Silvano S.a.s.,Commendator Bront Silvano S.a.s.,true,,abbreviation-expanded,paires-entites-18.json
+crusetra_entities,Company,Comm. Bront Silvano S.a.s.,Commendatore Bront Silvano S.a.s.,true,,abbreviation-expanded,paires-entites-18.json
 crusetra_entities,Company,Qualizza Impianti Termoidraulici S.a.s. di Qualizza R.,Qualizza Impianti Termoidraulici S.a.s. di Qualizza Renzo,true,,abbreviation-expanded,paires-entites-18.json
 crusetra_entities,Company,Tisza Kereskedelmi Kft.,Tisza Kereskedelmi Korlátolt Felelősségű Társaság,true,,abbreviation-expanded,paires-entites-18.json
 crusetra_entities,Vessel,M/V MZIURI (Batumi),მზიური,true,,vessel-script,paires-entites-21.json
@@ -1094,7 +1094,7 @@ crusetra_entities,Company,BENEFICIARY: Sarıkaya Hububat Ltd. Şti.,Sarikaya Hub
 crusetra_entities,Company,ORDERING CUSTOMER: KALLIOSAARI TRADING OY,Kalliosaari Trading Oy,true,,residue-party-label,paires-entites-12.json
 crusetra_entities,Company,MESSRS. BALTIC TIMBERLINE OU,Baltic Timberline OÜ,true,,residue-party-label,paires-entites-12.json
 crusetra_entities,Company,Ranjit Cotton Traders Pvt. Ltd.,RANJIT COTTON TRADERS PVT LTD,true,,uppercase-export,paires-entites-13.json
-crusetra_entities,Company,Blackwood Cattle Co Pty Ltd,FIELD 59: BLACKWOOD CATTLE CO PTY LTD,true,,uppercase-export,paires-entites-13.json
+crusetra_entities,Company,Blackwood Cattle Co Pty Ltd,FIELD 59: BLACKWOOD CATTLE CO PTY LTD,true,,residue-party-label,paires-entites-13.json
 crusetra_entities,Company,Deshpande Textiles Pvt. Ltd.,DESHPANDE TEXTILES PVT LTD,true,,uppercase-export,paires-entites-13.json
 crusetra_entities,Company,Chopra Bros. Enterprises,CHOPRA BROS ENTERPRISES,true,,uppercase-export,paires-entites-13.json
 crusetra_entities,Company,GIE Femmes de Korhogo,G.I.E. Femmes de Korhogo,true,,case-punctuation-spacing,paires-entites-16.json
@@ -1113,10 +1113,10 @@ crusetra_entities,Vessel,"MV SIAM ORCHID 7, Bangkok",SIAM ORCHID 7,true,,vessel-
 crusetra_entities,Vessel,M.T. THONG NAWA 3 (Laem Chabang),THONG NAWA NO.3,true,,vessel-prefix-and-port,paires-entites-22.json
 crusetra_entities,Vessel,"T/B CHAO LE 8, Sihanoukville",CHAO LE NO. 8,true,,vessel-prefix-and-port,paires-entites-22.json
 crusetra_entities,Vessel,"MT GOLDEN KINNAREE, Laem Chabang",GOLDEN KINNAREE,true,,vessel-prefix-and-port,paires-entites-22.json
-crusetra_entities,Company,Zakłady Mięsne Wiśniewski Sp. z o.o. S.K.A.,Zaklady Miesne Wisniewski spolka z ograniczona odpowiedzialnoscia spolka komandytowo-akcyjna,true,,legal-form-spelt-out,paires-entites-23.json
-crusetra_entities,Company,Łączyńska Wytwórnia Łodzi Sp. j.,LACZYNSKA WYTWORNIA LODZI SPOLKA JAWNA,true,,legal-form-spelt-out,paires-entites-23.json
-crusetra_entities,Company,Spedycja Wisłoujście Sp. z o.o. Sp. k.,Spedycja Wisloujscie spolka z ograniczona odpowiedzialnoscia spolka komandytowa,true,,legal-form-spelt-out,paires-entites-23.json
-crusetra_entities,Company,Bursztynowa Przystań Sp. z o.o.,BURSZTYNOWA PRZYSTAN SPOLKA Z OGRANICZONA ODPOWIEDZIALNOSCIA,true,,legal-form-spelt-out,paires-entites-23.json
+crusetra_entities,Company,Zakłady Mięsne Wiśniewski Sp. z o.o. S.K.A.,Zaklady Miesne Wisniewski spolka z ograniczona odpowiedzialnoscia spolka komandytowo-akcyjna,true,,legal-form-spelled-out,paires-entites-23.json
+crusetra_entities,Company,Łączyńska Wytwórnia Łodzi Sp. j.,LACZYNSKA WYTWORNIA LODZI SPOLKA JAWNA,true,,legal-form-spelled-out,paires-entites-23.json
+crusetra_entities,Company,Spedycja Wisłoujście Sp. z o.o. Sp. k.,Spedycja Wisloujscie spolka z ograniczona odpowiedzialnoscia spolka komandytowa,true,,legal-form-spelled-out,paires-entites-23.json
+crusetra_entities,Company,Bursztynowa Przystań Sp. z o.o.,BURSZTYNOWA PRZYSTAN SPOLKA Z OGRANICZONA ODPOWIEDZIALNOSCIA,true,,legal-form-spelled-out,paires-entites-23.json
 crusetra_entities,Company,EtsKoffietFreres,Ets Koffi et Freres,true,,missing-space,paires-entites-16.json
 crusetra_entities,Company,Ets Diallo,EtsDiallo,true,,missing-space,paires-entites-16.json
 crusetra_entities,Company,GroupeDiarraImportExport,Groupe Diarra Import Export,true,,missing-space,paires-entites-16.json
