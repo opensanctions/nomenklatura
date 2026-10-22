@@ -56,6 +56,18 @@ def test_name_match_reversed_part_tags():
     assert res.score == 1.0, res
 
 
+def test_name_match_legal_entity_query_reorders_person_result():
+    result = e(
+        "Person",
+        name="Grigory Alexeyevich RAPOTA",
+        lastName="RAPOTA",
+        fatherName="Alexeyevich",
+    )
+    query = e("LegalEntity", name="rapota grigoryi alexeyevich")
+    res = name_match(query, result, config)
+    assert res.score > 0.9
+
+
 # def test_specific():
 #     left = e("Company", name="N.A.B.C Company")
 #     right = e("Company", name="A.B.C. Company")

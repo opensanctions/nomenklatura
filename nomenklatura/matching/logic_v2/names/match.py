@@ -74,7 +74,10 @@ def match_name_symbolic(
         result_rem = [p for p in result.parts if p not in result_used]
 
         if len(query_rem) > 0 or len(result_rem) > 0:
-            if query.tag == NameTypeTag.PER:
+            # A LegalEntity query against a Person result has an ENT-tagged query
+            # name. Its parts are untagged, so tag_sort cannot fix a family-first
+            # word order. One PER side is enough evidence that the order can vary.
+            if NameTypeTag.PER in (query.tag, result.tag):
                 query_rem, result_rem = align_person_name_order(query_rem, result_rem)
             else:
                 query_rem = NamePart.tag_sort(query_rem)
