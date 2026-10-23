@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from followthemoney import EntityProxy
 from followthemoney.names import entity_names as ftm_entity_name
-from rigour.names import Name, Symbol
+from rigour.names import Name, NameTypeTag, Symbol
 from rigour.text.scripts import common_scripts
 
 from nomenklatura.matching.util import MEMO_BATCH
@@ -16,11 +16,12 @@ def entity_names(
     entity: EntityProxy,
     prop: str | None = None,
     is_query: bool = False,
+    type_tag: NameTypeTag | None = None,
 ) -> set[Name]:
     """This will transform the entity into a set of names with tags applied. The idea
     is to tag the names with the type of entity they are, e.g. person, organization,
     etc. and to tag the parts of the name with their type, e.g. first name, last name,
-    etc.
+    etc. `type_tag` overrides the name type that the entity's own schema implies.
     """
     # nb. Putting an @lru_cache here does not make sense for an individual use of the matcher,
     # but will cache the name objects for the `query` entity across multiple possible `results`.
@@ -29,7 +30,13 @@ def entity_names(
     props: tuple[str, ...] | None = None
     if prop is not None:
         props = (prop,)
-    return ftm_entity_name(entity, props, infer_initials=is_query, consolidate=False)
+    return ftm_entity_name(
+        entity,
+        props,
+        type_tag=type_tag,
+        infer_initials=is_query,
+        consolidate=False,
+    )
 
 
 @lru_cache(maxsize=MEMO_BATCH)
@@ -37,6 +44,7 @@ def entity_names_consolidated(
     entity: EntityProxy,
     prop: str | None = None,
     is_query: bool = False,
+    type_tag: NameTypeTag | None = None,
 ) -> set[Name]:
     """Return `entity_names` with names contained in longer names dropped.
 
@@ -44,7 +52,7 @@ def entity_names_consolidated(
     `name_match` still needs the unconsolidated names. Callers must not mutate
     the returned set.
     """
-    names = entity_names(entity, prop=prop, is_query=is_query)
+    names = entity_names(entity, prop=prop, is_query=is_query, type_tag=type_tag)
     return Name.consolidate_names(names)
 
 

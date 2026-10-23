@@ -74,9 +74,7 @@ def match_name_symbolic(
         result_rem = [p for p in result.parts if p not in result_used]
 
         if len(query_rem) > 0 or len(result_rem) > 0:
-            # A LegalEntity query against a Person result has an ENT-tagged query
-            # name. Its parts are untagged, so tag_sort cannot fix a family-first
-            # word order. One PER side is enough evidence that the order can vary.
+            # Callers may pass names analyzed with different type tags.
             if NameTypeTag.PER in (query.tag, result.tag):
                 query_rem, result_rem = align_person_name_order(query_rem, result_rem)
             else:
@@ -194,8 +192,11 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     if type_tag == NameTypeTag.OBJ:
         return match_object_names(query, result, config)
     name_prop = config.get_optional_string("nm_name_property")
-    query_names = entity_names(query, prop=name_prop, is_query=True)
-    result_names = entity_names(result, prop=name_prop)
+    # Analyze both sides with the type of the common schema. A LegalEntity query
+    # against a Person result then gets person-name handling: INITIAL symbols,
+    # the person tagger and person name-order alignment.
+    query_names = entity_names(query, prop=name_prop, is_query=True, type_tag=type_tag)
+    result_names = entity_names(result, prop=name_prop, type_tag=type_tag)
 
     # For literal matches, return early instead of performing all the magic. This addresses
     # a user surprise where literal matches can score below 1.0 after name de-duplication has
@@ -226,8 +227,10 @@ def name_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     # This prevents a scenario where a short version of a name ("John
     # Smith") is matched to a query ("John K Smith"), where a longer version
     # ("John K Smith" != "John R Smith") would have disqualified the match.
-    query_names = entity_names_consolidated(query, prop=name_prop, is_query=True)
-    result_names = entity_names_consolidated(result, prop=name_prop)
+    query_names = entity_names_consolidated(
+        query, prop=name_prop, is_query=True, type_tag=type_tag
+    )
+    result_names = entity_names_consolidated(result, prop=name_prop, type_tag=type_tag)
 
     # Read the scoring parameters once per candidate rather than per name pair.
     compare_config = CompareConfig(
