@@ -68,6 +68,19 @@ def test_name_match_legal_entity_query_reorders_person_result():
     assert res.score > 0.9
 
 
+def test_name_match_legal_entity_query_initials_person_result():
+    result = e(
+        "Person",
+        name="John Fitzgerald Kennedy",
+        firstName="John",
+        middleName="Fitzgerald",
+        lastName="Kennedy",
+    )
+    query = e("LegalEntity", name="J F Kennedy")
+    res = name_match(query, result, config)
+    assert res.score > 0.9
+
+
 # def test_specific():
 #     left = e("Company", name="N.A.B.C Company")
 #     right = e("Company", name="A.B.C. Company")
