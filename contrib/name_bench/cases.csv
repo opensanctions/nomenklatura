@@ -1125,3 +1125,7 @@ crusetra_entities,Company,Fabjan Prevozi d.o.o.,Fabjan Prevozi d. o. o.,true,,pu
 crusetra_entities,Company,Rupnik Transport in Logistika d.o.o.,"Rupnik Transport in Logistika, d. o. o.",true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Impresa Cecotti & Bront S.n.c.,Impresa Cecotti e Bront S.n.c.,true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Jadran Brodogradnja d.d.,"Jadran Brodogradnja, d. d.",true,,punctuation-spacing-legal-form,paires-entites-18.json
+homoglyphs,LegalEntity,COMРLEJO TURISTICO OASIS,COMPLEJO TURISTICO OASIS,true,STRONG,homoglyph-fold,Cyrillic Р in a mostly Latin token is a look-alike for P; transliteration would give R
+homoglyphs,Person,Dмитрий Medvedev,Dmitry Medvedev,true,MEDIUM,homoglyph-no-fold,Mostly Cyrillic token with letters that have no Latin look-alike; must transliterate
+homoglyphs,Person,Сергей Лавров,Sergei Lavrov,true,STRONG,homoglyph-no-fold,All-Cyrillic name; must transliterate as before
+homoglyphs,Person,Рома Иванов,Poma Ivanov,false,STRONG,homoglyph-no-fold,"All-Cyrillic token made only of look-alikes reads Roma, not Poma; must not fold"
