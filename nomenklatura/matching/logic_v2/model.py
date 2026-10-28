@@ -2,6 +2,7 @@ from typing import ClassVar
 
 from nomenklatura.matching.compare.addresses import (
     address_entity_match,
+    address_match,
     address_prop_match,
 )
 from nomenklatura.matching.compare.countries import country_mismatch
@@ -55,6 +56,7 @@ class LogicV2(HeuristicAlgorithm):
         Feature(func=npi_code_match, weight=0.95),
         Feature(func=identifier_match, weight=0.85),
         Feature(func=weak_alias_match, weight=0.8),
+        Feature(func=address_match, weight=0.0),
         Feature(func=address_prop_match, weight=0.2, qualifier=True),
         Feature(func=country_mismatch, weight=-0.2, qualifier=True),
         Feature(func=dob_year_disjoint, weight=-0.15, qualifier=True),
@@ -100,17 +102,26 @@ class LogicV2(HeuristicAlgorithm):
     def compute_score(
         cls, scores: dict[str, float], weights: dict[str, float]
     ) -> float:
-        mains: list[float] = []
+        score = FNUL
+        top_feature: str | None = None
         for feat in cls.features:
             if feat.qualifier:
                 continue
-            score = scores.get(feat.name, FNUL)
-            mains.append(score * weights.get(feat.name, FNUL))
-        score = max(mains, default=FNUL)
+            weighted = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
+            if weighted > score:
+                score = weighted
+                top_feature = feat.name
         if score <= FNUL:
             return score
         for feat in cls.features:
             if not feat.qualifier:
+                continue
+            # When the address is the primary evidence, it can't also be
+            # supporting evidence for itself.
+            if (
+                top_feature == address_match.__name__
+                and feat.name == address_prop_match.__name__
+            ):
                 continue
             weight = scores.get(feat.name, FNUL) * weights.get(feat.name, FNUL)
             score += weight
