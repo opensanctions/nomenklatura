@@ -16,7 +16,11 @@ from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 
 FETCH_SIZE = 10_000
-PREFETCH_BATCH = 1_000
+# Each prefetch round looks up the batch's neighbours with an IN list, which
+# DuckDB answers with a full scan of the statements table once the list grows
+# past a few hundred ids. Fewer, larger batches amortise those scans; beyond
+# about 10k entities the cost is dominated by assembling the returned rows.
+PREFETCH_BATCH = 10_000
 INVERTED_CAP = 1_000
 
 RAW_COLUMNS = (
