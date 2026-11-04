@@ -181,8 +181,11 @@ class DuckDBBatchView(View[DS, SE]):
             os.unlink(fh.name)
 
         names = sorted(self.dataset_names)
-        holes = ", ".join("?" for _ in names)
-        where = f"s.dataset IN ({holes})"
+        # The dataset names are bound as one list rather than as an IN list:
+        # DuckDB rewrites a long IN list into a hash join and pushes it into
+        # every branch of a union relation, and a union over hundreds of
+        # files then holds hundreds of hash tables at once.
+        where = "list_contains($names, s.dataset)"
         if self.external is False:
             where += " AND NOT s.external"
         # Resolve into an unsorted staging table, then sort that into the
@@ -205,7 +208,7 @@ class DuckDBBatchView(View[DS, SE]):
             LEFT JOIN {mapping} mv ON mv.entity_id = s.value
             WHERE {where}
             """,
-            names,
+            {"names": names},
         )
         conn.execute(f"DROP TABLE {mapping}")
         conn.execute(
