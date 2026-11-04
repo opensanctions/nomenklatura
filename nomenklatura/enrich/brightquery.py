@@ -128,7 +128,8 @@ class BrightQueryEnricher(Enricher[DS]):
         # We have to re-implement http_post_json_cached here because the endpoint doesn't
         # return JSON when there are no results.
         resp_data = self.cache.get_json(cache_key, max_age=self.cache_days)
-        if not resp_data:
+        # An empty result is cached as `{}`, which is falsy but still a cache hit.
+        if resp_data is None:
             log.info("BrightQuery search: %r", payload)
             try:
                 response = self.session.post(
