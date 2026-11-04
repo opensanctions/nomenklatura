@@ -871,8 +871,6 @@ crusetra_entities,Vessel,MV Salaam Dar,MV Salaam Zanzibar,false,,other-place,pai
 crusetra_entities,Company,Lefkada Bulk Carriers S.A.,Lefkosia Bulk Carriers S.A.,false,,other-place,paires-entites-17.json
 crusetra_entities,Company,Akinyi Textiles Ltd,Atieno Textiles Ltd,false,,other-name,paires-entites-15.json
 crusetra_entities,Company,Wanjiru & Wambui Advocates,Wanjiru & Wanjiku Advocates,false,,other-name,paires-entites-15.json
-crusetra_entities,Company,Haji Muhammad Ashraf & Sons,Haji Muhammad Asghar & Sons,false,,other-name,paires-entites-15.json
-crusetra_entities,Company,Chaudhry Nazir Ahmad & Co.,Chaudhry Nazir Hussain & Co.,false,,other-name,paires-entites-15.json
 crusetra_entities,Company,Adriatica Legnami S.r.l.,Adriatica Metalli S.r.l.,false,,different-business-sector-word,paires-entites-18.json
 crusetra_entities,Company,Jadranska Plovba d.o.o.,Jadranska Ribolov d.o.o.,false,,different-business-sector-word,paires-entites-18.json
 crusetra_entities,Company,Bevk Mizarstvo d.o.o.,Bevk Kovaštvo d.o.o.,false,,different-business-sector-word,paires-entites-18.json
@@ -1108,7 +1106,6 @@ crusetra_entities,Company,«Ջանոյան Էքսպրես» ՍՊԸ,Janoyan Expre
 crusetra_entities,Company,ရွှေပုလဲ ကုန်သွယ်ရေး ကုမ္ပဏီလီမိတက်,"Shwe Pale Trading Co., Ltd.",true,,burmese-script-vs-latin,paires-entites-22.json
 crusetra_entities,Company,ရတနာမင်္ဂလာ ပို့ဆောင်ရေး ကုမ္ပဏီလီမိတက်,"Yadanar Mingalar Logistics Co., Ltd.",true,,burmese-script-vs-latin,paires-entites-22.json
 crusetra_entities,Company,အောင်ကြယ် ဆန်စက် ကုမ္ပဏီလီမိတက်,"Aung Kyal Rice Mill Co., Ltd.",true,,burmese-script-vs-latin,paires-entites-22.json
-crusetra_entities,Company,ဦးကျော်ဇော်ထွန်း ကုန်သွယ်ရေး,U Kyaw Zaw Htun Trading,true,,burmese-script-vs-latin,paires-entites-22.json
 crusetra_entities,Vessel,"MV SIAM ORCHID 7, Bangkok",SIAM ORCHID 7,true,,vessel-prefix-and-port,paires-entites-22.json
 crusetra_entities,Vessel,M.T. THONG NAWA 3 (Laem Chabang),THONG NAWA NO.3,true,,vessel-prefix-and-port,paires-entites-22.json
 crusetra_entities,Vessel,"T/B CHAO LE 8, Sihanoukville",CHAO LE NO. 8,true,,vessel-prefix-and-port,paires-entites-22.json
