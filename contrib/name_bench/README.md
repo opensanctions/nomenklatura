@@ -217,6 +217,17 @@ post-hoc.
   `holding-vs-operating`, `vessel-vs-owner`); `notes` names the
   source pair file.
 
+- `asia_mena_people` (58 rows) — hand-written person-name pairs
+  for South Asian, Malay, Arabic and Chinese naming conventions,
+  using invented or very common names. `category` names the
+  convention: `muhammad-variant` (Mohd/Md./Mohamed/Muhammad),
+  `malay-patronymic` (bin/binti/b./bt.), `arabic-article`
+  (al-/el-/Al, ibn/bin), `arabic-script`, `indian-initials`
+  (initials and order, South Indian initial-first), `devanagari`,
+  `chinese-romanisation` (pinyin vs Cantonese/Hokkien),
+  `chinese-order`, `chinese-script`, and `hard-negative` (shared
+  surname or Kumar/Singh-only overlap). `notes` says what changed.
+
 Planned additions:
 
 - `qarin_negatives` / `un_sc_positives` / `us_congress` —
