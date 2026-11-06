@@ -26,10 +26,10 @@ $ nomenklatura dedupe entities.ijson
 # will pop up a user interface.
 $ nomenklatura apply entities.ijson -o merged.ijson
 # de-duplicated data goes into `merged.ijson`:
-$ cat entities.ijson | wc -l 
+$ cat entities.ijson | wc -l
 474
-$ cat merged.ijson | wc -l 
-468 
+$ cat merged.ijson | wc -l
+468
 ```
 
 The resolver graph database location can be customised by setting the environment variable `NOMENKLATURA_DB_URL`
@@ -78,6 +78,13 @@ The key implementation detail of nomenklatura is the `Resolver`, a graph structu
 
 This codebase is licensed under the terms of an MIT license (see [LICENSE](/LICENSE)).
 
-We're keen for any contributions, bug fixes and feature suggestions, please use the GitHub issue tracker for this repository. 
+We're keen for any contributions, bug fixes and feature suggestions, please use the GitHub issue tracker for this repository.
 
 Nomenklatura is currently developed thanks to a Prototypefund grant for [OpenSanctions](https://opensanctions.org). Previous iterations of the package were developed with support from [Knight-Mozilla OpenNews](http://opennews.org) and the [Open Knowledge Foundation Labs](http://okfnlabs.org).
+
+### Releasing
+
+```bash
+bump-my-version bump patch
+git push && git push --tags
+```

@@ -60,7 +60,7 @@ dev = [
     "requests-mock",
     "plyvel < 2.0.0",
     "psycopg[binary] >= 3.0, < 4.0",
-    "bump2version",
+    "bump-my-version",
     "prek",
 ]
 leveldb = ["plyvel < 2.0.0"]
@@ -114,6 +114,20 @@ select = [
     "UP035",  # deprecated typing imports
     "UP045",  # PEP 604 optionals
 ]
+
+[tool.bumpversion]
+current_version = "4.17.4"
+tag_name = "{new_version}"
+commit = true
+tag = true
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "nomenklatura/__init__.py"
 
 [tool.coverage.run]
 branch = true
