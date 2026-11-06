@@ -16,7 +16,11 @@ from nomenklatura.resolver import Linker
 from nomenklatura.store.base import Store, View, Writer
 
 FETCH_SIZE = 10_000
-PREFETCH_BATCH = 1_000
+# Each prefetch round looks up the batch's neighbours with an IN list, which
+# DuckDB answers with a full scan of the statements table once the list grows
+# past a few hundred ids. Fewer, larger batches amortise those scans; beyond
+# about 10k entities the cost is dominated by assembling the returned rows.
+PREFETCH_BATCH = 10_000
 INVERTED_CAP = 1_000
 
 RAW_COLUMNS = (
@@ -177,13 +181,21 @@ class DuckDBBatchView(View[DS, SE]):
             os.unlink(fh.name)
 
         names = sorted(self.dataset_names)
-        holes = ", ".join("?" for _ in names)
-        where = f"s.dataset IN ({holes})"
+        # The dataset names are bound as one list rather than as an IN list:
+        # DuckDB rewrites a long IN list into a hash join and pushes it into
+        # every branch of a union relation, and a union over hundreds of
+        # files then holds hundreds of hash tables at once.
+        where = "list_contains($names, s.dataset)"
         if self.external is False:
             where += " AND NOT s.external"
+        # Resolve into an unsorted staging table, then sort that into the
+        # final table. An ORDER BY straight off the store relation (a union
+        # of many file scans) does not spill to disk and runs out of memory on
+        # large scopes; sorting a stored table spills fine.
+        staged = f"{self.stmt_table}_staged"
         conn.execute(
             f"""
-            CREATE OR REPLACE TABLE {self.stmt_table} AS
+            CREATE OR REPLACE TABLE {staged} AS
             SELECT {RAW_COLUMNS},
                 coalesce(m.canonical_id, s.entity_id) AS canonical_id,
                 CASE WHEN p.prop IS NOT NULL
@@ -195,10 +207,15 @@ class DuckDBBatchView(View[DS, SE]):
             LEFT JOIN {mapping} m ON m.entity_id = s.entity_id
             LEFT JOIN {mapping} mv ON mv.entity_id = s.value
             WHERE {where}
-            ORDER BY canonical_id
             """,
-            names,
+            {"names": names},
         )
+        conn.execute(f"DROP TABLE {mapping}")
+        conn.execute(
+            f"CREATE OR REPLACE TABLE {self.stmt_table} AS "
+            f"SELECT * FROM {staged} ORDER BY canonical_id"
+        )
+        conn.execute(f"DROP TABLE {staged}")
         conn.execute(
             f"CREATE INDEX {self.stmt_table}_canonical "
             f"ON {self.stmt_table} (canonical_id)"
@@ -207,7 +224,6 @@ class DuckDBBatchView(View[DS, SE]):
             f"CREATE INDEX {self.stmt_table}_value "
             f"ON {self.stmt_table} (value_canonical_id)"
         )
-        conn.execute(f"DROP TABLE {mapping}")
 
     def _update(self, canonical: str, ids: set[str]) -> None:
         """Re-key a cluster's rows to its current canonical identifier."""

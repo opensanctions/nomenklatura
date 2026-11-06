@@ -23,6 +23,20 @@ def test_connect_tuned(tmp_path) -> None:
     conn.close()
 
 
+def test_connect_temp_directory(tmp_path) -> None:
+    temp = tmp_path / "missing" / "spill"
+    conn = duck.connect(memory_mb=100, threads=1, temp_directory=temp)
+    row = conn.execute("SELECT current_setting('temp_directory')").fetchone()
+    assert row is not None and row[0] == str(temp)
+    conn.execute(
+        "CREATE TABLE t AS SELECT range AS i, md5(range::VARCHAR) AS h "
+        "FROM range(2000000)"
+    )
+    conn.execute("SELECT h, count(*) FROM t GROUP BY h ORDER BY h").fetchall()
+    assert temp.is_dir()
+    conn.close()
+
+
 def test_validate_statement_relation() -> None:
     conn = duck.connect()
     conn.execute(f"CREATE TABLE stmts ({STATEMENT_DDL})")

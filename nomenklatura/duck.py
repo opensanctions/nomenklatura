@@ -75,12 +75,19 @@ def connect(
     path: Path | str | None = None,
     memory_mb: int | str | None = None,
     threads: int | str | None = None,
+    temp_directory: Path | str | None = None,
 ) -> duckdb.DuckDBPyConnection:
     """Open a DuckDB connection with nomenklatura's tuning applied.
 
     Connections come with `preserve_insertion_order` disabled to keep large
     imports and CTAS out of memory trouble, and the session timezone pinned
-    to UTC so TIMESTAMPTZ values never render in the host timezone."""
+    to UTC so TIMESTAMPTZ values never render in the host timezone.
+
+    `temp_directory` is where the database spills to disk when it exceeds its
+    memory limit. DuckDB defaults to `<path>.tmp` for a database file, and to
+    `.tmp` in the working directory for an in-memory database. A database
+    deletes its temp directory when it closes, so concurrently open databases
+    must not share one."""
     config: DuckDBConfig = {
         "preserve_insertion_order": False,
         "python_enable_replacements": False,
@@ -98,6 +105,11 @@ def connect(
         threads = DUCKDB_THREADS
     if threads is not None:
         config["threads"] = int(threads)
+    if temp_directory is not None:
+        # DuckDB creates the temp directory itself on the first spill, but
+        # not its parents, and only fails once memory runs out.
+        Path(temp_directory).parent.mkdir(parents=True, exist_ok=True)
+        config["temp_directory"] = str(temp_directory)
     database = ":memory:" if path is None else str(path)
     log.info("DuckDB connect %r, config: %r", database, config)
     conn = duckdb.connect(database, config=config)
