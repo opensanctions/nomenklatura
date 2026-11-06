@@ -33,3 +33,12 @@ def address_prop_match(query: E, result: E, config: ScoringConfig) -> FtResult:
     if has_schema(query, result, "Address"):
         return FtResult(score=FNUL, detail=None)
     return _address_match(query, result)
+
+
+def address_match(query: E, result: E, config: ScoringConfig) -> FtResult:
+    """Two entities have similar stated addresses. Disabled by default; give
+    it a weight to accept an address match as primary evidence, e.g. when
+    screening by location."""
+    if has_schema(query, result, "Address"):
+        return FtResult(score=FNUL, detail=None)
+    return _address_match(query, result)
