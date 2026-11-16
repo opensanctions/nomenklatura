@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from collections.abc import Callable, Iterable
 from typing import Any, Optional
 
@@ -18,9 +19,13 @@ class LangText:
     Wikidata labels and descriptions exist in many languages. Keeping the
     language tag with the string lets `apply()` write the value to an entity
     property with the language attached, and lets callers pick a preferred
-    display language."""
+    display language. Two fields describe where a Wikidata text came from and
+    are not part of the value's identity: `variant` is set when only regional
+    codes (`en-us`, `pt-br`) carry it, never the language's plain code, and
+    `support` counts the language slots that carry the same text, across all
+    languages."""
 
-    __slots__ = ["lang", "original", "text"]
+    __slots__ = ["lang", "original", "support", "text", "variant"]
 
     def __init__(
         self,
@@ -40,6 +45,8 @@ class LangText:
             # Language is given, but it is not one supported by the FtM ecosystem:
             self.text = None
         self.original = original or self.text
+        self.support = 1
+        self.variant = False
 
     def apply(
         self,
@@ -66,13 +73,32 @@ class LangText:
 
     @classmethod
     def pick(cls, texts: Iterable["LangText"]) -> Optional["LangText"]:
+        """Pick the display text in the first preferred language that has one,
+        following Wikidata's own fallback: the language's plain-code text, then
+        the `mul` text, then its regional variants.
+
+        `mul` comes in for every language because Wikidata editors drop the
+        per-language labels that repeat it, which can leave a stray `en-us`
+        as the only English label. Within a tier, the text more language slots
+        agree on wins, then lexicographic order, so the pick never depends on
+        the iteration order of `texts`."""
+
+        def rank(lt: LangText) -> tuple[int, int, str]:
+            tier = 1 if lt.lang == MULTI_LANG else (2 if lt.variant else 0)
+            return (tier, -lt.support, lt.text or "")
+
+        texts = list(texts)
+        multi = [lt for lt in texts if lt.lang == MULTI_LANG]
         for lang in PREFERRED_WD_LANGS:
-            for lt in texts:
-                if lt.lang == lang:
-                    return lt
-        for lt in texts:
-            return lt
-        return None
+            candidates = [lt for lt in texts if lt.lang == lang]
+            if len(candidates) == 0:
+                continue
+            if lang != MULTI_LANG:
+                candidates.extend(multi)
+            return min(candidates, key=rank)
+        if len(texts) == 0:
+            return None
+        return min(texts, key=lambda lt: (rank(lt), lt.lang or ""))
 
     @classmethod
     def sorted(cls, texts: Iterable["LangText"]) -> list["LangText"]:
@@ -87,7 +113,8 @@ class LangText:
 
     @classmethod
     def from_dict(cls, data: dict[str, list[dict[str, str]]]) -> set["LangText"]:
-        langs: set[LangText] = set()
+        langs: dict[LangText, LangText] = {}
+        support: Counter[str] = Counter()
         for objs in data.values():
             if not isinstance(objs, list):
                 objs = [objs]
@@ -95,12 +122,22 @@ class LangText:
                 value = obj["value"]
                 if value is None:
                     continue
+                support[value] += 1
                 lang = obj["language"]
                 lt = LangText(value, lang, original=value)
                 if lt.text is None:
                     continue
-                langs.add(lt)
-        return langs
+                variant = "-" in lang
+                existing = langs.get(lt)
+                if existing is None:
+                    lt.variant = variant
+                    langs[lt] = lt
+                else:
+                    existing.variant = existing.variant and variant
+        for lt in langs:
+            if lt.original is not None:
+                lt.support = support[lt.original]
+        return set(langs)
 
     def __str__(self) -> str:
         if self.text is None:

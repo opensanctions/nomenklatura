@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import UTC
+from itertools import permutations
 
 import pytest
 import requests_mock
@@ -36,6 +37,89 @@ def test_lang_text():
 
     text2 = LangText("John Smith", "eng")
     assert text1 == text2
+
+
+def _labels(**values: str) -> dict[str, dict[str, str]]:
+    return {
+        code.replace("_", "-"): {"language": code.replace("_", "-"), "value": value}
+        for code, value in values.items()
+    }
+
+
+def test_lang_text_from_dict():
+    labels = LangText.from_dict(
+        _labels(
+            en="Sébastien Lecornu",
+            en_gb="Sébastien Lecornu",
+            fr="Sébastien Lecornu",
+            en_us="Michel Barnier",
+        )
+    )
+    found = {(lt.text, lt.lang): (lt.support, lt.variant) for lt in labels}
+    assert found == {
+        ("Sébastien Lecornu", "eng"): (3, False),
+        ("Sébastien Lecornu", "fra"): (3, False),
+        ("Michel Barnier", "eng"): (1, True),
+    }
+    counted = next(lt for lt in labels if lt.text == "Michel Barnier")
+    assert counted == LangText("Michel Barnier", "eng")
+    assert hash(counted) == hash(LangText("Michel Barnier", "eng"))
+
+
+def test_lang_text_pick_fallback():
+    labels = _labels(
+        en="Sébastien Lecornu",
+        fr="Sébastien Lecornu",
+        mul="Sébastien Lecornu",
+        en_us="Michel Barnier",
+    )
+    picked = LangText.pick(LangText.from_dict(labels))
+    assert picked is not None and picked.text == "Sébastien Lecornu"
+    assert picked.lang == "eng"
+
+    # Once the `en` label that repeats `mul` is removed, `mul` comes before the
+    # stray regional English label:
+    del labels["en"]
+    picked = LangText.pick(LangText.from_dict(labels))
+    assert picked is not None and picked.text == "Sébastien Lecornu"
+    assert picked.lang == "mul"
+
+
+def test_lang_text_pick_plain_over_mul():
+    labels = _labels(
+        en="Social Democratic Party of Germany",
+        mul="Sozialdemokratische Partei Deutschlands",
+        de="Sozialdemokratische Partei Deutschlands",
+        nl="Sozialdemokratische Partei Deutschlands",
+    )
+    picked = LangText.pick(LangText.from_dict(labels))
+    assert picked is not None and picked.text == "Social Democratic Party of Germany"
+
+
+def test_lang_text_pick_variants():
+    picked = LangText.pick(
+        LangText.from_dict(_labels(en_us="Zeta", en_gb="Alpha", en_ca="Zeta"))
+    )
+    assert picked is not None and picked.text == "Zeta"
+
+    picked = LangText.pick(LangText.from_dict(_labels(en_us="Zeta", en_gb="Alpha")))
+    assert picked is not None and picked.text == "Alpha"
+
+    assert LangText.pick([]) is None
+
+
+def test_lang_text_pick_order():
+    texts = list(
+        LangText.from_dict(
+            _labels(en_us="Michel Barnier", en_gb="Lecornu", en_ca="Lecornu", sv="X")
+        )
+    )
+    picks = {LangText.pick(order).text for order in permutations(texts)}
+    assert picks == {"Lecornu"}
+
+    texts = [LangText("Beta", "swe"), LangText("Alpha", "fin")]
+    picks = {LangText.pick(order).text for order in permutations(texts)}
+    assert picks == {"Alpha"}
 
 
 def test_model_apply():
