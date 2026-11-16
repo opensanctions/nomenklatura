@@ -217,6 +217,12 @@ post-hoc.
   `holding-vs-operating`, `vessel-vs-owner`); `notes` names the
   source pair file.
 
+- `homoglyphs` (4 rows) — Cyrillic look-alike letters in Latin
+  names. One case per branch of the fold-or-transliterate
+  decision: fold a mostly Latin token, transliterate a mostly
+  or fully Cyrillic token, and do not fold an all-Cyrillic
+  token that is made only of look-alikes.
+
 Planned additions:
 
 - `qarin_negatives` / `un_sc_positives` / `us_congress` —
