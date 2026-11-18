@@ -1122,3 +1122,303 @@ crusetra_entities,Company,Fabjan Prevozi d.o.o.,Fabjan Prevozi d. o. o.,true,,pu
 crusetra_entities,Company,Rupnik Transport in Logistika d.o.o.,"Rupnik Transport in Logistika, d. o. o.",true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Impresa Cecotti & Bront S.n.c.,Impresa Cecotti e Bront S.n.c.,true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Jadran Brodogradnja d.d.,"Jadran Brodogradnja, d. d.",true,,punctuation-spacing-legal-form,paires-entites-18.json
+us_orgs,Organization,Taylor Schools,Taylor Public Schools,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,Fairfield-Suisun Unified School District,Fairfield Susiun Unified School District,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,COMMUNITY BLOOD CENTER OF THE OZARKS,COMMUNITY BLOOD CENTER OF OZARKS,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,MISSISSIPPI STATE DEPARTMENT OF HEALTH,DEPARTMENT OF HEALTH MISSISSIPPI,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,TEXAS HEALTH HARRIS METHODIST HOSPITAL AZLE,TX HLTH HARRIS METHODIST AZLE,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,CHELSEA SCHOOL DISTRICT,CHELSEA SCHOOL DIST,true,STRONG,abbreviation-or-reordering,BEN; usac_form470 vs usac_invoices
+us_orgs,Company,YELLOWSTONE KELLYS INC,YELLOWSTONE KELLYS CATERING CO,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"SunCom Wireless Company, LLC","SunCom Wireless License Company, LLC",true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,PERIMETER BEHAVIORAL HOSPITAL OF DALLAS,PERIMETER BEHAVIORAL HOSPITAL OF DAL,true,STRONG,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,Bais Chaya Esther,Yeshiva Bais Chaya Esther,true,MEDIUM,abbreviation-or-reordering,BEN; usac_form470 vs usac_invoices
+us_orgs,Organization,CITY OF SIERRA VISTA,"SIERRA VISTA, CITY OF",true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,"TENNESSEE, STATE OF","TENNESSEE, STATE OF (TDOT)",true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"RIVERSIDE PROSTHETICS, INC.",RIVERSIDE ORTHEDICS & PROSTHETICS,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,HUTCHINSON HEALTH,HUTCHINSON HEALTH CARE,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"REIER BROADCASTING COMPANY, INC.",CHAPARRAL BROADCASTING COMPANY,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_lms vs fcc_lms
+us_orgs,Organization,Montgomery County,Montgomery County IA,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,Washington State Universit,Washington State University,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"LEHMAN-REEN FUNERAL HOME, INC.",LEHMAN & REEN FUNERAL HOME,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,RICOH BUSINESS SYSTEMS,RICOH BUSINES SYSTEMS,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"HOSPITAL HOSPITALITY HOUSE OF RICHMOND, INC.",MCV-VCU HOSPITAL HOSPITALITY HOUSE INC,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,POSITIVE ALTERNATIVE RADIO INC,POSITIVE ALTENATIVE RADIO INC,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_lms
+us_orgs,Company,"COLLECT'D, INC.","MYCOLLECTED, INC.",true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,SAINT JOSEPH MEDICAL CENTER,PRESENCE ST. JOSEPH MEDICAL CENTER,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"HARVEYS EXCAVATING, LLC",HARVEY'S PLUMBING AND EXCAVATING LLC,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,Standing Rock Telecommunications Inc,Standing Rock Telecom Inc.,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,VERDUN GROWTH AND DEVELOPMENT LLC,VERDUN GROWTH DEVELOPMENT,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,SAINT THOMAS RIVER PARK HOSPITAL,ASCENSION ST THOMAS RIVER PARK,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,CITY OF FARGO,"FARGO, CITY OF",true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,Albuquerque Bernalillo County Water Utility,Albuquerque Bernalillo County Water Util,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,GOVERNMENT MLO SUPPLIES USA INC,GOVERNMENT MLO SUPPLIES LLC,true,STRONG,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,ST ANTHONY HOSPITAL,SSM HEALTH ST ANTHONY HOSPITAL - OKC,true,MEDIUM,abbreviation-or-reordering,CCN; cms_cost_reports vs cms_cost_reports
+us_orgs,Organization,"Roanoke, County of",County of Roanoke,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,"ZIONS BANCORPORATION, NATIONAL ASSOCIATION /UT/","ZIONS BANCORPORATION, NATIONAL ASSOCIATION",true,STRONG,abbreviation-or-reordering,CIK; sec_tickers vs sec_xbrl_frames
+us_orgs,Organization,ST JOSEPHS COMMUNITY HOSPITAL WEST BEND,ST. JOSEPHS COMM. HOSPT.,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,COLUMBIA COUNTY WATER UTILITIES,Columbia County Water Utility,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,"Huntington, City of",CITY OF HUNTINGTON,true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"WEAVER BROS., INC.",WEAVER BROTHERS INC,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,SENIOR HOUSING AND RESOURCE MANAGEMENT (SHARE),SENIOR HOUSING & RESOURCE MANAGEMENT,true,STRONG,abbreviation-or-reordering,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"Rolta AdvizeX Technologies, LLC",Advizex Technologies LLC,true,MEDIUM,abbreviation-or-reordering,SPIN; usac_invoices vs usac_invoices
+us_orgs,Organization,TULSA SPINE & SPECIALTY HOSPITAL,TULSA SPINE HOSPITAL,true,MEDIUM,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,RAPID RESOURCE SOLUTIONS INC,RAPID RESOURCE SOLUTIONS,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,WOLFE TRUCK & EQUIPMENT SERVICE INC.,WOLFE TRUCK & EQUIPMENT SERVICE,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,Minnesota Mobile Telephone Company,"Minnesota Mobile Telephone Company, Inc.",true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,KAM TECHNOLOGIES,"KAM TECHNOLOGIES, LLC",true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,VANGUARD INDUSTRIES EAST,VANGUARD INDUSTRIES EAST INCORPORATED,true,STRONG,legal-form-or-punctuation,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"WINNINGHAM FOREST MANAGEMENT, INC",WINNINGHAM FOREST MANAGEMENT,true,STRONG,legal-form-or-punctuation,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,COLONNA'S SHIPYARD INC,"COLONNA'S SHIP YARD, INCORPORATED",true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"KPE CONSULTING ENGINEERS, INC",K P E CONSULTING ENGINEERS INC,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"BIGR.IO, LLC",BIGRIO LLC,true,STRONG,legal-form-or-punctuation,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"Senawave, LLC",Senawave,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,SIMPSON AND SIMPSON LLP,SIMPSON & SIMPSON,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,CUMBERLAND HOSPITAL LLC,CUMBERLAND HOSPITAL,true,STRONG,legal-form-or-punctuation,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,New Mexico Gas Company Inc.,New Mexico Gas Company,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"MILPOWER, INC.",MILPOWER,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,SERRANO CONSTRUCTION AND DEVELOPMENT CORP.,SERRANO CONSTRUCTION AND DEVE LOPMENT CORP.,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,BINSWANGER ENTERPRISES LLC,BINSWANGER ENTERPRISES,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,T & K COMMUNICATIONS,T & K COMMUNICATIONS INC,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"Vermont transco, LLC",VERMONT TRANSCO,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,ERGOGENESIS WORKPLACE SOLUTIONS LLC,ERGOGENESIS WORKPLACE SOLUTIONS,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"AIRCALL, INC.",AIR CALL INC,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"STAY SAFE SOLUTIONS, INC.",STAY SAFE SOLUTIONS,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"BI-STATE MASONRY, INC.",BI-STATE MASONRY,true,STRONG,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"MTA Communications, LLC",MTA Communications,true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,Desert Winds Wireless,"Desert Winds Wireless, LLC",true,MEDIUM,legal-form-or-punctuation,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,L3HARRIS INTERSTATE ELECTRONICS CORPORATION,L3 HARRIS INTERSTATE ELECTRONICS CORP,true,MEDIUM,legal-form-or-punctuation,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"CHANDLER COLLISION, LLC",CHANDLER COLLISION INC,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"CORPORATE ENVIRONMENTS OF GEORGIA, LLC",CORPORATE ENVIRONMENTS OF GEORGIA INC,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,ROBINSON GENERAL CONTRACTORS LLC,"ROBINSON GENERAL CONTRACTORS, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"ANSYS GOVERNMENT INITIATIVES, LLC",ANSYS GOVERNMENT INITIATIVES INC,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"ICF INCORPORATED, L.L.C.",ICF INCORPORATED,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"AIRTRONICS, LLC","AIRTRONICS, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,CDW GOVERNMENT LLC,"CDW GOVERNMENT, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,ORBITAL SCIENCES LLC,ORBITAL SCIENCES CORPORATION,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,ARES ENERGY LP,ARES ENERGY LLC,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"VALUESCOPE, LLC","VALUESCOPE, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"HARRELL-FISH, LLC","HARRELL-FISH, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"CLASS 1 AIR, LLC","CLASS 1 AIR, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,COVENTBRIDGE (USA) LLC,COVENTBRIDGE (USA) INC.,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"MITEK ANALYTICS, INC.",MITEK ANALYTICS LLC,true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"AIR SQUARED, LLC","AIR SQUARED, INC.",true,WEAK,legal-form-change,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,NOTED,NATIONAL ORGANIZATION FOR TECHNOLOGY EXPLORATION AND DELIVERY,true,WEAK,acronym,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,LMH,LAWRENCE MEMORIAL HOSPITAL,true,WEAK,acronym,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"HSG, LLC",HIGH SPEED GEAR INC,true,WEAK,acronym,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"CPCO, LLC","CONSOLIDATED PAVING & CONCRETE OPERATIONS, LLC",true,WEAK,acronym,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,MIDWEST ORTHOPEDIC SPECIALTY HOSPITAL,MOSH,true,WEAK,acronym,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"TEMPORAL GEO ANALYTICS, INC.",TGA INC,true,WEAK,acronym,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"WILLIS KNIGHTON MEDICAL CENTER, INC",WILLIS-KNIGHTON HEALTH SYSTEMS,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,BAPTIST HEALTH MEDICAL CENTER - JACKSONVILLE,BAPTIST MEDICAL CENTER,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"LUMIA HEALTH, INC.","STAT HEALTH INFORMATICS, INC.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,LINCOLN COUNTY GEORGIA BOARD OF COMMISSIONERS,"LINCOLN, COUNTY OF",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"BIOSKRYB GENOMICS, INC.","BIOSKRYB, INC.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,COLEGIO DR. ROQUE DIAZ,Charter School Camino al Exito,true,WEAK,renamed-or-reworded,BEN; usac_form470 vs usac_invoices
+us_orgs,Company,BIO-K9 INC.,BIOSCENT INC.,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"NATIVE-X, INC. ARCHAEOLOGICAL SERVICES","NATIVE-X, INC",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,NIS SOLUTIONS CORP. (USED IN VA BY: NIS CORP.),NIS SOLUTIONS CORP.,true,WEAK,renamed-or-reworded,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,EDWARDS WILDMAN PALMER LLP,EDWARDS ANGELL PALMER & DODGE LLP,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,LAKE HEALTH,LAKE HOSPITAL SYSTEM,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,HUMAN SERVICES BOARD SERVING NORTH CENTRAL HEALTH CARE FACILITY,NORTH CENTRAL HEALTH CARE,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,GE VERNOVA INTERNATIONAL LLC,"GENERAL ELECTRIC INTERNATIONAL, INC.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,RAFT LLC,THOUGHT OBJECT LLC,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"GOLD STANDARD DIAGNOSTICS HORSHAM, LLC","ABRAXIS, INC.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,LC INDUSTRIES INC,L C IND INCORPORATED (6307),true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,WITHAM HEALTH SERVICES,WITHAM MEMORIAL HOSPITAL,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,REDWIRE SPACE MISSIONS LLC,"OAKMAN AEROSPACE, LLC",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"WIWA, LLC",WIWA WILHELM WAGNER LP,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,PERATON LABS INC,PERSPECTA LABS INC.,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,WELLPATH LLC,"CORRECT CARE SOLUTIONS, LLC",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,JMM LLLP,HOLIDAY INN HOTEL & SUITES DOWNTOWN,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"POTOMAC RIVER GROUP, LLC",POTOMAC RIVER GROUP LIMITED LIABILITY COMPANY,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,HALEON US LP,"GLAXOSMITHKLINE CONSUMER HEALTHCARE, L.P.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"Olema Oncology, Inc.","OLEMA PHARMACEUTICALS, INC.",true,WEAK,renamed-or-reworded,CIK; sec_tickers vs sec_xbrl_frames
+us_orgs,Organization,KAISER FOUNDATION HOSPITAL - ORANGE COUNTY - ANAHEIM,KFH - OC-ANAHEIM,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,TFM 22 LLC,"SOLID ROCK, 119, INC.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,STATE OF IOWA DEPARTMENT OF COMMERCE ALCHOHOLIC BEVERAGES DIVISION,"COMMERCE, IOWA DEPARTMENT OF",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,ST IGNATIUS ELEMENTARY SCHOOL,St. Ignatius of Loyola School - Los Angeles,true,WEAK,renamed-or-reworded,BEN; usac_invoices vs usac_invoices
+us_orgs,Organization,COREWELL HEALTH WATERVLIET HOSPITAL,LAKELAND COMMUNITY HOSP WATERVLIET,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,COX MEDICAL CENTERS,COXHEALTH,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,New Mexico Statewide Education Network,New Mexico Department of Information Technology (State Education Network),true,WEAK,renamed-or-reworded,BEN; usac_invoices vs usac_invoices
+us_orgs,Organization,UCLA WEST VALLEY MEDICAL CENTER,WEST HILLS HOSPITAL,true,WEAK,renamed-or-reworded,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,"1ST CHOICE, LLC",1ST CHOICE STAFFING AGENCY,true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"HILLTOP NURSING & REHABILITATION CENTER, L.L.C","COLONIAL MANOR PROPERTIES, L.L.C.",true,WEAK,renamed-or-reworded,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,MRL MATERIALS RESOURCES LLC,MRL,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,ANHINGA CO,BEARVAULT,true,WEAK,dba-alias,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,ASSOCIATED MILK PRODUCERS INC,AMPI,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,ENVIRONMENTAL CHEMICAL CORPORATION (5360),ECC REMEDIATION SERVICES; ECC INTERNATIONAL LIMITED LIABILIT,true,WEAK,dba-alias,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"INSPARISK, LLC",CITYSPEC,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,"UNIVERSITY OF CALIFORNIA, SAN FRANCISCO",UCSF MEDICAL CENTER ADMINISTRATION,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,HRB HOTELS INC,COMFORT INN UNIVERSITY,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"DATASAVERS OF JACKSONVILLE, INC.",DATASAVERS,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"NORDAM GROUP LLC, THE",NORDAM REPAIR DIVISION,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"BULOW BIOTECH PROSTHETICS, LLC",FORMOTION CLINIC,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"BEN FITZGERALD REAL ESTATE SERVICES, L.L.C.",ROSEMARK,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,PERSONAL GROUP INCORPORATED,PROFEESIONAL OUTSOURCING,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,LEADS CONSULTING COMPANY,THE LEADS CORPORATION,true,WEAK,dba-alias,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,HDT EXPEDITIONARY SYSTEMS INC,BLADE,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"GENERAL ATOMICS AERONAUTICAL SYSTEMS, INC.",GA-ASI,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"VEHICLE CONTROL TECHNOLOGIES, INC.",VCT,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,MEDIACOM LLC,MEDIACOM COMMUNICATION CORPORA,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,WORLD WIDE TECHNOLOGY INCORPORATED,WWT,true,WEAK,dba-alias,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Organization,"MEDICAL UNIVERSITY OF SOUTH CAROLINA, THE",HOSPITAL PATIENT ACCOUNTING,true,WEAK,dba-alias,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,LESLIE REGIS INC,ATLANTA CARGO TRANSPORT,true,WEAK,dba-alias,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,City of Grand Prairie,"GRAND PRAIRIE, CITY OF",true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Organization,OZARKS COMMUNITY HOSPITAL OF GRAVETTE,OZARKS COMMUNITY HOSPITAL OF GRAVETT,true,STRONG,abbreviation-or-reordering,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,PRE-EMPLOY.COM INC,PRE EMPLOY,true,MEDIUM,abbreviation-or-reordering,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"REWORLD ALEXANDRIA/ARLINGTON, LLC","COVANTA ALEXANDRIA/ARLINGTON, INC.",true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,RESEARCH AND DEVELOPMENT SOLUT,RESEARCH & DEVELOPMENT SOLUTIONS INC,true,STRONG,abbreviation-or-reordering,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Organization,INCREDIBLE SUPPLY & LOGISTIC,INCREDIBLE SUPPLY & LOGISTICS,true,STRONG,abbreviation-or-reordering,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,"Arctic Slope Telephone Assoc Coop., Inc.","ARCTIC SLOPE TELEPHONE ASSOCIATION COOPERATIVE, INC.",true,MEDIUM,abbreviation-or-reordering,FRN; fcc_uls vs fcc_uls
+us_orgs,Company,"DAKOTA REFRIGERATION, INC",DRI REFRIGERATION,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,"STRICTLY TECHNOLOGY, LLC",STRICTLY TECH,true,MEDIUM,abbreviation-or-reordering,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,PH HILLCREST HOSPITAL,HILLCREST HOSPITAL,false,MEDIUM,near-name-different-entity,CCN; cms_cost_reports vs cms_hospitals
+us_orgs,Company,"R.A. BURCH CONSTRUCTION CO., INC.",BURCH CONSTRUCTION CO INC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_subawards
+us_orgs,Organization,THE ASSOCIATION OF ILLINOIS ELECTRIC COOPERATIVES,IOWA ASSOCIATION OF ELECTRIC COOPERATIVES,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CJW JOINT VENTURE,ZZ-CJW JOINT VENTURE,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CCS KING GEORGE 2 LLC,CCS KING GEORGE LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"DAX/GBAB JV 4, LLC","DAX/GBAB JV 3, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,DRUMMOND SCHOOL DISTRICT 85 INC,DRUMMOND SCHOOL DISTRICT,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,AKIMA CENTERRA INTEGRATED SERVICES LLC,"CENTERRA INTEGRATED SERVICES, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,SCHOOL DISTRICT 1,SCHOOL DISTRICT #7J,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,DOUBLE D HAULING LLC,DOUBLE A HAULING INC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,PADRON PARTNERS II LLC,PADRON PARTNERS,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,SOUTH AUSTIN MEDICAL CENTER,NORTH AUSTIN MEDICAL CENTER,false,MEDIUM,near-name-different-entity,CCN; cms_cost_reports vs cms_hospitals
+us_orgs,Organization,HAZEN SCHOOL DISTRICT 2,HAZEN SCHOOL DISTRICT,false,WEAK,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CLT SOLUTIONS LLC,CLT SOLUTIONS 2 LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CITY OF FOLSOM PD,CITY OF FOLSOM,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,HARRISON COMMUNITY HOSPITAL,HARRISON COUNTY HOSPITAL,false,MEDIUM,near-name-different-entity,CCN; cms_hospitals vs cms_hospitals
+us_orgs,Company,"Cantor Equity Partners I, Inc.","Cantor Equity Partners V, Inc.",false,MEDIUM,near-name-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Company,"INSITUFORM TECHNOLOGIES USA, LLC","INSITUFORM TECHNOLOGIES, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,WOODLAWN HOSPITAL,"WOODLAWN HOSPITALITY, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CCS KING GEORGE 3 LLC,CCS KING GEORGE 2 LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"DAX/GBAB JV 4, LLC",DAX/GBAB JV LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"TIKIGAQ CONSTRUCTORS, LLC","TIKIGAQ CONSTRUCTION, LLC",false,MEDIUM,near-name-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Company,"TAURIAN CONSULTING, LLC",TAURIAN CONSULTING 2 LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,COUNTY OF MONROE,"A.H. OF MONROE COUNTY, INC.",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,BAYLOR SCOTT & WHITE MEDICAL CENTER - FRISCO,BAYLOR SCOTT AND WHITE MEDICAL CENTER FRISCO AT PG,false,MEDIUM,near-name-different-entity,CCN; cms_hospitals vs cms_hospitals
+us_orgs,Company,"CUSHMAN & WAKEFIELD U.S., INC","CUSHMAN & WAKEFIELD, INC.",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,DAX/GBAB JV LLC,"DAX/GBAB JV 3, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,RJ KIRKLAND CONSTRUCTION CO INC,"S KIRKLAND CONSTRUCTION, INC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CLIENT SOLUTION ARCHITECTS (CSA),CLIENT SOLUTION ARCHITECTS LLC,false,MEDIUM,near-name-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Company,RE-VOLV,"E-VOLV, INC.",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"BLACKROCK MUNIYIELD MICHIGAN QUALITY FUND, INC.","BLACKROCK MUNIYIELD QUALITY FUND III, INC.",false,MEDIUM,near-name-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Organization,MARLOW SCHOOL DISTRICT 3,MARLOW SCHOOL DISTRICT,false,WEAK,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CITY OF LEAVENWORTH,COUNTY OF LEAVENWORTH,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,NEW RIVER VALLEY REGIONAL COMMISSION,RIVER VALLEY REGIONAL COMMISSION,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"ASHFORD LEEBCOR ENTERPRISES III, LLC",ASHFORD LEEBCOR ENTERPRISES LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CHIMNEY ROCK VILLAGE,CHIMNEY ROCK VILLA,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,FAYETTEVILLE AR VA MEDICAL CENTER,FAYETTEVILLE NC VA MEDICAL CENTER,false,MEDIUM,near-name-different-entity,CCN; cms_hospitals vs cms_hospitals
+us_orgs,Company,CCS KING GEORGE 3 LLC,CCS KING GEORGE LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,REGIONAL SCHOOL DISTRICT NO 1,REGIONAL SCHOOL DISTRICT 11,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"Aimei Health Technology II Co., Ltd.","Aimei Health Technology Co., Ltd.",false,MEDIUM,near-name-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Company,"RMS NICKLAUS JV, LLC",RMS NICKLAUS JV II LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,EDUCATIONAL SERVICE UNIT 13,EDUCATIONAL SERVICE UNIT,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,D. Boral ARC Acquisition I Corp.,D. Boral Acquisition I Corp.,false,MEDIUM,near-name-different-entity,CIK; sec_xbrl_frames vs sec_tickers
+us_orgs,Company,"ANEON BRILLIENT, LLC","ANEON BRILLIENT II, LLC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,GRAHAM REGIONAL MEDICAL CENTER,MT. GRAHAM REGIONAL MEDICAL CENTER,false,WEAK,near-name-different-entity,CCN; cms_cost_reports vs cms_hospitals
+us_orgs,Company,YORK-BRAWLEY JV LLC,YORK-BRAWLEY II JV LLC,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CITY OF LEAVENWORTH,CITY OF LEAVENWORTH KS,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,YREKA UNION SCHOOL DISTRICT,YREKA UNION HIGH SCHOOL DISTRICT,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,DRUMMOND AREA SCHOOL DISTRICT,DRUMMOND SCHOOL DISTRICT,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,CITY OF PORT RICHEY,CITY OF NEW PORT RICHEY,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,SALEM VA MEDICAL CENTER,SALEM MEDICAL CENTER,false,MEDIUM,near-name-different-entity,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Organization,COUNTY OF FERGUS SCHOOL DISTRICT 44,FERGUS COUNTY SCHOOL DISTRICT NO. 84,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,BOSSIER PARISH FIRE DISTRICT #7,NE BOSSIER PARISH FIRE DISTRICT 5,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,Fidelity Private Credit Company LLC,Fidelity Private Credit Fund,false,MEDIUM,near-name-different-entity,CIK; sec_xbrl_frames vs sec_xbrl_frames
+us_orgs,Company,"BECKLEY, CITY OF WV INC",CITY OF BECKLEY,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CS DIAGNOSTICS CORP.,"Co-Diagnostics, Inc.",false,MEDIUM,near-name-different-entity,CIK; sec_xbrl_frames vs sec_tickers
+us_orgs,Company,"MARCON INTERNATIONAL, INC.","MARCON INTERNATIONAL USA, INC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"SURVEILLANCE SECURE, INC.","SURVEILLANCE SECURITY, INC",false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"Morgan Stanley Emerging Markets Domestic Debt Fund, Inc.",MORGAN STANLEY EMERGING MARKETS DEBT FUND INC,false,MEDIUM,near-name-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Organization,FPM-AECOM JV2,FPM-AECOM JV1,false,MEDIUM,near-name-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CROSSROADS PLAZA INC.,"CROSSROADS PLAZA, L.L.C.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ny vs state_registry_ny
+us_orgs,Company,Heavenly Properties LLC LTD,Heavenly Properties LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,"SALEM CONSTRUCTION, L.L.C.","SALEM CONSTRUCTION COMPANY, INC.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"NORTHEAST RESOURCES, LLC",NORTHEAST RESOURCES CORPORATION,false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,Wallshield Security,Wallshield Security LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,Forward Motion LLC,"Forward Motion, Ltd. LC",false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,MYLAN INSTITUTIONAL INC.,MYLAN INSTITUTIONAL LLC,false,WEAK,legal-form-only,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,Lending Automator LLC,"Lending Automator, Inc.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"J & E, INC.",J & E LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"COUNTRY LIFE PROPERTIES, INC.","COUNTRY LIFE PROPERTIES, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,SHABAZZ & ASSOCIATES - GLOBAL SUPREME - INC.,"SHABAZZ & ASSOCIATES - GLOBAL SUPREME, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_ny vs state_registry_ny
+us_orgs,Company,H&R LLC,H & R Inc,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,ARTISTIC FLOORS INC,"ARTISTIC FLOORS, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"HEMLOCK MANOR, LLC",HEMLOCK MANOR INC.,false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"PAGE SOUTHERLAND PAGE, L.L.P.","PAGE SOUTHERLAND PAGE, INC.",false,WEAK,legal-form-only,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"RONALD E. WYGONIK, DDS, LLC","RONALD E. WYGONIK, D.D.S.,P.C.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"Your Number Cruncher, LLC","Your Number Cruncher, Inc.",false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,Good Vibe LLC,The Good Vibe Company,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,"THE CROSSROADS COMPANY, L.P.","CROSSROADS, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_ny vs state_registry_ny
+us_orgs,Company,"LUTZ TREE SERVICE, INC.",LUTZ TREE SERVICE LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"HOWARD PROPERTIES, LLC","HOWARD PROPERTIES, LTD.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ny vs state_registry_ny
+us_orgs,Company,RIVERSIDE REALTY CORP.,"RIVERSIDE REALTY, LTD.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,M & F LLC,"M & F, INC.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,Mile High Restoration Inc,"MILE HIGH RESTORATION, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,"UPLIFT, LLC","UPLIFT, INC.",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"Colorado Management Solutions, Inc",Colorado Management Solutions LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,S.E.L. REALTY CORP.,SEL REALTY LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_ny vs state_registry_ny
+us_orgs,Company,WINWAY LLC,WINWAY INC,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,SILVER CONSTRUCTION CORPORATION,"SILVER CONSTRUCTION, LLC",false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"HORIZON ROOFING, INC.",Horizon Roofing,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,Wilson Construction Ltd.,Wilson Construction LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,"Brush Creek Partners, LLC","Brush Creek Partners, LP",false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,Tucker Consulting LLC,Tucker Consulting Inc,false,WEAK,legal-form-only,STATE_FILING; state_registry_co vs state_registry_co
+us_orgs,Company,STILL RIVER FARM LLP,STILL RIVER FARM LLC,false,WEAK,legal-form-only,STATE_FILING; state_registry_ct vs state_registry_ct
+us_orgs,Company,"MLU SERVICES, LLC","MLU SERVICES, INC.",false,WEAK,legal-form-only,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"PROJECT SOLUTIONS GROUP, INC.","PROJECT SERVICES GROUP, LLC",false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,HOUSING AUTHORITY OF THE CITY OF SOUTH WEST CITY,"NORTH SOUTH INSTITUTE, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,Virtus Diversified Income & Convertible Fund,Virtus Convertible & Income Fund,false,MEDIUM,shared-token-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Company,XC CONTAINER LLC,"W&K CONTAINER, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,FRONTLINE SERVICES INC,FRONTLINE MEDICAL SERVICES LLC,false,MEDIUM,shared-token-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Company,CALUMET DIVERSIFIED MEATS INC.,CALUMET HOUSING COMMISSION,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,BUFFALO AMHERST LODGING VENTURES LLC,AMHERST CENTRAL SCHOOL DISTRICT 1,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"TRANSCRIPTIONS, INC.",CONDUIT TRANSCRIPTIONS LLC,false,MEDIUM,shared-token-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Organization,CENTURA HEALTH-ST ANTHONY NORTH HEALTH CAMPUS,CENTURA HEALTH-ST ANTHONY HOSPITAL,false,MEDIUM,shared-token-different-entity,CCN; cms_hospitals vs cms_hospitals
+us_orgs,Company,CHARTWELL GOVERNMENTAL & SPECIALTY RX LLC,CHARTWELL RX LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,GORHAM TOWNSHIP,TOWN OF GORHAM,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,MEMPHIS AND SHELBY COUNTY COMMUNITY REDEVELOPMENT AGENCY,COUNTY OF SHELBY,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,ERC ACQUISITION INC,ERC ENVIRONMENTAL & CONSTRUCTION SERVICES INC,false,STRONG,shared-token-different-entity,UEI; fpds_contracts vs fpds_contracts
+us_orgs,Company,S3 DVBE,PIONEER DVBE LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,TECHNOLOGIES LINK BUSINESS AND SERVICES CORPORATION,WORLD LINK INC.,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,DARK BLUE USA LLC,DARK HORSE ENTERPRISES INC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,WOMEN'S INITIATIVE FOR SELF-EMPOWERMENT,"JAMES SELF, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Organization,LAKE DISTRICT HOSPITAL,LAKE AREA MEDICAL CENTER,false,MEDIUM,shared-token-different-entity,CCN; cms_hospitals vs cms_cost_reports
+us_orgs,Company,PROCESS OPTIMIZATION CORPORATION,"OPTIMIZATION TECHNOLOGIES, INC.",false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"VILLAGE FEED HOME AND GARDEN, INC","TEMPLE FEED & SUPPLY, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,USGP DALLAS DEA LP,DEA EDUCATION FOUNDATION (THE),false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,BUTLER COUNTY MENTAL HEALTH & ADDICTION RECOVERY SERVICES BOARD,ALASKA ADDICTION REHABILITATION SERVICES,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,MOUNTAIN TRUCKING LLC,N8 TRUCKING LLC,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs fpds_contracts
+us_orgs,Company,CALUMET COLLEGE OF SAINT JOSEPH INC,CALUMET HOUSING COMMISSION,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CEVA AIR & OCEAN USA INC,CEVA FREIGHT LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"TIC AEROSPACE, INC.",MAR-TIC JV,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,KFH - SACRAMENTO,KFH - REDWOOD CITY,false,MEDIUM,shared-token-different-entity,CCN; cms_cost_reports vs cms_cost_reports
+us_orgs,Organization,CYNTERGY-SLA JV,TIGERBRAIN/CYNTERGY AEC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"SILVER MOON PROPERTIES, LLC.","PRAIRIE MOON NURSERY, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,ENERGY SERVICES COALITION CORP,"THE COALITION, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,DIAMOND BACK FORESTRY LLC,"BACK BAY MISSION, INCORPORATED",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"RiverNorth Flexible Municipal Income Fund, Inc.",PIMCO Flexible Municipal Income Fund,false,MEDIUM,shared-token-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Company,EUGENE SECURITY GROUP LLC,CITY OF EUGENE,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"SILVER SHIPS, INC","OCEAN SHIPS, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"WIREGRASS ECOLOGICAL ASSOCIATES, LLC",WIREGRASS REHABILITATION CENTER INC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,BOUNDLESS PERFORMANCE LLC,BOUNDLESS ASSISTIVE TECHNOLOGY LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CONTEMPORARY DAYTON INC,CONTEMPORARY DANCE ARTS INC,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"KENNEY ORTHOPEDICS OF SEYMOUR, LLC","KENNEY ORTHOPEDIC, LLC",false,MEDIUM,shared-token-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Organization,CHESAPEAKE REDEVELOPMENT & HOUSING AUTHO,WAYNESBORO REDEVELOPMENT & HOUSING AUTHO,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"BOBBY DODD INSTITUTE, INC.",DODD CITY ISD,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"SCOTT - ROBERTS AND ASSOCIATES, LLC",ROBERTS ENVIRONMENTAL CONTROL CORP,false,STRONG,shared-token-different-entity,UEI; fpds_contracts vs usaspending_recipients
+us_orgs,Company,"VINYL TECHNOLOGY, LLC",VINYL TECHNOLOGIES INC,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,VILLAGE OF SOUTHAMPTON,TOWN OF SOUTHAMPTON,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"NORTH FORREST VOLUNTEER FIRE DEPARTMENT, INC",AMBULANCE SERVICES OF FORREST CITY LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,JBW FEDITC II JV LLC,JBW FEDITC JV LLC,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,NORTON COUNTY HOSPITAL,NORTON CLARK HOSPITAL,false,MEDIUM,shared-token-different-entity,CCN; cms_hospitals vs cms_hospitals
+us_orgs,Company,"RMS NICKLAUS JV, LLC","CBS NICKLAUS JV, LLC",false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,ROME HOSPITALITY GROUP LLC,CITY OF ROME,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,CITIZENS FINANCIAL GROUP INC/RI,CITIZENS FINANCIAL SERVICES INC,false,MEDIUM,shared-token-different-entity,CIK; sec_tickers vs sec_tickers
+us_orgs,Company,"FEEDING FLORIDA, INC.",FEEDING LOUISIANA,false,MEDIUM,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,HELIOS-TT 8(A) JV,"HELIOS REMOTE SENSING SYSTEMS, INC.",false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"MASON HARRIMAN GROUP, INC.",CITY OF HARRIMAN,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Organization,VILLAGE OF BARAGA MICHIGAN,BARAGA COUNTY,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"THE NOEL POINTER FOUNDATION, INC",NOEL FIRE LLC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
+us_orgs,Company,"CAROLINAS GEOTECHNICAL GROUP, PLLC",GEOTECHNICAL ENVIRONMENTAL & TESTING SOLUTIONS INC,false,STRONG,shared-token-different-entity,UEI; usaspending_recipients vs usaspending_recipients
