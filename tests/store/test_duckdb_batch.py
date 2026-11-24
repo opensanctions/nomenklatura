@@ -362,6 +362,60 @@ def test_duckdb_batch_store_prefetch_hub_guard(
     assert hubs > 0
 
 
+def test_duckdb_batch_store_inverted_streams_hub_owners(
+    monkeypatch: pytest.MonkeyPatch,
+    test_dataset: Dataset,
+    donations_json: list[dict[str, Any]],
+    resolver: Resolver[Entity],
+) -> None:
+    # Owners that weren't prefetched are streamed one entity at a time from an
+    # ordered query, rather than collected into one IN-list lookup that holds
+    # every owner in memory at once.
+    conn = duckdb.connect()
+    _load_statements(conn, test_dataset, donations_json)
+    store = DuckDBBatchStore(test_dataset, resolver, conn, "statements")
+    reference = store.default_view()
+
+    # Build up expected linked ID pairs
+    expected: dict[str, list[tuple[str, str, int]]] = {}
+    for entity in reference.entities(): # no prefetch
+        assert entity.id is not None
+        expected_owners = conn.execute(
+            f"SELECT DISTINCT canonical_id FROM {reference.stmt_table} "
+            "WHERE value_canonical_id = ?",
+            [entity.id],
+        ).fetchall()
+        found = []
+        for owner in reference.get_entities(row[0] for row in expected_owners):
+            for prop, value in owner.itervalues():
+                if value == entity.id and prop.reverse is not None:
+                    assert owner.id is not None
+                    found.append(
+                        (prop.reverse.name, owner.id, len(list(owner.statements)))
+                    )
+        expected[entity.id] = sorted(found)
+
+    view = store.default_view()
+
+    # Make sure we're streaming rather than fetching all at once
+    def no_bulk_lookup(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("uncached owners must be streamed")
+    monkeypatch.setattr(view, "get_entities", no_bulk_lookup)
+
+    streamed = 0
+    # Assert that streaming get_inverted returns the same IDs and number of statements
+    # as get_entities for the relevant IDs.
+    for id, expected_owners in expected.items():
+        inverted = []
+        for prop, owner in view.get_inverted(id):
+            assert owner.id is not None
+            statement_count = len(list(owner.statements))
+            inverted.append((prop.name, owner.id, statement_count))
+        assert sorted(inverted) == expected_owners
+        streamed += len(inverted)
+    assert streamed > 100
+
+
 def test_duckdb_batch_store_prefetch_update_invalidates(
     test_dataset: Dataset, resolver: Resolver[Entity]
 ) -> None:
@@ -415,8 +469,7 @@ def test_duckdb_batch_store_update_rekeys_references(
     assert acme is not None
     assert acme.get("parent") == [merged_id.id]
     row = conn.execute(
-        f"SELECT value, value_canonical_id FROM {view.stmt_table} "
-        "WHERE prop = 'parent'"
+        f"SELECT value, value_canonical_id FROM {view.stmt_table} WHERE prop = 'parent'"
     ).fetchone()
     assert row == ("john-doe-2", merged_id.id)
 
@@ -448,8 +501,7 @@ def test_duckdb_batch_store_update_rekeys_references_after_split(
     assert list(view.get_inverted("john-doe")) == []
     assert [e.id for _, e in view.get_inverted("john-doe-2")] == ["acme"]
     row = conn.execute(
-        f"SELECT value, value_canonical_id FROM {view.stmt_table} "
-        "WHERE prop = 'parent'"
+        f"SELECT value, value_canonical_id FROM {view.stmt_table} WHERE prop = 'parent'"
     ).fetchone()
     assert row == ("john-doe-2", "john-doe-2")
 
