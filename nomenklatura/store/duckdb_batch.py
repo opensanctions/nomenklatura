@@ -301,24 +301,33 @@ class DuckDBBatchView(View[DS, SE]):
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
         owners: Iterable[str] | None = self._inverted.get(id)
-        if owners is None:
-            lazy: set[str] = set()
-            cursor = self.store.conn.cursor()
-            try:
-                result = cursor.execute(
-                    f"SELECT DISTINCT s.canonical_id FROM {self.stmt_table} s "
-                    f"WHERE s.value_canonical_id = ?",
-                    [id],
-                )
-                while rows := result.fetchmany(FETCH_SIZE):
-                    lazy.update(row[0] for row in rows)
-            finally:
-                cursor.close()
-            owners = lazy
-        for entity in self.get_entities(owners):
+        entities = (
+            self._stream_owners(id) if owners is None else self.get_entities(owners)
+        )
+        for entity in entities:
             for prop, value in entity.itervalues():
                 if value == id and prop.reverse is not None:
                     yield prop.reverse, entity
+
+    def _stream_owners(self, id: str) -> Generator[SE, None, None]:
+        """Yield the entities referencing `id`, assembled one at a time.
+
+        Used for ids whose owners weren't prefetched, which includes hubs with
+        more than INVERTED_CAP owners. A hub can be referenced by hundreds of
+        thousands of entities, too many to hold in memory at once, so they're
+        streamed from one query ordered by canonical_id."""
+        cursor = self.store.conn.cursor()
+        try:
+            result = cursor.execute(
+                f"SELECT {STMT_COLUMNS}, s.canonical_id FROM {self.stmt_table} s "
+                f"WHERE s.canonical_id IN (SELECT o.canonical_id "
+                f"FROM {self.stmt_table} o WHERE o.value_canonical_id = ?) "
+                f"ORDER BY s.canonical_id",
+                [id],
+            )
+            yield from self._assemble_ordered(result)
+        finally:
+            cursor.close()
 
     def _bulk_inverted(self, ids: list[str]) -> set[str]:
         """Cache the inverted adjacency of a batch of ids in one query.
@@ -433,26 +442,35 @@ class DuckDBBatchView(View[DS, SE]):
         cursor = self.store.conn.cursor()
         try:
             result = cursor.execute(query, params)
-            statements: list[Statement] = []
-            previous: str | None = None
-            while rows := result.fetchmany(FETCH_SIZE):
-                for row in rows:
-                    canonical_id = row[-1]
-                    if previous is not None and canonical_id != previous:
-                        entity = self.store.assemble(statements)
-                        if entity is not None:
-                            if (
-                                include_schemata is None
-                                or entity.schema in include_schemata
-                            ):
-                                yield entity
-                        statements = []
-                    previous = canonical_id
-                    statements.append(_statement(row[:-1], canonical_id))
-            if len(statements) > 0:
-                entity = self.store.assemble(statements)
-                if entity is not None:
-                    if include_schemata is None or entity.schema in include_schemata:
-                        yield entity
+            yield from self._assemble_ordered(result, include_schemata)
         finally:
             cursor.close()
+
+    def _assemble_ordered(
+        self,
+        result: duckdb.DuckDBPyConnection,
+        include_schemata: list[Schema] | None = None,
+    ) -> Generator[SE, None, None]:
+        """Assemble entities from statement rows ordered by canonical_id, the
+        last column, holding only one entity's statements at a time."""
+        statements: list[Statement] = []
+        previous: str | None = None
+        while rows := result.fetchmany(FETCH_SIZE):
+            for row in rows:
+                canonical_id = row[-1]
+                if previous is not None and canonical_id != previous:
+                    entity = self.store.assemble(statements)
+                    if entity is not None:
+                        if (
+                            include_schemata is None
+                            or entity.schema in include_schemata
+                        ):
+                            yield entity
+                    statements = []
+                previous = canonical_id
+                statements.append(_statement(row[:-1], canonical_id))
+        if len(statements) > 0:
+            entity = self.store.assemble(statements)
+            if entity is not None:
+                if include_schemata is None or entity.schema in include_schemata:
+                    yield entity

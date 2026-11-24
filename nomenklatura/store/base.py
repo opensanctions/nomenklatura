@@ -141,6 +141,16 @@ class View(Generic[DS, SE]):
                 yield entity
 
     def get_inverted(self, id: str) -> Generator[tuple[Property, SE], None, None]:
+        """Yield the entities that reference `id`.
+
+        Each entity with an entity-typed property whose value is `id` is
+        yielded as `(prop.reverse, entity)`, the reverse property being how the
+        reference reads from the side of `id`: for a Security whose `issuer` is
+        `id`, that's `(Organization.securities, security)`. An entity that
+        references `id` through several properties is yielded once for each.
+
+        Returns a generator so that massively-connected IDs don't load all referring
+        entities at once."""
         raise NotImplementedError
 
     def get_adjacent(
