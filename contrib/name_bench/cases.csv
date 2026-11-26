@@ -1122,3 +1122,61 @@ crusetra_entities,Company,Fabjan Prevozi d.o.o.,Fabjan Prevozi d. o. o.,true,,pu
 crusetra_entities,Company,Rupnik Transport in Logistika d.o.o.,"Rupnik Transport in Logistika, d. o. o.",true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Impresa Cecotti & Bront S.n.c.,Impresa Cecotti e Bront S.n.c.,true,,punctuation-spacing-legal-form,paires-entites-18.json
 crusetra_entities,Company,Jadran Brodogradnja d.d.,"Jadran Brodogradnja, d. d.",true,,punctuation-spacing-legal-form,paires-entites-18.json
+asia_mena_people,Person,Mohd Rizal Hassan,Muhammad Rizal Hassan,true,MEDIUM,muhammad-variant,Malaysian Mohd abbreviation of Muhammad
+asia_mena_people,Person,Md. Rafiqul Islam,Mohammad Rafiqul Islam,true,MEDIUM,muhammad-variant,Bangladeshi Md. abbreviation
+asia_mena_people,Person,Mohammad Tariq Qureshi,Muhammed Tariq Qureshi,true,MEDIUM,muhammad-variant,Mohammad vs Muhammed spelling
+asia_mena_people,Person,Mohamed Abdelrahman Salem,Muhammad Abdul Rahman Salem,true,MEDIUM,muhammad-variant,Mohamed/Muhammad plus Abdelrahman vs Abdul Rahman spacing
+asia_mena_people,Person,Mohamed Hassan,Mahmoud Hassan,false,MEDIUM,muhammad-variant,Mahmoud is a distinct given name
+asia_mena_people,Person,Mohammed Ali Khan,Mohammed Asif Khan,false,MEDIUM,muhammad-variant,only Mohammed + Khan shared
+asia_mena_people,Person,Ahmad Faizal bin Abdullah,Ahmad Faizal Abdullah,true,STRONG,malay-patronymic,bin dropped
+asia_mena_people,Person,Nurul Aini binti Ismail,Nurul Aini bt. Ismail,true,MEDIUM,malay-patronymic,binti vs bt.
+asia_mena_people,Person,Mohd Hafiz b. Ramli,Mohd Hafiz bin Ramli,true,STRONG,malay-patronymic,b. vs bin
+asia_mena_people,Person,Siti Aishah binti Omar,Siti Aishah Omar,true,MEDIUM,malay-patronymic,binti dropped
+asia_mena_people,Person,Siti Aishah binti Omar,Siti Aminah binti Omar,false,MEDIUM,malay-patronymic,different given name same father (siblings)
+asia_mena_people,Person,Khalid al-Harbi,Khalid Alharbi,true,MEDIUM,arabic-article,al- joined to surname
+asia_mena_people,Person,Omar el-Sayed,Omar Al Sayed,true,MEDIUM,arabic-article,Egyptian el- vs Al
+asia_mena_people,Person,Yousef Abdullah Al Qahtani,Yousef Abdullah Qahtani,true,MEDIUM,arabic-article,article dropped
+asia_mena_people,Person,Faisal ibn Saad al-Mutairi,Faisal bin Saad Al Mutairi,true,MEDIUM,arabic-article,ibn vs bin and al- vs Al
+asia_mena_people,Person,Abdulaziz al-Rashid,Abdul Aziz Al-Rashed,true,MEDIUM,arabic-article,Abdulaziz spacing and Rashid/Rashed
+asia_mena_people,Person,Nasser al-Otaibi,Nasser al-Ghamdi,false,MEDIUM,arabic-article,different family name after al-
+asia_mena_people,Person,محمد عبد الله,Mohammed Abdullah,true,MEDIUM,arabic-script,Arabic script vs Latin
+asia_mena_people,Person,خالد الحربي,Khalid Al-Harbi,true,MEDIUM,arabic-script,Arabic script vs Latin with article
+asia_mena_people,Person,يوسف القحطاني,Yousef Al Qahtani,true,MEDIUM,arabic-script,Arabic script vs Latin with article
+asia_mena_people,Person,عمر السيد,Omar El Sayed,true,MEDIUM,arabic-script,Arabic script vs Egyptian-style Latin
+asia_mena_people,Person,خالد الحربي,Khalil Al-Harbi,false,MEDIUM,arabic-script,Khalid vs Khalil across scripts
+asia_mena_people,Person,سعيد المطيري,Saad Al-Mutairi,false,MEDIUM,arabic-script,Saeed vs Saad across scripts
+asia_mena_people,Person,R. K. Sharma,Rajesh Kumar Sharma,true,MEDIUM,indian-initials,both given names as initials
+asia_mena_people,Person,Rajesh K. Sharma,Rajesh Kumar Sharma,true,MEDIUM,indian-initials,middle name as initial
+asia_mena_people,Person,Sharma Rajesh Kumar,Rajesh Kumar Sharma,true,MEDIUM,indian-initials,surname-first order
+asia_mena_people,Person,S. Venkatesh,Venkatesh Srinivasan,true,MEDIUM,indian-initials,South Indian initial-first; initial expanded to father's name at the end
+asia_mena_people,Person,M. Karthik,Karthik Murugan,true,MEDIUM,indian-initials,South Indian initial-first; initial expanded
+asia_mena_people,Person,Nallapati Venkata Ramana,Venkata Ramana Nallapati,true,MEDIUM,indian-initials,Telugu family-name-first vs Western order
+asia_mena_people,Person,R. K. Sharma,Sunil Kumar Sharma,false,MEDIUM,indian-initials,first initial R conflicts with Sunil
+asia_mena_people,Person,S. Venkatesh,Venkatesh Raghavan,false,MEDIUM,indian-initials,initial S conflicts with Raghavan
+asia_mena_people,Person,राजेश कुमार शर्मा,Rajesh Kumar Sharma,true,STRONG,devanagari,Devanagari vs Latin
+asia_mena_people,Person,सुनीता देवी,Sunita Devi,true,MEDIUM,devanagari,Devanagari vs Latin
+asia_mena_people,Person,अमित वर्मा,Amit Verma,true,MEDIUM,devanagari,Devanagari vs Latin
+asia_mena_people,Person,प्रिया अग्रवाल,Priya Agarwal,true,MEDIUM,devanagari,Devanagari vs Latin; Agrawal/Agarwal spelling
+asia_mena_people,Person,अमित वर्मा,Sumit Verma,false,MEDIUM,devanagari,Amit vs Sumit across scripts
+asia_mena_people,Person,सुनीता देवी,Anita Devi,false,MEDIUM,devanagari,Sunita vs Anita across scripts
+asia_mena_people,Person,陳大文,Chan Tai Man,true,MEDIUM,chinese-romanisation,Han vs Cantonese romanisation
+asia_mena_people,Person,Chan Tai Man,Chen Dawen,true,MEDIUM,chinese-romanisation,Cantonese vs pinyin (陳大文)
+asia_mena_people,Person,陳文發,Tan Boon Huat,true,MEDIUM,chinese-romanisation,Han vs Hokkien romanisation
+asia_mena_people,Person,Tan Boon Huat,Chen Wenfa,true,MEDIUM,chinese-romanisation,Hokkien vs pinyin (陳文發)
+asia_mena_people,Person,Lim Bee Leng,Lin Meiling,true,MEDIUM,chinese-romanisation,Hokkien vs pinyin (林美玲)
+asia_mena_people,Person,Wong Siu Ming,Huang Xiaoming,true,MEDIUM,chinese-romanisation,Cantonese vs pinyin (黃小明)
+asia_mena_people,Person,Lee Ka Wai,Li Jiawei,true,MEDIUM,chinese-romanisation,Cantonese vs pinyin (李家偉)
+asia_mena_people,Person,Wang Xiaoming,Xiaoming Wang,true,MEDIUM,chinese-order,surname-first vs Western order
+asia_mena_people,Person,Wang Xiao Ming,Wang Xiaoming,true,MEDIUM,chinese-order,given name split vs joined
+asia_mena_people,Person,王小明,Wang Xiaoming,true,MEDIUM,chinese-script,Han vs pinyin
+asia_mena_people,Person,王小明,黃小明,false,MEDIUM,chinese-script,different surname character (Wang vs Huang)
+asia_mena_people,Person,Wang Xiaoming,Wang Xiaohong,false,MEDIUM,chinese-order,different given name same surname
+asia_mena_people,Person,Chen Dawen,Chen Dawei,false,MEDIUM,chinese-romanisation,different second given-name syllable
+asia_mena_people,Person,Rajesh Kumar,Ramesh Kumar,false,MEDIUM,hard-negative,Kumar-only overlap
+asia_mena_people,Person,Anil Kumar Singh,Sunil Kumar Singh,false,MEDIUM,hard-negative,Kumar Singh overlap; Anil vs Sunil
+asia_mena_people,Person,Gurpreet Singh,Harpreet Singh,false,MEDIUM,hard-negative,Singh-only overlap
+asia_mena_people,Person,Manpreet Singh Gill,Manpreet Singh Sandhu,false,MEDIUM,hard-negative,common given name; different family name
+asia_mena_people,Person,Amandeep Singh,Amandeep Kaur,false,MEDIUM,hard-negative,unisex given name; Singh (male) vs Kaur (female)
+asia_mena_people,Person,Priya Sharma,Priya Patel,false,STRONG,hard-negative,common given name; different surname
+asia_mena_people,Person,Mohd Rizal Hassan,Mohd Rizal Hussein,false,MEDIUM,hard-negative,Hassan vs Hussein are distinct names
+asia_mena_people,Person,Nurul Huda binti Ahmad,Nurul Ain binti Ahmad,false,MEDIUM,hard-negative,common Nurul prefix; different given name
