@@ -217,6 +217,17 @@ post-hoc.
   `holding-vs-operating`, `vessel-vs-owner`); `notes` names the
   source pair file.
 
+- `us_orgs` (300 rows): US organization name pairs from
+  [USORG-Bench](https://huggingface.co/datasets/tensorust/usorg-bench)
+  (CC BY 4.0), labelled by government identifiers: a pair matches
+  when both public records carry the same SAM UEI, SEC CIK, CMS
+  certification number, FCC FRN, USAC BEN/SPIN or state filing
+  number. Pairs whose names are identical up to word order, common
+  abbreviations or the legal form are left out. `category` names
+  the name relation (e.g. `renamed-or-reworded`,
+  `legal-form-only`); `notes` names the identifier and the two
+  source datasets.
+
 Planned additions:
 
 - `qarin_negatives` / `un_sc_positives` / `us_congress` —
