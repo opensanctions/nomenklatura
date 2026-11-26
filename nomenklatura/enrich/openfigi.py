@@ -1,5 +1,4 @@
 import logging
-import os
 from collections.abc import Generator
 
 from followthemoney import DS, SE
@@ -37,9 +36,8 @@ class OpenFIGIEnricher(Enricher[DS]):
         if self.api_key is None:
             log.warning("PermID has no API token (%s)" % api_key_var)
 
-        api_key = os.environ.get("OPENFIGI_API_KEY")
-        if api_key is not None:
-            self.session.headers["X-OPENFIGI-APIKEY"] = api_key
+        if self.api_key is not None:
+            self.session.headers["X-OPENFIGI-APIKEY"] = self.api_key
 
     def make_company_id(self, name: str) -> str:
         return f"figi-company-{make_entity_id(name)}"
